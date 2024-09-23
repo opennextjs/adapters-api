@@ -1,0 +1,42 @@
+{
+  "name": "@opennextjs/cloudflare",
+  "description": "Cloudflare builder for next apps",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch src",
+    "test": "vitest --run",
+    "test:watch": "vitest"
+  },
+  "bin": "dist/index.mjs",
+  "files": [
+    "README.md",
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flarelabs-net/poc-next.git",
+    "directory": "packages/cloudflare"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "next.js"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/flarelabs-net/poc-next/issues"
+  },
+  "homepage": "https://github.com/flarelabs-net/poc-next",
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "esbuild": "catalog:",
+    "glob": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "dependencies": {
+    "ts-morph": "catalog:"
+  }
+}
