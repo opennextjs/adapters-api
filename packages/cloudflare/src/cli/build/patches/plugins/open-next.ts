@@ -1,0 +1,76 @@
+/**
+ * Removed unused `require.resolve` calls in Open Next.
+ */
+
+import path from "node:path";
+
+import { type BuildOptions, getPackagePath } from "@opennextjs/aws/build/helper.js";
+import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
+import type { ContentUpdater, Plugin } from "@opennextjs/aws/plugins/content-updater.js";
+import { getCrossPlatformPathRegex } from "@opennextjs/aws/utils/regex.js";
+
+export function patchResolveCache(updater: ContentUpdater, buildOpts: BuildOptions): Plugin {
+	const { outputDir } = buildOpts;
+	const packagePath = getPackagePath(buildOpts);
+	const outputPath = path.join(outputDir, "server-functions/default");
+
+	const indexPath = path.relative(
+		buildOpts.appBuildOutputPath,
+		path.join(outputPath, packagePath, `index.mjs`)
+	);
+
+	return updater.updateContent("patch-resolve-cache", [
+		{
+			filter: getCrossPlatformPathRegex(indexPath),
+			contentFilter: /cacheHandlerPath/,
+			callback: async ({ contents }) => {
+				contents = patchCode(contents, cacheHandlerRule);
+				contents = patchCode(contents, compositeCacheHandlerRule);
+				return contents;
+			},
+		},
+	]);
+}
+
+export const cacheHandlerRule = `
+rule:
+  pattern: var cacheHandlerPath = __require.resolve("./cache.cjs");
+fix: |-
+  var cacheHandlerPath = "";
+`;
+
+export const compositeCacheHandlerRule = `
+rule:
+  pattern: var composableCacheHandlerPath = __require.resolve("./composable-cache.cjs");
+fix: |-
+  var composableCacheHandlerPath = "";
+`;
+
+export function patchSetWorkingDirectory(updater: ContentUpdater, buildOpts: BuildOptions): Plugin {
+	const { outputDir } = buildOpts;
+	const packagePath = getPackagePath(buildOpts);
+	const outputPath = path.join(outputDir, "server-functions/default");
+
+	const indexPath = path.relative(
+		buildOpts.appBuildOutputPath,
+		path.join(outputPath, packagePath, `index.mjs`)
+	);
+
+	return updater.updateContent("do-not-set-working-directory", [
+		{
+			filter: getCrossPlatformPathRegex(indexPath),
+			contentFilter: /function setNextjsServerWorkingDirectory\(/,
+			callback: async ({ contents }) => patchCode(contents, workingDirectoryRule),
+		},
+	]);
+}
+
+// `setNextjsServerWorkingDirectory` calls `process.chdir("")` which errors because the directory does not exists
+// See https://github.com/opennextjs/opennextjs-cloudflare/issues/899
+export const workingDirectoryRule = `
+rule:
+  pattern: function setNextjsServerWorkingDirectory() { $$$BODY }
+fix: |-
+    function setNextjsServerWorkingDirectory() {
+    }
+`;

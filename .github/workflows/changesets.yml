@@ -1,0 +1,42 @@
+name: Handle Changesets
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  release:
+    if: ${{ github.repository_owner == 'opennextjs' }}
+    name: Handle Changesets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          # See https://github.com/changesets/action/issues/187
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          fetch-depth: 0
+
+      - name: Install Dependencies
+        uses: ./.github/actions/install-dependencies
+        with:
+          # Needs 24 to get a version of npm that can handle trusted publishers
+          # See https://docs.npmjs.com/trusted-publishers
+          node-version: 24
+
+      - name: Build Cloudflare package
+        run: pnpm run build
+
+      - name: Create Version PR or Publish to NPM
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: pnpm exec changeset publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          NODE_ENV: "production"
