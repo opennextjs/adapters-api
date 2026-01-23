@@ -26,5 +26,6 @@ test-results
 .sst.config*
 .next/
 .open-next/
+.wrangler
 
 coverage/

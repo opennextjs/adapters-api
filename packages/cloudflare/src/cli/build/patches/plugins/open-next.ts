@@ -34,14 +34,18 @@ export function patchResolveCache(updater: ContentUpdater, buildOpts: BuildOptio
 
 export const cacheHandlerRule = `
 rule:
-  pattern: var cacheHandlerPath = __require.resolve("./cache.cjs");
+  any:
+    - pattern: var cacheHandlerPath = __require.resolve("./cache.cjs");
+    - pattern: var cacheHandlerPath = require.resolve("./cache.cjs");
 fix: |-
   var cacheHandlerPath = "";
 `;
 
 export const compositeCacheHandlerRule = `
 rule:
-  pattern: var composableCacheHandlerPath = __require.resolve("./composable-cache.cjs");
+  any:
+    - pattern: var composableCacheHandlerPath = __require.resolve("./composable-cache.cjs");
+    - pattern: var composableCacheHandlerPath = require.resolve("./composable-cache.cjs");
 fix: |-
   var composableCacheHandlerPath = "";
 `;
