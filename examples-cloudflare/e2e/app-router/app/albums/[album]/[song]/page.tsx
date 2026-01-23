@@ -1,4 +1,4 @@
-import { getSong } from "@example/shared/api";
+import { getSong } from "examples-cloudflare/e2e-shared/api";
 
 type Props = {
 	params: Promise<{

@@ -1,5 +1,5 @@
 {
-	"name": "vercel-blog-starter",
+	"name": "examples-cloudflare/vercel-blog-starter",
 	"private": true,
 	"scripts": {
 		"dev": "next",

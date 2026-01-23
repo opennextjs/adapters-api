@@ -1,5 +1,5 @@
 {
-	"name": "playground14",
+	"name": "examples-cloudflare/playground14",
 	"version": "0.1.0",
 	"private": true,
 	"type": "module",
@@ -17,8 +17,8 @@
 	},
 	"dependencies": {
 		"next": "^14.2.35",
-		"react": "catalog:",
-		"react-dom": "catalog:"
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0"
 	},
 	"devDependencies": {
 		"@opennextjs/cloudflare": "workspace:*",

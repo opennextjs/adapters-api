@@ -1,13 +1,13 @@
 {
-	"name": "prisma-next-app",
+	"name": "examples-cloudflare/prisma",
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
 		"dev": "next dev --turbopack",
-		"build": "next build",
+		"build": "pnpm exec prisma generate && next build",
 		"start": "next start",
 		"lint": "next lint",
-		"prepare:db": "npx prisma generate && wrangler d1 execute db --file populate.sql",
+		"prepare:db": "pnpm exec prisma generate && wrangler d1 execute db --file populate.sql",
 		"build:worker": "pnpm prepare:db && pnpm opennextjs-cloudflare build",
 		"preview:worker": "pnpm opennextjs-cloudflare preview",
 		"preview": "pnpm build:worker && pnpm preview:worker",
@@ -17,8 +17,8 @@
 	},
 	"dependencies": {
 		"@opennextjs/cloudflare": "workspace:*",
-		"@prisma/adapter-d1": "^6.7.0",
-		"@prisma/client": "^6.7.0",
+		"@prisma/adapter-d1": "6.7.0",
+		"@prisma/client": "6.7.0",
 		"next": "catalog:e2e",
 		"react": "catalog:e2e",
 		"react-dom": "catalog:e2e"
@@ -27,7 +27,7 @@
 		"@types/node": "catalog:",
 		"@types/react": "catalog:e2e",
 		"@types/react-dom": "catalog:e2e",
-		"prisma": "^6.7.0",
+		"prisma": "6.7.0",
 		"typescript": "catalog:",
 		"wrangler": "catalog:"
 	}

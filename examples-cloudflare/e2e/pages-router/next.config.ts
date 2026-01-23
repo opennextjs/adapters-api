@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-	transpilePackages: ["@example/shared", "react", "react-dom"],
+	transpilePackages: ["examples-cloudflare/e2e-shared", "react", "react-dom"],
 	i18n: {
 		locales: ["en", "nl"],
 		defaultLocale: "en",

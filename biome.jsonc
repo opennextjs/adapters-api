@@ -2,7 +2,19 @@
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
-    "ignoreUnknown": true
+    "ignoreUnknown": true,
+    "include": [
+      "packages/open-next/**",
+      "packages/tests-unit/**",
+      "packages/tests-e2e/**",
+      "packages/utils/**",
+      "examples/**"
+    ],
+    "ignore": [
+      "packages/cloudflare/**",
+      "create-cloudflare/**",
+      "examples-cloudflare/**"
+    ]
   },
   "organizeImports": { "enabled": true },
   "formatter": {

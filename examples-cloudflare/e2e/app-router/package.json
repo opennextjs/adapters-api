@@ -1,5 +1,5 @@
 {
-	"name": "app-router",
+	"name": "examples-cloudflare/e2e-app-router",
 	"version": "0.1.4",
 	"private": true,
 	"scripts": {
@@ -18,7 +18,7 @@
 	},
 	"dependencies": {
 		"@opennextjs/cloudflare": "workspace:*",
-		"@example/shared": "workspace:*",
+		"examples-cloudflare/e2e-shared": "workspace:*",
 		"next": "catalog:e2e",
 		"react": "catalog:e2e",
 		"react-dom": "catalog:e2e"

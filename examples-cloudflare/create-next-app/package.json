@@ -1,5 +1,5 @@
 {
-	"name": "create-next-app",
+	"name": "examples-cloudflare/create-next-app",
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {

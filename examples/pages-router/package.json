@@ -14,17 +14,17 @@
   },
   "dependencies": {
     "@example/shared": "workspace:*",
-    "next": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:"
+    "next": "catalog:aws",
+    "react": "catalog:aws",
+    "react-dom": "catalog:aws"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "tailwindcss": "catalog:",
-    "postcss": "catalog:",
-    "autoprefixer": "catalog:",
-    "typescript": "catalog:"
+    "@types/node": "catalog:aws",
+    "@types/react": "catalog:aws",
+    "@types/react-dom": "catalog:aws",
+    "tailwindcss": "catalog:aws",
+    "postcss": "catalog:aws",
+    "autoprefixer": "catalog:aws",
+    "typescript": "catalog:aws"
   }
 }

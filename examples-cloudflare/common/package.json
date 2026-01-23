@@ -1,5 +1,5 @@
 {
-	"name": "common",
+	"name": "examples-cloudflare/common",
 	"private": true,
 	"type": "module"
 }

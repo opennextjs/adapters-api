@@ -1,5 +1,5 @@
 {
-	"name": "experimental",
+	"name": "examples-cloudflare/experimental",
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {

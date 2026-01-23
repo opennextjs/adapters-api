@@ -5,12 +5,13 @@
   "scripts": {
     "clean": "rm -rf .turbo && rm -rf node_modules"
   },
-  "dependencies": {
-    "react": "catalog:",
-    "react-dom": "catalog:"
+  "peerDependencies": {
+    "next": "catalog:aws",
+    "react": "catalog:aws",
+    "react-dom": "catalog:aws"
   },
   "devDependencies": {
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:"
+    "@types/react": "catalog:aws",
+    "@types/react-dom": "catalog:aws"
   }
 }

@@ -1,5 +1,5 @@
 {
-	"name": "static-assets-incremental-cache",
+	"name": "examples-cloudflare/static-assets-incremental-cache",
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {

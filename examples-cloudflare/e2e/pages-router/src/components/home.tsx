@@ -1,4 +1,4 @@
-import Nav from "@example/shared/components/Nav";
+import Nav from "examples-cloudflare/e2e-shared/components/Nav";
 import Head from "next/head";
 
 export default function Home() {

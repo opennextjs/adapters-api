@@ -1,5 +1,5 @@
 {
-	"name": "d1-tag-next",
+	"name": "examples-cloudflare/d1-tag-next",
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {

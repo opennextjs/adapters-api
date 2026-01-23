@@ -1,0 +1,19 @@
+# Only apply prettier to Cloudflare directories
+*
+
+# Include Cloudflare directories
+!packages/cloudflare/
+!packages/cloudflare/**
+!create-cloudflare/
+!create-cloudflare/**
+!examples-cloudflare/
+!examples-cloudflare/**
+
+# Ignore build artifacts and generated files within included directories
+.next
+.wrangler
+pnpm-lock.yaml
+.vscode/setting.json
+test-fixtures
+test-snapshots
+playwright-report

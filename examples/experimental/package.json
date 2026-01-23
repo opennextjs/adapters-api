@@ -14,14 +14,14 @@
   },
   "dependencies": {
     "next": "15.4.0-canary.14",
-    "react": "catalog:",
-    "react-dom": "catalog:"
+    "react": "catalog:aws",
+    "react-dom": "catalog:aws"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "typescript": "catalog:",
+    "@types/node": "catalog:aws",
+    "@types/react": "catalog:aws",
+    "@types/react-dom": "catalog:aws",
+    "typescript": "catalog:aws",
     "@opennextjs/aws": "workspace:*"
   }
 }

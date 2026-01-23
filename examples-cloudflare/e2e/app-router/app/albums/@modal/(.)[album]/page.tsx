@@ -1,4 +1,4 @@
-import Modal from "@example/shared/components/Modal";
+import Modal from "examples-cloudflare/e2e-shared/components/Modal";
 
 type Props = {
 	params: Promise<{

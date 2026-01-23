@@ -1,5 +1,5 @@
 {
-	"name": "@example/shared",
+	"name": "examples-cloudflare/e2e-shared",
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {

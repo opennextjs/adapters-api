@@ -1,5 +1,5 @@
-import { getSong } from "@example/shared/api";
-import Modal from "@example/shared/components/Modal";
+import { getSong } from "examples-cloudflare/e2e-shared/api";
+import Modal from "examples-cloudflare/e2e-shared/components/Modal";
 
 type Props = {
 	params: Promise<{
