@@ -57,6 +57,11 @@ export async function build(
   buildHelper.initOutputDir(options);
   buildNextjsApp(options);
 
+  if(config.dangerous?.useAdapterOutputs) {
+    logger.info("Using adapter outputs for building OpenNext bundle.");
+    return;
+  }
+
   // Generate deployable bundle
   printHeader("Generating bundle");
 

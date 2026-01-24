@@ -87,9 +87,9 @@ export function createCacheAssets(options: buildHelper.BuildOptions) {
   const buildId = buildHelper.getBuildId(options);
   let useTagCache = false;
 
-  const dotNextPath = path.join(
+  const dotNextPath = options.config.dangerous?.useAdapterOutputs ? appBuildOutputPath : path.join(
     appBuildOutputPath,
-    options.config.dangerous?.useAdapterOutputs ? "" : ".next/standalone",
+    ".next/standalone",
     packagePath,
   );
 
