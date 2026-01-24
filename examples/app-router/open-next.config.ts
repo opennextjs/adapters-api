@@ -14,6 +14,7 @@ export default {
   dangerous: {
     middlewareHeadersOverrideNextConfigHeaders: true,
     useAdapterOutputs: true,
+    enableCacheInterception: true,
   },
 
   imageOptimization: {

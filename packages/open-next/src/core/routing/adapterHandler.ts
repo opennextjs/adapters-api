@@ -17,6 +17,10 @@ export async function adapterHandler(
 ) {
   let resolved = false;
 
+  const pendingPromiseRunner =
+    globalThis.__openNextAls.getStore()?.pendingPromiseRunner;
+  const waitUntil = options.waitUntil ?? pendingPromiseRunner?.add.bind(pendingPromiseRunner);
+
   //TODO: replace this at runtime with a version precompiled for the cloudflare adapter.
   for (const route of routingResult.resolvedRoutes) {
     const module = getHandler(route);
@@ -27,9 +31,8 @@ export async function adapterHandler(
     try {
       console.log("## adapterHandler trying route", route, req.url);
       const result = await module.handler(req, res, {
-        waitUntil: options.waitUntil,
+        waitUntil,
       });
-      await finished(res); // Not sure this one is necessary.
       console.log("## adapterHandler route succeeded", route);
       resolved = true;
       return result;
@@ -37,7 +40,44 @@ export async function adapterHandler(
     } catch (e) {
       console.log("## adapterHandler route failed", route, e);
       // I'll have to run some more tests, but in theory, we should not have anything special to do here, and we should return the 500 page here.
+      // TODO: find the correct one to use.
+      const module = getHandler({ route: "/_global-error", type: "app" });
+      try {
+        if (module) {
+        await module.handler(req, res, {
+          waitUntil,
+        });
+        resolved = true;
+        return;
+      }
+      }catch (e2) {
+        console.log("## adapterHandler global error route also failed", e2);
+      }
+      res.statusCode = 500;
+      res.end("Internal Server Error");
+      await finished(res);
+      resolved = true;
+      return;
     }
+  }
+  if (!resolved) {
+    console.log("## adapterHandler no route resolved for", req.url);
+    // TODO: find the correct one to use.
+    const module = getHandler({ route: "/_not-found", type: "app" });
+    try {
+      if (module) {
+        await module.handler(req, res, {
+          waitUntil,
+        });
+        return;
+      }
+    }catch (e2) {
+      console.log("## adapterHandler not found route also failed", e2);
+    }
+    res.statusCode = 404;
+    res.end("Not Found");
+    await finished(res);
+    return;
   }
 }
 
