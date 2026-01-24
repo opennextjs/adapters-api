@@ -11,6 +11,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
   PLAYWRIGHT_BROWSERS_PATH: 0

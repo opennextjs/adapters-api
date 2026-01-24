@@ -25,8 +25,6 @@
     "e2e:dev": "pnpm build && pnpm -r e2e:dev",
     "install-playwright": "playwright install --with-deps",
     "benchmark": "pnpm run --filter benchmarking benchmark",
-    "version": "./.changeset/version",
-    "release": "./.changeset/release",
     "postinstall": "pnpm build:opennext"
   },
   "devDependencies": {

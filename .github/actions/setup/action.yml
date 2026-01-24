@@ -3,47 +3,30 @@ description: Install's node, pnpm, restores cache, and then installs dependencie
 
 inputs:
   node-version:
-    default: 20.x
-  registry-url:
-    default: "https://registry.npmjs.org"
+    description: Node.js version to install
+    default: '24'
 
 runs:
-  using: 'composite'
+  using: composite
   steps:
-    # Install nodejs. https://github.com/actions/setup-node
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10
+
+    - name: Install Node.js ${{ inputs.node-version }}
+      uses: actions/setup-node@v6
       with:
         node-version: ${{ inputs.node-version }}
-        registry-url: ${{ inputs.registry-url }}
+        registry-url: https://registry.npmjs.org
+        cache: pnpm
 
-    # Ensure npm 11.5.1 or later is installed
-    # See https://docs.npmjs.com/trusted-publishers
-    # Note that pnpm publish runs npm publish
-    - name: Update npm
+    # Enable node compile cache (effective for Node 22+)
+    # See https://nodejs.org/docs/v24.11.1/api/module.html#module-compile-cache
+    - name: Enable Node Compile Cache
       shell: bash
-      run: npm install -g npm@latest
-
-    # Install pnpm. https://github.com/pnpm/action-setup
-    - uses: pnpm/action-setup@v4
-      with:
-        version: 9
-        # run_install: false
-
-    # Get pnpm store path so we can cache it
-    - name: Get pnpm store directory
-      shell: bash
-      run: |
-        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-    - uses: actions/cache@v4
-      name: Setup pnpm cache
-      with:
-        path: ${{ env.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
+      run: echo "NODE_COMPILE_CACHE=$HOME/.node_compile_cache" >> $GITHUB_ENV
 
     - name: Install dependencies
-      run: pnpm install
       shell: bash
+      run: pnpm install --frozen-lockfile
