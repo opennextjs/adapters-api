@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "build:cloudflare": "pnpm --filter cloudflare build",
+    "build:opennext": "turbo run build --filter @opennextjs/*",
     "openbuild:local": "turbo run openbuild:local",
     "openbuild:local:start": "turbo run openbuild:local:start",
     "clean": "turbo run clean && rm -rf node_modules pnpm-lock.yaml",
@@ -27,7 +27,7 @@
     "benchmark": "pnpm run --filter benchmarking benchmark",
     "version": "./.changeset/version",
     "release": "./.changeset/release",
-    "postinstall": "pnpm --filter @opennextjs/aws build && pnpm --filter cloudflare build"
+    "postinstall": "pnpm build:opennext"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
