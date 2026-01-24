@@ -16,13 +16,13 @@
 		"incremental": true,
 		"plugins": [
 			{
-				"name": "next",
-			},
+				"name": "next"
+			}
 		],
 		"paths": {
 			"@/*": ["./*"],
-			"examples-cloudflare/e2e-shared": ["../shared"],
-		},
+			"examples-cloudflare/e2e-shared": ["../shared"]
+		}
 	},
 	"include": [
 		"next-env.d.ts",
@@ -30,7 +30,7 @@
 		"**/*.tsx",
 		".next/types/**/*.ts",
 		"../utils.ts",
-		".next/dev/types/**/*.ts",
+		".next/dev/types/**/*.ts"
 	],
-	"exclude": ["node_modules", "open-next.config.ts"],
+	"exclude": ["node_modules", "open-next.config.ts"]
 }
