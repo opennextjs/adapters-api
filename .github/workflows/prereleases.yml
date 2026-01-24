@@ -2,26 +2,22 @@ name: Publish prereleases
 
 on:
   push:
-    branches: [main, experimental, adapters-api]
+    branches: [main]
   pull_request:
 
 jobs:
   release:
     if: ${{ github.repository_owner == 'opennextjs' }}
-    name: Publish builder package
+    name: Publish prerelease packages
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
         with:
-          fetch-depth: 0
+          node-version: 24
 
-      - name: Install Dependencies
-        uses: ./.github/actions/install-dependencies
+      - name: Build packages
+        run: pnpm build:opennext
 
-      - name: Build
-        run: pnpm -F cloudflare run build
-
-      - name: Publish to NPM
-        run: pnpm exec pkg-pr-new publish --pnpm --compact './packages/cloudflare'
+      - name: Publish prerelease
+        run: pnpm exec pkg-pr-new publish --pnpm --compact './packages/cloudflare' './packages/open-next'
