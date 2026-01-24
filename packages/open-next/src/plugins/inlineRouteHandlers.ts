@@ -6,6 +6,7 @@ import type { ContentUpdater, Plugin } from "./content-updater.js";
 export function inlineRouteHandler(
   updater: ContentUpdater,
   outputs: NextAdapterOutputs,
+  packagePath: string,
 ): Plugin {
   console.log("## inlineRouteHandler");
   return updater.updateContent("inlineRouteHandler", [
@@ -32,7 +33,7 @@ export function inlineRouteHandler(
       callback: ({ contents }) => {
         const result = patchCode(contents, inlineChunksRule);
         //TODO: Maybe find another way to do that.
-        return `${result}\n${inlineChunksFn(outputs)}`;
+        return `${result}\n${inlineChunksFn(outputs, packagePath)}`;
       },
     },
   ]);
@@ -72,15 +73,17 @@ fix:
   requireChunk(chunkPath)
 `;
 
-function getInlinableChunks(outputs: NextAdapterOutputs, prefix?: string) {
+function getInlinableChunks(outputs: NextAdapterOutputs, packagePath: string, prefix?: string) {
   const chunks = new Set<string>();
+  // TODO: handle middleware
   for (const type of ["pages", "pagesApi", "appPages", "appRoutes"] as const) {
     for (const { assets } of outputs[type]) {
-      for (const asset of Object.keys(assets)) {
+      for (let asset of Object.keys(assets)) {
         if (
           asset.includes(".next/server/chunks/") &&
           !asset.includes("[turbopack]_runtime.js")
         ) {
+          asset = packagePath !== "" ? asset.replace(`${packagePath}/`, "") : asset;
           chunks.add(prefix ? `${prefix}${asset}` : asset);
         }
       }
@@ -89,9 +92,9 @@ function getInlinableChunks(outputs: NextAdapterOutputs, prefix?: string) {
   return chunks;
 }
 
-function inlineChunksFn(outputs: NextAdapterOutputs) {
+function inlineChunksFn(outputs: NextAdapterOutputs, packagePath: string) {
   // From the outputs, we extract every chunks
-  const chunks = getInlinableChunks(outputs);
+  const chunks = getInlinableChunks(outputs, packagePath);
   return `
   function requireChunk(chunk) {
     const chunkPath = ".next/" + chunk;
@@ -109,8 +112,8 @@ ${Array.from(chunks)
 /**
  *  Esbuild plugin to mark all chunks that we inline as external.
  */
-export function externalChunksPlugin(outputs: NextAdapterOutputs): Plugin {
-  const chunks = getInlinableChunks(outputs, "./");
+export function externalChunksPlugin(outputs: NextAdapterOutputs, packagePath: string): Plugin {
+  const chunks = getInlinableChunks(outputs, packagePath, `./`);
   return {
     name: "external-chunks",
     setup(build) {
