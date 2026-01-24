@@ -5,7 +5,7 @@
   "scripts": {
     "clean": "rm -rf .turbo && rm -rf node_modules",
     "dev": "vitest",
-    "test": "vitest run --coverage"
+    "test": "vitest run"
   },
   "dependencies": {
     "@opennextjs/aws": "workspace:*"
