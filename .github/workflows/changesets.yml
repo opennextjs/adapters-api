@@ -15,22 +15,22 @@ jobs:
     name: Handle Changesets
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # See https://github.com/changesets/action/issues/187
-          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
+      - uses: ./.github/actions/setup
 
-      - name: Install Dependencies
-        uses: ./.github/actions/install-dependencies
-        with:
-          # Needs 24 to get a version of npm that can handle trusted publishers
-          # See https://docs.npmjs.com/trusted-publishers
-          node-version: 24
+      - name: Build packages
+        run: pnpm run build:opennext
 
-      - name: Build Cloudflare package
-        run: pnpm run build
+      # Ensure npm 11.5.1 or later is installed
+      # See https://docs.npmjs.com/trusted-publishers
+      # Note that pnpm publish runs npm publish
+      - name: Update npm
+        shell: bash
+        run: npm install -g npm@latest
 
       - name: Create Version PR or Publish to NPM
         id: changesets
@@ -38,5 +38,5 @@ jobs:
         with:
           publish: pnpm exec changeset publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-          NODE_ENV: "production"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_ENV: production

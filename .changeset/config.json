@@ -2,13 +2,14 @@
   "$schema": "https://unpkg.com/@changesets/config@2.3.0/schema.json",
   "changelog": [
     "@changesets/changelog-github",
-    { "repo": "opennextjs/opennextjs-aws" }
+    { "repo": "opennextjs/adapters-api" }
   ],
   "commit": false,
-  "fixed": [["@opennextjs/aws"]],
+  "fixed": [],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": []
+  "ignore": [],
+  "privatePackages": false
 }
