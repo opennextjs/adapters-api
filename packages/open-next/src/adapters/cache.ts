@@ -45,10 +45,7 @@ export default class Cache {
           kind?: "FETCH";
         },
   ) {
-    if (
-      globalThis.openNextConfig &&
-      globalThis.openNextConfig.dangerous?.disableIncrementalCache
-    ) {
+    if (globalThis.openNextConfig?.dangerous?.disableIncrementalCache) {
       return null;
     }
 
@@ -207,10 +204,7 @@ export default class Cache {
     data?: IncrementalCacheValue,
     ctx?: IncrementalCacheContext,
   ): Promise<void> {
-    if (
-      globalThis.openNextConfig &&
-      globalThis.openNextConfig.dangerous?.disableIncrementalCache
-    ) {
+    if (globalThis.openNextConfig?.dangerous?.disableIncrementalCache) {
       return;
     }
     // This one might not even be necessary anymore

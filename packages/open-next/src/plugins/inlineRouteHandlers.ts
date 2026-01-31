@@ -121,7 +121,7 @@ export function externalChunksPlugin(
   outputs: NextAdapterOutputs,
   packagePath: string,
 ): Plugin {
-  const chunks = getInlinableChunks(outputs, packagePath, `./`);
+  const chunks = getInlinableChunks(outputs, packagePath, "./");
   return {
     name: "external-chunks",
     setup(build) {
