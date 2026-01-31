@@ -3,8 +3,7 @@
   "version": "0.1.50",
   "private": true,
   "scripts": {
-    "openbuild": "node ../../packages/open-next/dist/index.js build --build-command \"npx turbo build\"",
-    "openbuild:local": "node ../../packages/open-next/dist/index.js build --config-path open-next.config.local.ts",
+    "openbuild": "node ../../packages/open-next/dist/index.js build",
     "openbuild:local:start": "PORT=3003 tsx on-proxy.ts",
     "dev": "next dev --turbopack --port 3003",
     "build": "next build",
@@ -15,6 +14,7 @@
   "dependencies": {
     "@example/shared": "workspace:*",
     "@opennextjs/aws": "workspace:*",
+    "express": "^5.2.1",
     "express-http-proxy": "2.1.1",
     "next": "catalog:aws",
     "react": "catalog:aws",
@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@types/express-http-proxy": "1.6.7",
+    "@types/express": "^5.0.6",
     "@types/node": "catalog:aws",
     "@types/react": "catalog:aws",
     "@types/react-dom": "catalog:aws",

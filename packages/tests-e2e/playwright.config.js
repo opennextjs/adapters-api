@@ -16,13 +16,13 @@ export default defineConfig({
     //     baseURL: process.env.PAGES_ROUTER_URL || "http://localhost:3002",
     //   },
     // },
-    // {
-    //   name: "appPagesRouter",
-    //   testMatch: ["tests/appPagesRouter/*.test.ts"],
-    //   use: {
-    //     baseURL: process.env.APP_PAGES_ROUTER_URL || "http://localhost:3003",
-    //   },
-    // },
+    {
+      name: "appPagesRouter",
+      testMatch: ["tests/appPagesRouter/*.test.ts"],
+      use: {
+        baseURL: process.env.APP_PAGES_ROUTER_URL || "http://localhost:3003",
+      },
+    },
     // {
     //   name: "experimental",
     //   testMatch: ["tests/experimental/*.test.ts"],

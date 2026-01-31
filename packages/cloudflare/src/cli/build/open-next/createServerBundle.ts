@@ -203,7 +203,7 @@ async function generateBundle(
 		if (!buildCtx) {
 			throw new Error("should not happen");
 		}
-		tracedFiles = await copyAdapterFiles(options, name, buildCtx.outputs);
+		tracedFiles = await copyAdapterFiles(options, name, packagePath, buildCtx.outputs);
 		//TODO: we should load manifests here
 	} else {
 		const oldTracedFileOutput = await copyTracedFiles({

@@ -50,14 +50,14 @@
     "chalk": "^5.6.2",
     "cookie": "^1.0.2",
     "esbuild": "catalog:aws",
-    "express": "^5.1.0",
+    "express": "^5.2.1",
     "path-to-regexp": "^6.3.0",
     "urlpattern-polyfill": "^10.1.0",
     "yaml": "^2.8.1"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.158",
-    "@types/express": "5.0.0",
+    "@types/express": "5.0.6",
     "@types/node": "catalog:aws",
     "concurrently": "^9.2.1",
     "tsc-alias": "^1.8.16",

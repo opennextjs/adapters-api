@@ -154,8 +154,9 @@ export default {
 } satisfies NextAdapter;
 
 function getAdditionalPluginsFactory(buildOpts: buildHelper.BuildOptions, ctx: BuildCompleteCtx) {
+	const packagePath = buildHelper.getPackagePath(buildOpts);
 	return (updater: ContentUpdater) => [
-		inlineRouteHandler(updater, ctx.outputs),
+		inlineRouteHandler(updater, ctx.outputs, packagePath),
 		//externalChunksPlugin(outputs),
 		inlineLoadManifest(updater, buildOpts),
 	];
