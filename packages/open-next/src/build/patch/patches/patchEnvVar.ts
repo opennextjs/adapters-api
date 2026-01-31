@@ -22,41 +22,33 @@ fix:
   '${value}'
 `;
 
-export function getEnvVarsPatch(
-  BuildOptions: buildHelper.BuildOptions,
-): CodePatcher {
-  const isTurbopack =
-    buildHelper.getBundlerRuntime(BuildOptions) === "turbopack";
+export function getEnvVarsPatch(BuildOptions: buildHelper.BuildOptions): CodePatcher {
+	const isTurbopack = buildHelper.getBundlerRuntime(BuildOptions) === "turbopack";
 
-  return {
-    name: "patch-env-vars",
-    patches: [
-      // This patch will set the `NEXT_RUNTIME` env var to "node" to avoid loading unnecessary edge deps at runtime
-      {
-        versions: ">=15.0.0",
-        pathFilter: /module\.compiled\.js$/,
-        contentFilter: /process\.env\.NEXT_RUNTIME/,
-        patchCode: createPatchCode(envVarRuleCreator("NEXT_RUNTIME", '"node"')),
-      },
-      // This patch will set `NODE_ENV` to production to avoid loading unnecessary dev deps at runtime
-      {
-        versions: ">=15.0.0",
-        pathFilter:
-          /(module\.compiled|react\/index|react\/jsx-runtime|react-dom\/index)\.js$/,
-        contentFilter: /process\.env\.NODE_ENV/,
-        patchCode: createPatchCode(
-          envVarRuleCreator("NODE_ENV", '"production"'),
-        ),
-      },
-      // This patch will set `TURBOPACK` env to false to avoid loading turbopack related deps at runtime
-      {
-        versions: ">=15.0.0",
-        pathFilter: /module\.compiled\.js$/,
-        contentFilter: /process\.env\.TURBOPACK/,
-        patchCode: createPatchCode(
-          envVarRuleCreator("TURBOPACK", JSON.stringify(isTurbopack)),
-        ),
-      },
-    ],
-  };
+	return {
+		name: "patch-env-vars",
+		patches: [
+			// This patch will set the `NEXT_RUNTIME` env var to "node" to avoid loading unnecessary edge deps at runtime
+			{
+				versions: ">=15.0.0",
+				pathFilter: /module\.compiled\.js$/,
+				contentFilter: /process\.env\.NEXT_RUNTIME/,
+				patchCode: createPatchCode(envVarRuleCreator("NEXT_RUNTIME", '"node"')),
+			},
+			// This patch will set `NODE_ENV` to production to avoid loading unnecessary dev deps at runtime
+			{
+				versions: ">=15.0.0",
+				pathFilter: /(module\.compiled|react\/index|react\/jsx-runtime|react-dom\/index)\.js$/,
+				contentFilter: /process\.env\.NODE_ENV/,
+				patchCode: createPatchCode(envVarRuleCreator("NODE_ENV", '"production"')),
+			},
+			// This patch will set `TURBOPACK` env to false to avoid loading turbopack related deps at runtime
+			{
+				versions: ">=15.0.0",
+				pathFilter: /module\.compiled\.js$/,
+				contentFilter: /process\.env\.TURBOPACK/,
+				patchCode: createPatchCode(envVarRuleCreator("TURBOPACK", JSON.stringify(isTurbopack))),
+			},
+		],
+	};
 }

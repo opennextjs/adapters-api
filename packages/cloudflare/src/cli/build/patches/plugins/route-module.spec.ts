@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 
 import { computePatchDiff } from "../../utils/test-patch.js";
+
 import { forceTrustHostHeader, getIncrementalCacheRule } from "./route-module.js";
 
 const code = `class n9 {

@@ -2,7 +2,7 @@
 import { adapterHandler } from "./routing/adapterHandler";
 
 globalThis.__next_route_preloader = async (stage: string) => {
-  // TODO: Implement route preloading logic here
+	// TODO: Implement route preloading logic here
 };
 
 export const requestHandler = adapterHandler;

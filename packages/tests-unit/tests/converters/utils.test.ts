@@ -1,31 +1,31 @@
 import { removeUndefinedFromQuery } from "@opennextjs/aws/overrides/converters/utils.js";
 
 describe("removeUndefinedFromQuery", () => {
-  it("should remove undefined from query", () => {
-    const result = removeUndefinedFromQuery({
-      a: "1",
-      b: ["2", "3"],
-      c: undefined,
-    });
+	it("should remove undefined from query", () => {
+		const result = removeUndefinedFromQuery({
+			a: "1",
+			b: ["2", "3"],
+			c: undefined,
+		});
 
-    expect(result).toEqual({
-      a: "1",
-      b: ["2", "3"],
-    });
-  });
+		expect(result).toEqual({
+			a: "1",
+			b: ["2", "3"],
+		});
+	});
 
-  it("should return empty object if input is empty", () => {
-    const result = removeUndefinedFromQuery({});
+	it("should return empty object if input is empty", () => {
+		const result = removeUndefinedFromQuery({});
 
-    expect(result).toEqual({});
-  });
+		expect(result).toEqual({});
+	});
 
-  it("should return empty object if all values are undefined", () => {
-    const result = removeUndefinedFromQuery({
-      a: undefined,
-      b: undefined,
-    });
+	it("should return empty object if all values are undefined", () => {
+		const result = removeUndefinedFromQuery({
+			a: undefined,
+			b: undefined,
+		});
 
-    expect(result).toEqual({});
-  });
+		expect(result).toEqual({});
+	});
 });

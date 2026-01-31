@@ -13,9 +13,9 @@
 		"e2e": "playwright test -c e2e/playwright.config.ts"
 	},
 	"dependencies": {
+		"next": "catalog:",
 		"react": "catalog:",
-		"react-dom": "catalog:",
-		"next": "catalog:"
+		"react-dom": "catalog:"
 	},
 	"devDependencies": {
 		"@opennextjs/cloudflare": "workspace:*",

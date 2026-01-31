@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
-import styles from "./page.module.css";
+
 import RevalidationButtons from "./components/revalidationButtons";
+import styles from "./page.module.css";
 
 const fetchedDateCb = unstable_cache(
 	async () => {

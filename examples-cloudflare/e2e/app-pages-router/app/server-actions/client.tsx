@@ -1,9 +1,8 @@
 "use client";
-import { useCallback, useState, useTransition } from "react";
-
 import type { Song as SongType } from "examples-cloudflare/e2e-shared/api";
 import { getSong } from "examples-cloudflare/e2e-shared/api";
 import Song from "examples-cloudflare/e2e-shared/components/Album/Song";
+import { useCallback, useState, useTransition } from "react";
 
 export default function Client() {
 	const [isPending, startTransition] = useTransition();

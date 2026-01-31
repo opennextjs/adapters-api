@@ -1,4 +1,5 @@
 import { getCrossPlatformPathRegex } from "utils/regex.js";
+
 import { createPatchCode } from "../astCodePatcher.js";
 import type { CodePatcher } from "../codePatcher.js";
 
@@ -41,7 +42,7 @@ fix:
  * @returns A rule to replace the body with a `throw`
  */
 export function createEmptyBodyRule(methodName: string) {
-  return `
+	return `
 rule:
   pattern:
     selector: method_definition
@@ -53,12 +54,9 @@ fix: |-
 `;
 }
 
-const pathFilter = getCrossPlatformPathRegex(
-  String.raw`/next/dist/server/next-server\.js$`,
-  {
-    escape: false,
-  },
-);
+const pathFilter = getCrossPlatformPathRegex(String.raw`/next/dist/server/next-server\.js$`, {
+	escape: false,
+});
 
 /**
  * Patches to avoid pulling babel (~4MB).
@@ -68,44 +66,44 @@ const pathFilter = getCrossPlatformPathRegex(
  * - drop `next/dist/server/node-environment-extensions/error-inspect.js`
  */
 const babelPatches = [
-  // Empty the body of `NextServer#runMiddleware`
-  {
-    pathFilter,
-    contentFilter: /runMiddleware\(/,
-    patchCode: createPatchCode(createEmptyBodyRule("runMiddleware")),
-  },
-  // Empty the body of `NextServer#runEdgeFunction`
-  {
-    pathFilter,
-    contentFilter: /runEdgeFunction\(/,
-    patchCode: createPatchCode(createEmptyBodyRule("runEdgeFunction")),
-  },
+	// Empty the body of `NextServer#runMiddleware`
+	{
+		pathFilter,
+		contentFilter: /runMiddleware\(/,
+		patchCode: createPatchCode(createEmptyBodyRule("runMiddleware")),
+	},
+	// Empty the body of `NextServer#runEdgeFunction`
+	{
+		pathFilter,
+		contentFilter: /runEdgeFunction\(/,
+		patchCode: createPatchCode(createEmptyBodyRule("runEdgeFunction")),
+	},
 ];
 
 export const patchNextServer: CodePatcher = {
-  name: "patch-next-server",
-  patches: [
-    // Empty the body of `NextServer#imageOptimizer` - unused in OpenNext
-    {
-      pathFilter,
-      contentFilter: /imageOptimizer\(/,
-      patchCode: createPatchCode(createEmptyBodyRule("imageOptimizer")),
-    },
-    // Disable Next background preloading done at creation of `NextServer`
-    {
-      versions: ">=14.0.0",
-      pathFilter,
-      contentFilter: /this\.nextConfig\.experimental\.preloadEntriesOnStart/,
-      patchCode: createPatchCode(disablePreloadingRule),
-    },
-    // Don't match edge functions in `NextServer`
-    {
-      // Next 12 and some version of 13 use the bundled middleware/edge function
-      versions: ">=14.0.0",
-      pathFilter,
-      contentFilter: /getMiddlewareManifest/,
-      patchCode: createPatchCode(removeMiddlewareManifestRule),
-    },
-    ...babelPatches,
-  ],
+	name: "patch-next-server",
+	patches: [
+		// Empty the body of `NextServer#imageOptimizer` - unused in OpenNext
+		{
+			pathFilter,
+			contentFilter: /imageOptimizer\(/,
+			patchCode: createPatchCode(createEmptyBodyRule("imageOptimizer")),
+		},
+		// Disable Next background preloading done at creation of `NextServer`
+		{
+			versions: ">=14.0.0",
+			pathFilter,
+			contentFilter: /this\.nextConfig\.experimental\.preloadEntriesOnStart/,
+			patchCode: createPatchCode(disablePreloadingRule),
+		},
+		// Don't match edge functions in `NextServer`
+		{
+			// Next 12 and some version of 13 use the bundled middleware/edge function
+			versions: ">=14.0.0",
+			pathFilter,
+			contentFilter: /getMiddlewareManifest/,
+			patchCode: createPatchCode(removeMiddlewareManifestRule),
+		},
+		...babelPatches,
+	],
 };

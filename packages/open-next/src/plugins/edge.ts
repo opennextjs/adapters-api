@@ -6,27 +6,27 @@ import type { Plugin } from "esbuild";
 import type { MiddlewareInfo } from "types/next-types.js";
 
 import {
-  loadAppPathRoutesManifest,
-  loadAppPathsManifest,
-  loadAppPathsManifestKeys,
-  loadBuildId,
-  loadConfig,
-  loadConfigHeaders,
-  loadFunctionsConfigManifest,
-  loadHtmlPages,
-  loadMiddlewareManifest,
-  loadPagesManifest,
-  loadPrerenderManifest,
-  loadRoutesManifest,
+	loadAppPathRoutesManifest,
+	loadAppPathsManifest,
+	loadAppPathsManifestKeys,
+	loadBuildId,
+	loadConfig,
+	loadConfigHeaders,
+	loadFunctionsConfigManifest,
+	loadHtmlPages,
+	loadMiddlewareManifest,
+	loadPagesManifest,
+	loadPrerenderManifest,
+	loadRoutesManifest,
 } from "../adapters/config/util.js";
 import logger from "../logger.js";
 import { normalizePath } from "../utils/normalize-path.js";
 import { getCrossPlatformPathRegex } from "../utils/regex.js";
 
 export interface IPluginSettings {
-  nextDir: string;
-  middlewareInfo?: MiddlewareInfo;
-  isInCloudflare?: boolean;
+	nextDir: string;
+	middlewareInfo?: MiddlewareInfo;
+	isInCloudflare?: boolean;
 }
 
 /**
@@ -35,72 +35,59 @@ export interface IPluginSettings {
  * @param opts.isInCloudflare - Whether the code runs on the cloudflare runtime
  * @returns
  */
-export function openNextEdgePlugins({
-  nextDir,
-  middlewareInfo,
-  isInCloudflare,
-}: IPluginSettings): Plugin {
-  const entryFiles =
-    middlewareInfo?.files.map((file: string) =>
-      normalizePath(path.join(nextDir, file)),
-    ) ?? [];
-  const routes = middlewareInfo
-    ? [
-        {
-          name: middlewareInfo.name || "/",
-          page: middlewareInfo.page,
-          regex: middlewareInfo.matchers.map((m) => m.regexp),
-        },
-      ]
-    : [];
-  const wasmFiles = middlewareInfo?.wasm ?? [];
+export function openNextEdgePlugins({ nextDir, middlewareInfo, isInCloudflare }: IPluginSettings): Plugin {
+	const entryFiles =
+		middlewareInfo?.files.map((file: string) => normalizePath(path.join(nextDir, file))) ?? [];
+	const routes = middlewareInfo
+		? [
+				{
+					name: middlewareInfo.name || "/",
+					page: middlewareInfo.page,
+					regex: middlewareInfo.matchers.map((m) => m.regexp),
+				},
+			]
+		: [];
+	const wasmFiles = middlewareInfo?.wasm ?? [];
 
-  return {
-    name: "opennext-edge",
-    setup(build) {
-      logger.debug(chalk.blue("OpenNext Edge plugin"));
+	return {
+		name: "opennext-edge",
+		setup(build) {
+			logger.debug(chalk.blue("OpenNext Edge plugin"));
 
-      build.onResolve({ filter: /\.(mjs|wasm)$/ }, () => {
-        return {
-          external: true,
-        };
-      });
+			build.onResolve({ filter: /\.(mjs|wasm)$/ }, () => {
+				return {
+					external: true,
+				};
+			});
 
-      //Copied from https://github.com/cloudflare/next-on-pages/blob/7a18efb5cab4d86c8e3e222fc94ea88ac05baffd/packages/next-on-pages/src/buildApplication/processVercelFunctions/build.ts#L86-L112
+			//Copied from https://github.com/cloudflare/next-on-pages/blob/7a18efb5cab4d86c8e3e222fc94ea88ac05baffd/packages/next-on-pages/src/buildApplication/processVercelFunctions/build.ts#L86-L112
 
-      build.onResolve({ filter: /^node:/ }, ({ kind, path }) => {
-        // this plugin converts `require("node:*")` calls, those are the only ones that
-        // need updating (esm imports to "node:*" are totally valid), so here we tag with the
-        // node-buffer namespace only imports that are require calls
-        return kind === "require-call"
-          ? { path, namespace: "node-built-in-modules" }
-          : undefined;
-      });
+			build.onResolve({ filter: /^node:/ }, ({ kind, path }) => {
+				// this plugin converts `require("node:*")` calls, those are the only ones that
+				// need updating (esm imports to "node:*" are totally valid), so here we tag with the
+				// node-buffer namespace only imports that are require calls
+				return kind === "require-call" ? { path, namespace: "node-built-in-modules" } : undefined;
+			});
 
-      // we convert the imports we tagged with the node-built-in-modules namespace so that instead of `require("node:*")`
-      // they import from `export * from "node:*";`
-      build.onLoad(
-        { filter: /.*/, namespace: "node-built-in-modules" },
-        ({ path }) => ({
-          contents: `export * from '${path}'`,
-          loader: "js",
-        }),
-      );
+			// we convert the imports we tagged with the node-built-in-modules namespace so that instead of `require("node:*")`
+			// they import from `export * from "node:*";`
+			build.onLoad({ filter: /.*/, namespace: "node-built-in-modules" }, ({ path }) => ({
+				contents: `export * from '${path}'`,
+				loader: "js",
+			}));
 
-      // We inject the entry files into the edgeFunctionHandler
-      build.onLoad(
-        { filter: getCrossPlatformPathRegex("/edgeFunctionHandler.js") },
-        async (args) => {
-          let contents = readFileSync(args.path, "utf-8");
-          contents = `
+			// We inject the entry files into the edgeFunctionHandler
+			build.onLoad({ filter: getCrossPlatformPathRegex("/edgeFunctionHandler.js") }, async (args) => {
+				let contents = readFileSync(args.path, "utf-8");
+				contents = `
 globalThis._ENTRIES = {};
 globalThis.self = globalThis;
 globalThis._ROUTES = ${JSON.stringify(routes)};
 
 ${
-  isInCloudflare
-    ? ""
-    : `
+	isInCloudflare
+		? ""
+		: `
 import {readFileSync} from "node:fs";
 import path from "node:path";
 function addDuplexToInit(init) {
@@ -147,29 +134,26 @@ ${entryFiles.map((file) => `require("${file}");`).join("\n")}
 ${contents}
         `;
 
-          return {
-            contents,
-          };
-        },
-      );
+				return {
+					contents,
+				};
+			});
 
-      build.onLoad(
-        { filter: getCrossPlatformPathRegex("adapters/config/index") },
-        async () => {
-          const NextConfig = loadConfig(nextDir);
-          const BuildId = loadBuildId(nextDir);
-          const HtmlPages = loadHtmlPages(nextDir);
-          const RoutesManifest = loadRoutesManifest(nextDir);
-          const ConfigHeaders = loadConfigHeaders(nextDir);
-          const PrerenderManifest = loadPrerenderManifest(nextDir);
-          const AppPathsManifestKeys = loadAppPathsManifestKeys(nextDir);
-          const MiddlewareManifest = loadMiddlewareManifest(nextDir);
-          const AppPathsManifest = loadAppPathsManifest(nextDir);
-          const AppPathRoutesManifest = loadAppPathRoutesManifest(nextDir);
-          const FunctionsConfigManifest = loadFunctionsConfigManifest(nextDir);
-          const PagesManifest = loadPagesManifest(nextDir);
+			build.onLoad({ filter: getCrossPlatformPathRegex("adapters/config/index") }, async () => {
+				const NextConfig = loadConfig(nextDir);
+				const BuildId = loadBuildId(nextDir);
+				const HtmlPages = loadHtmlPages(nextDir);
+				const RoutesManifest = loadRoutesManifest(nextDir);
+				const ConfigHeaders = loadConfigHeaders(nextDir);
+				const PrerenderManifest = loadPrerenderManifest(nextDir);
+				const AppPathsManifestKeys = loadAppPathsManifestKeys(nextDir);
+				const MiddlewareManifest = loadMiddlewareManifest(nextDir);
+				const AppPathsManifest = loadAppPathsManifest(nextDir);
+				const AppPathRoutesManifest = loadAppPathRoutesManifest(nextDir);
+				const FunctionsConfigManifest = loadFunctionsConfigManifest(nextDir);
+				const PagesManifest = loadPagesManifest(nextDir);
 
-          const contents = `
+				const contents = `
   import path from "node:path";
 
   import { debug } from "../logger";
@@ -197,28 +181,24 @@ ${contents}
   process.env.NEXT_BUILD_ID = BuildId;
   process.env.NEXT_PREVIEW_MODE_ID = PrerenderManifest?.preview?.previewModeId;
 `;
-          return { contents };
-        },
-      );
-    },
-  };
+				return { contents };
+			});
+		},
+	};
 }
 
-function importWasm(
-  files: MiddlewareInfo["wasm"],
-  { isInCloudflare }: { isInCloudflare?: boolean },
-) {
-  return files
-    .map(({ name }) => {
-      if (isInCloudflare) {
-        // As `.next/server/src/middleware.js` references the name,
-        // using `import ${name} from '...'` would cause ESBuild to rename the import.
-        // We use `globalThis.${name}` to make sure `middleware.js` reference name will match.
-        return `import __onw_${name}__ from './wasm/${name}.wasm'
+function importWasm(files: MiddlewareInfo["wasm"], { isInCloudflare }: { isInCloudflare?: boolean }) {
+	return files
+		.map(({ name }) => {
+			if (isInCloudflare) {
+				// As `.next/server/src/middleware.js` references the name,
+				// using `import ${name} from '...'` would cause ESBuild to rename the import.
+				// We use `globalThis.${name}` to make sure `middleware.js` reference name will match.
+				return `import __onw_${name}__ from './wasm/${name}.wasm'
 globalThis.${name} = __onw_${name}__`;
-      }
+			}
 
-      return `const ${name} = readFileSync(path.join(__dirname,'/wasm/${name}.wasm'));`;
-    })
-    .join("\n");
+			return `const ${name} = readFileSync(path.join(__dirname,'/wasm/${name}.wasm'));`;
+		})
+		.join("\n");
 }

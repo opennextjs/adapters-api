@@ -1,4 +1,5 @@
 import { setTimeout } from "node:timers/promises";
+
 import { headers } from "next/headers";
 
 export async function DynamicComponent() {

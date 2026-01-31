@@ -7,19 +7,17 @@ export const MAX_DYNAMO_BATCH_WRITE_ITEM_COUNT = 25;
 const DEFAULT_DYNAMO_BATCH_WRITE_COMMAND_CONCURRENCY = 4;
 
 export const getDynamoBatchWriteCommandConcurrency = (): number => {
-  const dynamoBatchWriteCommandConcurrencyFromEnv =
-    process.env.DYNAMO_BATCH_WRITE_COMMAND_CONCURRENCY;
-  const parsedDynamoBatchWriteCommandConcurrencyFromEnv =
-    dynamoBatchWriteCommandConcurrencyFromEnv
-      ? Number.parseInt(dynamoBatchWriteCommandConcurrencyFromEnv)
-      : undefined;
+	const dynamoBatchWriteCommandConcurrencyFromEnv = process.env.DYNAMO_BATCH_WRITE_COMMAND_CONCURRENCY;
+	const parsedDynamoBatchWriteCommandConcurrencyFromEnv = dynamoBatchWriteCommandConcurrencyFromEnv
+		? Number.parseInt(dynamoBatchWriteCommandConcurrencyFromEnv)
+		: undefined;
 
-  if (
-    parsedDynamoBatchWriteCommandConcurrencyFromEnv &&
-    !Number.isNaN(parsedDynamoBatchWriteCommandConcurrencyFromEnv)
-  ) {
-    return parsedDynamoBatchWriteCommandConcurrencyFromEnv;
-  }
+	if (
+		parsedDynamoBatchWriteCommandConcurrencyFromEnv &&
+		!Number.isNaN(parsedDynamoBatchWriteCommandConcurrencyFromEnv)
+	) {
+		return parsedDynamoBatchWriteCommandConcurrencyFromEnv;
+	}
 
-  return DEFAULT_DYNAMO_BATCH_WRITE_COMMAND_CONCURRENCY;
+	return DEFAULT_DYNAMO_BATCH_WRITE_COMMAND_CONCURRENCY;
 };

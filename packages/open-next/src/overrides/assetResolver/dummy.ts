@@ -6,7 +6,7 @@ import type { AssetResolver } from "types/overrides";
  * It never overrides the result with an asset.
  */
 const resolver: AssetResolver = {
-  name: "dummy",
+	name: "dummy",
 };
 
 export default resolver;

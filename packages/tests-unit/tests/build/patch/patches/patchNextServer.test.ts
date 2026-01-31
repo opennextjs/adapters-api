@@ -1,10 +1,11 @@
 import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
 import {
-  createEmptyBodyRule,
-  disablePreloadingRule,
-  removeMiddlewareManifestRule,
+	createEmptyBodyRule,
+	disablePreloadingRule,
+	removeMiddlewareManifestRule,
 } from "@opennextjs/aws/build/patch/patches/patchNextServer.js";
 import { describe, it } from "vitest";
+
 import { computePatchDiff } from "./util.js";
 
 const nextServerGetMiddlewareManifestCode = `
@@ -410,28 +411,19 @@ async imageOptimizer(req, res, paramsResult, previousCacheEntry) {
 `;
 
 describe("patchNextServer", () => {
-  it("should patch getMiddlewareManifest", async () => {
-    expect(
-      patchCode(
-        nextServerGetMiddlewareManifestCode,
-        removeMiddlewareManifestRule,
-      ),
-    ).toMatchInlineSnapshot(`
+	it("should patch getMiddlewareManifest", async () => {
+		expect(patchCode(nextServerGetMiddlewareManifestCode, removeMiddlewareManifestRule))
+			.toMatchInlineSnapshot(`
 "class NextNodeServer extends _baseserver.default {
 getMiddlewareManifest() {return null;}
 }
 "
 `);
-  });
+	});
 
-  it("should disable preloading for Next 15", async () => {
-    expect(
-      computePatchDiff(
-        "next-server.js",
-        next15ServerMinimalCode,
-        disablePreloadingRule,
-      ),
-    ).toMatchInlineSnapshot(`
+	it("should disable preloading for Next 15", async () => {
+		expect(computePatchDiff("next-server.js", next15ServerMinimalCode, disablePreloadingRule))
+			.toMatchInlineSnapshot(`
       "Index: next-server.js
       ===================================================================
       --- next-server.js
@@ -476,10 +468,10 @@ getMiddlewareManifest() {return null;}
                        // TODO: can we just re-use the regex from the manifest?
       "
     `);
-  });
+	});
 
-  it("should disable preloading for Next 14", async () => {
-    const next14ServerMinimalCode = `
+	it("should disable preloading for Next 14", async () => {
+		const next14ServerMinimalCode = `
 class NextNodeServer extends _baseserver.default {
     constructor(options){
         // Initialize super class
@@ -811,13 +803,8 @@ class NextNodeServer extends _baseserver.default {
     // development.
     }
   }`;
-    expect(
-      computePatchDiff(
-        "next-server.js",
-        next14ServerMinimalCode,
-        disablePreloadingRule,
-      ),
-    ).toMatchInlineSnapshot(`
+		expect(computePatchDiff("next-server.js", next14ServerMinimalCode, disablePreloadingRule))
+			.toMatchInlineSnapshot(`
       "Index: next-server.js
       ===================================================================
       --- next-server.js
@@ -860,17 +847,13 @@ class NextNodeServer extends _baseserver.default {
                        // TODO: can we just re-use the regex from the manifest?
       "
     `);
-  });
+	});
 
-  describe("Drop babel dependency", () => {
-    test("Drop body", () => {
-      expect(
-        computePatchDiff(
-          "next-server.js",
-          next15ServerMinimalCode,
-          createEmptyBodyRule("runMiddleware"),
-        ),
-      ).toMatchInlineSnapshot(`
+	describe("Drop babel dependency", () => {
+		test("Drop body", () => {
+			expect(
+				computePatchDiff("next-server.js", next15ServerMinimalCode, createEmptyBodyRule("runMiddleware"))
+			).toMatchInlineSnapshot(`
         "Index: next-server.js
         ===================================================================
         --- next-server.js
@@ -905,13 +888,9 @@ class NextNodeServer extends _baseserver.default {
         "
       `);
 
-      expect(
-        computePatchDiff(
-          "next-server.js",
-          next15ServerMinimalCode,
-          createEmptyBodyRule("runEdgeFunction"),
-        ),
-      ).toMatchInlineSnapshot(`
+			expect(
+				computePatchDiff("next-server.js", next15ServerMinimalCode, createEmptyBodyRule("runEdgeFunction"))
+			).toMatchInlineSnapshot(`
         "Index: next-server.js
         ===================================================================
         --- next-server.js
@@ -941,6 +920,6 @@ class NextNodeServer extends _baseserver.default {
                      throw Object.defineProperty(new Error('invariant: imageOptimizer should not be called in minimal mode'), "__NEXT_ERROR_CODE", {
         "
       `);
-    });
-  });
+		});
+	});
 });

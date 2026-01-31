@@ -1,5 +1,6 @@
-import styles from "./page.module.css";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+
+import styles from "./page.module.css";
 
 export default async function Home() {
 	const cloudflareContext = await getCloudflareContext({

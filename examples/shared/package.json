@@ -1,17 +1,17 @@
 {
-  "name": "@example/shared",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "clean": "rm -rf .turbo && rm -rf node_modules"
-  },
-  "peerDependencies": {
-    "next": "catalog:aws",
-    "react": "catalog:aws",
-    "react-dom": "catalog:aws"
-  },
-  "devDependencies": {
-    "@types/react": "catalog:aws",
-    "@types/react-dom": "catalog:aws"
-  }
+	"name": "@example/shared",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"clean": "rm -rf .turbo && rm -rf node_modules"
+	},
+	"devDependencies": {
+		"@types/react": "catalog:aws",
+		"@types/react-dom": "catalog:aws"
+	},
+	"peerDependencies": {
+		"next": "catalog:aws",
+		"react": "catalog:aws",
+		"react-dom": "catalog:aws"
+	}
 }

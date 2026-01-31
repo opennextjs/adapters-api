@@ -1,0 +1,33 @@
+{
+	"$schema": "./node_modules/oxfmt/configuration_schema.json",
+	"printWidth": 110,
+	"singleQuote": false,
+	"semi": true,
+	"useTabs": true,
+	"trailingComma": "es5",
+	"experimentalSortImports": {
+		"groups": [
+			["side-effect"],
+			["type-builtin", "value-builtin"],
+			["type-external", "value-external"],
+			["type-internal", "value-internal"],
+			["type-parent", "value-parent"],
+			["type-sibling", "value-sibling"],
+			["type-index", "value-index"]
+		],
+		"internalPattern": ["@/", "#/"],
+		"newlinesBetween": true
+	},
+	"experimentalSortPackageJson": {
+		"sortScripts": false
+	},
+	"overrides": [
+		{
+			"files": ["**/wrangler.jsonc"],
+			"options": {
+				"trailingComma": "none"
+			}
+		}
+	],
+	"ignorePatterns": [".open-next", "dist", ".wrangler", "node_modules"]
+}

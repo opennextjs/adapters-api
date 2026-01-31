@@ -1,14 +1,9 @@
 // Mostly copied from the cloudflare adapter
 import { readFileSync } from "node:fs";
 
-import {
-  type Edit,
-  Lang,
-  type NapiConfig,
-  type SgNode,
-  parse,
-} from "@ast-grep/napi";
+import { type Edit, Lang, type NapiConfig, type SgNode, parse } from "@ast-grep/napi";
 import yaml from "yaml";
+
 import type { PatchCodeFn } from "./codePatcher";
 
 export type * from "@ast-grep/napi";
@@ -32,50 +27,44 @@ export type RuleConfig = NapiConfig & { fix?: string };
  * @returns A list of edits and a list of matches.
  */
 export function applyRule(
-  rule: string | RuleConfig,
-  root: SgNode,
-  { once = false } = {},
+	rule: string | RuleConfig,
+	root: SgNode,
+	{ once = false } = {}
 ): {
-  edits: Edit[];
-  matches: SgNode[];
+	edits: Edit[];
+	matches: SgNode[];
 } {
-  const ruleConfig: RuleConfig =
-    typeof rule === "string" ? yaml.parse(rule) : rule;
-  if (ruleConfig.transform) {
-    throw new Error("transform is not supported");
-  }
-  if (!ruleConfig.fix) {
-    throw new Error("no fix to apply");
-  }
+	const ruleConfig: RuleConfig = typeof rule === "string" ? yaml.parse(rule) : rule;
+	if (ruleConfig.transform) {
+		throw new Error("transform is not supported");
+	}
+	if (!ruleConfig.fix) {
+		throw new Error("no fix to apply");
+	}
 
-  const fix = ruleConfig.fix;
+	const fix = ruleConfig.fix;
 
-  const matches = once
-    ? [root.find(ruleConfig)].filter((m) => m !== null)
-    : root.findAll(ruleConfig);
+	const matches = once ? [root.find(ruleConfig)].filter((m) => m !== null) : root.findAll(ruleConfig);
 
-  const edits: Edit[] = [];
+	const edits: Edit[] = [];
 
-  matches.forEach((match) => {
-    edits.push(
-      match.replace(
-        // Replace known placeholders by their value
-        fix
-          .replace(/\$\$\$([A-Z0-9_]+)/g, (_m, name) =>
-            match
-              .getMultipleMatches(name)
-              .map((n) => n.text())
-              .join(""),
-          )
-          .replace(
-            /\$([A-Z0-9_]+)/g,
-            (m, name) => match.getMatch(name)?.text() ?? m,
-          ),
-      ),
-    );
-  });
+	matches.forEach((match) => {
+		edits.push(
+			match.replace(
+				// Replace known placeholders by their value
+				fix
+					.replace(/\$\$\$([A-Z0-9_]+)/g, (_m, name) =>
+						match
+							.getMultipleMatches(name)
+							.map((n) => n.text())
+							.join("")
+					)
+					.replace(/\$([A-Z0-9_]+)/g, (m, name) => match.getMatch(name)?.text() ?? m)
+			)
+		);
+	});
 
-  return { edits, matches };
+	return { edits, matches };
 }
 
 /**
@@ -86,7 +75,7 @@ export function applyRule(
  * @returns The root for the file.
  */
 export function parseFile(path: string, lang = Lang.TypeScript): SgNode {
-  return parse(lang, readFileSync(path, { encoding: "utf-8" })).root();
+	return parse(lang, readFileSync(path, { encoding: "utf-8" })).root();
 }
 
 /**
@@ -102,13 +91,13 @@ export function parseFile(path: string, lang = Lang.TypeScript): SgNode {
  * @returns The patched code
  */
 export function patchCode(
-  code: string,
-  rule: string | RuleConfig,
-  { lang = Lang.TypeScript, once = false } = {},
+	code: string,
+	rule: string | RuleConfig,
+	{ lang = Lang.TypeScript, once = false } = {}
 ): string {
-  const node = parse(lang, code).root();
-  const { edits } = applyRule(rule, node, { once });
-  return node.commitEdits(edits);
+	const node = parse(lang, code).root();
+	const { edits } = applyRule(rule, node, { once });
+	return node.commitEdits(edits);
 }
 
 /**
@@ -116,9 +105,6 @@ export function patchCode(
  * @param lang
  * @returns a callback applying the the rule.
  */
-export function createPatchCode(
-  rule: string | RuleConfig,
-  lang = Lang.TypeScript,
-): PatchCodeFn {
-  return async ({ code }) => patchCode(code, rule, { lang });
+export function createPatchCode(rule: string | RuleConfig, lang = Lang.TypeScript): PatchCodeFn {
+	return async ({ code }) => patchCode(code, rule, { lang });
 }

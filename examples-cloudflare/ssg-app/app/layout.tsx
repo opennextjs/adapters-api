@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
 import "./globals.css";
 
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
 	title: "SSG App",

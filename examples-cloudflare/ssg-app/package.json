@@ -13,9 +13,9 @@
 		"e2e": "playwright test -c e2e/playwright.config.ts"
 	},
 	"dependencies": {
+		"next": "15.5.9",
 		"react": "^19.0.3",
-		"react-dom": "^19.0.3",
-		"next": "15.5.9"
+		"react-dom": "^19.0.3"
 	},
 	"devDependencies": {
 		"@opennextjs/cloudflare": "workspace:*",

@@ -1,13 +1,13 @@
 export default async function Page({
-  searchParams,
+	searchParams,
 }: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const q = (await searchParams).q;
+	const q = (await searchParams).q;
 
-  return (
-    <>
-      <div data-testid="searchParams">q: {q}</div>
-    </>
-  );
+	return (
+		<>
+			<div data-testid="searchParams">q: {q}</div>
+		</>
+	);
 }
