@@ -210,7 +210,12 @@ async function generateBundle(
 
   // Copy all necessary traced files
   if (config.dangerous?.useAdapterOutputs) {
-    tracedFiles = await copyAdapterFiles(options, name, packagePath, nextOutputs!);
+    tracedFiles = await copyAdapterFiles(
+      options,
+      name,
+      packagePath,
+      nextOutputs!,
+    );
     //TODO: we should load manifests here
   } else {
     const oldTracedFileOutput = await copyTracedFiles({

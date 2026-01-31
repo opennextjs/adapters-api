@@ -70,7 +70,12 @@ export default {
 
     // We then have to copy the cache files to the .next dir so that they are available at runtime
     //TODO: use a better path, this one is temporary just to make it work
-    const tempCachePath = path.join(buildOpts.outputDir, "server-functions/default", packagePath, ".open-next/.build");
+    const tempCachePath = path.join(
+      buildOpts.outputDir,
+      "server-functions/default",
+      packagePath,
+      ".open-next/.build",
+    );
     fs.mkdirSync(tempCachePath, { recursive: true });
     fs.copyFileSync(cache.cache, path.join(tempCachePath, "cache.cjs"));
     fs.copyFileSync(

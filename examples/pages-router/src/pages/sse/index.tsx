@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 
 type Event = {
@@ -8,7 +6,16 @@ type Event = {
   body?: string;
 };
 
-export default function SSE() {
+//SEEMS mandatory to have getStaticProps for SSG pages
+// TODO: verify if that's the case
+export async function getStaticProps() {
+  return {
+    props: {
+    },
+  };
+}
+
+export default function Page() {
   const [events, setEvents] = useState<Event[]>([]);
   const [finished, setFinished] = useState(false);
 

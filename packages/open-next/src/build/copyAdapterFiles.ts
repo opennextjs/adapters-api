@@ -14,26 +14,30 @@ export async function copyAdapterFiles(
 
   // Copying the files from outputs to the output dir
   for (const [key, value] of Object.entries(outputs)) {
-    if (["pages", "pagesApi", "appPages", "appRoutes", "middleware"].includes(key)) {
-
+    if (
+      ["pages", "pagesApi", "appPages", "appRoutes", "middleware"].includes(key)
+    ) {
       const setFileToCopy = (route: any) => {
         const assets = route.assets;
         // We need to copy the filepaths to the output dir
-        const relativeFilePath = path.join(packagePath, path.relative(options.appPath, route.filePath));
+        const relativeFilePath = path.join(
+          packagePath,
+          path.relative(options.appPath, route.filePath),
+        );
         filesToCopy.set(
           route.filePath,
           `${options.outputDir}/server-functions/${fnName}/${relativeFilePath}`,
         );
 
         for (const [relative, from] of Object.entries(assets || {})) {
-                  //  console.log("route.assets", from, relative, packagePath);
+          //  console.log("route.assets", from, relative, packagePath);
           filesToCopy.set(
             from as string,
             `${options.outputDir}/server-functions/${fnName}/${relative}`,
           );
         }
-      }
-      if(key === "middleware") {
+      };
+      if (key === "middleware") {
         // Middleware is a single object
         setFileToCopy(value as any);
       } else {

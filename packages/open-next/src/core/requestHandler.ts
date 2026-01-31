@@ -138,7 +138,9 @@ export async function openNextHandler(
             isISR: false,
             origin: false,
             initialURL: internalEvent.url,
-            resolvedRoutes: [{ route: "/500", type: "page" }],
+            resolvedRoutes: [
+              { route: "/500", type: "page", isFallback: false },
+            ],
           };
         }
       }
@@ -208,6 +210,13 @@ export async function openNextHandler(
         overwrittenResponseHeaders,
         options?.streamCreator,
       );
+      // It seems that Next.js doesn't set the status code for 404 and 500 anymore for us, we have to do it ourselves
+      // TODO: check security wise if it's ok to do that
+      if (pathname === "/404") {
+        res.statusCode = 404;
+      } else if (pathname === "/500") {
+        res.statusCode = 500;
+      }
 
       //#override useAdapterHandler
       await adapterHandler(req, res, routingResult, {

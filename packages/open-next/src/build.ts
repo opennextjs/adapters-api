@@ -1,6 +1,7 @@
 import path from "node:path";
 import url from "node:url";
 
+import { createRequire } from "node:module";
 import {
   buildNextjsApp,
   setStandaloneBuildMode,
@@ -19,7 +20,6 @@ import * as buildHelper from "./build/helper.js";
 import { patchOriginalNextConfig } from "./build/patch/patches/index.js";
 import { printHeader, showWarningOnWindows } from "./build/utils.js";
 import logger from "./logger.js";
-import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
 
@@ -57,14 +57,14 @@ export async function build(
   // Build Next.js app
   printHeader("Building Next.js app");
   setStandaloneBuildMode(options);
-  if(config.dangerous?.useAdapterOutputs) {
+  if (config.dangerous?.useAdapterOutputs) {
     logger.info("Using adapter outputs for building OpenNext bundle.");
     process.env.NEXT_ADAPTER_PATH = require.resolve("./adapter.js");
   }
   buildHelper.initOutputDir(options);
   buildNextjsApp(options);
 
-  if(config.dangerous?.useAdapterOutputs) {
+  if (config.dangerous?.useAdapterOutputs) {
     logger.info("Using adapter outputs for building OpenNext bundle.");
     return;
   }

@@ -19,7 +19,8 @@ export async function adapterHandler(
 
   const pendingPromiseRunner =
     globalThis.__openNextAls.getStore()?.pendingPromiseRunner;
-  const waitUntil = options.waitUntil ?? pendingPromiseRunner?.add.bind(pendingPromiseRunner);
+  const waitUntil =
+    options.waitUntil ?? pendingPromiseRunner?.add.bind(pendingPromiseRunner);
 
   //TODO: replace this at runtime with a version precompiled for the cloudflare adapter.
   for (const route of routingResult.resolvedRoutes) {
@@ -41,16 +42,20 @@ export async function adapterHandler(
       console.log("## adapterHandler route failed", route, e);
       // I'll have to run some more tests, but in theory, we should not have anything special to do here, and we should return the 500 page here.
       // TODO: find the correct one to use.
-      const module = getHandler({ route: "/_global-error", type: "app" });
+      const module = getHandler({
+        route: "/_global-error",
+        type: "app",
+        isFallback: false,
+      });
       try {
         if (module) {
-        await module.handler(req, res, {
-          waitUntil,
-        });
-        resolved = true;
-        return;
-      }
-      }catch (e2) {
+          await module.handler(req, res, {
+            waitUntil,
+          });
+          resolved = true;
+          return;
+        }
+      } catch (e2) {
         console.log("## adapterHandler global error route also failed", e2);
       }
       res.statusCode = 500;
@@ -62,18 +67,23 @@ export async function adapterHandler(
   }
   if (!resolved) {
     console.log("## adapterHandler no route resolved for", req.url);
-    // TODO: find the correct one to use.
-    const module = getHandler({ route: "/_not-found", type: "app" });
     try {
+      // TODO: find the correct one to use.
+      const module = getHandler({
+        route: "/_not-found",
+        type: "app",
+        isFallback: false,
+      });
       if (module) {
         await module.handler(req, res, {
           waitUntil,
         });
         return;
       }
-    }catch (e2) {
+    } catch (e2) {
       console.log("## adapterHandler not found route also failed", e2);
     }
+    // Ideally we should never reach here as the 404 page should be the Next.js one.
     res.statusCode = 404;
     res.end("Not Found");
     await finished(res);

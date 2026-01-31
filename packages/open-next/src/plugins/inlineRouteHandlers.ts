@@ -73,7 +73,11 @@ fix:
   requireChunk(chunkPath)
 `;
 
-function getInlinableChunks(outputs: NextAdapterOutputs, packagePath: string, prefix?: string) {
+function getInlinableChunks(
+  outputs: NextAdapterOutputs,
+  packagePath: string,
+  prefix?: string,
+) {
   const chunks = new Set<string>();
   // TODO: handle middleware
   for (const type of ["pages", "pagesApi", "appPages", "appRoutes"] as const) {
@@ -83,7 +87,8 @@ function getInlinableChunks(outputs: NextAdapterOutputs, packagePath: string, pr
           asset.includes(".next/server/chunks/") &&
           !asset.includes("[turbopack]_runtime.js")
         ) {
-          asset = packagePath !== "" ? asset.replace(`${packagePath}/`, "") : asset;
+          asset =
+            packagePath !== "" ? asset.replace(`${packagePath}/`, "") : asset;
           chunks.add(prefix ? `${prefix}${asset}` : asset);
         }
       }
@@ -112,7 +117,10 @@ ${Array.from(chunks)
 /**
  *  Esbuild plugin to mark all chunks that we inline as external.
  */
-export function externalChunksPlugin(outputs: NextAdapterOutputs, packagePath: string): Plugin {
+export function externalChunksPlugin(
+  outputs: NextAdapterOutputs,
+  packagePath: string,
+): Plugin {
   const chunks = getInlinableChunks(outputs, packagePath, `./`);
   return {
     name: "external-chunks",
