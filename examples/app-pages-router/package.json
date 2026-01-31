@@ -3,7 +3,7 @@
   "version": "0.1.50",
   "private": true,
   "scripts": {
-    "openbuild": "node ../../packages/open-next/dist/index.js build",
+    "openbuild:local": "node ../../packages/open-next/dist/index.js build",
     "openbuild:local:start": "PORT=3003 tsx on-proxy.ts",
     "dev": "next dev --turbopack --port 3003",
     "build": "next build",

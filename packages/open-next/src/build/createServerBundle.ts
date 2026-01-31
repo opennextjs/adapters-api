@@ -307,20 +307,6 @@ async function generateBundle(
         ...(useAdapterHandler ? ["useRequestHandler"] : ["useAdapterHandler"]),
       ],
     }),
-    openNextReplacementPlugin({
-      name: `utilOverride ${name}`,
-      target: getCrossPlatformPathRegex("core/util.js"),
-      deletes: [
-        ...(disableNextPrebundledReact ? ["requireHooks"] : []),
-        ...(isBefore13413 ? ["trustHostHeader"] : ["requestHandlerHost"]),
-        ...(isAfter141
-          ? ["experimentalIncrementalCacheHandler"]
-          : ["stableIncrementalCache"]),
-        ...(isAfter152 ? [] : ["composableCache"]),
-      ],
-      replacements: [require.resolve("../core/util.adapter.js")],
-      entireFile: useAdapterHandler,
-    }),
 
     openNextResolvePlugin({
       fnName: name,
