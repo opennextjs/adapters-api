@@ -5,11 +5,23 @@ import {
 import { vi } from "vitest";
 
 vi.mock("@opennextjs/aws/adapters/config/index.js", () => ({
+  PrerenderManifest: {
+    routes: {},
+    dynamicRoutes: {
+      "/fallback/[...slug]": { fallback: false },
+    },
+    preview: {
+      previewModeId: "",
+      previewModeEncryptionKey: "",
+      previewModeSigningKey: "",
+    },
+  },
   NextConfig: {},
   AppPathRoutesManifest: {
     "/api/app/route": "/api/app",
     "/app/page": "/app",
     "/catchAll/[...slug]/page": "/catchAll/[...slug]",
+    "/fallback/[...slug]/page": "/fallback/[...slug]",
   },
   RoutesManifest: {
     version: 3,
@@ -37,6 +49,14 @@ vi.mock("@opennextjs/aws/adapters/config/index.js", () => ({
           },
           namedRegex: "^/page/catchAll/(?<nxtPslug>.+?)(?:/)?$",
         },
+        {
+          page: "/fallback/[...slug]",
+          regex: "^/fallback/(.+?)(?:/)?$",
+          routeKeys: {
+            nxtPslug: "nxtPslug",
+          },
+          namedRegex: "^/fallback/(?<nxtPslug>.+?)(?:/)?$",
+        }
       ],
       static: [
         {
@@ -81,6 +101,7 @@ describe("routeMatcher", () => {
         {
           route: "/app",
           type: "app",
+          isFallback: false,
         },
       ]);
     });
@@ -91,6 +112,7 @@ describe("routeMatcher", () => {
         {
           route: "/api/app",
           type: "route",
+          isFallback: false,
         },
       ]);
 
@@ -99,6 +121,7 @@ describe("routeMatcher", () => {
         {
           route: "/api/hello",
           type: "page",
+          isFallback: false,
         },
       ]);
     });
@@ -126,6 +149,7 @@ describe("routeMatcher", () => {
         {
           route: "/catchAll/[...slug]",
           type: "app",
+          isFallback: false,
         },
       ]);
     });
@@ -136,6 +160,18 @@ describe("routeMatcher", () => {
         {
           route: "/page/catchAll/[...slug]",
           type: "page",
+          isFallback: false,
+        },
+      ]);
+    });
+
+    it("should match fallback false dynamic route", () => {
+      const routes = dynamicRouteMatcher("/fallback/anything/here");
+      expect(routes).toEqual([
+        {
+          route: "/fallback/[...slug]",
+          type: "app",
+          isFallback: true,
         },
       ]);
     });
@@ -147,6 +183,7 @@ describe("routeMatcher", () => {
         {
           route: "/page/catchAll/[...slug]",
           type: "page",
+          isFallback: false,
         },
       ]);
 
@@ -155,6 +192,7 @@ describe("routeMatcher", () => {
         {
           route: "/page/catchAll/static",
           type: "page",
+          isFallback: false,
         },
       ]);
     });

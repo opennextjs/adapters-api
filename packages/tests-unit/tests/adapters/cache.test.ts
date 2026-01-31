@@ -622,6 +622,7 @@ describe("CacheHandler", () => {
             {
               type: "app",
               route: "/path",
+              isFallback: false,
             },
           ],
         },
