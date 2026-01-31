@@ -22,6 +22,16 @@ export async function adapterHandler(
   const waitUntil =
     options.waitUntil ?? pendingPromiseRunner?.add.bind(pendingPromiseRunner);
 
+  // Our internal routing could return /500 or /404 routes, we first check that
+  if (routingResult.internalEvent.rawPath === "/404") {
+    await handle404(req, res, waitUntil);
+    return;
+  }
+  if (routingResult.internalEvent.rawPath === "/500") {
+    await handle500(req, res, waitUntil);
+    return;
+  }
+
   //TODO: replace this at runtime with a version precompiled for the cloudflare adapter.
   for (const route of routingResult.resolvedRoutes) {
     const module = getHandler(route);
@@ -41,54 +51,68 @@ export async function adapterHandler(
     } catch (e) {
       console.log("## adapterHandler route failed", route, e);
       // I'll have to run some more tests, but in theory, we should not have anything special to do here, and we should return the 500 page here.
-      // TODO: find the correct one to use.
-      const module = getHandler({
-        route: "/_global-error",
-        type: "app",
-        isFallback: false,
-      });
-      try {
-        if (module) {
-          await module.handler(req, res, {
-            waitUntil,
-          });
-          resolved = true;
-          return;
-        }
-      } catch (e2) {
-        console.log("## adapterHandler global error route also failed", e2);
-      }
-      res.statusCode = 500;
-      res.end("Internal Server Error");
-      await finished(res);
-      resolved = true;
+      await handle500(req, res, waitUntil);
       return;
     }
   }
   if (!resolved) {
     console.log("## adapterHandler no route resolved for", req.url);
-    try {
-      // TODO: find the correct one to use.
-      const module = getHandler({
-        route: "/_not-found",
-        type: "app",
-        isFallback: false,
-      });
-      if (module) {
-        await module.handler(req, res, {
-          waitUntil,
-        });
-        return;
-      }
-    } catch (e2) {
-      console.log("## adapterHandler not found route also failed", e2);
-    }
-    // Ideally we should never reach here as the 404 page should be the Next.js one.
-    res.statusCode = 404;
-    res.end("Not Found");
-    await finished(res);
+    await handle404(req, res, waitUntil);
     return;
   }
+}
+
+async function handle404(
+  req: IncomingMessage,
+  res: OpenNextNodeResponse,
+  waitUntil?: WaitUntil,
+) {
+  try {
+    // TODO: find the correct one to use.
+    const module = getHandler({
+      route: "/_not-found",
+      type: "app",
+      isFallback: false,
+    });
+    if (module) {
+      await module.handler(req, res, {
+        waitUntil,
+      });
+      return;
+    }
+  } catch (e2) {
+    console.log("## adapterHandler not found route also failed", e2);
+  }
+  // Ideally we should never reach here as the 404 page should be the Next.js one.
+  res.statusCode = 404;
+  res.end("Not Found");
+  await finished(res);
+}
+
+async function handle500(
+  req: IncomingMessage,
+  res: OpenNextNodeResponse,
+  waitUntil?: WaitUntil,
+) {
+  try {
+    // TODO: find the correct one to use.
+    const module = getHandler({
+      route: "/_global-error",
+      type: "app",
+      isFallback: false,
+    });
+    if (module) {
+      await module.handler(req, res, {
+        waitUntil,
+      });
+      return;
+    }
+  } catch (e2) {
+    console.log("## adapterHandler global error route also failed", e2);
+  }
+  res.statusCode = 500;
+  res.end("Internal Server Error");
+  await finished(res);
 }
 
 // Body replaced at build time
