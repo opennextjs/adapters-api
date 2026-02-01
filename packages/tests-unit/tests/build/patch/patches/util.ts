@@ -9,11 +9,7 @@ import { createPatch } from "diff";
  * @param rule ASTgrep rule
  * @returns diff in unified diff format
  */
-export function computePatchDiff(
-  filename: string,
-  src: string,
-  rule: string,
-): string {
-  const dst = patchCode(src, rule);
-  return createPatch(filename, src, dst);
+export function computePatchDiff(filename: string, src: string, rule: string): string {
+	const dst = patchCode(src, rule);
+	return createPatch(filename, src, dst);
 }

@@ -20,10 +20,9 @@ const codeToPatch = `if (cachedResponse && !isOnDemandRevalidate) {
                 }`;
 
 describe("patchBackgroundRevalidation", () => {
-  it("Should patch code", () => {
-    expect(
-      patchCode(codeToPatch, rule),
-    ).toMatchInlineSnapshot(`"if (cachedResponse && !isOnDemandRevalidate) {
+	it("Should patch code", () => {
+		expect(patchCode(codeToPatch, rule))
+			.toMatchInlineSnapshot(`"if (cachedResponse && !isOnDemandRevalidate) {
                     var _cachedResponse_value;
                     if (((_cachedResponse_value = cachedResponse.value) == null ? void 0 : _cachedResponse_value.kind) === _types.CachedRouteKind.FETCH) {
                         throw new Error(\`invariant: unexpected cachedResponse of kind fetch in response cache\`);
@@ -39,5 +38,5 @@ describe("patchBackgroundRevalidation", () => {
                         return null;
                     }
                 }"`);
-  });
+	});
 });

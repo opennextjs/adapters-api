@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
+
 import testImage from "../../public/test.jpg";
 
 export default function Page() {

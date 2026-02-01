@@ -1,6 +1,7 @@
-import { test, expect } from "@playwright/test";
-import type { BinaryLike } from "node:crypto";
 import { createHash } from "node:crypto";
+import type { BinaryLike } from "node:crypto";
+
+import { test, expect } from "@playwright/test";
 
 const OG_MD5 = "2f7b724d62d8c7739076da211aa62e7b";
 

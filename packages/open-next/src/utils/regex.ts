@@ -1,6 +1,6 @@
 type Options = {
-  escape?: boolean;
-  flags?: string;
+	escape?: boolean;
+	flags?: string;
 };
 
 /**
@@ -16,12 +16,13 @@ type Options = {
  * ```
  */
 export function getCrossPlatformPathRegex(
-  regex: string,
-  { escape: shouldEscape = true, flags = "" }: Options = {},
+	regex: string,
+	{ escape: shouldEscape = true, flags = "" }: Options = {}
 ) {
-  const newExpr = (
-    shouldEscape ? regex.replace(/([[\]().*+?^$|{}\\])/g, "\\$1") : regex
-  ).replaceAll("/", String.raw`(?:\/|\\)`);
+	const newExpr = (shouldEscape ? regex.replace(/([[\]().*+?^$|{}\\])/g, "\\$1") : regex).replaceAll(
+		"/",
+		String.raw`(?:\/|\\)`
+	);
 
-  return new RegExp(newExpr, flags);
+	return new RegExp(newExpr, flags);
 }

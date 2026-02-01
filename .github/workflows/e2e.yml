@@ -5,9 +5,9 @@ on:
     - cron: "0 0 * * *"
   push:
     paths:
-      - 'examples/**'
-      - 'packages/open-next/**'
-      - 'packages/tests-e2e/**'
+      - "examples/**"
+      - "packages/open-next/**"
+      - "packages/tests-e2e/**"
     branches:
       - main
 

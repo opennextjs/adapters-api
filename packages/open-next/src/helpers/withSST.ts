@@ -1,37 +1,24 @@
-import type {
-  FunctionOptions,
-  OpenNextConfig,
-  RouteTemplate,
-} from "types/open-next";
+import type { FunctionOptions, OpenNextConfig, RouteTemplate } from "types/open-next";
 
 type SSTCompatibleFunction = FunctionOptions & {
-  override?: {
-    wrapper?: "aws-lambda-streaming" | "aws-lambda";
-    converter?: "aws-apigw-v2" | "aws-apigw-v1" | "aws-cloudfront";
-  };
+	override?: {
+		wrapper?: "aws-lambda-streaming" | "aws-lambda";
+		converter?: "aws-apigw-v2" | "aws-apigw-v1" | "aws-cloudfront";
+	};
 };
 
 type SSTCompatibleSplittedFunction = {
-  routes: RouteTemplate[];
-  patterns: string[];
+	routes: RouteTemplate[];
+	patterns: string[];
 } & SSTCompatibleFunction;
 
-type SSTCompatibleConfig<
-  Fn extends Record<string, SSTCompatibleSplittedFunction>,
-> = {
-  default: SSTCompatibleFunction;
-  functions?: Fn;
-  middleware?: {
-    external: true;
-  };
-} & Pick<
-  OpenNextConfig,
-  | "dangerous"
-  | "appPath"
-  | "buildCommand"
-  | "buildOutputPath"
-  | "packageJsonPath"
->;
+type SSTCompatibleConfig<Fn extends Record<string, SSTCompatibleSplittedFunction>> = {
+	default: SSTCompatibleFunction;
+	functions?: Fn;
+	middleware?: {
+		external: true;
+	};
+} & Pick<OpenNextConfig, "dangerous" | "appPath" | "buildCommand" | "buildOutputPath" | "packageJsonPath">;
 
 /**
  * This function makes it more straightforward to use SST with OpenNext.
@@ -56,10 +43,10 @@ type SSTCompatibleConfig<
   });
  * ```
  */
-export function withSST<
-  Fn extends Record<string, SSTCompatibleSplittedFunction>,
->(config: SSTCompatibleConfig<Fn>) {
-  return {
-    ...config,
-  } satisfies OpenNextConfig;
+export function withSST<Fn extends Record<string, SSTCompatibleSplittedFunction>>(
+	config: SSTCompatibleConfig<Fn>
+) {
+	return {
+		...config,
+	} satisfies OpenNextConfig;
 }

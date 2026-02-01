@@ -1,8 +1,8 @@
-name: 'Setup Playwright'
-description: 'Setup Playwright with caching'
+name: "Setup Playwright"
+description: "Setup Playwright with caching"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Put $HOME in env
       if: runner.os == 'windows'

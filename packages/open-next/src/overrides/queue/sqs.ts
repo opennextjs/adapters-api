@@ -7,22 +7,22 @@ import { awsLogger } from "../../adapters/logger";
 const { REVALIDATION_QUEUE_REGION, REVALIDATION_QUEUE_URL } = process.env;
 
 const sqsClient = new SQSClient({
-  region: REVALIDATION_QUEUE_REGION,
-  logger: awsLogger,
+	region: REVALIDATION_QUEUE_REGION,
+	logger: awsLogger,
 });
 
 const queue: Queue = {
-  send: async ({ MessageBody, MessageDeduplicationId, MessageGroupId }) => {
-    await sqsClient.send(
-      new SendMessageCommand({
-        QueueUrl: REVALIDATION_QUEUE_URL,
-        MessageBody: JSON.stringify(MessageBody),
-        MessageDeduplicationId,
-        MessageGroupId,
-      }),
-    );
-  },
-  name: "sqs",
+	send: async ({ MessageBody, MessageDeduplicationId, MessageGroupId }) => {
+		await sqsClient.send(
+			new SendMessageCommand({
+				QueueUrl: REVALIDATION_QUEUE_URL,
+				MessageBody: JSON.stringify(MessageBody),
+				MessageDeduplicationId,
+				MessageGroupId,
+			})
+		);
+	},
+	name: "sqs",
 };
 
 export default queue;

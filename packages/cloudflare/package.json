@@ -1,8 +1,46 @@
 {
 	"name": "@opennextjs/cloudflare",
-	"description": "Cloudflare builder for next apps",
 	"version": "1.15.1",
+	"description": "Cloudflare builder for next apps",
+	"keywords": [
+		"cloudflare",
+		"next.js",
+		"opennextjs-cloudflare",
+		"workers"
+	],
+	"homepage": "https://github.com/opennextjs/opennextjs-cloudflare",
+	"bugs": {
+		"url": "https://github.com/opennextjs/opennextjs-cloudflare/issues"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/opennextjs/opennextjs-cloudflare.git",
+		"directory": "packages/cloudflare"
+	},
+	"bin": {
+		"opennextjs-cloudflare": "dist/cli/index.js"
+	},
+	"files": [
+		"README.md",
+		"dist",
+		"templates"
+	],
 	"type": "module",
+	"main": "./dist/api/index.js",
+	"types": "./dist/api/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/api/index.d.ts",
+			"import": "./dist/api/index.js",
+			"default": "./dist/api/index.js"
+		},
+		"./*": {
+			"types": "./dist/api/*.d.ts",
+			"import": "./dist/api/*.js",
+			"default": "./dist/api/*.js"
+		}
+	},
 	"scripts": {
 		"clean": "rimraf dist",
 		"build": "pnpm clean && tsc",
@@ -13,44 +51,6 @@
 		"test": "vitest --run",
 		"test:watch": "vitest"
 	},
-	"bin": {
-		"opennextjs-cloudflare": "dist/cli/index.js"
-	},
-	"main": "./dist/api/index.js",
-	"types": "./dist/api/index.d.ts",
-	"exports": {
-		".": {
-			"import": "./dist/api/index.js",
-			"types": "./dist/api/index.d.ts",
-			"default": "./dist/api/index.js"
-		},
-		"./*": {
-			"import": "./dist/api/*.js",
-			"types": "./dist/api/*.d.ts",
-			"default": "./dist/api/*.js"
-		}
-	},
-	"files": [
-		"README.md",
-		"dist",
-		"templates"
-	],
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/opennextjs/opennextjs-cloudflare.git",
-		"directory": "packages/cloudflare"
-	},
-	"keywords": [
-		"opennextjs-cloudflare",
-		"cloudflare",
-		"workers",
-		"next.js"
-	],
-	"license": "MIT",
-	"bugs": {
-		"url": "https://github.com/opennextjs/opennextjs-cloudflare/issues"
-	},
-	"homepage": "https://github.com/opennextjs/opennextjs-cloudflare",
 	"dependencies": {
 		"@ast-grep/napi": "0.40.0",
 		"@dotenvx/dotenvx": "catalog:",
@@ -85,7 +85,7 @@
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"wrangler": "catalog:",
-		"next": "^14.2.35 || ~15.0.7 || ~15.1.11 || ~15.2.8 || ~15.3.8 || ~15.4.10 || ~15.5.9 || ^16.0.10"
+		"next": "^14.2.35 || ~15.0.7 || ~15.1.11 || ~15.2.8 || ~15.3.8 || ~15.4.10 || ~15.5.9 || ^16.0.10",
+		"wrangler": "catalog:"
 	}
 }

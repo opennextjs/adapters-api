@@ -1,31 +1,31 @@
 {
-  "name": "app-router",
-  "version": "0.1.33",
-  "private": true,
-  "scripts": {
-    "openbuild": "node ../../packages/open-next/dist/index.js build",
-    "openbuild:local": "node ../../packages/open-next/dist/index.js build --config-path open-next.config.local.ts",
-    "openbuild:local:start": "PORT=3001 OPEN_NEXT_REQUEST_ID_HEADER=true node .open-next/server-functions/default/index.mjs",
-    "dev": "next dev --turbopack --port 3001",
-    "build": "next build",
-    "start": "next start --port 3001",
-    "lint": "next lint",
-    "clean": "rm -rf .turbo node_modules .next .open-next"
-  },
-  "dependencies": {
-    "@example/shared": "workspace:*",
-    "next": "catalog:aws",
-    "react": "catalog:aws",
-    "react-dom": "catalog:aws"
-  },
-  "devDependencies": {
-    "@opennextjs/aws": "workspace:*",
-    "@types/node": "catalog:aws",
-    "@types/react": "catalog:aws",
-    "@types/react-dom": "catalog:aws",
-    "autoprefixer": "catalog:aws",
-    "postcss": "catalog:aws",
-    "tailwindcss": "catalog:aws",
-    "typescript": "catalog:aws"
-  }
+	"name": "app-router",
+	"version": "0.1.33",
+	"private": true,
+	"scripts": {
+		"openbuild": "node ../../packages/open-next/dist/index.js build",
+		"openbuild:local": "node ../../packages/open-next/dist/index.js build --config-path open-next.config.local.ts",
+		"openbuild:local:start": "PORT=3001 OPEN_NEXT_REQUEST_ID_HEADER=true node .open-next/server-functions/default/index.mjs",
+		"dev": "next dev --turbopack --port 3001",
+		"build": "next build",
+		"start": "next start --port 3001",
+		"lint": "next lint",
+		"clean": "rm -rf .turbo node_modules .next .open-next"
+	},
+	"dependencies": {
+		"@example/shared": "workspace:*",
+		"next": "catalog:aws",
+		"react": "catalog:aws",
+		"react-dom": "catalog:aws"
+	},
+	"devDependencies": {
+		"@opennextjs/aws": "workspace:*",
+		"@types/node": "catalog:aws",
+		"@types/react": "catalog:aws",
+		"@types/react-dom": "catalog:aws",
+		"autoprefixer": "catalog:aws",
+		"postcss": "catalog:aws",
+		"tailwindcss": "catalog:aws",
+		"typescript": "catalog:aws"
+	}
 }

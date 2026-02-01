@@ -211,7 +211,6 @@
 - [#950](https://github.com/opennextjs/opennextjs-aws/pull/950) [`58789c9018a2e2d2404b334b4e21bea8fd3e949f`](https://github.com/opennextjs/opennextjs-aws/commit/58789c9018a2e2d2404b334b4e21bea8fd3e949f) Thanks [@sommeeeer](https://github.com/sommeeeer)! - chore: Exclude more packages
 
   Will skip these packages now aswell:
-
   - "typescript"
   - "next/dist/compiled/babel"
   - "next/dist/compiled/babel-packages"
@@ -308,7 +307,6 @@
 - [#907](https://github.com/opennextjs/opennextjs-aws/pull/907) [`fc14edeb3c38f0307a7d81e8197fd0c9f16be261`](https://github.com/opennextjs/opennextjs-aws/commit/fc14edeb3c38f0307a7d81e8197fd0c9f16be261) Thanks [@conico974](https://github.com/conico974)! - Fix incorrect status code being sent from interceptor
 
 - [#904](https://github.com/opennextjs/opennextjs-aws/pull/904) [`075be1e53dcbd4253e5700ddec872e3354ea6d06`](https://github.com/opennextjs/opennextjs-aws/commit/075be1e53dcbd4253e5700ddec872e3354ea6d06) Thanks [@artabr](https://github.com/artabr)! - - add css files to server bundle for optimizeCss feature to work
-
   - load all manifests and configs in copyTracedFiles in one place once
 
 ## 3.6.5
@@ -379,17 +377,17 @@
   export type CacheEntryType = "cache" | "fetch" | "composable";
 
   export type IncrementalCache = {
-    get<CacheType extends CacheEntryType = "cache">(
-      key: string,
-      cacheType?: CacheType
-    ): Promise<WithLastModified<CacheValue<CacheType>> | null>;
-    set<CacheType extends CacheEntryType = "cache">(
-      key: string,
-      value: CacheValue<CacheType>,
-      isFetch?: CacheType
-    ): Promise<void>;
-    delete(key: string): Promise<void>;
-    name: string;
+  	get<CacheType extends CacheEntryType = "cache">(
+  		key: string,
+  		cacheType?: CacheType
+  	): Promise<WithLastModified<CacheValue<CacheType>> | null>;
+  	set<CacheType extends CacheEntryType = "cache">(
+  		key: string,
+  		value: CacheValue<CacheType>,
+  		isFetch?: CacheType
+  	): Promise<void>;
+  	delete(key: string): Promise<void>;
+  	name: string;
   };
   ```
 
@@ -541,8 +539,8 @@
 
   // after
   handler(internalEvent, {
-    streamCreator: myStreamCreator,
-    waitUntil: myWaitUntil,
+  	streamCreator: myStreamCreator,
+  	waitUntil: myWaitUntil,
   });
   ```
 
@@ -557,10 +555,10 @@
   ```ts
   import type { OpenNextConfig } from "@opennextjs/aws/types/open-next";
   const config = {
-    default: {},
-    imageOptimization: {
-      loader: "s3-lite",
-    },
+  	default: {},
+  	imageOptimization: {
+  		loader: "s3-lite",
+  	},
   } satisfies OpenNextConfig;
 
   export default config;
@@ -612,7 +610,6 @@
 - [#702](https://github.com/opennextjs/opennextjs-aws/pull/702) [`1981a47dd3dbc77066d2bf5cad5d5d406fecb010`](https://github.com/opennextjs/opennextjs-aws/commit/1981a47dd3dbc77066d2bf5cad5d5d406fecb010) Thanks [@vicb](https://github.com/vicb)! - refactor(cache): deprecate global disableDynamoDBCache and disableIncrementalCache
 
   In the cache adapter:
-
   - `globalThis.disableDynamoDBCache` is deprecated and will be removed.
     use `globalThis.openNextConfig.dangerous?.disableTagCache` instead.
   - `globalThis.disableIncrementalCache` is deprecated and will be removed.
@@ -639,7 +636,6 @@
 - [#694](https://github.com/opennextjs/opennextjs-aws/pull/694) [`6884444cb929ab60c074c918954d24100f4e9668`](https://github.com/opennextjs/opennextjs-aws/commit/6884444cb929ab60c074c918954d24100f4e9668) Thanks [@james-elicx](https://github.com/james-elicx)! - Mark the host header as trusted when the OpenNext project has external middleware to align with normal behavior for the Next.js server.
 
 - [#688](https://github.com/opennextjs/opennextjs-aws/pull/688) [`86916bfd9246a63f321352bb11346eeb0ca3f6da`](https://github.com/opennextjs/opennextjs-aws/commit/86916bfd9246a63f321352bb11346eeb0ca3f6da) Thanks [@vicb](https://github.com/vicb)! - fix city name header encoding
-
   - encode the header in cloudflare wrapper
   - decode the header in the routing layer
 
@@ -668,7 +664,6 @@
 
   OPEN_NEXT_ERROR_LOG_LEVEL is the minimal error level from which internal errors are logged.
   It can be set to:
-
   - "0" / "debug"
   - "1" / "warn" (default)
   - "2" / "error"
@@ -891,7 +886,6 @@
   If you are using OpenNext V2, please refer to the [migration guide](https://open-next.js.org/migration#from-opennext-v2) to upgrade to V3.
 
   ### New Features
-
   - Add support for function splitting
   - Add support for external middleware
   - Custom config file support : `open-next.config.ts`
@@ -908,13 +902,11 @@
   - Create an `open-next.output.json` file for easier integration with IAC tools
 
   ### Breaking Changes
-
   - Edge runtime don't work out of the box anymore. You need to deploy them on a separate function see [the config for more info](https://opennext.js.org/config)
   - Output directory structure has changed to support function splitting
   - Removed build arguments in favor of `open-next.config.ts`
 
   ### Internal Changes
-
   - Use OpenNextNodeResponse instead of ServerResponse (It uses transform stream to properly handle the stream)
   - Big refactor of the codebase to support function splitting
   - Added new plugins to support the new features and make the codebase more modular

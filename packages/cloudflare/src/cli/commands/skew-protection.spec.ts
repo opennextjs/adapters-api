@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 
 import { CURRENT_VERSION_ID } from "../templates/skew-protection.js";
+
 import { listWorkerVersions, updateDeploymentMapping } from "./skew-protection.js";
 
 describe("skew protection", () => {

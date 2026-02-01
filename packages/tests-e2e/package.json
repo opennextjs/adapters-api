@@ -1,16 +1,16 @@
 {
-  "name": "tests-e2e",
-  "private": true,
-  "scripts": {
-    "e2e:dev": "playwright test --headed",
-    "e2e:test": "playwright test --retries=5",
-    "clean": "rm -rf .turbo && rm -rf node_modules"
-  },
-  "dependencies": {},
-  "devDependencies": {
-    "@playwright/test": "1.49.1",
-    "start-server-and-test": "2.0.0",
-    "ts-node": "10.9.1"
-  },
-  "version": null
+	"name": "tests-e2e",
+	"version": null,
+	"private": true,
+	"scripts": {
+		"e2e:dev": "playwright test --headed",
+		"e2e:test": "playwright test --retries=5",
+		"clean": "rm -rf .turbo && rm -rf node_modules"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@playwright/test": "1.49.1",
+		"start-server-and-test": "2.0.0",
+		"ts-node": "10.9.1"
+	}
 }

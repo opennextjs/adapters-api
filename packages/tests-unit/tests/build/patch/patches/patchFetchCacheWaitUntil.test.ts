@@ -1,12 +1,12 @@
-import { describe, expect, test } from "vitest";
-
 import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
 import { rule } from "@opennextjs/aws/build/patch/patches/patchFetchCacheWaitUntil.js";
+import { describe, expect, test } from "vitest";
+
 import { computePatchDiff } from "./util.js";
 
 describe("patchFetchCacheSetMissingWaitUntil", () => {
-  test("on minified code", () => {
-    const code = `
+	test("on minified code", () => {
+		const code = `
 {
   let [o4, a2] = (0, d2.cloneResponse)(e3);
   return o4.arrayBuffer().then(async (e4) => {
@@ -16,7 +16,7 @@ describe("patchFetchCacheSetMissingWaitUntil", () => {
   }).catch((e4) => console.warn("Failed to set fetch cache", u4, e4)).finally(X), a2;
 }`;
 
-    expect(patchCode(code, rule)).toMatchInlineSnapshot(`
+		expect(patchCode(code, rule)).toMatchInlineSnapshot(`
       "{
         let [o4, a2] = (0, d2.cloneResponse)(e3);
         return globalThis.__openNextAls?.getStore()?.pendingPromiseRunner.add(o4.arrayBuffer().then(async (e4) => {
@@ -27,12 +27,12 @@ describe("patchFetchCacheSetMissingWaitUntil", () => {
       , a2;
       }"
     `);
-  });
+	});
 
-  describe("on non-minified code", () => {
-    test("15.1.0", () => {
-      // source: https://github.com/vercel/next.js/blob/fe45b74fdac83d3/packages/next/src/server/lib/patch-fetch.ts#L627-L732
-      const code = `if (
+	describe("on non-minified code", () => {
+		test("15.1.0", () => {
+			// source: https://github.com/vercel/next.js/blob/fe45b74fdac83d3/packages/next/src/server/lib/patch-fetch.ts#L627-L732
+			const code = `if (
                 res.status === 200 &&
                 incrementalCache &&
                 cacheKey &&
@@ -140,9 +140,7 @@ describe("patchFetchCacheSetMissingWaitUntil", () => {
               }
       `;
 
-      expect(
-        computePatchDiff("patch-fetch.js", code, rule),
-      ).toMatchInlineSnapshot(`
+			expect(computePatchDiff("patch-fetch.js", code, rule)).toMatchInlineSnapshot(`
         "Index: patch-fetch.js
         ===================================================================
         --- patch-fetch.js
@@ -174,11 +172,11 @@ describe("patchFetchCacheSetMissingWaitUntil", () => {
         \\ No newline at end of file
         "
       `);
-    });
+		});
 
-    test("Next.js 15.0.4", () => {
-      // source: https://github.com/vercel/next.js/blob/d6a6aa14069/packages/next/src/server/lib/patch-fetch.ts#L627-L725
-      const code = `if (
+		test("Next.js 15.0.4", () => {
+			// source: https://github.com/vercel/next.js/blob/d6a6aa14069/packages/next/src/server/lib/patch-fetch.ts#L627-L725
+			const code = `if (
       res.status === 200 &&
       incrementalCache &&
       cacheKey &&
@@ -278,9 +276,7 @@ describe("patchFetchCacheSetMissingWaitUntil", () => {
       }
     }`;
 
-      expect(
-        computePatchDiff("patch-fetch.js", code, rule),
-      ).toMatchInlineSnapshot(`
+			expect(computePatchDiff("patch-fetch.js", code, rule)).toMatchInlineSnapshot(`
         "Index: patch-fetch.js
         ===================================================================
         --- patch-fetch.js
@@ -311,6 +307,6 @@ describe("patchFetchCacheSetMissingWaitUntil", () => {
         \\ No newline at end of file
         "
       `);
-    });
-  });
+		});
+	});
 });

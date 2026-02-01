@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-
 import type { ReactNode } from "react";
 
 export default function Layout({ a, b, children }: { children: ReactNode; a: ReactNode; b: ReactNode }) {

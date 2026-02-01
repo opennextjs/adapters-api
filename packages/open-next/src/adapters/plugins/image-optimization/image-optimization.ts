@@ -13,24 +13,24 @@ import { debug } from "../../logger.js";
 
 //#override optimizeImage
 export async function optimizeImage(
-  headers: APIGatewayProxyEventHeaders,
-  imageParams: any,
-  nextConfig: NextConfig,
-  handleRequest: (
-    newReq: IncomingMessage,
-    newRes: ServerResponse,
-    newParsedUrl: NextUrlWithParsedQuery,
-  ) => Promise<void>,
+	headers: APIGatewayProxyEventHeaders,
+	imageParams: any,
+	nextConfig: NextConfig,
+	handleRequest: (
+		newReq: IncomingMessage,
+		newRes: ServerResponse,
+		newParsedUrl: NextUrlWithParsedQuery
+	) => Promise<void>
 ) {
-  const result = await imageOptimizer(
-    { headers },
-    {}, // res object is not necessary as it's not actually used.
-    imageParams,
-    nextConfig,
-    false, // not in dev mode
-    handleRequest,
-  );
-  debug("optimized result", result);
-  return result;
+	const result = await imageOptimizer(
+		{ headers },
+		{}, // res object is not necessary as it's not actually used.
+		imageParams,
+		nextConfig,
+		false, // not in dev mode
+		handleRequest
+	);
+	debug("optimized result", result);
+	return result;
 }
 //#endOverride

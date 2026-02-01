@@ -10,6 +10,7 @@ import { build, type Plugin } from "esbuild";
 
 import { getOpenNextConfig } from "../../api/config.js";
 import type { ProjectOptions } from "../project-options.js";
+
 import { patchVercelOgLibrary } from "./patches/ast/patch-vercel-og-library.js";
 import { patchWebpackRuntime } from "./patches/ast/webpack-runtime.js";
 import { inlineDynamicRequires } from "./patches/plugins/dynamic-requires.js";
@@ -21,8 +22,8 @@ import { patchResolveCache, patchSetWorkingDirectory } from "./patches/plugins/o
 import { handleOptionalDependencies } from "./patches/plugins/optional-deps.js";
 import { patchPagesRouterContext } from "./patches/plugins/pages-router-context.js";
 import { patchDepdDeprecations } from "./patches/plugins/patch-depd-deprecations.js";
-import { fixRequire } from "./patches/plugins/require.js";
 import { shimRequireHook } from "./patches/plugins/require-hook.js";
+import { fixRequire } from "./patches/plugins/require.js";
 import { patchRouteModules } from "./patches/plugins/route-module.js";
 import { shimReact } from "./patches/plugins/shim-react.js";
 import { setWranglerExternal } from "./patches/plugins/wrangler-external.js";

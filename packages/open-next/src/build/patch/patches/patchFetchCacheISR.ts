@@ -1,5 +1,6 @@
 import { Lang } from "@ast-grep/napi";
 import { getCrossPlatformPathRegex } from "utils/regex.js";
+
 import { createPatchCode } from "../astCodePatcher.js";
 import type { CodePatcher } from "../codePatcher.js";
 
@@ -102,46 +103,46 @@ fix:
   '($STORE_OR_CACHE.isOnDemandRevalidate && !globalThis.__openNextAls?.getStore()?.isISRRevalidation)'`;
 
 export const patchFetchCacheForISR: CodePatcher = {
-  name: "patch-fetch-cache-for-isr",
-  patches: [
-    {
-      versions: ">=14.0.0",
-      pathFilter: getCrossPlatformPathRegex(
-        String.raw`(server/chunks/.*\.js|.*\.runtime\..*\.js|patch-fetch\.js)$`,
-        { escape: false },
-      ),
-      contentFilter: /\.isOnDemandRevalidate/,
-      patchCode: createPatchCode(fetchRule, Lang.JavaScript),
-    },
-  ],
+	name: "patch-fetch-cache-for-isr",
+	patches: [
+		{
+			versions: ">=14.0.0",
+			pathFilter: getCrossPlatformPathRegex(
+				String.raw`(server/chunks/.*\.js|.*\.runtime\..*\.js|patch-fetch\.js)$`,
+				{ escape: false }
+			),
+			contentFilter: /\.isOnDemandRevalidate/,
+			patchCode: createPatchCode(fetchRule, Lang.JavaScript),
+		},
+	],
 };
 
 export const patchUnstableCacheForISR: CodePatcher = {
-  name: "patch-unstable-cache-for-isr",
-  patches: [
-    {
-      versions: ">=14.2.0",
-      pathFilter: getCrossPlatformPathRegex(
-        String.raw`(server/chunks/.*\.js|.*\.runtime\..*\.js|spec-extension/unstable-cache\.js)$`,
-        { escape: false },
-      ),
-      contentFilter: /\.isOnDemandRevalidate/,
-      patchCode: createPatchCode(unstable_cacheRule, Lang.JavaScript),
-    },
-  ],
+	name: "patch-unstable-cache-for-isr",
+	patches: [
+		{
+			versions: ">=14.2.0",
+			pathFilter: getCrossPlatformPathRegex(
+				String.raw`(server/chunks/.*\.js|.*\.runtime\..*\.js|spec-extension/unstable-cache\.js)$`,
+				{ escape: false }
+			),
+			contentFilter: /\.isOnDemandRevalidate/,
+			patchCode: createPatchCode(unstable_cacheRule, Lang.JavaScript),
+		},
+	],
 };
 
 export const patchUseCacheForISR: CodePatcher = {
-  name: "patch-use-cache-for-isr",
-  patches: [
-    {
-      versions: ">=15.3.0",
-      pathFilter: getCrossPlatformPathRegex(
-        String.raw`(server/chunks/.*\.js|\.runtime\..*\.js|use-cache/use-cache-wrapper\.js)$`,
-        { escape: false },
-      ),
-      contentFilter: /\.isOnDemandRevalidate/,
-      patchCode: createPatchCode(useCacheRule, Lang.JavaScript),
-    },
-  ],
+	name: "patch-use-cache-for-isr",
+	patches: [
+		{
+			versions: ">=15.3.0",
+			pathFilter: getCrossPlatformPathRegex(
+				String.raw`(server/chunks/.*\.js|\.runtime\..*\.js|use-cache/use-cache-wrapper\.js)$`,
+				{ escape: false }
+			),
+			contentFilter: /\.isOnDemandRevalidate/,
+			patchCode: createPatchCode(useCacheRule, Lang.JavaScript),
+		},
+	],
 };

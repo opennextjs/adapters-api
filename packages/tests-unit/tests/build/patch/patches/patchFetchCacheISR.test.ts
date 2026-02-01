@@ -1,8 +1,8 @@
 import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
 import {
-  fetchRule,
-  unstable_cacheRule,
-  useCacheRule,
+	fetchRule,
+	unstable_cacheRule,
+	useCacheRule,
 } from "@opennextjs/aws/build/patch/patches/patchFetchCacheISR.js";
 import { describe } from "vitest";
 
@@ -74,10 +74,8 @@ const patchUseCacheMinified = `
 function D(e,t){if(e.isOnDemandRevalidate||e.isDraftMode)return!0;if(e.dev&&t){if("request"===t.type)return"no-cache"===t.headers.get("cache-control");if("cache"===t.type)return t.forceRevalidate}return!1}`;
 
 describe("patchUnstableCacheForISR", () => {
-  test("on unminified code", async () => {
-    expect(
-      patchCode(unstable_cacheCode, unstable_cacheRule),
-    ).toMatchInlineSnapshot(`
+	test("on unminified code", async () => {
+		expect(patchCode(unstable_cacheCode, unstable_cacheRule)).toMatchInlineSnapshot(`
 "if (// when we are nested inside of other unstable_cache's
                 // we should bypass cache similar to fetches
                 !isNestedUnstableCache && workStore.fetchCache !== 'force-no-store' && !(workStore.isOnDemandRevalidate && !globalThis.__openNextAls?.getStore()?.isISRRevalidation) && !(incrementalCache.isOnDemandRevalidate && !globalThis.__openNextAls?.getStore()?.isISRRevalidation) && !workStore.isDraftMode) {
@@ -111,15 +109,13 @@ else {
 }
 "
 `);
-  });
+	});
 });
 
 describe("patchFetchCacheISR", () => {
-  describe("Next 15", () => {
-    test("on unminified code", async () => {
-      expect(
-        patchCode(patchFetchCacheCodeUnMinified, fetchRule),
-      ).toMatchInlineSnapshot(`
+	describe("Next 15", () => {
+		test("on unminified code", async () => {
+			expect(patchCode(patchFetchCacheCodeUnMinified, fetchRule)).toMatchInlineSnapshot(`
 "const entry = (workStore.isOnDemandRevalidate && !globalThis.__openNextAls?.getStore()?.isISRRevalidation) ? null : await incrementalCache.get(cacheKey, {
                         kind: _responsecache.IncrementalCacheKind.FETCH,
                         revalidate: finalRevalidate,
@@ -130,25 +126,21 @@ describe("patchFetchCacheISR", () => {
                     });
 "
   `);
-    });
+		});
 
-    test("on minified code", async () => {
-      expect(
-        patchCode(patchFetchCacheCodeMinifiedNext15, fetchRule),
-      ).toMatchInlineSnapshot(`
+		test("on minified code", async () => {
+			expect(patchCode(patchFetchCacheCodeMinifiedNext15, fetchRule)).toMatchInlineSnapshot(`
 "let t=(P.isOnDemandRevalidate && !globalThis.__openNextAls?.getStore()?.isISRRevalidation)?null:await V.get(n,{kind:l.IncrementalCacheKind.FETCH,revalidate:_,fetchUrl:y,fetchIdx:X,tags:N,softTags:C});
 "
 `);
-    });
-  });
-  //TODO: Add test for Next 14.2.24
+		});
+	});
+	//TODO: Add test for Next 14.2.24
 });
 
 describe("patchUseCache", () => {
-  test("on unminified code", async () => {
-    expect(
-      patchCode(patchUseCacheUnminified, useCacheRule),
-    ).toMatchInlineSnapshot(`
+	test("on unminified code", async () => {
+		expect(patchCode(patchUseCacheUnminified, useCacheRule)).toMatchInlineSnapshot(`
 "function shouldForceRevalidate(workStore, workUnitStore) {
     if ((workStore.isOnDemandRevalidate && !globalThis.__openNextAls?.getStore()?.isISRRevalidation) || workStore.isDraftMode) {
         return true;
@@ -163,12 +155,10 @@ describe("patchUseCache", () => {
     }
     return false;
 }"`);
-  });
-  test("on minified code", async () => {
-    expect(
-      patchCode(patchUseCacheMinified, useCacheRule),
-    ).toMatchInlineSnapshot(`
+	});
+	test("on minified code", async () => {
+		expect(patchCode(patchUseCacheMinified, useCacheRule)).toMatchInlineSnapshot(`
 "function D(e,t){if((e.isOnDemandRevalidate && !globalThis.__openNextAls?.getStore()?.isISRRevalidation)||e.isDraftMode)return!0;if(e.dev&&t){if("request"===t.type)return"no-cache"===t.headers.get("cache-control");if("cache"===t.type)return t.forceRevalidate}return!1}"
 `);
-  });
+	});
 });

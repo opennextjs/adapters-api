@@ -38,13 +38,9 @@ if (process.env.NODE_ENV === 'production') {
 `;
 
 describe("patch NODE_ENV", () => {
-  it("should patch NODE_ENV in module.compiled", () => {
-    expect(
-      patchCode(
-        moduleCompiledCode,
-        envVarRuleCreator("NODE_ENV", '"production"'),
-      ),
-    ).toMatchInlineSnapshot(`
+	it("should patch NODE_ENV in module.compiled", () => {
+		expect(patchCode(moduleCompiledCode, envVarRuleCreator("NODE_ENV", '"production"')))
+			.toMatchInlineSnapshot(`
 ""use strict";
 if (process.env.NEXT_RUNTIME === 'edge') {
     module.exports = require('next/dist/server/route-modules/app-page/module.js');
@@ -68,15 +64,11 @@ if (process.env.NEXT_RUNTIME === 'edge') {
     }
 }
 "`);
-  });
+	});
 
-  it("should patch NODE_ENV in react/jsx-runtime", () => {
-    expect(
-      patchCode(
-        reactJSXRuntimeCode,
-        envVarRuleCreator("NODE_ENV", '"production"'),
-      ),
-    ).toMatchInlineSnapshot(`
+	it("should patch NODE_ENV in react/jsx-runtime", () => {
+		expect(patchCode(reactJSXRuntimeCode, envVarRuleCreator("NODE_ENV", '"production"')))
+			.toMatchInlineSnapshot(`
 "'use strict';
 
 if ("production" === 'production') {
@@ -85,17 +77,12 @@ if ("production" === 'production') {
   module.exports = require('./cjs/react-jsx-runtime.development.js');
 }
 "`);
-  });
+	});
 });
 
 describe("patch NEXT_RUNTIME", () => {
-  it("should patch NEXT_RUNTIME in module.compiled", () => {
-    expect(
-      patchCode(
-        moduleCompiledCode,
-        envVarRuleCreator("NEXT_RUNTIME", '"node"'),
-      ),
-    ).toMatchInlineSnapshot(`
+	it("should patch NEXT_RUNTIME in module.compiled", () => {
+		expect(patchCode(moduleCompiledCode, envVarRuleCreator("NEXT_RUNTIME", '"node"'))).toMatchInlineSnapshot(`
 ""use strict";
 if ("node" === 'edge') {
     module.exports = require('next/dist/server/route-modules/app-page/module.js');
@@ -119,14 +106,12 @@ if ("node" === 'edge') {
     }
 }
 "`);
-  });
+	});
 });
 
 describe("patch TURBOPACK", () => {
-  it("should patch TURBOPACK in module.compiled", () => {
-    expect(
-      patchCode(moduleCompiledCode, envVarRuleCreator("TURBOPACK", "false")),
-    ).toMatchInlineSnapshot(`
+	it("should patch TURBOPACK in module.compiled", () => {
+		expect(patchCode(moduleCompiledCode, envVarRuleCreator("TURBOPACK", "false"))).toMatchInlineSnapshot(`
 ""use strict";
 if (process.env.NEXT_RUNTIME === 'edge') {
     module.exports = require('next/dist/server/route-modules/app-page/module.js');
@@ -150,5 +135,5 @@ if (process.env.NEXT_RUNTIME === 'edge') {
     }
 }
 "`);
-  });
+	});
 });

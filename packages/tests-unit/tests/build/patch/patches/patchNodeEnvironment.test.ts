@@ -1,8 +1,9 @@
 import { rule } from "@opennextjs/aws/build/patch/patches/patchNodeEnvironment.js";
+
 import { computePatchDiff } from "./util.js";
 
 test("nodeEnvironment", () => {
-  const code = `
+	const code = `
 // This file should be imported before any others. It sets up the environment
 // for later imports to work properly.
 "use strict";
@@ -20,9 +21,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 //# sourceMappingURL=node-environment.js.map`;
-  expect(
-    computePatchDiff("node-environment.js", code, rule),
-  ).toMatchInlineSnapshot(`
+	expect(computePatchDiff("node-environment.js", code, rule)).toMatchInlineSnapshot(`
         "Index: node-environment.js
         ===================================================================
         --- node-environment.js

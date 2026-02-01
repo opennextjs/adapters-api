@@ -1,5 +1,6 @@
-import { ISRComponent } from "@/components/cached";
 import { Suspense } from "react";
+
+import { ISRComponent } from "@/components/cached";
 
 async function getFromFetch() {
 	"use cache";

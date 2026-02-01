@@ -1,10 +1,7 @@
 import path from "node:path";
 import url from "node:url";
 
-import {
-  buildNextjsApp,
-  setStandaloneBuildMode,
-} from "./build/buildNextApp.js";
+import { buildNextjsApp, setStandaloneBuildMode } from "./build/buildNextApp.js";
 import { compileCache } from "./build/compileCache.js";
 import { compileOpenNextConfig } from "./build/compileConfig.js";
 import { compileTagCacheProvider } from "./build/compileTagCacheProvider.js";
@@ -21,67 +18,60 @@ import { printHeader, showWarningOnWindows } from "./build/utils.js";
 import logger from "./logger.js";
 
 export type PublicFiles = {
-  files: string[];
+	files: string[];
 };
 
-export async function build(
-  openNextConfigPath?: string,
-  nodeExternals?: string,
-) {
-  showWarningOnWindows();
+export async function build(openNextConfigPath?: string, nodeExternals?: string) {
+	showWarningOnWindows();
 
-  const baseDir = process.cwd();
-  const openNextDistDir = url.fileURLToPath(new URL(".", import.meta.url));
+	const baseDir = process.cwd();
+	const openNextDistDir = url.fileURLToPath(new URL(".", import.meta.url));
 
-  const { config, buildDir } = await compileOpenNextConfig(
-    path.join(baseDir, openNextConfigPath ?? "open-next.config.ts"),
-    { nodeExternals },
-  );
+	const { config, buildDir } = await compileOpenNextConfig(
+		path.join(baseDir, openNextConfigPath ?? "open-next.config.ts"),
+		{ nodeExternals }
+	);
 
-  // Initialize options
-  const options = buildHelper.normalizeOptions(
-    config,
-    openNextDistDir,
-    buildDir,
-  );
-  logger.setLevel(options.debug ? "debug" : "info");
+	// Initialize options
+	const options = buildHelper.normalizeOptions(config, openNextDistDir, buildDir);
+	logger.setLevel(options.debug ? "debug" : "info");
 
-  // Pre-build validation
-  buildHelper.checkRunningInsideNextjsApp(options);
-  buildHelper.printNextjsVersion(options);
-  buildHelper.printOpenNextVersion(options);
+	// Pre-build validation
+	buildHelper.checkRunningInsideNextjsApp(options);
+	buildHelper.printNextjsVersion(options);
+	buildHelper.printOpenNextVersion(options);
 
-  // Build Next.js app
-  printHeader("Building Next.js app");
-  setStandaloneBuildMode(options);
-  buildHelper.initOutputDir(options);
-  buildNextjsApp(options);
+	// Build Next.js app
+	printHeader("Building Next.js app");
+	setStandaloneBuildMode(options);
+	buildHelper.initOutputDir(options);
+	buildNextjsApp(options);
 
-  // Generate deployable bundle
-  printHeader("Generating bundle");
+	// Generate deployable bundle
+	printHeader("Generating bundle");
 
-  // Patch the original Next.js config
-  await patchOriginalNextConfig(options);
+	// Patch the original Next.js config
+	await patchOriginalNextConfig(options);
 
-  // Compile cache.ts
-  compileCache(options);
+	// Compile cache.ts
+	compileCache(options);
 
-  // Compile middleware
-  await createMiddleware(options);
+	// Compile middleware
+	await createMiddleware(options);
 
-  createStaticAssets(options);
+	createStaticAssets(options);
 
-  if (config.dangerous?.disableIncrementalCache !== true) {
-    const { useTagCache } = createCacheAssets(options);
-    if (useTagCache) {
-      await compileTagCacheProvider(options);
-    }
-  }
+	if (config.dangerous?.disableIncrementalCache !== true) {
+		const { useTagCache } = createCacheAssets(options);
+		if (useTagCache) {
+			await compileTagCacheProvider(options);
+		}
+	}
 
-  await createServerBundle(options);
-  await createRevalidationBundle(options);
-  await createImageOptimizationBundle(options);
-  await createWarmerBundle(options);
-  await generateOutput(options);
-  logger.info("OpenNext build complete.");
+	await createServerBundle(options);
+	await createRevalidationBundle(options);
+	await createImageOptimizationBundle(options);
+	await createWarmerBundle(options);
+	await generateOutput(options);
+	logger.info("OpenNext build complete.");
 }
