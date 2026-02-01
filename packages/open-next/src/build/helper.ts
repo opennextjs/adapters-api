@@ -274,11 +274,11 @@ export function compareSemver(v1: string, operator: SemverOp, v2: string): boole
 		versionDiff = 1;
 	} else {
 		if (/^[^\d]/.test(v1)) {
-			// biome-ignore lint/style/noParameterAssign:
+			// oxlint-disable-next-line no-param-reassign
 			v1 = v1.substring(1);
 		}
 		if (/^[^\d]/.test(v2)) {
-			// biome-ignore lint/style/noParameterAssign:
+			// oxlint-disable-next-line no-param-reassign
 			v2 = v2.substring(1);
 		}
 		const [major1, minor1 = 0, patch1 = 0] = v1.split(".").map(Number);

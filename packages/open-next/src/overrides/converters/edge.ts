@@ -1,9 +1,10 @@
 import { Buffer } from "node:buffer";
 
 import cookieParser from "cookie";
-import { parseSetCookieHeader } from "http/util";
 import type { InternalEvent, InternalResult, MiddlewareResult } from "types/open-next";
 import type { Converter } from "types/overrides";
+
+import { parseSetCookieHeader } from "@/http/util";
 
 import { getQueryFromSearchParams } from "./utils.js";
 

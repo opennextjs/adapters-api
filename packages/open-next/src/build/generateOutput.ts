@@ -149,7 +149,6 @@ function prefixPattern(basePath: string) {
 	};
 }
 
-// eslint-disable-next-line sonarjs/cognitive-complexity
 export async function generateOutput(options: BuildOptions) {
 	const { appBuildOutputPath, config } = options;
 	const edgeFunctions: OpenNextOutput["edgeFunctions"] = {};

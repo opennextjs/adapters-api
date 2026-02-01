@@ -1,4 +1,3 @@
-import { mkdirSync } from "node:fs";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -22,8 +21,7 @@ import { openNextExternalMiddlewarePlugin } from "../../plugins/externalMiddlewa
 import { openNextReplacementPlugin } from "../../plugins/replacement.js";
 import { openNextResolvePlugin } from "../../plugins/resolve.js";
 import { getCrossPlatformPathRegex } from "../../utils/regex.js";
-import { type BuildOptions, isEdgeRuntime } from "../helper.js";
-import { copyOpenNextConfig, esbuildAsync } from "../helper.js";
+import { type BuildOptions, isEdgeRuntime, copyOpenNextConfig, esbuildAsync } from "../helper.js";
 
 type Override = OverrideOptions & {
 	originResolver?: LazyLoadedOverride<OriginResolver> | IncludedOriginResolver;
@@ -227,7 +225,7 @@ export function copyMiddlewareResources(
 	middlewareInfo: MiddlewareInfo | undefined,
 	destDir: string
 ) {
-	mkdirSync(path.join(destDir, "wasm"), { recursive: true });
+	fs.mkdirSync(path.join(destDir, "wasm"), { recursive: true });
 	for (const file of middlewareInfo?.wasm ?? []) {
 		fs.copyFileSync(
 			path.join(options.appBuildOutputPath, ".next", file.filePath),
@@ -235,7 +233,7 @@ export function copyMiddlewareResources(
 		);
 	}
 
-	mkdirSync(path.join(destDir, "assets"), { recursive: true });
+	fs.mkdirSync(path.join(destDir, "assets"), { recursive: true });
 	for (const file of middlewareInfo?.assets ?? []) {
 		fs.copyFileSync(
 			path.join(options.appBuildOutputPath, ".next", file.filePath),

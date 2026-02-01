@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 import { cacheInterceptor } from "@opennextjs/aws/core/routing/cacheInterceptor.js";
 import { convertFromQueryString } from "@opennextjs/aws/core/routing/util.js";
 import type { MiddlewareEvent } from "@opennextjs/aws/types/open-next.js";

@@ -13,7 +13,6 @@ interface Options {
 	type: "accept-language";
 }
 
-// eslint-disable-next-line sonarjs/cognitive-complexity
 function parse(raw: string, preferences: string[] | undefined, options: Options) {
 	const lowers = new Map<string, { orig: string; pos: number }>();
 	const header = raw.replace(/[ \t]/g, "");
@@ -25,7 +24,6 @@ function parse(raw: string, preferences: string[] | undefined, options: Options)
 			lowers.set(lower, { orig: preference, pos: pos++ });
 			if (options.prefixMatch) {
 				const parts = lower.split("-");
-				// biome-ignore lint/style/noCommaOperator:
 				while ((parts.pop(), parts.length > 0)) {
 					const joined = parts.join("-");
 					if (!lowers.has(joined)) {

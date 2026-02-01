@@ -82,7 +82,6 @@ export function getManifests(nextDir: string) {
 	};
 }
 
-// eslint-disable-next-line sonarjs/cognitive-complexity
 export async function copyTracedFiles({
 	buildOutputPath,
 	packagePath,

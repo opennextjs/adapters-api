@@ -302,13 +302,11 @@ async function generateBundle(
 				].join(""),
 			},
 			plugins,
-			alias: {
-				...(isBundled
-					? {
-							"next/dist/server/next-server.js": "./next-server.runtime.prod.js",
-						}
-					: {}),
-			},
+			alias: isBundled
+				? {
+						"next/dist/server/next-server.js": "./next-server.runtime.prod.js",
+					}
+				: {},
 		},
 		options
 	);

@@ -21,7 +21,7 @@
  */
 
 // re-enable when types are fixed in the cloudflare lib
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import path from "node:path";
 
 import { loadConfig } from "@opennextjs/aws/adapters/config/util.js";

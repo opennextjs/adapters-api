@@ -45,7 +45,6 @@ async function computeCacheControl(
 			existingRoute.initialRevalidateSeconds === false
 				? CACHE_ONE_YEAR
 				: existingRoute.initialRevalidateSeconds;
-		// eslint-disable-next-line sonarjs/elseif-without-else
 	} else if (revalidate !== undefined) {
 		finalRevalidate = revalidate === false ? CACHE_ONE_YEAR : revalidate;
 	}

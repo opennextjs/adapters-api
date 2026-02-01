@@ -14,7 +14,7 @@ interface CachedFetchValue {
 
 interface CachedRedirectValue {
 	kind: "REDIRECT";
-	props: Object;
+	props: object;
 }
 
 interface CachedRouteValue {
@@ -40,7 +40,7 @@ interface IncrementalCachedPageValue {
 	// this needs to be a string since the cache expects to store
 	// the string value
 	html: string;
-	pageData: Object;
+	pageData: object;
 	status?: number;
 	headers?: Record<string, undefined | string>;
 }

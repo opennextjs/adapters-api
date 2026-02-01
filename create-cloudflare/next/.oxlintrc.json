@@ -1,0 +1,11 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"plugins": ["typescript", "unicorn", "import", "react", "nextjs"],
+	"categories": {},
+	"rules": {},
+	"env": {
+		"builtin": true
+	},
+	"globals": {},
+	"ignorePatterns": [".next", "node_modules", ".open-next", "dist", ".wrangler"]
+}

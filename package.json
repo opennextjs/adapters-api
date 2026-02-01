@@ -11,9 +11,8 @@
 		"openbuild:local": "turbo run openbuild:local",
 		"openbuild:local:start": "turbo run openbuild:local:start",
 		"clean": "turbo run clean && rm -rf node_modules pnpm-lock.yaml",
-		"lint": "biome check",
-		"lint:fix": "biome check --fix",
-		"lint:check": "pnpm -r lint:check",
+		"lint": "oxlint",
+		"lint:fix": "oxlint --fix",
 		"fmt": "oxfmt --check",
 		"fmt:fix": "oxfmt --write",
 		"ts:check": "pnpm -r ts:check",
@@ -28,7 +27,6 @@
 		"postinstall": "pnpm build:opennext"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "1.9.4",
 		"@changesets/changelog-github": "^0.5.1",
 		"@changesets/cli": "^2.29.7",
 		"@playwright/test": "catalog:",
@@ -38,7 +36,7 @@
 		"turbo": "1.10.12"
 	},
 	"engines": {
-		"node": ">=18",
+		"node": ">=22",
 		"pnpm": ">=9"
 	}
 }

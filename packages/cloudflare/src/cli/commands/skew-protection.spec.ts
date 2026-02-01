@@ -7,7 +7,7 @@ import { listWorkerVersions, updateDeploymentMapping } from "./skew-protection.j
 describe("skew protection", () => {
 	describe("listWorkerVersions", () => {
 		test("listWorkerVersions return versions ordered by time DESC", async () => {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 			const client: any = {
 				workers: {
 					scripts: {

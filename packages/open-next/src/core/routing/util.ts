@@ -4,11 +4,12 @@ import { parse as parseQs, stringify as stringifyQs } from "node:querystring";
 import { ReadableStream } from "node:stream/web";
 
 import { BuildId, HtmlPages, NextConfig } from "config/index.js";
-import type { IncomingMessage } from "http/index.js";
-import { OpenNextNodeResponse } from "http/openNextResponse.js";
-import { getQueryFromIterator, parseHeaders } from "http/util.js";
 import type { FunctionsConfigManifest, MiddlewareManifest } from "types/next-types";
 import type { InternalEvent, InternalResult, RoutingResult, StreamCreator } from "types/open-next.js";
+
+import type { IncomingMessage } from "@/http/index.js";
+import { OpenNextNodeResponse } from "@/http/openNextResponse.js";
+import { getQueryFromIterator, parseHeaders } from "@/http/util.js";
 
 import { debug, error } from "../../adapters/logger.js";
 import { isBinaryContentType } from "../../utils/binary.js";
@@ -64,7 +65,7 @@ export function getUrlParts(url: string, isExternal: boolean) {
 		};
 	}
 
-	const regex = /^(https?:)\/\/?([^\/\s]+)(\/[^?]*)?(\?.*)?/;
+	const regex = /^(https?:)\/\/?([^/\s]+)(\/[^?]*)?(\?.*)?/;
 	const match = url.match(regex);
 	if (!match) {
 		throw new Error(`Invalid external URL: ${url}`);

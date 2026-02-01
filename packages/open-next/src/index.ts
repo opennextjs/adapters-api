@@ -18,7 +18,6 @@ function parseArgs() {
 					acc[key] = undefined;
 				} else if (self[ind + 1]) {
 					acc[key] = self[ind + 1];
-					// eslint-disable-next-line sonarjs/elseif-without-else
 				} else if (!self[ind + 1]) {
 					acc[key] = undefined;
 				}
