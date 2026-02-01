@@ -29,5 +29,5 @@
 			}
 		}
 	],
-	"ignorePatterns": [".open-next", "dist", ".wrangler", "node_modules"]
+	"ignorePatterns": [".open-next", "dist", ".wrangler", "node_modules", ".sst"]
 }
