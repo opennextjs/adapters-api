@@ -24,7 +24,7 @@
 		"@opennextjs/cloudflare": "workspace:*",
 		"@tailwindcss/forms": "0.5.7",
 		"@tailwindcss/typography": "0.5.13",
-		"@types/node": "20.14.10",
+		"@types/node": "^22",
 		"@types/react": "18.3.3",
 		"@types/react-dom": "18.3.0",
 		"autoprefixer": "10.4.19",

@@ -44,7 +44,7 @@
 		"@opennextjs/cloudflare": "workspace:*",
 		"@playwright/test": "catalog:",
 		"@types/better-sqlite3": "^7.6.12",
-		"@types/node": "^20",
+		"@types/node": "^22",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
 		"cross-env": "^7.0.3",
