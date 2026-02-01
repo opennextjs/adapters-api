@@ -1,14 +1,14 @@
-export function debug(...args: any[]) {
+export function debug(...args: unknown[]) {
 	if (process.env.OPEN_NEXT_DEBUG) {
 		console.log(...args);
 	}
 }
 
-export function warn(...args: any[]) {
+export function warn(...args: unknown[]) {
 	console.warn(...args);
 }
 
-export function error(...args: any[]) {
+export function error(...args: unknown[]) {
 	console.error(...args);
 }
 

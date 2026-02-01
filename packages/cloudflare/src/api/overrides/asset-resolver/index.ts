@@ -45,7 +45,7 @@ const resolver: AssetResolver = {
 			statusCode: response.status,
 			headers: Object.fromEntries(response.headers.entries()),
 			// Workers and Node types differ.
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 			body: response.body || (new ReadableStream() as any),
 			isBase64Encoded: false,
 		} satisfies InternalResult;

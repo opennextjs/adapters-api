@@ -121,7 +121,7 @@ export function applyOverride() {
 		options: any
 	) => {
 		const hookResolved = isApp() ? requestMapApp.get(request) : requestMapPage.get(request);
-		// biome-ignore lint/style/noParameterAssign:
+		// oxlint-disable-next-line no-param-reassign
 		if (hookResolved) request = hookResolved;
 		return originalResolveFilename.call(mod, request, parent, isMain, options);
 

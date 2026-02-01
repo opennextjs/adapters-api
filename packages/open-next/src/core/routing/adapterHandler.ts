@@ -1,8 +1,9 @@
 import type { IncomingMessage } from "node:http";
 import { finished } from "node:stream/promises";
 
-import type { OpenNextNodeResponse } from "http/index";
 import type { ResolvedRoute, RoutingResult, WaitUntil } from "types/open-next";
+
+import type { OpenNextNodeResponse } from "@/http/index";
 
 /**
  * This function loads the necessary routes, and invoke the expected handler.

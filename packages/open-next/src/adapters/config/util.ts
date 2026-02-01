@@ -106,10 +106,10 @@ export function loadAppPathsManifestKeys(nextDir: string) {
 	const appPathsManifest = loadAppPathsManifest(nextDir);
 	return Object.keys(appPathsManifest).map((key) => {
 		// Remove parallel route
-		let cleanedKey = key.replace(/\/@[^\/]+/g, "");
+		let cleanedKey = key.replace(/\/@[^/]+/g, "");
 
 		// Remove group routes
-		cleanedKey = cleanedKey.replace(/\/\((?!\.)[^\)]*\)/g, "");
+		cleanedKey = cleanedKey.replace(/\/\((?!\.)[^)]*\)/g, "");
 
 		// Remove /page suffix
 		cleanedKey = cleanedKey.replace(/\/page$/g, "");

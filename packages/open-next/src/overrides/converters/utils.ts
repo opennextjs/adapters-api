@@ -1,4 +1,4 @@
-import { getQueryFromIterator } from "http/util.js";
+import { getQueryFromIterator } from "@/http/util.js";
 
 export function removeUndefinedFromQuery(query: Record<string, string | string[] | undefined>) {
 	const newQuery: Record<string, string | string[]> = {};

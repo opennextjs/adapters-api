@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 import * as config from "@opennextjs/aws/adapters/config/index.js";
 import { NextConfig } from "@opennextjs/aws/adapters/config/index.js";
 import {

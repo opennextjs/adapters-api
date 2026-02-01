@@ -67,7 +67,7 @@ const lambdaWarmerInvoke: Warmer = {
 				event: "warmer result",
 				sent: CONCURRENCY,
 				success: warmedServerIds.length,
-				uniqueServersWarmed: [...new Set(warmedServerIds)].length,
+				uniqueServersWarmed: new Set(warmedServerIds).size,
 			});
 		}
 	},

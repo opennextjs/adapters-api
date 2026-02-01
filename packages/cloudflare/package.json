@@ -45,8 +45,6 @@
 		"clean": "rimraf dist",
 		"build": "pnpm clean && tsc",
 		"build:watch": "tsc -w",
-		"lint:check": "eslint",
-		"lint:fix": "eslint --fix",
 		"ts:check": "tsc --noEmit",
 		"test": "vitest --run",
 		"test:watch": "vitest"
@@ -63,7 +61,6 @@
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "catalog:",
-		"@eslint/js": "catalog:",
 		"@tsconfig/strictest": "catalog:",
 		"@types/mock-fs": "catalog:",
 		"@types/node": "catalog:",
@@ -71,17 +68,12 @@
 		"@types/yargs": "catalog:",
 		"diff": "^8.0.2",
 		"esbuild": "catalog:",
-		"eslint": "catalog:",
-		"eslint-plugin-import": "catalog:",
-		"eslint-plugin-simple-import-sort": "catalog:",
-		"eslint-plugin-unicorn": "catalog:",
 		"globals": "catalog:",
 		"mock-fs": "catalog:",
 		"next": "catalog:",
 		"picomatch": "^4.0.2",
 		"rimraf": "catalog:",
 		"typescript": "catalog:",
-		"typescript-eslint": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {

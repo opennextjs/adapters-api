@@ -192,7 +192,6 @@ declare global {
 	 * Only available in edge runtime functions.
 	 * Defined in createEdgeBundle.
 	 */
-	// biome-ignore lint/suspicious/noRedeclare: This is only needed in the edge runtime
 	var AsyncLocalStorage: any;
 
 	/**

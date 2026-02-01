@@ -232,7 +232,6 @@ export class OpenNextCdkReferenceImplementation extends Construct {
 				(acc, [key, value]) => {
 					if (value.type === "function") {
 						acc[key] = this.createFunctionOrigin(key, value);
-						// eslint-disable-next-line sonarjs/elseif-without-else
 					} else if (value.type === "ecs") {
 						acc[key] = this.createAppRunnerOrigin(key, value);
 					}

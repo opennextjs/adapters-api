@@ -51,13 +51,13 @@ export interface AssetResolver {
 export type CachedFile =
 	| {
 			type: "redirect";
-			props?: Object;
+			props?: object;
 			meta?: Meta;
 	  }
 	| {
 			type: "page";
 			html: string;
-			json: Object;
+			json: object;
 			meta?: Meta;
 	  }
 	| {

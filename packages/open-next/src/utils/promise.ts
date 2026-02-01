@@ -25,9 +25,7 @@ export class DetachedPromise<T = any> {
 
 		// We know that resolvers is defined because the Promise constructor runs
 		// synchronously.
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		this.resolve = resolve!;
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		this.reject = reject!;
 	}
 }

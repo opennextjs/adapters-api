@@ -7,10 +7,11 @@ import type {
 	CloudFrontRequestEvent,
 	CloudFrontRequestResult,
 } from "aws-lambda";
-import { parseSetCookieHeader } from "http/util";
 import type { InternalEvent, InternalResult, MiddlewareResult } from "types/open-next";
 import type { Converter } from "types/overrides";
 import { fromReadableStream } from "utils/stream";
+
+import { parseSetCookieHeader } from "@/http/util";
 
 import { debug } from "../../adapters/logger";
 import { convertToQuery, convertToQueryString } from "../../core/routing/util";

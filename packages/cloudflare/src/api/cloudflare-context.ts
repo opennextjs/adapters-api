@@ -308,7 +308,7 @@ async function monkeyPatchVmModuleEdgeContext(cloudflareContext: CloudflareConte
 		await import(/* webpackIgnore: true */ `${"__module".replaceAll("_", "")}`)
 	).default.createRequire(import.meta.url);
 
-	// eslint-disable-next-line unicorn/prefer-node-protocol -- the `next dev` compiler doesn't accept the node prefix
+	// oxlint-disable-next-line unicorn/prefer-node-protocol -- the `next dev` compiler doesn't accept the node prefix
 	const vmModule = require("vm");
 
 	const originalRunInContext = vmModule.runInContext.bind(vmModule);

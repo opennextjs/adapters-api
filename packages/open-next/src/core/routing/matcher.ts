@@ -286,7 +286,6 @@ function handleTrailingSlashRedirect(event: InternalEvent): false | InternalResu
 			body: emptyBody,
 			isBase64Encoded: false,
 		};
-		// eslint-disable-next-line sonarjs/elseif-without-else
 	}
 	if (!NextConfig.trailingSlash && event.rawPath.endsWith("/") && event.rawPath !== "/") {
 		const headersLocation = event.url.split("?");

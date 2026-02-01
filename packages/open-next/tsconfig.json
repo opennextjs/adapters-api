@@ -7,9 +7,10 @@
 		"outDir": "./dist",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
+			// TODO: Align path aliases
 			"types/*": ["./src/types/*"],
 			"config/*": ["./src/adapters/config/*"],
-			"http/*": ["./src/http/*"],
+			"@/http/*": ["./src/http/*"],
 			"utils/*": ["./src/utils/*"]
 		}
 	}

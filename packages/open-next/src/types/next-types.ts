@@ -1,6 +1,6 @@
 // NOTE: add more next config typings as they become relevant
 
-import type { IncomingMessage, OpenNextNodeResponse } from "http/index.js";
+import type { IncomingMessage, OpenNextNodeResponse } from "@/http/index.js";
 
 import type { InternalEvent } from "./open-next";
 

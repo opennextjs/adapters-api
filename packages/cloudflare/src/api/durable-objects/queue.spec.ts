@@ -35,7 +35,7 @@ const createDurableObjectQueue = ({
 			},
 		},
 	};
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 	return new DOQueueHandler(mockState as any, {
 		WORKER_SELF_REFERENCE: {
 			fetch: vi.fn().mockReturnValue(

@@ -3,10 +3,12 @@ import type { RequestData } from "types/global";
 type EdgeRequest = Omit<RequestData, "page">;
 
 // Do we need Buffer here?
+// oxlint-disable-next-line import/first
 import { Buffer } from "node:buffer";
 globalThis.Buffer = Buffer;
 
 // AsyncLocalStorage is needed to be defined globally
+// oxlint-disable-next-line import/first
 import { AsyncLocalStorage } from "node:async_hooks";
 globalThis.AsyncLocalStorage = AsyncLocalStorage;
 

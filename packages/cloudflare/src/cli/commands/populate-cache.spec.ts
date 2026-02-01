@@ -118,7 +118,7 @@ describe("populateCache", () => {
 								incrementalCache: "cf-r2-incremental-cache",
 							},
 						},
-					} as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+					} as any, // oxlint-disable-line @typescript-eslint/no-explicit-any
 					{
 						r2_buckets: [
 							{
@@ -126,9 +126,9 @@ describe("populateCache", () => {
 								bucket_name: "test-bucket",
 							},
 						],
-					} as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+					} as any, // oxlint-disable-line @typescript-eslint/no-explicit-any
 					{ target, shouldUsePreviewId: false },
-					{} as any // eslint-disable-line @typescript-eslint/no-explicit-any
+					{} as any // oxlint-disable-line @typescript-eslint/no-explicit-any
 				);
 
 				expect(runWrangler).toHaveBeenCalledWith(
@@ -154,7 +154,7 @@ describe("populateCache", () => {
 								incrementalCache: "cf-r2-incremental-cache",
 							},
 						},
-					} as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+					} as any, // oxlint-disable-line @typescript-eslint/no-explicit-any
 					{
 						r2_buckets: [
 							{
@@ -163,9 +163,9 @@ describe("populateCache", () => {
 								jurisdiction: "eu",
 							},
 						],
-					} as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+					} as any, // oxlint-disable-line @typescript-eslint/no-explicit-any
 					{ target, shouldUsePreviewId: false },
-					{} as any // eslint-disable-line @typescript-eslint/no-explicit-any
+					{} as any // oxlint-disable-line @typescript-eslint/no-explicit-any
 				);
 
 				expect(runWrangler).toHaveBeenCalledWith(

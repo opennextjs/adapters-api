@@ -264,7 +264,7 @@ class ShardedDOTagCache implements NextModeTagCache {
 			await stub.writeTags(tags, lastModified);
 			// Depending on the shards and the tags, deleting from the regional cache will not work for every tag
 			// We also need to delete both cache
-			await Promise.all([this.deleteRegionalCache({ doId, tags })]);
+			await this.deleteRegionalCache({ doId, tags });
 		} catch (e) {
 			error("Error while writing tags", e);
 			if (retryNumber >= this.maxWriteRetries) {

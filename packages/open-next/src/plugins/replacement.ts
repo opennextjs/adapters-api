@@ -75,7 +75,7 @@ export function openNextReplacementPlugin({
 
 				await Promise.all([
 					...(deletes ?? []).map(async (id) => {
-						const pattern = new RegExp(`\/\/#override (${id})\n([\\s\\S]*?)\/\/#endOverride`);
+						const pattern = new RegExp(`//#override (${id})\n([\\s\\S]*?)//#endOverride`);
 						logger.debug(chalk.blue(`OpenNext Replacement plugin ${name}`), `Delete override ${id}`);
 						contents = contents.replace(pattern, "");
 					}),
@@ -91,7 +91,7 @@ export function openNextReplacementPlugin({
 						for (const match of matches) {
 							const replacement = match[2];
 							const id = match[1];
-							const pattern = new RegExp(`\/\/#override (${id})\n([\\s\\S]*?)\/\/#endOverride`, "g");
+							const pattern = new RegExp(`//#override (${id})\n([\\s\\S]*?)//#endOverride`, "g");
 							logger.debug(
 								chalk.blue(`Open-next replacement plugin ${name}`),
 								`Apply override ${id} from ${filename}`

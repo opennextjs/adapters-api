@@ -1,8 +1,9 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
-import { parseSetCookieHeader } from "http/util";
 import type { InternalEvent, InternalResult } from "types/open-next";
 import type { Converter } from "types/overrides";
 import { fromReadableStream } from "utils/stream";
+
+import { parseSetCookieHeader } from "@/http/util";
 
 import { debug } from "../../adapters/logger";
 import { convertToQuery } from "../../core/routing/util";
