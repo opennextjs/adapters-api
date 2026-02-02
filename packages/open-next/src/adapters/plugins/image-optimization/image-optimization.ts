@@ -14,6 +14,7 @@ import { debug } from "../../logger.js";
 //#override optimizeImage
 export async function optimizeImage(
 	headers: APIGatewayProxyEventHeaders,
+	// oxlint-disable-next-line @typescript-eslint/no-explicit-any - image optimization API varies across Next.js versions
 	imageParams: any,
 	nextConfig: NextConfig,
 	handleRequest: (

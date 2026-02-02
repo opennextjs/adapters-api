@@ -1,4 +1,4 @@
-import type { AsyncLocalStorage } from "node:async_hooks";
+import type { AsyncLocalStorage, AsyncLocalStorage as NodeAsyncLocalStorage } from "node:async_hooks";
 import type { OutgoingHttpHeaders } from "node:http";
 
 import type {
@@ -12,6 +12,7 @@ import type {
 
 import type { DetachedPromiseRunner } from "../utils/promise";
 
+import type { i18nConfig } from "./next-types.js";
 import type { OpenNextConfig, WaitUntil } from "./open-next";
 
 export interface RequestData {
@@ -27,7 +28,7 @@ export interface RequestData {
 	method: string;
 	nextConfig?: {
 		basePath?: string;
-		i18n?: any;
+		i18n?: i18nConfig;
 		trailingSlash?: boolean;
 	};
 	page?: {
@@ -185,14 +186,14 @@ declare global {
 	 * AsyncContext available globally in the edge runtime.
 	 * Only available in edge runtime functions.
 	 */
-	var AsyncContext: any;
+	var AsyncContext: unknown;
 
 	/**
 	 * AsyncLocalStorage available globally in the edge runtime.
 	 * Only available in edge runtime functions.
 	 * Defined in createEdgeBundle.
 	 */
-	var AsyncLocalStorage: any;
+	var AsyncLocalStorage: typeof NodeAsyncLocalStorage;
 
 	/**
 	 * The version of the Open Next runtime.

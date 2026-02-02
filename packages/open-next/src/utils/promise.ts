@@ -8,14 +8,14 @@ import { debug, error } from "../adapters/logger";
  * Copied from next https://github.com/vercel/next.js/blob/canary/packages/next/src/lib/detached-promise.ts
  * @see https://tc39.es/proposal-promise-with-resolvers/
  */
-export class DetachedPromise<T = any> {
+export class DetachedPromise<T = unknown> {
 	public readonly resolve: (value: T | PromiseLike<T>) => void;
-	public readonly reject: (reason: any) => void;
+	public readonly reject: (reason: unknown) => void;
 	public readonly promise: Promise<T>;
 
 	constructor() {
 		let resolve: (value: T | PromiseLike<T>) => void;
-		let reject: (reason: any) => void;
+		let reject: (reason: unknown) => void;
 
 		// Create the promise and assign the resolvers to the object.
 		this.promise = new Promise<T>((res, rej) => {
@@ -31,17 +31,17 @@ export class DetachedPromise<T = any> {
 }
 
 export class DetachedPromiseRunner {
-	private promises: DetachedPromise<any>[] = [];
+	private promises: DetachedPromise<unknown>[] = [];
 
 	public withResolvers<T>(): DetachedPromise<T> {
 		const detachedPromise = new DetachedPromise<T>();
-		this.promises.push(detachedPromise);
+		this.promises.push(detachedPromise as DetachedPromise<unknown>);
 		return detachedPromise;
 	}
 
 	public add<T>(promise: Promise<T>): void {
 		const detachedPromise = new DetachedPromise<T>();
-		this.promises.push(detachedPromise);
+		this.promises.push(detachedPromise as DetachedPromise<unknown>);
 		promise.then(detachedPromise.resolve, detachedPromise.reject);
 	}
 

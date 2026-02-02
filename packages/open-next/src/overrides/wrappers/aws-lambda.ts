@@ -14,15 +14,15 @@ export function formatWarmerResponse(event: WarmerEvent) {
 	});
 }
 
-const handler: WrapperHandler =
-	async (handler, converter) =>
-	async (event: AwsLambdaEvent): Promise<AwsLambdaReturn> => {
+const handler: WrapperHandler = async (handler, converter) => {
+	return async (event: unknown): Promise<unknown> => {
+		const lambdaEvent = event as AwsLambdaEvent;
 		// Handle warmer event
-		if ("type" in event) {
-			return formatWarmerResponse(event);
+		if ("type" in lambdaEvent) {
+			return formatWarmerResponse(lambdaEvent);
 		}
 
-		const internalEvent = await converter.convertFrom(event);
+		const internalEvent = await converter.convertFrom(lambdaEvent);
 
 		//TODO: create a simple reproduction and open an issue in the node repo
 		//This is a workaround, there is an issue in node that causes node to crash silently if the OpenNextNodeResponse stream is not consumed
@@ -43,8 +43,9 @@ const handler: WrapperHandler =
 			streamCreator: fakeStream,
 		});
 
-		return converter.convertTo(response, event);
+		return converter.convertTo(response, lambdaEvent);
 	};
+};
 
 export default {
 	wrapper: handler,

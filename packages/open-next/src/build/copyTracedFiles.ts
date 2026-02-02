@@ -267,8 +267,8 @@ File ${serverPath} does not exist
 		if (symlink) {
 			try {
 				symlinkSync(symlink, to);
-			} catch (e: any) {
-				if (e.code !== "EEXIST") {
+			} catch (e: unknown) {
+				if (e instanceof Error && (e as NodeJS.ErrnoException).code !== "EEXIST") {
 					throw e;
 				}
 			}

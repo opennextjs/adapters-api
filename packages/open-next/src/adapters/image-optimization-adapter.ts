@@ -92,7 +92,7 @@ export async function defaultHandler(
 		}
 		const result = await optimizeImage(headers, imageParams, nextConfig, downloadHandler);
 		return buildSuccessResponse(result, options?.streamCreator, etag);
-	} catch (e: any) {
+	} catch (e: unknown) {
 		error("Failed to optimize image", e);
 		return buildFailureResponse("Internal server error", options?.streamCreator);
 	}
@@ -129,7 +129,17 @@ function computeEtag(imageParams: { href: string; width: number; quality: number
 		.digest("base64");
 }
 
-function buildSuccessResponse(result: any, streamCreator?: StreamCreator, etag?: string): InternalResult {
+type ImageOptimizeResult = {
+	contentType: string;
+	buffer: Buffer;
+	maxAge: number;
+};
+
+function buildSuccessResponse(
+	result: ImageOptimizeResult,
+	streamCreator?: StreamCreator,
+	etag?: string
+): InternalResult {
 	const headers: Record<string, string> = {
 		Vary: "Accept",
 		"Content-Type": result.contentType,
@@ -239,7 +249,7 @@ async function downloadHandler(_req: IncomingMessage, res: ServerResponse, url: 
 				res.setHeader("Cache-Control", response.cacheControl);
 			}
 		}
-	} catch (e: any) {
+	} catch (e: unknown) {
 		error("Failed to download image", e);
 		throw e;
 	}

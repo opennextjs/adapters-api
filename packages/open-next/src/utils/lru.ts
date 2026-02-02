@@ -14,7 +14,7 @@ export class LRUCache<T> {
 		return result;
 	}
 
-	set(key: string, value: any) {
+	set(key: string, value: T) {
 		if (this.cache.size >= this.maxSize) {
 			const firstKey = this.cache.keys().next().value;
 			if (firstKey !== undefined) {

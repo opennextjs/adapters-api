@@ -4,6 +4,7 @@ import chalk from "chalk";
 import type { Plugin } from "esbuild";
 
 import type {
+	BaseOverride,
 	DefaultOverrideOptions,
 	IncludedImageLoader,
 	IncludedOriginResolver,
@@ -18,7 +19,9 @@ import { getCrossPlatformPathRegex } from "../utils/regex.js";
 
 export interface IPluginSettings {
 	overrides?: {
+		// oxlint-disable-next-line @typescript-eslint/no-explicit-any - generic overrides for flexibility
 		wrapper?: DefaultOverrideOptions<any, any>["wrapper"];
+		// oxlint-disable-next-line @typescript-eslint/no-explicit-any - generic overrides for flexibility
 		converter?: DefaultOverrideOptions<any, any>["converter"];
 		tagCache?: OverrideOptions["tagCache"];
 		queue?: OverrideOptions["queue"];
@@ -32,7 +35,7 @@ export interface IPluginSettings {
 	fnName?: string;
 }
 
-function getOverrideOrDummy<Override extends string | LazyLoadedOverride<any>>(override: Override) {
+function getOverrideOrDummy<Override extends string | LazyLoadedOverride<BaseOverride>>(override: Override) {
 	if (typeof override === "string") {
 		return override;
 	}

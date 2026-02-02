@@ -1,6 +1,6 @@
 import logger from "../logger.js";
 
-export function safeParseJsonFile<T = any>(input: string, filePath: string, fallback?: T): T | undefined {
+export function safeParseJsonFile<T = unknown>(input: string, filePath: string, fallback?: T): T | undefined {
 	try {
 		return JSON.parse(input);
 	} catch (err) {

@@ -11,8 +11,8 @@ import { error } from "../adapters/logger.js";
 const mod = require("node:module");
 
 const resolveFilename = mod._resolveFilename;
-const hookPropertyMapApp = new Map();
-const hookPropertyMapPage = new Map();
+const hookPropertyMapApp = new Map<string, string>();
+const hookPropertyMapPage = new Map<string, string>();
 
 export function overrideHooks(config: NextConfig) {
 	try {
@@ -26,7 +26,11 @@ export function overrideHooks(config: NextConfig) {
 
 function addHookAliases(aliases: [string, string][], type: "app" | "page") {
 	for (const [key, value] of aliases) {
-		type === "app" ? hookPropertyMapApp.set(key, value) : hookPropertyMapPage.set(key, value);
+		if (type === "app") {
+			hookPropertyMapApp.set(key, value);
+		} else {
+			hookPropertyMapPage.set(key, value);
+		}
 	}
 }
 
@@ -116,9 +120,9 @@ export function applyOverride() {
 		requestMapApp: Map<string, string>,
 		requestMapPage: Map<string, string>,
 		request: string,
-		parent: any,
+		parent: unknown,
 		isMain: boolean,
-		options: any
+		options: unknown
 	) => {
 		const hookResolved = isApp() ? requestMapApp.get(request) : requestMapPage.get(request);
 		// oxlint-disable-next-line no-param-reassign

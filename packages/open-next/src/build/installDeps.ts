@@ -71,8 +71,8 @@ export function installDependencies(outputDir: string, installOptions?: InstallO
 		// Cleanup tempDir
 		fs.rmSync(tempInstallDir, { recursive: true, force: true });
 		logger.info(`Dependencies installed for ${name}`);
-	} catch (e: any) {
-		logger.error(e.toString());
+	} catch (e: unknown) {
+		logger.error(e instanceof Error ? e.message : String(e));
 		logger.error("Could not install dependencies");
 	}
 }

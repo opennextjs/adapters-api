@@ -259,12 +259,12 @@ export class OpenNextNodeResponse extends Transform implements ServerResponse {
 		return Buffer.concat(this._chunks);
 	}
 
-	private _internalWrite(chunk: any, encoding: BufferEncoding) {
+	private _internalWrite(chunk: Buffer | string, encoding: BufferEncoding) {
 		// When encoding === 'buffer', chunk is already a Buffer
 		// and does not need to be converted again.
 		// @ts-expect-error TS2367 'encoding' can be 'buffer', but it's not in the
 		// official type definition
-		const buffer = encoding === "buffer" ? chunk : Buffer.from(chunk, encoding);
+		const buffer = encoding === "buffer" ? (chunk as Buffer) : Buffer.from(chunk, encoding);
 		this.bodyLength += buffer.length;
 		if (this.streamCreator?.retainChunks !== false) {
 			// Avoid keeping chunks around when the `StreamCreator` supports it to save memory
@@ -275,7 +275,7 @@ export class OpenNextNodeResponse extends Transform implements ServerResponse {
 		this.streamCreator?.onWrite?.();
 	}
 
-	_transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback): void {
+	_transform(chunk: Buffer | string, encoding: BufferEncoding, callback: TransformCallback): void {
 		if (!this.headersSent) {
 			this.flushHeaders();
 		}

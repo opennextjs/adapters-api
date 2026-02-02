@@ -40,9 +40,9 @@ export class FatalError extends Error implements BaseOpenNextError {
 	}
 }
 
-export function isOpenNextError(e: any): e is BaseOpenNextError & Error {
+export function isOpenNextError(e: unknown): e is BaseOpenNextError & Error {
 	try {
-		return "__openNextInternal" in e;
+		return e !== null && typeof e === "object" && "__openNextInternal" in e;
 	} catch {
 		return false;
 	}

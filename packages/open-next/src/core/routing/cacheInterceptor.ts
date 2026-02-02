@@ -279,7 +279,7 @@ export async function cacheInterceptor(event: MiddlewareEvent): Promise<Internal
 						statusCode: cachedData.value.meta?.status ?? 307,
 						body: emptyReadableStream(),
 						headers: {
-							...((cachedData.value.meta?.headers as Record<string, string>) ?? {}),
+							...cachedData.value.meta?.headers,
 							...cacheControl,
 						},
 						isBase64Encoded: false,

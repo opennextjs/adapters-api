@@ -8,7 +8,8 @@ import type { Converter } from "@/types/overrides";
 import { extractHostFromHeaders, getQueryFromSearchParams } from "./utils.js";
 
 const converter: Converter = {
-	convertFrom: async (req: IncomingMessage & { protocol?: string }) => {
+	convertFrom: async (event: unknown) => {
+		const req = event as IncomingMessage & { protocol?: string };
 		const body = await new Promise<Buffer>((resolve) => {
 			const chunks: Uint8Array[] = [];
 			req.on("data", (chunk) => {
