@@ -1,8 +1,13 @@
 import type { ReadableStream } from "node:stream/web";
 
-import { FunctionsConfigManifest, MiddlewareManifest, NextConfig, PrerenderManifest } from "config/index.js";
-import type { InternalEvent, InternalResult, MiddlewareEvent } from "types/open-next.js";
-import { emptyReadableStream } from "utils/stream.js";
+import {
+	FunctionsConfigManifest,
+	MiddlewareManifest,
+	NextConfig,
+	PrerenderManifest,
+} from "@/config/index.js";
+import type { InternalEvent, InternalResult, MiddlewareEvent } from "@/types/open-next.js";
+import { emptyReadableStream } from "@/utils/stream.js";
 
 import { getQueryFromSearchParams } from "../../overrides/converters/utils.js";
 

@@ -1,5 +1,5 @@
-import type { InternalEvent, InternalResult, MiddlewareResult } from "types/open-next";
-import type { Wrapper, WrapperHandler } from "types/overrides";
+import type { InternalEvent, InternalResult, MiddlewareResult } from "@/types/open-next";
+import type { Wrapper, WrapperHandler } from "@/types/overrides";
 
 const cfPropNameMapping: Record<string, string | [(s: string) => string, string]> = {
 	// The city name is percent-encoded.

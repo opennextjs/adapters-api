@@ -1,4 +1,4 @@
-import type { Warmer } from "types/overrides";
+import type { Warmer } from "@/types/overrides";
 
 import { debug, error } from "../../adapters/logger";
 import type { WarmerEvent, WarmerResponse } from "../../adapters/warmer-function";

@@ -1,4 +1,4 @@
-import type { Queue } from "types/overrides.js";
+import type { Queue } from "@/types/overrides.js";
 
 const queue: Queue = {
 	name: "dev-queue",

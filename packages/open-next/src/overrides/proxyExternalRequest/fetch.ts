@@ -1,5 +1,5 @@
-import type { ProxyExternalRequest } from "types/overrides";
-import { emptyReadableStream } from "utils/stream";
+import type { ProxyExternalRequest } from "@/types/overrides";
+import { emptyReadableStream } from "@/utils/stream";
 
 const fetchProxy: ProxyExternalRequest = {
 	name: "fetch-proxy",

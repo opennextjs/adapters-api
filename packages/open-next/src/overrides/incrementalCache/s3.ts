@@ -2,8 +2,9 @@ import path from "node:path";
 
 import type { S3ClientConfig } from "@aws-sdk/client-s3";
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import type { Extension } from "types/cache";
-import type { IncrementalCache } from "types/overrides";
+
+import type { Extension } from "@/types/cache";
+import type { IncrementalCache } from "@/types/overrides";
 
 import { awsLogger } from "../../adapters/logger";
 import { parseNumberFromEnv } from "../../adapters/util";

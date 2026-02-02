@@ -1,4 +1,4 @@
-import type { Converter } from "types/overrides";
+import type { Converter } from "@/types/overrides";
 
 type DummyEventOrResult = {
 	type: "dummy";

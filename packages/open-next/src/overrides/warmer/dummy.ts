@@ -1,5 +1,5 @@
-import type { Warmer } from "types/overrides";
-import { FatalError } from "utils/error";
+import type { Warmer } from "@/types/overrides";
+import { FatalError } from "@/utils/error";
 
 const dummyWarmer: Warmer = {
 	name: "dummy",

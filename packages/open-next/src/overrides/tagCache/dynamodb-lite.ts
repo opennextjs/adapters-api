@@ -1,9 +1,10 @@
 import path from "node:path";
 
 import { AwsClient } from "aws4fetch";
-import type { TagCache } from "types/overrides";
-import { RecoverableError } from "utils/error";
-import { customFetchClient } from "utils/fetch";
+
+import type { TagCache } from "@/types/overrides";
+import { RecoverableError } from "@/utils/error";
+import { customFetchClient } from "@/utils/fetch";
 
 import { debug, error } from "../../adapters/logger";
 import { chunk, parseNumberFromEnv } from "../../adapters/util";

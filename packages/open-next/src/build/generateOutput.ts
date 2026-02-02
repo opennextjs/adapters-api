@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import path from "node:path";
 
-import { loadConfig } from "config/util.js";
+import { loadConfig } from "@/config/util.js";
 import type {
 	BaseOverride,
 	DefaultOverrideOptions,
@@ -9,7 +9,7 @@ import type {
 	FunctionOptions,
 	LazyLoadedOverride,
 	OverrideOptions,
-} from "types/open-next";
+} from "@/types/open-next";
 
 import { type BuildOptions, getBuildId } from "./helper.js";
 

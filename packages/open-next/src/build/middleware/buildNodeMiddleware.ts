@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import type { IncludedOriginResolver, LazyLoadedOverride, OverrideOptions } from "types/open-next.js";
-import type { OriginResolver } from "types/overrides.js";
-import { getCrossPlatformPathRegex } from "utils/regex.js";
+import type { IncludedOriginResolver, LazyLoadedOverride, OverrideOptions } from "@/types/open-next.js";
+import type { OriginResolver } from "@/types/overrides.js";
+import { getCrossPlatformPathRegex } from "@/utils/regex.js";
 
 import { openNextExternalMiddlewarePlugin } from "../../plugins/externalMiddleware.js";
 import { openNextReplacementPlugin } from "../../plugins/replacement.js";

@@ -1,4 +1,4 @@
-import type { NextModeTagCache } from "types/overrides";
+import type { NextModeTagCache } from "@/types/overrides";
 
 import { debug } from "../../adapters/logger";
 

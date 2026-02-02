@@ -1,12 +1,11 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
-import { NextConfig } from "config/index";
-import type { InternalEvent, InternalResult, ResolvedRoute, RoutingResult } from "types/open-next";
-import type { OpenNextHandlerOptions } from "types/overrides";
-import { runWithOpenNextRequestContext } from "utils/promise";
-
+import { NextConfig } from "@/config/index";
 import type { OpenNextNodeResponse } from "@/http/index.js";
 import { IncomingMessage } from "@/http/index.js";
+import type { InternalEvent, InternalResult, ResolvedRoute, RoutingResult } from "@/types/open-next";
+import type { OpenNextHandlerOptions } from "@/types/overrides";
+import { runWithOpenNextRequestContext } from "@/utils/promise";
 
 import { debug, error } from "../adapters/logger";
 

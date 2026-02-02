@@ -1,10 +1,11 @@
 import path from "node:path";
 
-import { NextConfig } from "config/index";
 import express from "express";
-import type { StreamCreator } from "types/open-next.js";
-import type { WrapperHandler } from "types/overrides.js";
-import { getMonorepoRelativePath } from "utils/normalize-path";
+
+import { NextConfig } from "@/config/index";
+import type { StreamCreator } from "@/types/open-next.js";
+import type { WrapperHandler } from "@/types/overrides.js";
+import { getMonorepoRelativePath } from "@/utils/normalize-path";
 
 const wrapper: WrapperHandler = async (handler, converter) => {
 	const app = express();

@@ -1,4 +1,4 @@
-import type { FunctionOptions, OpenNextConfig, RouteTemplate } from "types/open-next";
+import type { FunctionOptions, OpenNextConfig, RouteTemplate } from "@/types/open-next";
 
 type SSTCompatibleFunction = FunctionOptions & {
 	override?: {

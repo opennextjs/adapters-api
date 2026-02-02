@@ -4,7 +4,7 @@ import type {
 	IncludedWrapper,
 	OpenNextConfig,
 	SplittedFunctionOptions,
-} from "types/open-next";
+} from "@/types/open-next";
 
 import logger from "../logger.js";
 

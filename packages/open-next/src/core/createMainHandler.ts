@@ -1,4 +1,4 @@
-import type { OpenNextConfig } from "types/open-next";
+import type { OpenNextConfig } from "@/types/open-next";
 
 import { debug } from "../adapters/logger";
 import { generateUniqueId } from "../adapters/util";

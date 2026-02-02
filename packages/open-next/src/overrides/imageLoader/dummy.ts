@@ -1,5 +1,5 @@
-import type { ImageLoader } from "types/overrides";
-import { FatalError } from "utils/error";
+import type { ImageLoader } from "@/types/overrides";
+import { FatalError } from "@/utils/error";
 
 const dummyLoader: ImageLoader = {
 	name: "dummy",

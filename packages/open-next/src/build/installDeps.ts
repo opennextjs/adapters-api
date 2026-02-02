@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import type { InstallOptions } from "types/open-next";
+import type { InstallOptions } from "@/types/open-next";
 
 import logger from "../logger.js";
 

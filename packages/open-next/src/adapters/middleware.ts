@@ -3,9 +3,9 @@ import type {
 	InternalEvent,
 	InternalResult,
 	MiddlewareResult,
-} from "types/open-next";
-import type { OpenNextHandlerOptions } from "types/overrides";
-import { runWithOpenNextRequestContext } from "utils/promise";
+} from "@/types/open-next";
+import type { OpenNextHandlerOptions } from "@/types/overrides";
+import { runWithOpenNextRequestContext } from "@/utils/promise";
 
 import { debug, error } from "../adapters/logger";
 import { createGenericHandler } from "../core/createGenericHandler";

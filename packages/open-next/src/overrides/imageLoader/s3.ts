@@ -1,8 +1,9 @@
 import type { Readable } from "node:stream";
 
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import type { ImageLoader } from "types/overrides";
-import { FatalError } from "utils/error";
+
+import type { ImageLoader } from "@/types/overrides";
+import { FatalError } from "@/utils/error";
 
 import { awsLogger } from "../../adapters/logger";
 

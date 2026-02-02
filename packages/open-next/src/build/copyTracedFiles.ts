@@ -21,8 +21,8 @@ import {
 	loadMiddlewareManifest,
 	loadPagesManifest,
 	loadPrerenderManifest,
-} from "config/util.js";
-import { getCrossPlatformPathRegex } from "utils/regex.js";
+} from "@/config/util.js";
+import { getCrossPlatformPathRegex } from "@/utils/regex.js";
 
 import logger from "../logger.js";
 

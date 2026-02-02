@@ -2,8 +2,9 @@ import { Readable, type Writable } from "node:stream";
 import zlib from "node:zlib";
 
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
-import type { StreamCreator } from "types/open-next";
-import type { Wrapper, WrapperHandler } from "types/overrides";
+
+import type { StreamCreator } from "@/types/open-next";
+import type { Wrapper, WrapperHandler } from "@/types/overrides";
 
 import { debug, error } from "../../adapters/logger";
 import type { WarmerEvent, WarmerResponse } from "../../adapters/warmer-function";

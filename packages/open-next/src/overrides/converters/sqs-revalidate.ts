@@ -1,5 +1,6 @@
 import type { SQSEvent } from "aws-lambda";
-import type { Converter } from "types/overrides";
+
+import type { Converter } from "@/types/overrides";
 
 import type { RevalidateEvent } from "../../adapters/revalidate";
 

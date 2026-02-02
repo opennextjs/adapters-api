@@ -2,8 +2,9 @@ import { Readable } from "node:stream";
 import type { ReadableStream } from "node:stream/web";
 
 import { AwsClient } from "aws4fetch";
-import type { ImageLoader } from "types/overrides";
-import { FatalError } from "utils/error";
+
+import type { ImageLoader } from "@/types/overrides";
+import { FatalError } from "@/utils/error";
 
 let awsClient: AwsClient | null = null;
 

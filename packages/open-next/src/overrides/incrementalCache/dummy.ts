@@ -1,5 +1,5 @@
-import type { IncrementalCache } from "types/overrides";
-import { IgnorableError } from "utils/error";
+import type { IncrementalCache } from "@/types/overrides";
+import { IgnorableError } from "@/utils/error";
 
 const dummyIncrementalCache: IncrementalCache = {
 	name: "dummy",

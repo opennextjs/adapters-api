@@ -7,7 +7,7 @@ import type {
 	NextConfig,
 	PrerenderManifest,
 	RoutesManifest,
-} from "types/next-types";
+} from "@/types/next-types";
 
 import type { PublicFiles } from "../../build";
 

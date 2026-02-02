@@ -1,8 +1,9 @@
 import type { IncomingMessage } from "node:http";
 
 import cookieParser from "cookie";
-import type { InternalResult } from "types/open-next";
-import type { Converter } from "types/overrides";
+
+import type { InternalResult } from "@/types/open-next";
+import type { Converter } from "@/types/overrides";
 
 import { extractHostFromHeaders, getQueryFromSearchParams } from "./utils.js";
 

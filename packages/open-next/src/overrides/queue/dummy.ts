@@ -1,5 +1,5 @@
-import type { Queue } from "types/overrides";
-import { FatalError } from "utils/error";
+import type { Queue } from "@/types/overrides";
+import { FatalError } from "@/utils/error";
 
 const dummyQueue: Queue = {
 	name: "dummy",

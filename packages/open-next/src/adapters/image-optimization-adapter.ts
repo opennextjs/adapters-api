@@ -4,7 +4,6 @@ import https from "node:https";
 import path from "node:path";
 import type { Writable } from "node:stream";
 
-import { loadBuildId, loadConfig } from "config/util.js";
 // @ts-ignore
 import { defaultConfig } from "next/dist/server/config-shared";
 import {
@@ -13,11 +12,12 @@ import {
 } from "next/dist/server/image-optimizer";
 // @ts-ignore
 import type { NextUrlWithParsedQuery } from "next/dist/server/request-meta";
-import type { InternalEvent, InternalResult, StreamCreator } from "types/open-next.js";
-import type { OpenNextHandlerOptions } from "types/overrides.js";
-import { emptyReadableStream, toReadableStream } from "utils/stream.js";
 
+import { loadBuildId, loadConfig } from "@/config/util.js";
 import { OpenNextNodeResponse } from "@/http/openNextResponse.js";
+import type { InternalEvent, InternalResult, StreamCreator } from "@/types/open-next.js";
+import type { OpenNextHandlerOptions } from "@/types/overrides.js";
+import { emptyReadableStream, toReadableStream } from "@/utils/stream.js";
 
 import { createGenericHandler } from "../core/createGenericHandler.js";
 import { resolveImageLoader } from "../core/resolve.js";

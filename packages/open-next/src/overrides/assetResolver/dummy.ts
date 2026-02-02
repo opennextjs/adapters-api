@@ -1,4 +1,4 @@
-import type { AssetResolver } from "types/overrides";
+import type { AssetResolver } from "@/types/overrides";
 
 /**
  * A dummy asset resolver.

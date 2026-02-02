@@ -1,5 +1,5 @@
-import type { CacheHandlerValue, IncrementalCacheContext, IncrementalCacheValue } from "types/cache";
-import { getTagsFromValue, hasBeenRevalidated, writeTags } from "utils/cache";
+import type { CacheHandlerValue, IncrementalCacheContext, IncrementalCacheValue } from "@/types/cache";
+import { getTagsFromValue, hasBeenRevalidated, writeTags } from "@/utils/cache";
 
 import { isBinaryContentType } from "../utils/binary";
 
