@@ -1,5 +1,6 @@
 import { CloudFrontClient, CreateInvalidationCommand } from "@aws-sdk/client-cloudfront";
-import type { CDNInvalidationHandler } from "types/overrides";
+
+import type { CDNInvalidationHandler } from "@/types/overrides";
 
 const cloudfront = new CloudFrontClient({});
 export default {

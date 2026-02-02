@@ -1,4 +1,4 @@
-import type { CacheValue, OriginalTagCacheWriteInput, WithLastModified } from "types/overrides";
+import type { CacheValue, OriginalTagCacheWriteInput, WithLastModified } from "@/types/overrides";
 
 import { debug } from "../adapters/logger";
 

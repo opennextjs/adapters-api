@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { loadMiddlewareManifest } from "config/util.js";
 import { type Plugin, build } from "esbuild";
-import type { MiddlewareInfo } from "types/next-types";
+
+import { loadMiddlewareManifest } from "@/config/util.js";
+import type { MiddlewareInfo } from "@/types/next-types";
 import type {
 	IncludedConverter,
 	IncludedOriginResolver,
@@ -11,8 +12,8 @@ import type {
 	OverrideOptions,
 	RouteTemplate,
 	SplittedFunctionOptions,
-} from "types/open-next";
-import type { OriginResolver } from "types/overrides.js";
+} from "@/types/open-next";
+import type { OriginResolver } from "@/types/overrides.js";
 
 import logger from "../../logger.js";
 import { ContentUpdater } from "../../plugins/content-updater.js";

@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { NextConfig } from "config/index";
-import type { ImageLoader } from "types/overrides";
-import { getMonorepoRelativePath } from "utils/normalize-path";
+import { NextConfig } from "@/config/index";
+import type { ImageLoader } from "@/types/overrides";
+import { getMonorepoRelativePath } from "@/utils/normalize-path";
 
 export default {
 	name: "fs-dev",

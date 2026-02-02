@@ -5,7 +5,8 @@ import url from "node:url";
 
 import type { BuildOptions as ESBuildOptions } from "esbuild";
 import { build as buildAsync, buildSync } from "esbuild";
-import type { DefaultOverrideOptions, OpenNextConfig } from "types/open-next.js";
+
+import type { DefaultOverrideOptions, OpenNextConfig } from "@/types/open-next.js";
 
 import logger from "../logger.js";
 

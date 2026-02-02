@@ -1,8 +1,8 @@
 import { Writable } from "node:stream";
 
-import type { AwsLambdaEvent, AwsLambdaReturn } from "types/aws-lambda";
-import type { StreamCreator } from "types/open-next";
-import type { WrapperHandler } from "types/overrides";
+import type { AwsLambdaEvent, AwsLambdaReturn } from "@/types/aws-lambda";
+import type { StreamCreator } from "@/types/open-next";
+import type { WrapperHandler } from "@/types/overrides";
 
 import type { WarmerEvent, WarmerResponse } from "../../adapters/warmer-function";
 

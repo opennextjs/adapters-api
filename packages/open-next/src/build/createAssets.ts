@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { loadConfig } from "config/util.js";
-import { safeParseJsonFile } from "utils/safe-json-parse.js";
+import { loadConfig } from "@/config/util.js";
+import { safeParseJsonFile } from "@/utils/safe-json-parse.js";
 
 import logger from "../logger.js";
 import type { TagCacheMetaFile } from "../types/cache.js";

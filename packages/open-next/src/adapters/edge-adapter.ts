@@ -1,9 +1,9 @@
 import type { ReadableStream } from "node:stream/web";
 
-import type { InternalEvent, InternalResult } from "types/open-next";
-import type { OpenNextHandlerOptions } from "types/overrides";
-import { runWithOpenNextRequestContext } from "utils/promise";
-import { emptyReadableStream } from "utils/stream";
+import type { InternalEvent, InternalResult } from "@/types/open-next";
+import type { OpenNextHandlerOptions } from "@/types/overrides";
+import { runWithOpenNextRequestContext } from "@/utils/promise";
+import { emptyReadableStream } from "@/utils/stream";
 
 // We import it like that so that the edge plugin can replace it
 import { NextConfig } from "../adapters/config";

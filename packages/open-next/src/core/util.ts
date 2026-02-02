@@ -1,6 +1,7 @@
-import { AppPathsManifestKeys, NextConfig, RoutesManifest } from "config/index.js";
 // @ts-ignore
 import NextServer from "next/dist/server/next-server.js";
+
+import { AppPathsManifestKeys, NextConfig, RoutesManifest } from "@/config/index.js";
 
 import { debug, error } from "../adapters/logger.js";
 

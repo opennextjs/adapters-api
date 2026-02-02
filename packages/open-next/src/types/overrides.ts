@@ -1,6 +1,6 @@
 import type { Readable } from "node:stream";
 
-import type { Extension, Meta, StoredComposableCacheEntry } from "types/cache";
+import type { Extension, Meta, StoredComposableCacheEntry } from "@/types/cache";
 
 import type {
 	BaseEventOrResult,

@@ -1,6 +1,6 @@
-import { BuildId, ConfigHeaders, NextConfig, PrerenderManifest, RoutesManifest } from "config/index";
-import type { InternalEvent, InternalResult, ResolvedRoute, RoutingResult } from "types/open-next";
-import type { AssetResolver } from "types/overrides";
+import { BuildId, ConfigHeaders, NextConfig, PrerenderManifest, RoutesManifest } from "@/config/index";
+import type { InternalEvent, InternalResult, ResolvedRoute, RoutingResult } from "@/types/open-next";
+import type { AssetResolver } from "@/types/overrides";
 
 import { debug, error } from "../adapters/logger";
 

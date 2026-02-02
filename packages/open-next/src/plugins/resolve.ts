@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 
 import chalk from "chalk";
 import type { Plugin } from "esbuild";
+
 import type {
 	DefaultOverrideOptions,
 	IncludedImageLoader,
@@ -9,8 +10,8 @@ import type {
 	IncludedWarmer,
 	LazyLoadedOverride,
 	OverrideOptions,
-} from "types/open-next";
-import type { ImageLoader, OriginResolver, Warmer } from "types/overrides";
+} from "@/types/open-next";
+import type { ImageLoader, OriginResolver, Warmer } from "@/types/overrides";
 
 import logger from "../logger.js";
 import { getCrossPlatformPathRegex } from "../utils/regex.js";

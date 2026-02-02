@@ -2,7 +2,8 @@ import path from "node:path";
 
 import type { DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
 import { BatchWriteItemCommand, DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
-import type { TagCache } from "types/overrides";
+
+import type { TagCache } from "@/types/overrides";
 
 import { awsLogger, debug, error } from "../../adapters/logger";
 import { chunk, parseNumberFromEnv } from "../../adapters/util";

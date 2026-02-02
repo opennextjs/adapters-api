@@ -1,4 +1,4 @@
-import { getCrossPlatformPathRegex } from "utils/regex.js";
+import { getCrossPlatformPathRegex } from "@/utils/regex.js";
 
 import type { NextAdapterOutputs } from "../adapter.js";
 import { patchCode } from "../build/patch/astCodePatcher.js";

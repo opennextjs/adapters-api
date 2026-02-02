@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-import type { NextConfig } from "types/next-types";
+import type { NextConfig } from "@/types/next-types";
 
 import { compileCache } from "./build/compileCache.js";
 import { compileOpenNextConfig } from "./build/compileConfig.js";

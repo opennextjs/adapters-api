@@ -3,7 +3,7 @@ import type { Socket } from "node:net";
 import { Transform } from "node:stream";
 import type { TransformCallback, Writable } from "node:stream";
 
-import type { StreamCreator } from "types/open-next";
+import type { StreamCreator } from "@/types/open-next";
 
 import { debug } from "../adapters/logger";
 

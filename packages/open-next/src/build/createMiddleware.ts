@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { loadFunctionsConfigManifest, loadMiddlewareManifest } from "config/util.js";
+import { loadFunctionsConfigManifest, loadMiddlewareManifest } from "@/config/util.js";
 
 import logger from "../logger.js";
 import type { MiddlewareInfo } from "../types/next-types.js";

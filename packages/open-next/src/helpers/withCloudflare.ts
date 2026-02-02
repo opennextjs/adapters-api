@@ -3,7 +3,7 @@ import type {
 	OpenNextConfig,
 	RouteTemplate,
 	SplittedFunctionOptions,
-} from "types/open-next";
+} from "@/types/open-next";
 
 type CloudflareCompatibleFunction<Placement extends "regional" | "global"> = Placement extends "regional"
 	? FunctionOptions & {

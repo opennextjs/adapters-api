@@ -1,4 +1,4 @@
-import type { OriginResolver } from "types/overrides";
+import type { OriginResolver } from "@/types/overrides";
 
 const dummyOriginResolver: OriginResolver = {
 	name: "dummy",

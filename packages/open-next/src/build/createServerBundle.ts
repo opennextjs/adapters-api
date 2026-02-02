@@ -2,9 +2,10 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-import { loadMiddlewareManifest } from "config/util.js";
 import type { Plugin } from "esbuild";
-import type { FunctionOptions, SplittedFunctionOptions } from "types/open-next";
+
+import { loadMiddlewareManifest } from "@/config/util.js";
+import type { FunctionOptions, SplittedFunctionOptions } from "@/types/open-next";
 
 import type { NextAdapterOutputs } from "../adapter.js";
 import logger from "../logger.js";

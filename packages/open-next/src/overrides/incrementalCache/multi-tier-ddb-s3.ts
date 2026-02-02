@@ -1,6 +1,6 @@
-import type { CacheEntryType, CacheValue, IncrementalCache } from "types/overrides";
-import { customFetchClient } from "utils/fetch";
-import { LRUCache } from "utils/lru";
+import type { CacheEntryType, CacheValue, IncrementalCache } from "@/types/overrides";
+import { customFetchClient } from "@/utils/fetch";
+import { LRUCache } from "@/utils/lru";
 
 import { debug } from "../../adapters/logger";
 

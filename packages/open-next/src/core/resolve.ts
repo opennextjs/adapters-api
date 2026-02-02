@@ -6,8 +6,8 @@ import type {
 	InternalResult,
 	OpenNextConfig,
 	OverrideOptions,
-} from "types/open-next";
-import type { Converter, TagCache, Wrapper } from "types/overrides";
+} from "@/types/open-next";
+import type { Converter, TagCache, Wrapper } from "@/types/overrides";
 
 // Just a little utility type to remove undefined from a type
 type RemoveUndefined<T> = T extends undefined ? never : T;

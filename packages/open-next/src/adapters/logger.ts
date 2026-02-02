@@ -1,4 +1,4 @@
-import { isOpenNextError } from "utils/error.js";
+import { isOpenNextError } from "@/utils/error.js";
 
 export function debug(...args: any[]) {
 	if (globalThis.openNextDebug) {

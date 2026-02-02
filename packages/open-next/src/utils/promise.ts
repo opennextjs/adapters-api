@@ -1,4 +1,4 @@
-import type { WaitUntil } from "types/open-next";
+import type { WaitUntil } from "@/types/open-next";
 
 import { debug, error } from "../adapters/logger";
 

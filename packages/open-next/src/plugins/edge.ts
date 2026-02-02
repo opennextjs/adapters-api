@@ -3,7 +3,8 @@ import path from "node:path";
 
 import chalk from "chalk";
 import type { Plugin } from "esbuild";
-import type { MiddlewareInfo } from "types/next-types.js";
+
+import type { MiddlewareInfo } from "@/types/next-types.js";
 
 import {
 	loadAppPathRoutesManifest,

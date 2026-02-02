@@ -1,7 +1,7 @@
 import { Writable } from "node:stream";
 
-import type { InternalEvent, InternalResult, StreamCreator } from "types/open-next";
-import type { Wrapper, WrapperHandler } from "types/overrides";
+import type { InternalEvent, InternalResult, StreamCreator } from "@/types/open-next";
+import type { Wrapper, WrapperHandler } from "@/types/overrides";
 
 // Response with null body status (101, 204, 205, or 304) cannot have a body.
 const NULL_BODY_STATUSES = new Set([101, 204, 205, 304]);

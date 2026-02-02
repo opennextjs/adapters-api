@@ -1,5 +1,6 @@
 import type { Plugin } from "esbuild";
-import { getCrossPlatformPathRegex } from "utils/regex.js";
+
+import { getCrossPlatformPathRegex } from "@/utils/regex.js";
 
 export function openNextExternalMiddlewarePlugin(functionPath: string): Plugin {
 	return {

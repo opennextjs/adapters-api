@@ -1,10 +1,11 @@
 import path from "node:path";
 
 import { AwsClient } from "aws4fetch";
-import type { Extension } from "types/cache";
-import type { IncrementalCache } from "types/overrides";
-import { IgnorableError, RecoverableError } from "utils/error";
-import { customFetchClient } from "utils/fetch";
+
+import type { Extension } from "@/types/cache";
+import type { IncrementalCache } from "@/types/overrides";
+import { IgnorableError, RecoverableError } from "@/utils/error";
+import { customFetchClient } from "@/utils/fetch";
 
 import { parseNumberFromEnv } from "../../adapters/util";
 

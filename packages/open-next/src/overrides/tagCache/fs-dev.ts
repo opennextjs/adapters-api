@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import type { TagCache } from "types/overrides";
-import { getMonorepoRelativePath } from "utils/normalize-path";
+import type { TagCache } from "@/types/overrides";
+import { getMonorepoRelativePath } from "@/utils/normalize-path";
 
 const tagFile = path.join(getMonorepoRelativePath(), "dynamodb-provider/dynamodb-cache.json");
 const tagContent = fs.readFileSync(tagFile, "utf-8");

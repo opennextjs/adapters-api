@@ -1,6 +1,6 @@
 // Necessary files will be imported here with banner in esbuild
 
-import type { RequestData } from "types/global";
+import type { RequestData } from "@/types/global";
 
 type EdgeRequest = Omit<RequestData, "page">;
 

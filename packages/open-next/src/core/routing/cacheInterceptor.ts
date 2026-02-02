@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
 
-import { NextConfig, PrerenderManifest } from "config/index";
-import type { InternalEvent, InternalResult, MiddlewareEvent } from "types/open-next";
-import type { CacheValue } from "types/overrides";
-import { isBinaryContentType } from "utils/binary";
-import { getTagsFromValue, hasBeenRevalidated } from "utils/cache";
-import { emptyReadableStream, toReadableStream } from "utils/stream";
+import { NextConfig, PrerenderManifest } from "@/config/index";
+import type { InternalEvent, InternalResult, MiddlewareEvent } from "@/types/open-next";
+import type { CacheValue } from "@/types/overrides";
+import { isBinaryContentType } from "@/utils/binary";
+import { getTagsFromValue, hasBeenRevalidated } from "@/utils/cache";
+import { emptyReadableStream, toReadableStream } from "@/utils/stream";
 
 import { debug, error } from "../../adapters/logger";
 

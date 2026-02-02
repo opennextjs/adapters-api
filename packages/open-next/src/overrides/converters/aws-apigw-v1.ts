@@ -1,7 +1,8 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import type { InternalEvent, InternalResult } from "types/open-next";
-import type { Converter } from "types/overrides";
-import { fromReadableStream } from "utils/stream";
+
+import type { InternalEvent, InternalResult } from "@/types/open-next";
+import type { Converter } from "@/types/overrides";
+import { fromReadableStream } from "@/utils/stream";
 
 import { debug } from "../../adapters/logger";
 

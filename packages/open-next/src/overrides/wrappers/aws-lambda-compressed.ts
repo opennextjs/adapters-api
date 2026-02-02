@@ -2,9 +2,9 @@ import { Readable, type Transform, Writable } from "node:stream";
 import type { ReadableStream } from "node:stream/web";
 import zlib from "node:zlib";
 
-import type { AwsLambdaEvent, AwsLambdaReturn } from "types/aws-lambda";
-import type { InternalResult, StreamCreator } from "types/open-next";
-import type { WrapperHandler } from "types/overrides";
+import type { AwsLambdaEvent, AwsLambdaReturn } from "@/types/aws-lambda";
+import type { InternalResult, StreamCreator } from "@/types/open-next";
+import type { WrapperHandler } from "@/types/overrides";
 
 import { error } from "../../adapters/logger";
 

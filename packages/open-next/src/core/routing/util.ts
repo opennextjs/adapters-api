@@ -3,13 +3,12 @@ import type { OutgoingHttpHeaders } from "node:http";
 import { parse as parseQs, stringify as stringifyQs } from "node:querystring";
 import { ReadableStream } from "node:stream/web";
 
-import { BuildId, HtmlPages, NextConfig } from "config/index.js";
-import type { FunctionsConfigManifest, MiddlewareManifest } from "types/next-types";
-import type { InternalEvent, InternalResult, RoutingResult, StreamCreator } from "types/open-next.js";
-
+import { BuildId, HtmlPages, NextConfig } from "@/config/index.js";
 import type { IncomingMessage } from "@/http/index.js";
 import { OpenNextNodeResponse } from "@/http/openNextResponse.js";
 import { getQueryFromIterator, parseHeaders } from "@/http/util.js";
+import type { FunctionsConfigManifest, MiddlewareManifest } from "@/types/next-types";
+import type { InternalEvent, InternalResult, RoutingResult, StreamCreator } from "@/types/open-next.js";
 
 import { debug, error } from "../../adapters/logger.js";
 import { isBinaryContentType } from "../../utils/binary.js";

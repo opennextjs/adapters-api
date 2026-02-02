@@ -8,7 +8,7 @@ import type {
 	ProxyExternalRequest,
 	Queue,
 	TagCache,
-} from "types/overrides";
+} from "@/types/overrides";
 
 import type { DetachedPromiseRunner } from "../utils/promise";
 
