@@ -1,34 +1,28 @@
-import type {
-  CacheHandlerValue,
-  IncrementalCacheContext,
-  IncrementalCacheValue,
-} from "types/cache";
-import { getTagsFromValue, hasBeenRevalidated, writeTags } from "utils/cache";
+import type { CacheHandlerValue, IncrementalCacheContext, IncrementalCacheValue } from "@/types/cache";
+import { getTagsFromValue, hasBeenRevalidated, writeTags } from "@/utils/cache";
+
 import { isBinaryContentType } from "../utils/binary";
+
 import { debug, error, warn } from "./logger";
 
 export const SOFT_TAG_PREFIX = "_N_T_/";
 
 function isFetchCache(
-  options?:
-    | boolean
-    | {
-        fetchCache?: boolean;
-        kindHint?: "app" | "pages" | "fetch";
-        kind?: "FETCH";
-      },
+	options?:
+		| boolean
+		| {
+				fetchCache?: boolean;
+				kindHint?: "app" | "pages" | "fetch";
+				kind?: "FETCH";
+		  }
 ): boolean {
-  if (typeof options === "boolean") {
-    return options;
-  }
-  if (typeof options === "object") {
-    return (
-      options.kindHint === "fetch" ||
-      options.fetchCache ||
-      options.kind === "FETCH"
-    );
-  }
-  return false;
+	if (typeof options === "boolean") {
+		return options;
+	}
+	if (typeof options === "object") {
+		return options.kindHint === "fetch" || options.fetchCache || options.kind === "FETCH";
+	}
+	return false;
 }
 // We need to use globalThis client here as this class can be defined at load time in next 12 but client is not available at load time
 export default class Cache {
@@ -49,155 +43,141 @@ export default class Cache {
       return null;
     }
 
-    const softTags = typeof options === "object" ? options.softTags : [];
-    const tags = typeof options === "object" ? options.tags : [];
-    return isFetchCache(options)
-      ? this.getFetchCache(key, softTags, tags)
-      : this.getIncrementalCache(key);
-  }
+		const softTags = typeof options === "object" ? options.softTags : [];
+		const tags = typeof options === "object" ? options.tags : [];
+		return isFetchCache(options) ? this.getFetchCache(key, softTags, tags) : this.getIncrementalCache(key);
+	}
 
-  async getFetchCache(key: string, softTags?: string[], tags?: string[]) {
-    debug("get fetch cache", { key, softTags, tags });
-    try {
-      const cachedEntry = await globalThis.incrementalCache.get(key, "fetch");
+	async getFetchCache(key: string, softTags?: string[], tags?: string[]) {
+		debug("get fetch cache", { key, softTags, tags });
+		try {
+			const cachedEntry = await globalThis.incrementalCache.get(key, "fetch");
 
-      if (cachedEntry?.value === undefined) return null;
+			if (cachedEntry?.value === undefined) return null;
 
-      const _tags = [...(tags ?? []), ...(softTags ?? [])];
-      const _lastModified = cachedEntry.lastModified ?? Date.now();
-      const _hasBeenRevalidated = cachedEntry.shouldBypassTagCache
-        ? false
-        : await hasBeenRevalidated(key, _tags, cachedEntry);
+			const _tags = [...(tags ?? []), ...(softTags ?? [])];
+			const _lastModified = cachedEntry.lastModified ?? Date.now();
+			const _hasBeenRevalidated = cachedEntry.shouldBypassTagCache
+				? false
+				: await hasBeenRevalidated(key, _tags, cachedEntry);
 
-      if (_hasBeenRevalidated) return null;
+			if (_hasBeenRevalidated) return null;
 
-      // For cases where we don't have tags, we need to ensure that the soft tags are not being revalidated
-      // We only need to check for the path as it should already contain all the tags
-      if ((tags ?? []).length === 0) {
-        // Then we need to find the path for the given key
-        const path = softTags?.find(
-          (tag) =>
-            tag.startsWith(SOFT_TAG_PREFIX) &&
-            !tag.endsWith("layout") &&
-            !tag.endsWith("page"),
-        );
-        if (path) {
-          const hasPathBeenUpdated = cachedEntry.shouldBypassTagCache
-            ? false
-            : await hasBeenRevalidated(
-                path.replace(SOFT_TAG_PREFIX, ""),
-                [],
-                cachedEntry,
-              );
-          if (hasPathBeenUpdated) {
-            // In case the path has been revalidated, we don't want to use the fetch cache
-            return null;
-          }
-        }
-      }
+			// For cases where we don't have tags, we need to ensure that the soft tags are not being revalidated
+			// We only need to check for the path as it should already contain all the tags
+			if ((tags ?? []).length === 0) {
+				// Then we need to find the path for the given key
+				const path = softTags?.find(
+					(tag) => tag.startsWith(SOFT_TAG_PREFIX) && !tag.endsWith("layout") && !tag.endsWith("page")
+				);
+				if (path) {
+					const hasPathBeenUpdated = cachedEntry.shouldBypassTagCache
+						? false
+						: await hasBeenRevalidated(path.replace(SOFT_TAG_PREFIX, ""), [], cachedEntry);
+					if (hasPathBeenUpdated) {
+						// In case the path has been revalidated, we don't want to use the fetch cache
+						return null;
+					}
+				}
+			}
 
-      return {
-        lastModified: _lastModified,
-        value: cachedEntry.value,
-      } as CacheHandlerValue;
-    } catch (e) {
-      // We can usually ignore errors here as they are usually due to cache not being found
-      debug("Failed to get fetch cache", e);
-      return null;
-    }
-  }
+			return {
+				lastModified: _lastModified,
+				value: cachedEntry.value,
+			} as CacheHandlerValue;
+		} catch (e) {
+			// We can usually ignore errors here as they are usually due to cache not being found
+			debug("Failed to get fetch cache", e);
+			return null;
+		}
+	}
 
-  async getIncrementalCache(key: string): Promise<CacheHandlerValue | null> {
-    try {
-      const cachedEntry = await globalThis.incrementalCache.get(key, "cache");
+	async getIncrementalCache(key: string): Promise<CacheHandlerValue | null> {
+		try {
+			const cachedEntry = await globalThis.incrementalCache.get(key, "cache");
 
-      if (!cachedEntry?.value) {
-        return null;
-      }
+			if (!cachedEntry?.value) {
+				return null;
+			}
 
-      const cacheData = cachedEntry.value;
+			const cacheData = cachedEntry.value;
 
-      const meta = cacheData.meta;
-      const tags = getTagsFromValue(cacheData);
-      const _lastModified = cachedEntry.lastModified ?? Date.now();
-      const _hasBeenRevalidated = cachedEntry.shouldBypassTagCache
-        ? false
-        : await hasBeenRevalidated(key, tags, cachedEntry);
-      if (_hasBeenRevalidated) return null;
+			const meta = cacheData.meta;
+			const tags = getTagsFromValue(cacheData);
+			const _lastModified = cachedEntry.lastModified ?? Date.now();
+			const _hasBeenRevalidated = cachedEntry.shouldBypassTagCache
+				? false
+				: await hasBeenRevalidated(key, tags, cachedEntry);
+			if (_hasBeenRevalidated) return null;
 
-      const store = globalThis.__openNextAls.getStore();
-      if (store) {
-        store.lastModified = _lastModified;
-      }
+			const store = globalThis.__openNextAls.getStore();
+			if (store) {
+				store.lastModified = _lastModified;
+			}
 
-      if (cacheData?.type === "route") {
-        return {
-          lastModified: _lastModified,
-          value: {
-            kind: globalThis.isNextAfter15 ? "APP_ROUTE" : "ROUTE",
-            body: Buffer.from(
-              cacheData.body ?? Buffer.alloc(0),
-              isBinaryContentType(String(meta?.headers?.["content-type"]))
-                ? "base64"
-                : "utf8",
-            ),
-            status: meta?.status,
-            headers: meta?.headers,
-          },
-        } as CacheHandlerValue;
-      }
-      if (cacheData?.type === "page" || cacheData?.type === "app") {
-        if (globalThis.isNextAfter15 && cacheData?.type === "app") {
-          const segmentData = new Map<string, Buffer>();
-          if (cacheData.segmentData) {
-            for (const [segmentPath, segmentContent] of Object.entries(
-              cacheData.segmentData ?? {},
-            )) {
-              segmentData.set(segmentPath, Buffer.from(segmentContent));
-            }
-          }
-          return {
-            lastModified: _lastModified,
-            value: {
-              kind: "APP_PAGE",
-              html: cacheData.html,
-              rscData: Buffer.from(cacheData.rsc),
-              status: meta?.status,
-              headers: meta?.headers,
-              postponed: meta?.postponed,
-              segmentData,
-            },
-          } as CacheHandlerValue;
-        }
-        return {
-          lastModified: _lastModified,
-          value: {
-            kind: globalThis.isNextAfter15 ? "PAGES" : "PAGE",
-            html: cacheData.html,
-            pageData:
-              cacheData.type === "page" ? cacheData.json : cacheData.rsc,
-            status: meta?.status,
-            headers: meta?.headers,
-          },
-        } as CacheHandlerValue;
-      }
-      if (cacheData?.type === "redirect") {
-        return {
-          lastModified: _lastModified,
-          value: {
-            kind: "REDIRECT",
-            props: cacheData.props,
-          },
-        } as CacheHandlerValue;
-      }
-      warn("Unknown cache type", cacheData);
-      return null;
-    } catch (e) {
-      // We can usually ignore errors here as they are usually due to cache not being found
-      debug("Failed to get body cache", e);
-      return null;
-    }
-  }
+			if (cacheData?.type === "route") {
+				return {
+					lastModified: _lastModified,
+					value: {
+						kind: globalThis.isNextAfter15 ? "APP_ROUTE" : "ROUTE",
+						body: Buffer.from(
+							cacheData.body ?? Buffer.alloc(0),
+							isBinaryContentType(String(meta?.headers?.["content-type"])) ? "base64" : "utf8"
+						),
+						status: meta?.status,
+						headers: meta?.headers,
+					},
+				} as CacheHandlerValue;
+			}
+			if (cacheData?.type === "page" || cacheData?.type === "app") {
+				if (globalThis.isNextAfter15 && cacheData?.type === "app") {
+					const segmentData = new Map<string, Buffer>();
+					if (cacheData.segmentData) {
+						for (const [segmentPath, segmentContent] of Object.entries(cacheData.segmentData ?? {})) {
+							segmentData.set(segmentPath, Buffer.from(segmentContent));
+						}
+					}
+					return {
+						lastModified: _lastModified,
+						value: {
+							kind: "APP_PAGE",
+							html: cacheData.html,
+							rscData: Buffer.from(cacheData.rsc),
+							status: meta?.status,
+							headers: meta?.headers,
+							postponed: meta?.postponed,
+							segmentData,
+						},
+					} as CacheHandlerValue;
+				}
+				return {
+					lastModified: _lastModified,
+					value: {
+						kind: globalThis.isNextAfter15 ? "PAGES" : "PAGE",
+						html: cacheData.html,
+						pageData: cacheData.type === "page" ? cacheData.json : cacheData.rsc,
+						status: meta?.status,
+						headers: meta?.headers,
+					},
+				} as CacheHandlerValue;
+			}
+			if (cacheData?.type === "redirect") {
+				return {
+					lastModified: _lastModified,
+					value: {
+						kind: "REDIRECT",
+						props: cacheData.props,
+					},
+				} as CacheHandlerValue;
+			}
+			warn("Unknown cache type", cacheData);
+			return null;
+		} catch (e) {
+			// We can usually ignore errors here as they are usually due to cache not being found
+			debug("Failed to get body cache", e);
+			return null;
+		}
+	}
 
   async set(
     key: string,
@@ -311,29 +291,29 @@ export default class Cache {
         }
       }
 
-      await this.updateTagsOnSet(key, data, ctx);
-      debug("Finished setting cache");
-    } catch (e) {
-      error("Failed to set cache", e);
-    } finally {
-      // We need to resolve the promise even if there was an error
-      detachedPromise?.resolve();
-    }
-  }
+			await this.updateTagsOnSet(key, data, ctx);
+			debug("Finished setting cache");
+		} catch (e) {
+			error("Failed to set cache", e);
+		} finally {
+			// We need to resolve the promise even if there was an error
+			detachedPromise?.resolve();
+		}
+	}
 
-  public async revalidateTag(tags: string | string[]) {
-    const config = globalThis.openNextConfig.dangerous;
-    if (config?.disableTagCache || config?.disableIncrementalCache) {
-      return;
-    }
-    const _tags = Array.isArray(tags) ? tags : [tags];
-    if (_tags.length === 0) {
-      return;
-    }
+	public async revalidateTag(tags: string | string[]) {
+		const config = globalThis.openNextConfig.dangerous;
+		if (config?.disableTagCache || config?.disableIncrementalCache) {
+			return;
+		}
+		const _tags = Array.isArray(tags) ? tags : [tags];
+		if (_tags.length === 0) {
+			return;
+		}
 
-    try {
-      if (globalThis.tagCache.mode === "nextMode") {
-        const paths = (await globalThis.tagCache.getPathsByTags?.(_tags)) ?? [];
+		try {
+			if (globalThis.tagCache.mode === "nextMode") {
+				const paths = (await globalThis.tagCache.getPathsByTags?.(_tags)) ?? [];
 
         await writeTags(_tags);
         if (paths.length > 0) {
@@ -357,40 +337,38 @@ export default class Cache {
         return;
       }
 
-      for (const tag of _tags) {
-        debug("revalidateTag", tag);
-        // Find all keys with the given tag
-        const paths = await globalThis.tagCache.getByTag(tag);
-        debug("Items", paths);
-        const toInsert = paths.map((path) => ({
-          path,
-          tag,
-        }));
+			for (const tag of _tags) {
+				debug("revalidateTag", tag);
+				// Find all keys with the given tag
+				const paths = await globalThis.tagCache.getByTag(tag);
+				debug("Items", paths);
+				const toInsert = paths.map((path) => ({
+					path,
+					tag,
+				}));
 
-        // If the tag is a soft tag, we should also revalidate the hard tags
-        if (tag.startsWith(SOFT_TAG_PREFIX)) {
-          for (const path of paths) {
-            // We need to find all hard tags for a given path
-            const _tags = await globalThis.tagCache.getByPath(path);
-            const hardTags = _tags.filter(
-              (t) => !t.startsWith(SOFT_TAG_PREFIX),
-            );
-            // For every hard tag, we need to find all paths and revalidate them
-            for (const hardTag of hardTags) {
-              const _paths = await globalThis.tagCache.getByTag(hardTag);
-              debug({ hardTag, _paths });
-              toInsert.push(
-                ..._paths.map((path) => ({
-                  path,
-                  tag: hardTag,
-                })),
-              );
-            }
-          }
-        }
+				// If the tag is a soft tag, we should also revalidate the hard tags
+				if (tag.startsWith(SOFT_TAG_PREFIX)) {
+					for (const path of paths) {
+						// We need to find all hard tags for a given path
+						const _tags = await globalThis.tagCache.getByPath(path);
+						const hardTags = _tags.filter((t) => !t.startsWith(SOFT_TAG_PREFIX));
+						// For every hard tag, we need to find all paths and revalidate them
+						for (const hardTag of hardTags) {
+							const _paths = await globalThis.tagCache.getByTag(hardTag);
+							debug({ hardTag, _paths });
+							toInsert.push(
+								..._paths.map((path) => ({
+									path,
+									tag: hardTag,
+								}))
+							);
+						}
+					}
+				}
 
-        // Update all keys with the given tag with revalidatedAt set to now
-        await writeTags(toInsert);
+				// Update all keys with the given tag with revalidatedAt set to now
+				await writeTags(toInsert);
 
         // We can now invalidate all paths in the CDN
         // This only applies to `revalidateTag`, not to `res.revalidate()`
@@ -424,64 +402,58 @@ export default class Cache {
     }
   }
 
-  // TODO: We should delete/update tags in this method
-  // This will require an update to the tag cache interface
-  private async updateTagsOnSet(
-    key: string,
-    data?: IncrementalCacheValue,
-    ctx?: IncrementalCacheContext,
-  ) {
-    if (
-      globalThis.openNextConfig.dangerous?.disableTagCache ||
-      globalThis.tagCache.mode === "nextMode" ||
-      // Here it means it's a delete
-      !data
-    ) {
-      return;
-    }
-    // Write derivedTags to the tag cache
-    // If we use an in house version of getDerivedTags in build we should use it here instead of next's one
-    const derivedTags: string[] =
-      data?.kind === "FETCH"
-        ? //@ts-expect-error - On older versions of next, ctx was a number, but for these cases we use data?.data?.tags
-          (ctx?.tags ?? data?.data?.tags ?? []) // before version 14 next.js used data?.data?.tags so we keep it for backward compatibility
-        : data?.kind === "PAGE"
-          ? (data.headers?.["x-next-cache-tags"]?.split(",") ?? [])
-          : [];
-    debug("derivedTags", derivedTags);
+	// TODO: We should delete/update tags in this method
+	// This will require an update to the tag cache interface
+	private async updateTagsOnSet(key: string, data?: IncrementalCacheValue, ctx?: IncrementalCacheContext) {
+		if (
+			globalThis.openNextConfig.dangerous?.disableTagCache ||
+			globalThis.tagCache.mode === "nextMode" ||
+			// Here it means it's a delete
+			!data
+		) {
+			return;
+		}
+		// Write derivedTags to the tag cache
+		// If we use an in house version of getDerivedTags in build we should use it here instead of next's one
+		const derivedTags: string[] =
+			data?.kind === "FETCH"
+				? //@ts-expect-error - On older versions of next, ctx was a number, but for these cases we use data?.data?.tags
+					(ctx?.tags ?? data?.data?.tags ?? []) // before version 14 next.js used data?.data?.tags so we keep it for backward compatibility
+				: data?.kind === "PAGE"
+					? (data.headers?.["x-next-cache-tags"]?.split(",") ?? [])
+					: [];
+		debug("derivedTags", derivedTags);
 
-    // Get all tags stored in dynamodb for the given key
-    // If any of the derived tags are not stored in dynamodb for the given key, write them
-    const storedTags = await globalThis.tagCache.getByPath(key);
-    const tagsToWrite = derivedTags.filter((tag) => !storedTags.includes(tag));
-    if (tagsToWrite.length > 0) {
-      await writeTags(
-        tagsToWrite.map((tag) => ({
-          path: key,
-          tag: tag,
-          // In case the tags are not there we just need to create them
-          // but we don't want them to return from `getLastModified` as they are not stale
-          revalidatedAt: 1,
-        })),
-      );
-    }
-  }
+		// Get all tags stored in dynamodb for the given key
+		// If any of the derived tags are not stored in dynamodb for the given key, write them
+		const storedTags = await globalThis.tagCache.getByPath(key);
+		const tagsToWrite = derivedTags.filter((tag) => !storedTags.includes(tag));
+		if (tagsToWrite.length > 0) {
+			await writeTags(
+				tagsToWrite.map((tag) => ({
+					path: key,
+					tag: tag,
+					// In case the tags are not there we just need to create them
+					// but we don't want them to return from `getLastModified` as they are not stale
+					revalidatedAt: 1,
+				}))
+			);
+		}
+	}
 
-  private extractRevalidateForSet(
-    ctx?: IncrementalCacheContext,
-  ): number | false | undefined {
-    if (ctx === undefined) {
-      return undefined;
-    }
-    if (typeof ctx === "number" || ctx === false) {
-      return ctx;
-    }
-    if ("revalidate" in ctx) {
-      return ctx.revalidate;
-    }
-    if ("cacheControl" in ctx) {
-      return ctx.cacheControl?.revalidate;
-    }
-    return undefined;
-  }
+	private extractRevalidateForSet(ctx?: IncrementalCacheContext): number | false | undefined {
+		if (ctx === undefined) {
+			return undefined;
+		}
+		if (typeof ctx === "number" || ctx === false) {
+			return ctx;
+		}
+		if ("revalidate" in ctx) {
+			return ctx.revalidate;
+		}
+		if ("cacheControl" in ctx) {
+			return ctx.cacheControl?.revalidate;
+		}
+		return undefined;
+	}
 }

@@ -1,5 +1,6 @@
-import Home from "@/components/home";
 import type { GetStaticPathsResult, GetStaticPropsContext, InferGetStaticPropsType } from "next";
+
+import Home from "@/components/home";
 
 const validRootPages = ["conico974", "kheuzy", "sommeeer"];
 const validLongPaths = ["super/long/path/to/secret/page"];

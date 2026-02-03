@@ -1,27 +1,29 @@
 {
-  "name": "@open-next/utils",
-  "private": true,
-  "exports": {
-    ".": "./dist/index.js",
-    "./binary": "./dist/binary.js",
-    "./logger": "./dist/logger.js"
-  },
-  "typesVersions": {
-    "*": {
-      "types": ["./dist/*.d.ts"]
-    }
-  },
-  "scripts": {
-    "build": "tsup ./src/*.ts --format cjs --dts",
-    "dev": "tsup ./src/*.ts --format cjs --dts --watch",
-    "clean": "rm -rf .turbo && rm -rf node_modules"
-  },
-  "dependencies": {},
-  "devDependencies": {
-    "tsup": "7.2.0",
-    "@types/node": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+	"name": "@open-next/utils",
+	"private": true,
+	"typesVersions": {
+		"*": {
+			"types": [
+				"./dist/*.d.ts"
+			]
+		}
+	},
+	"exports": {
+		".": "./dist/index.js",
+		"./binary": "./dist/binary.js",
+		"./logger": "./dist/logger.js"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "tsup ./src/*.ts --format cjs --dts",
+		"dev": "tsup ./src/*.ts --format cjs --dts --watch",
+		"clean": "rm -rf .turbo && rm -rf node_modules"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"tsup": "7.2.0"
+	}
 }

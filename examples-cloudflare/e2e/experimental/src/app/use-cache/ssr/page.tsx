@@ -1,6 +1,7 @@
-import { FullyCachedComponent, FullyCachedComponentWithTag, ISRComponent } from "@/components/cached";
 import { headers } from "next/headers";
 import { Suspense } from "react";
+
+import { FullyCachedComponent, FullyCachedComponentWithTag, ISRComponent } from "@/components/cached";
 
 export default async function Page() {
 	// To opt into SSR

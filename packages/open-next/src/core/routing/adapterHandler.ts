@@ -1,21 +1,22 @@
 import type { IncomingMessage } from "node:http";
 import { finished } from "node:stream/promises";
-import type { OpenNextNodeResponse } from "http/index";
-import type { ResolvedRoute, RoutingResult, WaitUntil } from "types/open-next";
+
+import type { OpenNextNodeResponse } from "@/http/index";
+import type { ResolvedRoute, RoutingResult, WaitUntil } from "@/types/open-next";
 
 /**
  * This function loads the necessary routes, and invoke the expected handler.
  * @param routingResult The result of the routing process, containing information about the matched route and any parameters.
  */
 export async function adapterHandler(
-  req: IncomingMessage,
-  res: OpenNextNodeResponse,
-  routingResult: RoutingResult,
-  options: {
-    waitUntil?: WaitUntil;
-  } = {},
+	req: IncomingMessage,
+	res: OpenNextNodeResponse,
+	routingResult: RoutingResult,
+	options: {
+		waitUntil?: WaitUntil;
+	} = {}
 ) {
-  let resolved = false;
+	let resolved = false;
 
   const pendingPromiseRunner =
     globalThis.__openNextAls.getStore()?.pendingPromiseRunner;
@@ -117,13 +118,13 @@ async function handle500(
 
 // Body replaced at build time
 function getHandler(route: ResolvedRoute):
-  | undefined
-  | {
-      handler: (
-        req: IncomingMessage,
-        res: OpenNextNodeResponse,
-        options: { waitUntil?: (promise: Promise<void>) => void },
-      ) => Promise<void>;
-    } {
-  return undefined;
+	| undefined
+	| {
+			handler: (
+				req: IncomingMessage,
+				res: OpenNextNodeResponse,
+				options: { waitUntil?: (promise: Promise<void>) => void }
+			) => Promise<void>;
+	  } {
+	return undefined;
 }

@@ -1,56 +1,54 @@
 {
 	"name": "@opennextjs/cloudflare",
-	"description": "Cloudflare builder for next apps",
 	"version": "1.15.1",
-	"type": "module",
-	"scripts": {
-		"clean": "rimraf dist",
-		"build": "pnpm clean && tsc",
-		"build:watch": "tsc -w",
-		"lint:check": "eslint",
-		"lint:fix": "eslint --fix",
-		"ts:check": "tsc --noEmit",
-		"test": "vitest --run",
-		"test:watch": "vitest"
+	"description": "Cloudflare builder for next apps",
+	"keywords": [
+		"cloudflare",
+		"next.js",
+		"opennextjs-cloudflare",
+		"workers"
+	],
+	"homepage": "https://github.com/opennextjs/opennextjs-cloudflare",
+	"bugs": {
+		"url": "https://github.com/opennextjs/opennextjs-cloudflare/issues"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/opennextjs/opennextjs-cloudflare.git",
+		"directory": "packages/cloudflare"
 	},
 	"bin": {
 		"opennextjs-cloudflare": "dist/cli/index.js"
-	},
-	"main": "./dist/api/index.js",
-	"types": "./dist/api/index.d.ts",
-	"exports": {
-		".": {
-			"import": "./dist/api/index.js",
-			"types": "./dist/api/index.d.ts",
-			"default": "./dist/api/index.js"
-		},
-		"./*": {
-			"import": "./dist/api/*.js",
-			"types": "./dist/api/*.d.ts",
-			"default": "./dist/api/*.js"
-		}
 	},
 	"files": [
 		"README.md",
 		"dist",
 		"templates"
 	],
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/opennextjs/opennextjs-cloudflare.git",
-		"directory": "packages/cloudflare"
+	"type": "module",
+	"main": "./dist/api/index.js",
+	"types": "./dist/api/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/api/index.d.ts",
+			"import": "./dist/api/index.js",
+			"default": "./dist/api/index.js"
+		},
+		"./*": {
+			"types": "./dist/api/*.d.ts",
+			"import": "./dist/api/*.js",
+			"default": "./dist/api/*.js"
+		}
 	},
-	"keywords": [
-		"opennextjs-cloudflare",
-		"cloudflare",
-		"workers",
-		"next.js"
-	],
-	"license": "MIT",
-	"bugs": {
-		"url": "https://github.com/opennextjs/opennextjs-cloudflare/issues"
+	"scripts": {
+		"clean": "rimraf dist",
+		"build": "pnpm clean && tsc",
+		"build:watch": "tsc -w",
+		"ts:check": "tsc --noEmit",
+		"test": "vitest --run",
+		"test:watch": "vitest"
 	},
-	"homepage": "https://github.com/opennextjs/opennextjs-cloudflare",
 	"dependencies": {
 		"@ast-grep/napi": "0.40.0",
 		"@dotenvx/dotenvx": "catalog:",
@@ -63,7 +61,6 @@
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "catalog:",
-		"@eslint/js": "catalog:",
 		"@tsconfig/strictest": "catalog:",
 		"@types/mock-fs": "catalog:",
 		"@types/node": "catalog:",
@@ -71,21 +68,16 @@
 		"@types/yargs": "catalog:",
 		"diff": "^8.0.2",
 		"esbuild": "catalog:",
-		"eslint": "catalog:",
-		"eslint-plugin-import": "catalog:",
-		"eslint-plugin-simple-import-sort": "catalog:",
-		"eslint-plugin-unicorn": "catalog:",
 		"globals": "catalog:",
 		"mock-fs": "catalog:",
 		"next": "catalog:",
 		"picomatch": "^4.0.2",
 		"rimraf": "catalog:",
 		"typescript": "catalog:",
-		"typescript-eslint": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"wrangler": "catalog:",
-		"next": "^14.2.35 || ~15.0.7 || ~15.1.11 || ~15.2.8 || ~15.3.8 || ~15.4.10 || ~15.5.9 || ^16.0.10"
+		"next": "^14.2.35 || ~15.0.7 || ~15.1.11 || ~15.2.8 || ~15.3.8 || ~15.4.10 || ~15.5.9 || ^16.0.10",
+		"wrangler": "catalog:"
 	}
 }

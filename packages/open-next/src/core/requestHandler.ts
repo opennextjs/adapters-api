@@ -9,6 +9,7 @@ import type {
 import type { OpenNextHandlerOptions } from "types/overrides";
 import { runWithOpenNextRequestContext } from "utils/promise";
 import { debug, error } from "../adapters/logger";
+
 import { patchAsyncStorage } from "./patchAsyncStorage";
 import { adapterHandler } from "./routing/adapterHandler";
 import {
@@ -17,12 +18,12 @@ import {
   createServerResponse,
 } from "./routing/util";
 import routingHandler, {
-  INTERNAL_EVENT_REQUEST_ID,
-  INTERNAL_HEADER_REWRITE_STATUS_CODE,
-  INTERNAL_HEADER_INITIAL_URL,
-  INTERNAL_HEADER_RESOLVED_ROUTES,
-  MIDDLEWARE_HEADER_PREFIX,
-  MIDDLEWARE_HEADER_PREFIX_LEN,
+	INTERNAL_EVENT_REQUEST_ID,
+	INTERNAL_HEADER_REWRITE_STATUS_CODE,
+	INTERNAL_HEADER_INITIAL_URL,
+	INTERNAL_HEADER_RESOLVED_ROUTES,
+	MIDDLEWARE_HEADER_PREFIX,
+	MIDDLEWARE_HEADER_PREFIX_LEN,
 } from "./routingHandler";
 
 // This is used to identify requests in the cache
@@ -33,8 +34,8 @@ patchAsyncStorage();
 //#endOverride
 
 export async function openNextHandler(
-  internalEvent: InternalEvent,
-  options?: OpenNextHandlerOptions,
+	internalEvent: InternalEvent,
+	options?: OpenNextHandlerOptions
 ): Promise<InternalResult> {
   const initialHeaders = internalEvent.headers;
   // We only use the requestId header if we are using an external middleware
@@ -58,53 +59,47 @@ export async function openNextHandler(
       }
       debug("internalEvent", internalEvent);
 
-      // These 3 will get overwritten by the routing handler if not using an external middleware
-      const internalHeaders = {
-        initialPath:
-          initialHeaders[INTERNAL_HEADER_INITIAL_URL] ?? internalEvent.rawPath,
-        resolvedRoutes: initialHeaders[INTERNAL_HEADER_RESOLVED_ROUTES]
-          ? JSON.parse(initialHeaders[INTERNAL_HEADER_RESOLVED_ROUTES])
-          : ([] as ResolvedRoute[]),
-        rewriteStatusCode: Number.parseInt(
-          initialHeaders[INTERNAL_HEADER_REWRITE_STATUS_CODE],
-        ),
-      };
+			// These 3 will get overwritten by the routing handler if not using an external middleware
+			const internalHeaders = {
+				initialPath: initialHeaders[INTERNAL_HEADER_INITIAL_URL] ?? internalEvent.rawPath,
+				resolvedRoutes: initialHeaders[INTERNAL_HEADER_RESOLVED_ROUTES]
+					? JSON.parse(initialHeaders[INTERNAL_HEADER_RESOLVED_ROUTES])
+					: ([] as ResolvedRoute[]),
+				rewriteStatusCode: Number.parseInt(initialHeaders[INTERNAL_HEADER_REWRITE_STATUS_CODE]),
+			};
 
-      let routingResult: InternalResult | RoutingResult = {
-        internalEvent,
-        isExternalRewrite: false,
-        origin: false,
-        isISR: false,
-        initialURL: internalEvent.url,
-        ...internalHeaders,
-      };
+			let routingResult: InternalResult | RoutingResult = {
+				internalEvent,
+				isExternalRewrite: false,
+				origin: false,
+				isISR: false,
+				initialURL: internalEvent.url,
+				...internalHeaders,
+			};
 
-      //#override withRouting
-      routingResult = await routingHandler(internalEvent, {
-        assetResolver: globalThis.assetResolver,
-      });
-      //#endOverride
+			//#override withRouting
+			routingResult = await routingHandler(internalEvent, {
+				assetResolver: globalThis.assetResolver,
+			});
+			//#endOverride
 
-      const headers =
-        "type" in routingResult
-          ? routingResult.headers
-          : routingResult.internalEvent.headers;
+			const headers = "type" in routingResult ? routingResult.headers : routingResult.internalEvent.headers;
 
-      const overwrittenResponseHeaders: Record<string, string | string[]> = {};
+			const overwrittenResponseHeaders: Record<string, string | string[]> = {};
 
-      for (const [rawKey, value] of Object.entries(headers)) {
-        if (!rawKey.startsWith(MIDDLEWARE_HEADER_PREFIX)) {
-          continue;
-        }
-        const key = rawKey.slice(MIDDLEWARE_HEADER_PREFIX_LEN);
-        // We skip this header here since it is used by Next internally and we don't want it on the response headers.
-        // This header needs to be present in the request headers for processRequest, so cookies().get() from Next will work on initial render.
-        if (key !== "x-middleware-set-cookie") {
-          overwrittenResponseHeaders[key] = value;
-        }
-        headers[key] = value;
-        delete headers[rawKey];
-      }
+			for (const [rawKey, value] of Object.entries(headers)) {
+				if (!rawKey.startsWith(MIDDLEWARE_HEADER_PREFIX)) {
+					continue;
+				}
+				const key = rawKey.slice(MIDDLEWARE_HEADER_PREFIX_LEN);
+				// We skip this header here since it is used by Next internally and we don't want it on the response headers.
+				// This header needs to be present in the request headers for processRequest, so cookies().get() from Next will work on initial render.
+				if (key !== "x-middleware-set-cookie") {
+					overwrittenResponseHeaders[key] = value;
+				}
+				headers[key] = value;
+				delete headers[rawKey];
+			}
 
       if (
         "isExternalRewrite" in routingResult &&
@@ -139,64 +134,61 @@ export async function openNextHandler(
         }
       }
 
-      if ("type" in routingResult) {
-        // response is used only in the streaming case
-        if (options?.streamCreator) {
-          const response = createServerResponse(
-            {
-              internalEvent,
-              isExternalRewrite: false,
-              isISR: false,
-              resolvedRoutes: [],
-              origin: false,
-              initialURL: internalEvent.url,
-            },
-            routingResult.headers,
-            options.streamCreator,
-          );
-          response.statusCode = routingResult.statusCode;
-          response.flushHeaders();
-          const [bodyToConsume, bodyToReturn] = routingResult.body.tee();
-          for await (const chunk of bodyToConsume) {
-            response.write(chunk);
-          }
-          response.end();
-          routingResult.body = bodyToReturn;
-        }
-        return routingResult;
-      }
+			if ("type" in routingResult) {
+				// response is used only in the streaming case
+				if (options?.streamCreator) {
+					const response = createServerResponse(
+						{
+							internalEvent,
+							isExternalRewrite: false,
+							isISR: false,
+							resolvedRoutes: [],
+							origin: false,
+							initialURL: internalEvent.url,
+						},
+						routingResult.headers,
+						options.streamCreator
+					);
+					response.statusCode = routingResult.statusCode;
+					response.flushHeaders();
+					const [bodyToConsume, bodyToReturn] = routingResult.body.tee();
+					for await (const chunk of bodyToConsume) {
+						response.write(chunk);
+					}
+					response.end();
+					routingResult.body = bodyToReturn;
+				}
+				return routingResult;
+			}
 
-      const preprocessedEvent = routingResult.internalEvent;
-      debug("preprocessedEvent", preprocessedEvent);
-      const { search, pathname, hash } = new URL(preprocessedEvent.url);
-      const reqProps = {
-        method: preprocessedEvent.method,
-        url: `${pathname}${search}${hash}`,
-        //WORKAROUND: We pass this header to the serverless function to mimic a prefetch request which will not trigger revalidation since we handle revalidation differently
-        // There is 3 way we can handle revalidation:
-        // 1. We could just let the revalidation go as normal, but due to race conditions the revalidation will be unreliable
-        // 2. We could alter the lastModified time of our cache to make next believe that the cache is fresh, but this could cause issues with stale data since the cdn will cache the stale data as if it was fresh
-        // 3. OUR CHOICE: We could pass a purpose prefetch header to the serverless function to make next believe that the request is a prefetch request and not trigger revalidation (This could potentially break in the future if next changes the behavior of prefetch requests)
-        headers: {
-          ...headers,
-          //#override appendPrefetch
-          purpose: "prefetch",
-          //#endOverride
-        },
-        body: preprocessedEvent.body,
-        remoteAddress: preprocessedEvent.remoteAddress,
-      };
+			const preprocessedEvent = routingResult.internalEvent;
+			debug("preprocessedEvent", preprocessedEvent);
+			const { search, pathname, hash } = new URL(preprocessedEvent.url);
+			const reqProps = {
+				method: preprocessedEvent.method,
+				url: `${pathname}${search}${hash}`,
+				//WORKAROUND: We pass this header to the serverless function to mimic a prefetch request which will not trigger revalidation since we handle revalidation differently
+				// There is 3 way we can handle revalidation:
+				// 1. We could just let the revalidation go as normal, but due to race conditions the revalidation will be unreliable
+				// 2. We could alter the lastModified time of our cache to make next believe that the cache is fresh, but this could cause issues with stale data since the cdn will cache the stale data as if it was fresh
+				// 3. OUR CHOICE: We could pass a purpose prefetch header to the serverless function to make next believe that the request is a prefetch request and not trigger revalidation (This could potentially break in the future if next changes the behavior of prefetch requests)
+				headers: {
+					...headers,
+					//#override appendPrefetch
+					purpose: "prefetch",
+					//#endOverride
+				},
+				body: preprocessedEvent.body,
+				remoteAddress: preprocessedEvent.remoteAddress,
+			};
 
-      const mergeHeadersPriority = globalThis.openNextConfig.dangerous
-        ?.headersAndCookiesPriority
-        ? globalThis.openNextConfig.dangerous.headersAndCookiesPriority(
-            preprocessedEvent,
-          )
-        : "middleware";
-      const store = globalThis.__openNextAls.getStore();
-      if (store) {
-        store.mergeHeadersPriority = mergeHeadersPriority;
-      }
+			const mergeHeadersPriority = globalThis.openNextConfig.dangerous?.headersAndCookiesPriority
+				? globalThis.openNextConfig.dangerous.headersAndCookiesPriority(preprocessedEvent)
+				: "middleware";
+			const store = globalThis.__openNextAls.getStore();
+			if (store) {
+				store.mergeHeadersPriority = mergeHeadersPriority;
+			}
 
       const req = new IncomingMessage(reqProps);
       const res = createServerResponse(
@@ -212,11 +204,11 @@ export async function openNextHandler(
         res.statusCode = 500;
       }
 
-      //#override useAdapterHandler
-      await adapterHandler(req, res, routingResult, {
-        waitUntil: options?.waitUntil,
-      });
-      //#endOverride
+			//#override useAdapterHandler
+			await adapterHandler(req, res, routingResult, {
+				waitUntil: options?.waitUntil,
+			});
+			//#endOverride
 
       const {
         statusCode,
@@ -225,15 +217,15 @@ export async function openNextHandler(
         body,
       } = convertRes(res);
 
-      const internalResult = {
-        type: internalEvent.type,
-        statusCode,
-        headers: responseHeaders,
-        body,
-        isBase64Encoded,
-      };
+			const internalResult = {
+				type: internalEvent.type,
+				statusCode,
+				headers: responseHeaders,
+				body,
+				isBase64Encoded,
+			};
 
-      return internalResult;
-    },
-  );
+			return internalResult;
+		}
+	);
 }

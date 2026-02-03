@@ -1,6 +1,8 @@
-import { getCrossPlatformPathRegex } from "utils/regex.js";
+import { getCrossPlatformPathRegex } from "@/utils/regex.js";
+
 import type { NextAdapterOutputs } from "../adapter.js";
 import { patchCode } from "../build/patch/astCodePatcher.js";
+
 import type { ContentUpdater, Plugin } from "./content-updater.js";
 
 export function inlineRouteHandler(
@@ -40,23 +42,23 @@ export function inlineRouteHandler(
 }
 
 function inlineRule(outputs: NextAdapterOutputs) {
-  const routeToHandlerPath: Record<string, string> = {};
+	const routeToHandlerPath: Record<string, string> = {};
 
-  for (const type of ["pages", "pagesApi", "appPages", "appRoutes"] as const) {
-    for (const { pathname, filePath } of outputs[type]) {
-      routeToHandlerPath[pathname] = filePath;
-    }
-  }
+	for (const type of ["pages", "pagesApi", "appPages", "appRoutes"] as const) {
+		for (const { pathname, filePath } of outputs[type]) {
+			routeToHandlerPath[pathname] = filePath;
+		}
+	}
 
-  return `
+	return `
 rule:
   pattern: "function getHandler($ROUTE) { $$$BODY }"
 fix: |-
   function getHandler($ROUTE) {
     switch($ROUTE.route) {
 ${Object.entries(routeToHandlerPath)
-  .map(([route, file]) => `      case "${route}": return require("${file}");`)
-  .join("\n")}
+	.map(([route, file]) => `      case "${route}": return require("${file}");`)
+	.join("\n")}
       default:
         throw new Error(\`Not found \${$ROUTE.route}\`);
     }
@@ -105,8 +107,8 @@ function inlineChunksFn(outputs: NextAdapterOutputs, packagePath: string) {
     const chunkPath = ".next/" + chunk;
     switch(chunkPath) {
 ${Array.from(chunks)
-  .map((chunk) => `      case "${chunk}": return require("./${chunk}");`)
-  .join("\n")}
+	.map((chunk) => `      case "${chunk}": return require("./${chunk}");`)
+	.join("\n")}
       default:
         throw new Error(\`Not found \${chunkPath}\`);
     }

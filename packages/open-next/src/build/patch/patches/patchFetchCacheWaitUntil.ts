@@ -1,4 +1,5 @@
-import { getCrossPlatformPathRegex } from "utils/regex.js";
+import { getCrossPlatformPathRegex } from "@/utils/regex.js";
+
 import { createPatchCode } from "../astCodePatcher.js";
 import type { CodePatcher } from "../codePatcher.js";
 
@@ -25,16 +26,16 @@ fix: |
 `;
 
 export const patchFetchCacheSetMissingWaitUntil: CodePatcher = {
-  name: "patch-fetch-cache-set-missing-wait-until",
-  patches: [
-    {
-      versions: ">=15.0.0",
-      pathFilter: getCrossPlatformPathRegex(
-        String.raw`(server/chunks/.*\.js|.*\.runtime\..*\.js|patch-fetch\.js)$`,
-        { escape: false },
-      ),
-      contentFilter: /arrayBuffer\(\)\s*\.then/,
-      patchCode: createPatchCode(rule),
-    },
-  ],
+	name: "patch-fetch-cache-set-missing-wait-until",
+	patches: [
+		{
+			versions: ">=15.0.0",
+			pathFilter: getCrossPlatformPathRegex(
+				String.raw`(server/chunks/.*\.js|.*\.runtime\..*\.js|patch-fetch\.js)$`,
+				{ escape: false }
+			),
+			contentFilter: /arrayBuffer\(\)\s*\.then/,
+			patchCode: createPatchCode(rule),
+		},
+	],
 };

@@ -12,4 +12,4 @@ This app uses the pages router exclusively
 
 ## AppPagesRouter
 
-This app uses a mix of app and pages router and *DOES NOT* use the streaming feature
+This app uses a mix of app and pages router and _DOES NOT_ use the streaming feature

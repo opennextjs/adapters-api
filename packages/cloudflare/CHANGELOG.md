@@ -184,9 +184,7 @@
   This update adds optional batch upload support for R2 cache population, significantly improving upload performance for large caches when enabled via .env or environment variables.
 
   **Key Changes:**
-
   1. **Optional Batch Upload**: Configure R2 credentials via .env or environment variables to enable faster batch uploads:
-
      - `R2_ACCESS_KEY_ID`
      - `R2_SECRET_ACCESS_KEY`
      - `CF_ACCOUNT_ID`
@@ -195,14 +193,12 @@
   3. **Smart Fallback**: If credentials are not configured, the CLI falls back to standard Wrangler uploads with a helpful message about enabling batch upload for better performance
 
   **All deployment commands support batch upload:**
-
   - `populateCache` - Explicit cache population
   - `deploy` - Deploy with cache population
   - `upload` - Upload version with cache population
   - `preview` - Preview with cache population
 
   **Performance Benefits (when batch upload is enabled):**
-
   - Parallel transfer capabilities (32 concurrent transfers)
   - Significantly faster for large caches
   - Reduced API calls to Cloudflare
@@ -246,12 +242,10 @@
 - [#937](https://github.com/opennextjs/opennextjs-cloudflare/pull/937) [`32ba91a`](https://github.com/opennextjs/opennextjs-cloudflare/commit/32ba91a6d3fa6b9a8b2cd5a8c973c3b3eb1108f0) Thanks [@vicb](https://github.com/vicb)! - feat: retrieve CLI environment variables from `process.env` and `.env*` files
 
   Recommended usage on CI:
-
   - Add your secrets to `process.env` (i.e. `CF_ACCOUNT_ID`)
   - Add public values to the wrangler config `wrangler.jsonc` (i.e. `R2_CACHE_PREFIX_ENV_NAME`)
 
   Recommended usage for local dev:
-
   - Add your secrets to either a `.dev.vars*` or `.env*` file (i.e. `CF_ACCOUNT_ID`)
   - Add public values to the wrangler config `wrangler.jsonc` (i.e. `R2_CACHE_PREFIX_ENV_NAME`)
 
@@ -308,7 +302,6 @@
 - [#888](https://github.com/opennextjs/opennextjs-cloudflare/pull/888) [`51322a8`](https://github.com/opennextjs/opennextjs-cloudflare/commit/51322a8c02eda77ff106e50e57f41ca3832ebd87) Thanks [@james-elicx](https://github.com/james-elicx)! - fix: remote flag not working for preview command's cache population
 
   Previously, passing the `--remote` flag when running `opennextjs-cloudflare preview --remote` would not result in the remote preview binding being populated, and would throw errors due to a missing preview flag when populating Workers KV. The remote flag is now supported for the cache popoulation step when running the preview command.
-
   - `opennextjs-cloudflare preview --remote` will populate the remote binding for the preview ID specified in your Wrangler config.
   - `opennextjs-cloudflare preview` will continue to populate the local binding in your Wrangler config.
 
@@ -665,7 +658,6 @@
 - [#593](https://github.com/opennextjs/opennextjs-cloudflare/pull/593) [`faca3e1`](https://github.com/opennextjs/opennextjs-cloudflare/commit/faca3e1376dd47216f97a5dcaef6275fd16d84cb) Thanks [@vicb](https://github.com/vicb)! - Use the workerd build condition by default
 
 - [#641](https://github.com/opennextjs/opennextjs-cloudflare/pull/641) [`e07a2ed`](https://github.com/opennextjs/opennextjs-cloudflare/commit/e07a2ede88896982fc4e91f1a2f131590bcdcd32) Thanks [@conico974](https://github.com/conico974)! - some performance improvements
-
   - `enableCacheInterception` can be enabled using `defineCloudflareConfig`, it loads ISR/SSG pages from cache without waiting for the js page bundle to load. PPR is not supported at the moment
   - `routePreloadingBehavior` is now set to `withWaitUntil`, which means a single route js will be lazy loaded on cold start, but other routes will be preloaded using `waitUntil` for better performance
 
@@ -742,7 +734,6 @@
   Bump `@opennextjs/aws` to 3.5.4
 
   BREAKING CHANGES
-
   - `DurableObjectQueueHandler` renamed to `DOQueueHandler`
   - `NEXT_CACHE_DO_QUEUE_MAX_NUM_REVALIDATIONS` renamed to `NEXT_CACHE_DO_QUEUE_MAX_RETRIES`
   - `D1TagCache` has been removed, use `D1NextModeTagCache` instead.
@@ -817,7 +808,6 @@
   Overrides:
 
   Overrides now live in `@opennextjs/cloudflare/overrides` and some files have been renamed.
-
   - Incremental cache overrides: `@opennextjs/cloudflare/overrides/incremental-cache/...`
   - Tag cache overrides: `@opennextjs/cloudflare/overrides/tag-cache/...`
   - Queue overrides: `@opennextjs/cloudflare/overrides/queue/...`
@@ -825,7 +815,6 @@
   For example the KV incremental cache override can be imported as `@opennextjs/cloudflare/overrides/incremental-cache/kv-incremental-cache`.
 
   Environment variables and bindings name changes:
-
   - `NEXT_CACHE_WORKERS_KV` -> `NEXT_INC_CACHE_KV`
   - `NEXT_CACHE_R2_...` -> `NEXT_INC_CACHE_R2_...`
   - `NEXT_CACHE_D1` -> `NEXT_TAG_CACHE_D1`
@@ -841,7 +830,6 @@
 - [#479](https://github.com/opennextjs/opennextjs-cloudflare/pull/479) [`0c93e8b`](https://github.com/opennextjs/opennextjs-cloudflare/commit/0c93e8b3e22960553c6537b6e83b84cbd8724423) Thanks [@james-elicx](https://github.com/james-elicx)! - feat: commands for cli actions
 
   The OpenNext Cloudflare CLI now uses the following commands;
-
   - `build`: build the application
   - `populateCache`: populate either the local or remote cache
   - `preview`: populate the local cache and start a dev server

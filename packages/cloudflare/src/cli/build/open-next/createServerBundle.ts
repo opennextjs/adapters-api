@@ -195,7 +195,7 @@ async function generateBundle(
 	buildHelper.copyEnvFile(appBuildOutputPath, packagePath, outputPath);
 
 	let tracedFiles: string[] = [];
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 	let manifests: any = {};
 
 	// Copy all necessary traced files
@@ -327,13 +327,11 @@ async function generateBundle(
 				].join(""),
 			},
 			plugins,
-			alias: {
-				...(isBundled
-					? {
-							"next/dist/server/next-server.js": "./next-server.runtime.prod.js",
-						}
-					: {}),
-			},
+			alias: isBundled
+				? {
+						"next/dist/server/next-server.js": "./next-server.runtime.prod.js",
+					}
+				: {},
 		},
 		options
 	);

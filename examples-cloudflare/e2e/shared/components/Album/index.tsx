@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type { Album } from "../../api/index";
+
 import Song from "./Song";
 
 type Props = {

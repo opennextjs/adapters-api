@@ -1,4 +1,5 @@
-import { getCrossPlatformPathRegex } from "utils/regex.js";
+import { getCrossPlatformPathRegex } from "@/utils/regex.js";
+
 import { createPatchCode } from "../astCodePatcher.js";
 import type { CodePatcher } from "../codePatcher.js";
 
@@ -16,18 +17,15 @@ fix: |-
 `;
 
 export const patchNodeEnvironment: CodePatcher = {
-  name: "patch-node-environment-error-inspect",
-  patches: [
-    {
-      pathFilter: getCrossPlatformPathRegex(
-        String.raw`/next/dist/server/node-environment\.js$`,
-        {
-          escape: false,
-        },
-      ),
-      contentFilter: /error-inspect/,
-      patchCode: createPatchCode(rule),
-      versions: ">=15.0.0",
-    },
-  ],
+	name: "patch-node-environment-error-inspect",
+	patches: [
+		{
+			pathFilter: getCrossPlatformPathRegex(String.raw`/next/dist/server/node-environment\.js$`, {
+				escape: false,
+			}),
+			contentFilter: /error-inspect/,
+			patchCode: createPatchCode(rule),
+			versions: ">=15.0.0",
+		},
+	],
 };

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+
 import { validateMd5 } from "../../utils";
 
 const EXT_PNG_MD5 = "405f45cc3397b09717a13ebd6f1e027b";

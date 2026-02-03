@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+
 import { getAppPort, getInspectorPort, type AppName } from "./apps";
 
 declare const process: typeof nodeProcess;

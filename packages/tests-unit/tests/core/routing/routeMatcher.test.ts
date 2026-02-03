@@ -1,7 +1,4 @@
-import {
-  dynamicRouteMatcher,
-  staticRouteMatcher,
-} from "@opennextjs/aws/core/routing/routeMatcher.js";
+import { dynamicRouteMatcher, staticRouteMatcher } from "@opennextjs/aws/core/routing/routeMatcher.js";
 import { vi } from "vitest";
 
 vi.mock("@opennextjs/aws/adapters/config/index.js", () => ({
@@ -90,9 +87,9 @@ vi.mock("@opennextjs/aws/adapters/config/index.js", () => ({
 }));
 
 describe("routeMatcher", () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
-  });
+	beforeEach(() => {
+		vi.resetAllMocks();
+	});
 
   describe("staticRouteMatcher", () => {
     it("should match static app route", () => {
@@ -126,21 +123,21 @@ describe("routeMatcher", () => {
       ]);
     });
 
-    it("should not match app dynamic route", () => {
-      const routes = staticRouteMatcher("/catchAll/slug");
-      expect(routes).toEqual([]);
-    });
+		it("should not match app dynamic route", () => {
+			const routes = staticRouteMatcher("/catchAll/slug");
+			expect(routes).toEqual([]);
+		});
 
-    it("should not match page dynamic route", () => {
-      const routes = staticRouteMatcher("/page/catchAll/slug");
-      expect(routes).toEqual([]);
-    });
+		it("should not match page dynamic route", () => {
+			const routes = staticRouteMatcher("/page/catchAll/slug");
+			expect(routes).toEqual([]);
+		});
 
-    it("should not match random route", () => {
-      const routes = staticRouteMatcher("/random");
-      expect(routes).toEqual([]);
-    });
-  });
+		it("should not match random route", () => {
+			const routes = staticRouteMatcher("/random");
+			expect(routes).toEqual([]);
+		});
+	});
 
   describe("dynamicRouteMatcher", () => {
     it("should match dynamic app page", () => {

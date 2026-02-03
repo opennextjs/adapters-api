@@ -1,7 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import type { NextAdapterOutputs } from "../adapter";
 import { addDebugFile } from "../debug.js";
+
 import type * as buildHelper from "./helper.js";
 
 export async function copyAdapterFiles(
@@ -10,7 +12,7 @@ export async function copyAdapterFiles(
   packagePath: string,
   outputs: NextAdapterOutputs,
 ) {
-  const filesToCopy = new Map<string, string>();
+	const filesToCopy = new Map<string, string>();
 
   // Copying the files from outputs to the output dir
   for (const [key, value] of Object.entries(outputs)) {
@@ -50,36 +52,36 @@ export async function copyAdapterFiles(
     }
   }
 
-  console.log("\n### Copying adapter files");
-  const debugCopiedFiles: Record<string, string> = {};
-  for (const [from, to] of filesToCopy) {
-    debugCopiedFiles[from] = to;
+	console.log("\n### Copying adapter files");
+	const debugCopiedFiles: Record<string, string> = {};
+	for (const [from, to] of filesToCopy) {
+		debugCopiedFiles[from] = to;
 
-    //make sure the directory exists first
-    fs.mkdirSync(path.dirname(to), { recursive: true });
-    // For pnpm symlink we need to do that
-    // see https://github.com/vercel/next.js/blob/498f342b3552d6fc6f1566a1cc5acea324ce0dec/packages/next/src/build/utils.ts#L1932
-    let symlink = "";
-    try {
-      symlink = fs.readlinkSync(from);
-    } catch (e) {
-      //Ignore
-    }
-    if (symlink) {
-      try {
-        fs.symlinkSync(symlink, to);
-      } catch (e: any) {
-        if (e.code !== "EEXIST") {
-          throw e;
-        }
-      }
-    } else {
-      fs.copyFileSync(from, to);
-    }
-  }
+		//make sure the directory exists first
+		fs.mkdirSync(path.dirname(to), { recursive: true });
+		// For pnpm symlink we need to do that
+		// see https://github.com/vercel/next.js/blob/498f342b3552d6fc6f1566a1cc5acea324ce0dec/packages/next/src/build/utils.ts#L1932
+		let symlink = "";
+		try {
+			symlink = fs.readlinkSync(from);
+		} catch (e) {
+			//Ignore
+		}
+		if (symlink) {
+			try {
+				fs.symlinkSync(symlink, to);
+			} catch (e: any) {
+				if (e.code !== "EEXIST") {
+					throw e;
+				}
+			}
+		} else {
+			fs.copyFileSync(from, to);
+		}
+	}
 
-  // TODO(vicb): debug
-  addDebugFile(options, "copied_files.json", debugCopiedFiles);
+	// TODO(vicb): debug
+	addDebugFile(options, "copied_files.json", debugCopiedFiles);
 
-  return Array.from(filesToCopy.values());
+	return Array.from(filesToCopy.values());
 }

@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
-import { PrismaD1 } from "@prisma/adapter-d1";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { PrismaD1 } from "@prisma/adapter-d1";
+import { PrismaClient } from "@prisma/client";
 
 export const getDb = () => {
 	const { env } = getCloudflareContext();

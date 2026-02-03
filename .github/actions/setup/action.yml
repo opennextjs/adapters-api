@@ -4,7 +4,7 @@ description: Install's node, pnpm, restores cache, and then installs dependencie
 inputs:
   node-version:
     description: Node.js version to install
-    default: '24'
+    default: "24"
 
 runs:
   using: composite

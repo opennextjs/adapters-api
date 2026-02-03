@@ -1,43 +1,42 @@
 {
-  "name": "monorepo",
-  "version": "0.0.0",
-  "license": "MIT",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
-    "build:opennext": "turbo run build --filter @opennextjs/*",
-    "openbuild:local": "turbo run openbuild:local",
-    "openbuild:local:start": "turbo run openbuild:local:start",
-    "clean": "turbo run clean && rm -rf node_modules pnpm-lock.yaml",
-    "lint": "biome check && prettier --check .",
-    "lint:fix": "biome check --fix && prettier --write .",
-    "lint:check": "pnpm -r lint:check",
-    "prettier:check": "prettier --check .",
-		"prettier:fix": "prettier --write .",
-    "ts:check": "pnpm -r ts:check",
-    "code:checks": "pnpm lint && pnpm ts:check",
-    "test": "turbo run test",
-    "e2e:test": "turbo run e2e:test",
-    "e2e": "pnpm build && pnpm -r e2e",
-    "e2e-turbopack": "pnpm build && pnpm -r e2e-turbopack",
-    "e2e:dev": "pnpm build && pnpm -r e2e:dev",
-    "install-playwright": "playwright install --with-deps",
-    "benchmark": "pnpm run --filter benchmarking benchmark",
-    "postinstall": "pnpm build:opennext"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "@changesets/changelog-github": "^0.5.1",
-    "@changesets/cli": "^2.29.7",
-    "@playwright/test": "catalog:",
-    "pkg-pr-new": "^0.0.60",
-    "prettier": "3.3.3",
-    "turbo": "1.10.12"
-  },
-  "engines": {
-    "node": ">=18",
-    "pnpm": ">=9"
-  }
+	"name": "monorepo",
+	"version": "0.0.0",
+	"private": true,
+	"license": "MIT",
+	"type": "module",
+	"scripts": {
+		"dev": "turbo run dev",
+		"build": "turbo run build",
+		"build:opennext": "turbo run build --filter @opennextjs/*",
+		"openbuild:local": "turbo run openbuild:local",
+		"openbuild:local:start": "turbo run openbuild:local:start",
+		"clean": "turbo run clean && rm -rf node_modules pnpm-lock.yaml",
+		"lint": "oxlint",
+		"lint:fix": "oxlint --fix",
+		"fmt": "oxfmt --check",
+		"fmt:fix": "oxfmt --write",
+		"ts:check": "pnpm -r ts:check",
+		"code:checks": "pnpm fmt && pnpm lint && pnpm ts:check",
+		"test": "turbo run test",
+		"e2e:test": "turbo run e2e:test",
+		"e2e": "pnpm build && pnpm -r e2e",
+		"e2e-turbopack": "pnpm build && pnpm -r e2e-turbopack",
+		"e2e:dev": "pnpm build && pnpm -r e2e:dev",
+		"install-playwright": "playwright install --with-deps",
+		"benchmark": "pnpm run --filter benchmarking benchmark",
+		"postinstall": "pnpm build:opennext"
+	},
+	"devDependencies": {
+		"@changesets/changelog-github": "^0.5.1",
+		"@changesets/cli": "^2.29.7",
+		"@playwright/test": "catalog:",
+		"oxfmt": "^0.27.0",
+		"oxlint": "^1.42.0",
+		"pkg-pr-new": "^0.0.60",
+		"turbo": "1.10.12"
+	},
+	"engines": {
+		"node": ">=22",
+		"pnpm": ">=9"
+	}
 }

@@ -1,6 +1,7 @@
+import { Suspense } from "react";
+
 import { DynamicComponent } from "@/components/dynamic";
 import { StaticComponent } from "@/components/static";
-import { Suspense } from "react";
 
 export default function PPRPage() {
 	return (

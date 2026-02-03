@@ -1,17 +1,14 @@
 import { createHash } from "node:crypto";
 
-import { NextConfig, PrerenderManifest } from "config/index";
-import type {
-  InternalEvent,
-  InternalResult,
-  MiddlewareEvent,
-} from "types/open-next";
-import type { CacheValue } from "types/overrides";
-import { emptyReadableStream, toReadableStream } from "utils/stream";
+import { NextConfig, PrerenderManifest } from "@/config/index";
+import type { InternalEvent, InternalResult, MiddlewareEvent } from "@/types/open-next";
+import type { CacheValue } from "@/types/overrides";
+import { isBinaryContentType } from "@/utils/binary";
+import { getTagsFromValue, hasBeenRevalidated } from "@/utils/cache";
+import { emptyReadableStream, toReadableStream } from "@/utils/stream";
 
-import { isBinaryContentType } from "utils/binary";
-import { getTagsFromValue, hasBeenRevalidated } from "utils/cache";
 import { debug, error } from "../../adapters/logger";
+
 import { localizePath } from "./i18n";
 import { generateMessageGroupId } from "./queue";
 
@@ -28,182 +25,170 @@ const CACHE_ONE_MONTH = 60 * 60 * 24 * 30;
  * Also see this PR: https://github.com/vercel/next.js/pull/79426
  */
 const VARY_HEADER =
-  "RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url";
+	"RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Next-Url";
 const NEXT_SEGMENT_PREFETCH_HEADER = "next-router-segment-prefetch";
 const NEXT_PRERENDER_HEADER = "x-nextjs-prerender";
 const NEXT_POSTPONED_HEADER = "x-nextjs-postponed";
 
 async function computeCacheControl(
-  path: string,
-  body: string,
-  host: string,
-  revalidate?: number | false,
-  lastModified?: number,
+	path: string,
+	body: string,
+	host: string,
+	revalidate?: number | false,
+	lastModified?: number
 ) {
-  let finalRevalidate = CACHE_ONE_YEAR;
+	let finalRevalidate = CACHE_ONE_YEAR;
 
-  const existingRoute = Object.entries(PrerenderManifest?.routes ?? {}).find(
-    (p) => p[0] === path,
-  )?.[1];
-  if (revalidate === undefined && existingRoute) {
-    finalRevalidate =
-      existingRoute.initialRevalidateSeconds === false
-        ? CACHE_ONE_YEAR
-        : existingRoute.initialRevalidateSeconds;
-    // eslint-disable-next-line sonarjs/elseif-without-else
-  } else if (revalidate !== undefined) {
-    finalRevalidate = revalidate === false ? CACHE_ONE_YEAR : revalidate;
-  }
-  // calculate age
-  const age = Math.round((Date.now() - (lastModified ?? 0)) / 1000);
-  const hash = (str: string) => createHash("md5").update(str).digest("hex");
-  const etag = hash(body);
-  if (revalidate === 0) {
-    // This one should never happen
-    return {
-      "cache-control":
-        "private, no-cache, no-store, max-age=0, must-revalidate",
-      "x-opennext-cache": "ERROR",
-      etag,
-    };
-  }
-  if (finalRevalidate !== CACHE_ONE_YEAR) {
-    const sMaxAge = Math.max(finalRevalidate - age, 1);
-    debug("sMaxAge", {
-      finalRevalidate,
-      age,
-      lastModified,
-      revalidate,
-    });
-    const isStale = sMaxAge === 1;
-    if (isStale) {
-      let url = NextConfig.trailingSlash ? `${path}/` : path;
-      if (NextConfig.basePath) {
-        // We need to add the basePath to the url
-        url = `${NextConfig.basePath}${url}`;
-      }
-      await globalThis.queue.send({
-        MessageBody: {
-          host,
-          url,
-          eTag: etag,
-          lastModified: lastModified ?? Date.now(),
-        },
-        MessageDeduplicationId: hash(`${path}-${lastModified}-${etag}`),
-        MessageGroupId: generateMessageGroupId(path),
-      });
-    }
-    return {
-      "cache-control": `s-maxage=${sMaxAge}, stale-while-revalidate=${CACHE_ONE_MONTH}`,
-      "x-opennext-cache": isStale ? "STALE" : "HIT",
-      etag,
-    };
-  }
-  return {
-    "cache-control": `s-maxage=${CACHE_ONE_YEAR}, stale-while-revalidate=${CACHE_ONE_MONTH}`,
-    "x-opennext-cache": "HIT",
-    etag,
-  };
+	const existingRoute = Object.entries(PrerenderManifest?.routes ?? {}).find((p) => p[0] === path)?.[1];
+	if (revalidate === undefined && existingRoute) {
+		finalRevalidate =
+			existingRoute.initialRevalidateSeconds === false
+				? CACHE_ONE_YEAR
+				: existingRoute.initialRevalidateSeconds;
+	} else if (revalidate !== undefined) {
+		finalRevalidate = revalidate === false ? CACHE_ONE_YEAR : revalidate;
+	}
+	// calculate age
+	const age = Math.round((Date.now() - (lastModified ?? 0)) / 1000);
+	const hash = (str: string) => createHash("md5").update(str).digest("hex");
+	const etag = hash(body);
+	if (revalidate === 0) {
+		// This one should never happen
+		return {
+			"cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+			"x-opennext-cache": "ERROR",
+			etag,
+		};
+	}
+	if (finalRevalidate !== CACHE_ONE_YEAR) {
+		const sMaxAge = Math.max(finalRevalidate - age, 1);
+		debug("sMaxAge", {
+			finalRevalidate,
+			age,
+			lastModified,
+			revalidate,
+		});
+		const isStale = sMaxAge === 1;
+		if (isStale) {
+			let url = NextConfig.trailingSlash ? `${path}/` : path;
+			if (NextConfig.basePath) {
+				// We need to add the basePath to the url
+				url = `${NextConfig.basePath}${url}`;
+			}
+			await globalThis.queue.send({
+				MessageBody: {
+					host,
+					url,
+					eTag: etag,
+					lastModified: lastModified ?? Date.now(),
+				},
+				MessageDeduplicationId: hash(`${path}-${lastModified}-${etag}`),
+				MessageGroupId: generateMessageGroupId(path),
+			});
+		}
+		return {
+			"cache-control": `s-maxage=${sMaxAge}, stale-while-revalidate=${CACHE_ONE_MONTH}`,
+			"x-opennext-cache": isStale ? "STALE" : "HIT",
+			etag,
+		};
+	}
+	return {
+		"cache-control": `s-maxage=${CACHE_ONE_YEAR}, stale-while-revalidate=${CACHE_ONE_MONTH}`,
+		"x-opennext-cache": "HIT",
+		etag,
+	};
 }
 
 function getBodyForAppRouter(
-  event: MiddlewareEvent,
-  cachedValue: CacheValue<"cache">,
+	event: MiddlewareEvent,
+	cachedValue: CacheValue<"cache">
 ): { body: string; additionalHeaders: Record<string, string> } {
-  if (cachedValue.type !== "app") {
-    throw new Error("getBodyForAppRouter called with non-app cache value");
-  }
-  try {
-    const segmentHeader = `${event.headers[NEXT_SEGMENT_PREFETCH_HEADER]}`;
-    const isSegmentResponse =
-      Boolean(segmentHeader) &&
-      segmentHeader in (cachedValue.segmentData || {});
+	if (cachedValue.type !== "app") {
+		throw new Error("getBodyForAppRouter called with non-app cache value");
+	}
+	try {
+		const segmentHeader = `${event.headers[NEXT_SEGMENT_PREFETCH_HEADER]}`;
+		const isSegmentResponse = Boolean(segmentHeader) && segmentHeader in (cachedValue.segmentData || {});
 
-    const body = isSegmentResponse
-      ? cachedValue.segmentData![segmentHeader]
-      : cachedValue.rsc;
-    return {
-      body,
-      additionalHeaders: isSegmentResponse
-        ? { [NEXT_PRERENDER_HEADER]: "1", [NEXT_POSTPONED_HEADER]: "2" }
-        : {},
-    };
-  } catch (e) {
-    error("Error while getting body for app router from cache:", e);
-    return { body: cachedValue.rsc, additionalHeaders: {} };
-  }
+		const body = isSegmentResponse ? cachedValue.segmentData![segmentHeader] : cachedValue.rsc;
+		return {
+			body,
+			additionalHeaders: isSegmentResponse
+				? { [NEXT_PRERENDER_HEADER]: "1", [NEXT_POSTPONED_HEADER]: "2" }
+				: {},
+		};
+	} catch (e) {
+		error("Error while getting body for app router from cache:", e);
+		return { body: cachedValue.rsc, additionalHeaders: {} };
+	}
 }
 
 async function generateResult(
-  event: MiddlewareEvent,
-  localizedPath: string,
-  cachedValue: CacheValue<"cache">,
-  lastModified?: number,
+	event: MiddlewareEvent,
+	localizedPath: string,
+	cachedValue: CacheValue<"cache">,
+	lastModified?: number
 ): Promise<InternalResult> {
-  debug("Returning result from experimental cache");
-  let body = "";
-  let type = "application/octet-stream";
-  let isDataRequest = false;
-  let additionalHeaders = {};
-  if (cachedValue.type === "app") {
-    isDataRequest = Boolean(event.headers.rsc);
-    if (isDataRequest) {
-      const { body: appRouterBody, additionalHeaders: appHeaders } =
-        getBodyForAppRouter(event, cachedValue);
-      body = appRouterBody;
-      additionalHeaders = appHeaders;
-    } else {
-      body = cachedValue.html;
-    }
-    type = isDataRequest ? "text/x-component" : "text/html; charset=utf-8";
-  } else if (cachedValue.type === "page") {
-    isDataRequest = Boolean(event.query.__nextDataReq);
-    body = isDataRequest ? JSON.stringify(cachedValue.json) : cachedValue.html;
-    type = isDataRequest ? "application/json" : "text/html; charset=utf-8";
-  } else {
-    throw new Error(
-      "generateResult called with unsupported cache value type, only 'app' and 'page' are supported",
-    );
-  }
-  const cacheControl = await computeCacheControl(
-    localizedPath,
-    body,
-    event.headers.host,
-    cachedValue.revalidate,
-    lastModified,
-  );
-  return {
-    type: "core",
-    // Sometimes other status codes can be cached, like 404. For these cases, we should return the correct status code
-    // Also set the status code to the rewriteStatusCode if defined
-    // This can happen in handleMiddleware in routingHandler.
-    // `NextResponse.rewrite(url, { status: xxx})
-    // The rewrite status code should take precedence over the cached one
-    statusCode: event.rewriteStatusCode ?? cachedValue.meta?.status ?? 200,
-    body: toReadableStream(body, false),
-    isBase64Encoded: false,
-    headers: {
-      ...cacheControl,
-      "content-type": type,
-      ...cachedValue.meta?.headers,
-      vary: VARY_HEADER,
-      ...additionalHeaders,
-    },
-  };
+	debug("Returning result from experimental cache");
+	let body = "";
+	let type = "application/octet-stream";
+	let isDataRequest = false;
+	let additionalHeaders = {};
+	if (cachedValue.type === "app") {
+		isDataRequest = Boolean(event.headers.rsc);
+		if (isDataRequest) {
+			const { body: appRouterBody, additionalHeaders: appHeaders } = getBodyForAppRouter(event, cachedValue);
+			body = appRouterBody;
+			additionalHeaders = appHeaders;
+		} else {
+			body = cachedValue.html;
+		}
+		type = isDataRequest ? "text/x-component" : "text/html; charset=utf-8";
+	} else if (cachedValue.type === "page") {
+		isDataRequest = Boolean(event.query.__nextDataReq);
+		body = isDataRequest ? JSON.stringify(cachedValue.json) : cachedValue.html;
+		type = isDataRequest ? "application/json" : "text/html; charset=utf-8";
+	} else {
+		throw new Error(
+			"generateResult called with unsupported cache value type, only 'app' and 'page' are supported"
+		);
+	}
+	const cacheControl = await computeCacheControl(
+		localizedPath,
+		body,
+		event.headers.host,
+		cachedValue.revalidate,
+		lastModified
+	);
+	return {
+		type: "core",
+		// Sometimes other status codes can be cached, like 404. For these cases, we should return the correct status code
+		// Also set the status code to the rewriteStatusCode if defined
+		// This can happen in handleMiddleware in routingHandler.
+		// `NextResponse.rewrite(url, { status: xxx})
+		// The rewrite status code should take precedence over the cached one
+		statusCode: event.rewriteStatusCode ?? cachedValue.meta?.status ?? 200,
+		body: toReadableStream(body, false),
+		isBase64Encoded: false,
+		headers: {
+			...cacheControl,
+			"content-type": type,
+			...cachedValue.meta?.headers,
+			vary: VARY_HEADER,
+			...additionalHeaders,
+		},
+	};
 }
 
 /**
  *
  * https://github.com/vercel/next.js/blob/34039551d2e5f611c0abde31a197d9985918adaf/packages/next/src/shared/lib/router/utils/escape-path-delimiters.ts#L2-L10
  */
-function escapePathDelimiters(
-  segment: string,
-  escapeEncoded?: boolean,
-): string {
-  return segment.replace(
-    new RegExp(`([/#?]${escapeEncoded ? "|%(2f|23|3f|5c)" : ""})`, "gi"),
-    (char: string) => encodeURIComponent(char),
-  );
+function escapePathDelimiters(segment: string, escapeEncoded?: boolean): string {
+	return segment.replace(
+		new RegExp(`([/#?]${escapeEncoded ? "|%(2f|23|3f|5c)" : ""})`, "gi"),
+		(char: string) => encodeURIComponent(char)
+	);
 }
 
 /**
@@ -212,149 +197,125 @@ function escapePathDelimiters(
  * https://github.com/vercel/next.js/blob/34039551d2e5f611c0abde31a197d9985918adaf/packages/next/src/server/lib/router-utils/decode-path-params.ts#L11-L26
  */
 function decodePathParams(pathname: string): string {
-  return pathname
-    .split("/")
-    .map((segment) => {
-      try {
-        return escapePathDelimiters(decodeURIComponent(segment), true);
-      } catch (e) {
-        // If decodeURIComponent fails, we return the original segment
-        return segment;
-      }
-    })
-    .join("/");
+	return pathname
+		.split("/")
+		.map((segment) => {
+			try {
+				return escapePathDelimiters(decodeURIComponent(segment), true);
+			} catch (e) {
+				// If decodeURIComponent fails, we return the original segment
+				return segment;
+			}
+		})
+		.join("/");
 }
 
-export async function cacheInterceptor(
-  event: MiddlewareEvent,
-): Promise<InternalEvent | InternalResult> {
-  if (
-    Boolean(event.headers["next-action"]) ||
-    Boolean(event.headers["x-prerender-revalidate"])
-  )
-    return event;
+export async function cacheInterceptor(event: MiddlewareEvent): Promise<InternalEvent | InternalResult> {
+	if (Boolean(event.headers["next-action"]) || Boolean(event.headers["x-prerender-revalidate"])) return event;
 
-  // Check for Next.js preview mode cookies
-  const cookies = event.headers.cookie || "";
-  const hasPreviewData =
-    cookies.includes("__prerender_bypass") ||
-    cookies.includes("__next_preview_data");
+	// Check for Next.js preview mode cookies
+	const cookies = event.headers.cookie || "";
+	const hasPreviewData = cookies.includes("__prerender_bypass") || cookies.includes("__next_preview_data");
 
-  if (hasPreviewData) {
-    debug("Preview mode detected, passing through to handler");
-    return event;
-  }
-  // We localize the path in case i18n is enabled
-  let localizedPath = localizePath(event);
-  // If using basePath we need to remove it from the path
-  if (NextConfig.basePath) {
-    localizedPath = localizedPath.replace(NextConfig.basePath, "");
-  }
-  // We also need to remove trailing slash
-  localizedPath = localizedPath.replace(/\/$/, "");
+	if (hasPreviewData) {
+		debug("Preview mode detected, passing through to handler");
+		return event;
+	}
+	// We localize the path in case i18n is enabled
+	let localizedPath = localizePath(event);
+	// If using basePath we need to remove it from the path
+	if (NextConfig.basePath) {
+		localizedPath = localizedPath.replace(NextConfig.basePath, "");
+	}
+	// We also need to remove trailing slash
+	localizedPath = localizedPath.replace(/\/$/, "");
 
-  // Then we decode the path params
-  localizedPath = decodePathParams(localizedPath);
+	// Then we decode the path params
+	localizedPath = decodePathParams(localizedPath);
 
-  debug("Checking cache for", localizedPath, PrerenderManifest);
+	debug("Checking cache for", localizedPath, PrerenderManifest);
 
-  const isISR =
-    Object.keys(PrerenderManifest?.routes ?? {}).includes(
-      localizedPath ?? "/",
-    ) ||
-    Object.values(PrerenderManifest?.dynamicRoutes ?? {}).some((dr) =>
-      new RegExp(dr.routeRegex).test(localizedPath),
-    );
-  debug("isISR", isISR);
-  if (isISR) {
-    try {
-      const cachedData = await globalThis.incrementalCache.get(
-        localizedPath ?? "/index",
-      );
-      debug("cached data in interceptor", cachedData);
+	const isISR =
+		Object.keys(PrerenderManifest?.routes ?? {}).includes(localizedPath ?? "/") ||
+		Object.values(PrerenderManifest?.dynamicRoutes ?? {}).some((dr) =>
+			new RegExp(dr.routeRegex).test(localizedPath)
+		);
+	debug("isISR", isISR);
+	if (isISR) {
+		try {
+			const cachedData = await globalThis.incrementalCache.get(localizedPath ?? "/index");
+			debug("cached data in interceptor", cachedData);
 
-      if (!cachedData?.value) {
-        return event;
-      }
-      // We need to check the tag cache now
-      if (
-        cachedData.value?.type === "app" ||
-        cachedData.value?.type === "route"
-      ) {
-        const tags = getTagsFromValue(cachedData.value);
+			if (!cachedData?.value) {
+				return event;
+			}
+			// We need to check the tag cache now
+			if (cachedData.value?.type === "app" || cachedData.value?.type === "route") {
+				const tags = getTagsFromValue(cachedData.value);
 
-        const _hasBeenRevalidated = cachedData.shouldBypassTagCache
-          ? false
-          : await hasBeenRevalidated(localizedPath, tags, cachedData);
+				const _hasBeenRevalidated = cachedData.shouldBypassTagCache
+					? false
+					: await hasBeenRevalidated(localizedPath, tags, cachedData);
 
-        if (_hasBeenRevalidated) {
-          return event;
-        }
-      }
-      const host = event.headers.host;
-      switch (cachedData?.value?.type) {
-        case "app":
-        case "page":
-          return generateResult(
-            event,
-            localizedPath,
-            cachedData.value,
-            cachedData.lastModified,
-          );
-        case "redirect": {
-          const cacheControl = await computeCacheControl(
-            localizedPath,
-            "",
-            host,
-            cachedData.value.revalidate,
-            cachedData.lastModified,
-          );
-          return {
-            type: "core",
-            statusCode: cachedData.value.meta?.status ?? 307,
-            body: emptyReadableStream(),
-            headers: {
-              ...((cachedData.value.meta?.headers as Record<string, string>) ??
-                {}),
-              ...cacheControl,
-            },
-            isBase64Encoded: false,
-          };
-        }
-        case "route": {
-          const cacheControl = await computeCacheControl(
-            localizedPath,
-            cachedData.value.body,
-            host,
-            cachedData.value.revalidate,
-            cachedData.lastModified,
-          );
+				if (_hasBeenRevalidated) {
+					return event;
+				}
+			}
+			const host = event.headers.host;
+			switch (cachedData?.value?.type) {
+				case "app":
+				case "page":
+					return generateResult(event, localizedPath, cachedData.value, cachedData.lastModified);
+				case "redirect": {
+					const cacheControl = await computeCacheControl(
+						localizedPath,
+						"",
+						host,
+						cachedData.value.revalidate,
+						cachedData.lastModified
+					);
+					return {
+						type: "core",
+						statusCode: cachedData.value.meta?.status ?? 307,
+						body: emptyReadableStream(),
+						headers: {
+							...((cachedData.value.meta?.headers as Record<string, string>) ?? {}),
+							...cacheControl,
+						},
+						isBase64Encoded: false,
+					};
+				}
+				case "route": {
+					const cacheControl = await computeCacheControl(
+						localizedPath,
+						cachedData.value.body,
+						host,
+						cachedData.value.revalidate,
+						cachedData.lastModified
+					);
 
-          const isBinary = isBinaryContentType(
-            String(cachedData.value.meta?.headers?.["content-type"]),
-          );
+					const isBinary = isBinaryContentType(String(cachedData.value.meta?.headers?.["content-type"]));
 
-          return {
-            type: "core",
-            statusCode:
-              event.rewriteStatusCode ?? cachedData.value.meta?.status ?? 200,
-            body: toReadableStream(cachedData.value.body, isBinary),
-            headers: {
-              ...cacheControl,
-              ...cachedData.value.meta?.headers,
-              vary: VARY_HEADER,
-            },
-            isBase64Encoded: isBinary,
-          };
-        }
-        default:
-          return event;
-      }
-    } catch (e) {
-      debug("Error while fetching cache", e);
-      // In case of error we fallback to the server
-      return event;
-    }
-  }
-  return event;
+					return {
+						type: "core",
+						statusCode: event.rewriteStatusCode ?? cachedData.value.meta?.status ?? 200,
+						body: toReadableStream(cachedData.value.body, isBinary),
+						headers: {
+							...cacheControl,
+							...cachedData.value.meta?.headers,
+							vary: VARY_HEADER,
+						},
+						isBase64Encoded: isBinary,
+					};
+				}
+				default:
+					return event;
+			}
+		} catch (e) {
+			debug("Error while fetching cache", e);
+			// In case of error we fallback to the server
+			return event;
+		}
+	}
+	return event;
 }

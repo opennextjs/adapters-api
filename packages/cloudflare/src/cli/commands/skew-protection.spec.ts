@@ -1,12 +1,13 @@
 import { describe, expect, test, vi } from "vitest";
 
 import { CURRENT_VERSION_ID } from "../templates/skew-protection.js";
+
 import { listWorkerVersions, updateDeploymentMapping } from "./skew-protection.js";
 
 describe("skew protection", () => {
 	describe("listWorkerVersions", () => {
 		test("listWorkerVersions return versions ordered by time DESC", async () => {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 			const client: any = {
 				workers: {
 					scripts: {

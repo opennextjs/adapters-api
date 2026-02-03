@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse, NextFetchEvent } from "next/server";
 import { clerkMiddleware } from "@clerk/nextjs/server";
-
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { NextRequest, NextResponse, NextFetchEvent } from "next/server";
 
 export function middleware(request: NextRequest, event: NextFetchEvent) {
 	console.log("middleware");

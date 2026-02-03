@@ -1,12 +1,12 @@
 {
-  "name": "example_sst",
-  "version": "0.0.0",
-  "type": "module",
-  "private": true,
-  "scripts": {},
-  "devDependencies": {
-    "aws-cdk-lib": "2.161.1",
-    "constructs": "10.3.0",
-    "sst": "^2.43.6"
-  }
+	"name": "example_sst",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {},
+	"devDependencies": {
+		"aws-cdk-lib": "2.161.1",
+		"constructs": "10.3.0",
+		"sst": "^2.43.6"
+	}
 }

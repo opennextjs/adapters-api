@@ -1,12 +1,11 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 import Cache, { SOFT_TAG_PREFIX } from "@opennextjs/aws/adapters/cache.js";
 import { type Mock, vi } from "vitest";
 
 declare global {
-  var openNextConfig: {
-    dangerous: { disableIncrementalCache?: boolean; disableTagCache?: boolean };
-  };
-  var isNextAfter15: boolean;
+	var openNextConfig: {
+		dangerous: { disableIncrementalCache?: boolean; disableTagCache?: boolean };
+	};
+	var isNextAfter15: boolean;
 }
 
 describe("CacheHandler", () => {

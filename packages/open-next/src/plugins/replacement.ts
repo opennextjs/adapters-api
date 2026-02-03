@@ -6,11 +6,11 @@ import type { Plugin } from "esbuild";
 import logger from "../logger.js";
 
 export interface IPluginSettings {
-  target: RegExp;
-  replacements?: string[];
-  deletes?: string[];
-  name?: string;
-  entireFile?: boolean;
+	target: RegExp;
+	replacements?: string[];
+	deletes?: string[];
+	name?: string;
+	entireFile?: boolean;
 }
 
 const overridePattern = /\/\/#override (\w+)\n([\s\S]*?)\n\/\/#endOverride/gm;
@@ -53,68 +53,58 @@ const importPattern = /\/\/#import([\s\S]*?)\n\/\/#endImport/gm;
  * @returns
  */
 export function openNextReplacementPlugin({
-  target,
-  replacements,
-  deletes,
-  name,
-  entireFile,
+	target,
+	replacements,
+	deletes,
+	name,
+	entireFile,
 }: IPluginSettings): Plugin {
-  return {
-    name: name ?? "opennext",
-    setup(build) {
-      build.onLoad({ filter: target }, async (args) => {
-        if (entireFile) {
-          if (replacements?.length !== 1) {
-            throw new Error(
-              "When using entireFile option, exactly one replacement file must be provided",
-            );
-          }
-          const contents = await readFile(replacements[0], "utf-8");
-          return { contents };
-        }
+	return {
+		name: name ?? "opennext",
+		setup(build) {
+			build.onLoad({ filter: target }, async (args) => {
+				if (entireFile) {
+					if (replacements?.length !== 1) {
+						throw new Error("When using entireFile option, exactly one replacement file must be provided");
+					}
+					const contents = await readFile(replacements[0], "utf-8");
+					return { contents };
+				}
 
-        let contents = await readFile(args.path, "utf-8");
+				let contents = await readFile(args.path, "utf-8");
 
-        await Promise.all([
-          ...(deletes ?? []).map(async (id) => {
-            const pattern = new RegExp(
-              `\/\/#override (${id})\n([\\s\\S]*?)\/\/#endOverride`,
-            );
-            logger.debug(
-              chalk.blue(`OpenNext Replacement plugin ${name}`),
-              `Delete override ${id}`,
-            );
-            contents = contents.replace(pattern, "");
-          }),
-          ...(replacements ?? []).map(async (filename) => {
-            const replacementFile = await readFile(filename, "utf-8");
-            const matches = replacementFile.matchAll(overridePattern);
+				await Promise.all([
+					...(deletes ?? []).map(async (id) => {
+						const pattern = new RegExp(`//#override (${id})\n([\\s\\S]*?)//#endOverride`);
+						logger.debug(chalk.blue(`OpenNext Replacement plugin ${name}`), `Delete override ${id}`);
+						contents = contents.replace(pattern, "");
+					}),
+					...(replacements ?? []).map(async (filename) => {
+						const replacementFile = await readFile(filename, "utf-8");
+						const matches = replacementFile.matchAll(overridePattern);
 
-            const importMatch = replacementFile.match(importPattern);
-            const addedImport = importMatch ? importMatch[0] : "";
+						const importMatch = replacementFile.match(importPattern);
+						const addedImport = importMatch ? importMatch[0] : "";
 
-            contents = `${addedImport}\n${contents}`;
+						contents = `${addedImport}\n${contents}`;
 
-            for (const match of matches) {
-              const replacement = match[2];
-              const id = match[1];
-              const pattern = new RegExp(
-                `\/\/#override (${id})\n([\\s\\S]*?)\/\/#endOverride`,
-                "g",
-              );
-              logger.debug(
-                chalk.blue(`Open-next replacement plugin ${name}`),
-                `Apply override ${id} from ${filename}`,
-              );
-              contents = contents.replace(pattern, replacement);
-            }
-          }),
-        ]);
+						for (const match of matches) {
+							const replacement = match[2];
+							const id = match[1];
+							const pattern = new RegExp(`//#override (${id})\n([\\s\\S]*?)//#endOverride`, "g");
+							logger.debug(
+								chalk.blue(`Open-next replacement plugin ${name}`),
+								`Apply override ${id} from ${filename}`
+							);
+							contents = contents.replace(pattern, replacement);
+						}
+					}),
+				]);
 
-        return {
-          contents,
-        };
-      });
-    },
-  };
+				return {
+					contents,
+				};
+			});
+		},
+	};
 }

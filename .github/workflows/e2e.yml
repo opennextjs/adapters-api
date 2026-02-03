@@ -5,9 +5,9 @@ on:
     - cron: "0 0 * * *"
   push:
     paths:
-      - 'examples/**'
-      - 'packages/open-next/**'
-      - 'packages/tests-e2e/**'
+      - "examples/**"
+      - "packages/open-next/**"
+      - "packages/tests-e2e/**"
     branches:
       - main
 
@@ -100,7 +100,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           cache: pnpm # cache pnpm store
-          node-version: 20.x
+          node-version: 22.x
 
       - name: Install packages
         run: pnpm install

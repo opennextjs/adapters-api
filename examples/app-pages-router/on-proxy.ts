@@ -12,8 +12,8 @@ spawn("node", [".open-next/server-functions/default/index.mjs"], {
 });
 
 spawn("node", [".open-next/server-functions/api/index.mjs"], {
-  env: { ...process.env, PORT: "3011" },
-  stdio: "inherit",
+	env: { ...process.env, PORT: "3011" },
+	stdio: "inherit",
 });
 
 const app = express();
@@ -46,5 +46,5 @@ app.use(
 );
 
 app.listen(PORT, () => {
-  console.log(`Proxy running at http://localhost:${PORT}`);
+	console.log(`Proxy running at http://localhost:${PORT}`);
 });

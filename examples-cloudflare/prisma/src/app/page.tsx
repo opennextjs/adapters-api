@@ -1,5 +1,6 @@
-import styles from "./page.module.css";
 import { getDb } from "@/lib/db";
+
+import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
 

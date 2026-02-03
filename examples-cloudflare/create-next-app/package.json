@@ -13,9 +13,9 @@
 		"e2e": "playwright test -c e2e/playwright.config.ts"
 	},
 	"dependencies": {
+		"next": "catalog:",
 		"react": "catalog:",
-		"react-dom": "catalog:",
-		"next": "catalog:"
+		"react-dom": "catalog:"
 	},
 	"devDependencies": {
 		"@opennextjs/cloudflare": "workspace:*",
@@ -23,8 +23,6 @@
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
-		"eslint": "^8",
-		"eslint-config-next": "14.2.14",
 		"postcss": "^8",
 		"tailwindcss": "^3.4.1",
 		"typescript": "catalog:",

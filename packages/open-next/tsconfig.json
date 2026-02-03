@@ -1,16 +1,16 @@
 {
-  "extends": "@tsconfig/node18/tsconfig.json",
-  "compilerOptions": {
-    "declaration": true,
-    "module": "esnext",
-    "lib": ["DOM", "ESNext"],
-    "outDir": "./dist",
-    "allowSyntheticDefaultImports": true,
-    "paths": {
-      "types/*": ["./src/types/*"],
-      "config/*": ["./src/adapters/config/*"],
-      "http/*": ["./src/http/*"],
-      "utils/*": ["./src/utils/*"]
-    }
-  }
+	"extends": "@tsconfig/node18/tsconfig.json",
+	"compilerOptions": {
+		"declaration": true,
+		"module": "esnext",
+		"lib": ["DOM", "ESNext"],
+		"outDir": "./dist",
+		"allowSyntheticDefaultImports": true,
+		"paths": {
+			"@/types/*": ["./src/types/*"],
+			"@/config/*": ["./src/adapters/config/*"],
+			"@/http/*": ["./src/http/*"],
+			"@/utils/*": ["./src/utils/*"]
+		}
+	}
 }

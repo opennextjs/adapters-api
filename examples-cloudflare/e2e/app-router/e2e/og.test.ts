@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+
 import { validateMd5 } from "../../utils";
 
 // This is the md5sums of the expected PNGs generated with `md5sum <file>`

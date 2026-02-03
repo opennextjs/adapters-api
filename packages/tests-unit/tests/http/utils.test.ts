@@ -1,84 +1,81 @@
 import type http from "node:http";
 
-import {
-  parseHeaders,
-  parseSetCookieHeader,
-} from "@opennextjs/aws/http/util.js";
+import { parseHeaders, parseSetCookieHeader } from "@opennextjs/aws/http/util.js";
 
 describe("parseSetCookieHeader", () => {
-  it("returns an empty list if cookies is emptyish", () => {
-    expect(parseSetCookieHeader("")).toEqual([]);
-    expect(parseSetCookieHeader(null)).toEqual([]);
-    expect(parseSetCookieHeader(undefined)).toEqual([]);
-    expect(parseSetCookieHeader([])).toEqual([]);
-  });
-  it("parse single cookie", () => {
-    const cookies = parseSetCookieHeader(
-      "cookie1=value1; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; Path=/",
-    );
-    expect(cookies).toEqual([
-      "cookie1=value1; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; Path=/",
-    ]);
-  });
-  it("parse multiple cookies", () => {
-    // NOTE: expires is lower case but still works
-    const cookies = parseSetCookieHeader(
-      "cookie1=value1; expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; Path=/, cookie2=value2; HttpOnly; Secure",
-    );
-    expect(cookies).toEqual([
-      "cookie1=value1; expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; Path=/",
-      "cookie2=value2; HttpOnly; Secure",
-    ]);
-  });
-  it("return if cookies is already an array", () => {
-    const cookies = parseSetCookieHeader([
-      "cookie1=value1; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; Path=/",
-    ]);
-    expect(cookies).toEqual([
-      "cookie1=value1; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; Path=/",
-    ]);
-  });
-  it("parses w/o Expire", () => {
-    const cookies = parseSetCookieHeader(
-      "cookie1=value1; HttpOnly; Secure; Path=/, cookie2=value2; HttpOnly=false; Secure=True; Domain=example.com; Path=/api",
-    );
-    expect(cookies).toEqual([
-      "cookie1=value1; HttpOnly; Secure; Path=/",
-      "cookie2=value2; HttpOnly=false; Secure=True; Domain=example.com; Path=/api",
-    ]);
-  });
+	it("returns an empty list if cookies is emptyish", () => {
+		expect(parseSetCookieHeader("")).toEqual([]);
+		expect(parseSetCookieHeader(null)).toEqual([]);
+		expect(parseSetCookieHeader(undefined)).toEqual([]);
+		expect(parseSetCookieHeader([])).toEqual([]);
+	});
+	it("parse single cookie", () => {
+		const cookies = parseSetCookieHeader(
+			"cookie1=value1; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; Path=/"
+		);
+		expect(cookies).toEqual([
+			"cookie1=value1; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; Path=/",
+		]);
+	});
+	it("parse multiple cookies", () => {
+		// NOTE: expires is lower case but still works
+		const cookies = parseSetCookieHeader(
+			"cookie1=value1; expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; Path=/, cookie2=value2; HttpOnly; Secure"
+		);
+		expect(cookies).toEqual([
+			"cookie1=value1; expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; Path=/",
+			"cookie2=value2; HttpOnly; Secure",
+		]);
+	});
+	it("return if cookies is already an array", () => {
+		const cookies = parseSetCookieHeader([
+			"cookie1=value1; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; Path=/",
+		]);
+		expect(cookies).toEqual([
+			"cookie1=value1; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; Path=/",
+		]);
+	});
+	it("parses w/o Expire", () => {
+		const cookies = parseSetCookieHeader(
+			"cookie1=value1; HttpOnly; Secure; Path=/, cookie2=value2; HttpOnly=false; Secure=True; Domain=example.com; Path=/api"
+		);
+		expect(cookies).toEqual([
+			"cookie1=value1; HttpOnly; Secure; Path=/",
+			"cookie2=value2; HttpOnly=false; Secure=True; Domain=example.com; Path=/api",
+		]);
+	});
 });
 
 describe("parseHeaders", () => {
-  it("parses headers correctly", () => {
-    const headers = parseHeaders({
-      location: ["/target", "/target"],
-      "x-custom-header": "customValue",
-      "x-multiple-values": ["value1", "value2"],
-      "x-undefined-header": undefined,
-      "x-opennext": "is-so-cool",
-    } as unknown as http.OutgoingHttpHeaders);
-    expect(headers).toEqual({
-      location: "/target",
-      "x-custom-header": "customValue",
-      "x-multiple-values": "value1,value2",
-      "x-opennext": "is-so-cool",
-    });
-  });
+	it("parses headers correctly", () => {
+		const headers = parseHeaders({
+			location: ["/target", "/target"],
+			"x-custom-header": "customValue",
+			"x-multiple-values": ["value1", "value2"],
+			"x-undefined-header": undefined,
+			"x-opennext": "is-so-cool",
+		} as unknown as http.OutgoingHttpHeaders);
+		expect(headers).toEqual({
+			location: "/target",
+			"x-custom-header": "customValue",
+			"x-multiple-values": "value1,value2",
+			"x-opennext": "is-so-cool",
+		});
+	});
 
-  it("handles location header array with a single value", () => {
-    const headers = parseHeaders({
-      location: ["/target"],
-      "x-custom-header": "customValue",
-      "x-multiple-values": ["value1", "value2"],
-      "x-undefined-header": undefined,
-      "x-opennext": "is-so-cool",
-    } as unknown as http.OutgoingHttpHeaders);
-    expect(headers).toEqual({
-      location: "/target",
-      "x-custom-header": "customValue",
-      "x-multiple-values": "value1,value2",
-      "x-opennext": "is-so-cool",
-    });
-  });
+	it("handles location header array with a single value", () => {
+		const headers = parseHeaders({
+			location: ["/target"],
+			"x-custom-header": "customValue",
+			"x-multiple-values": ["value1", "value2"],
+			"x-undefined-header": undefined,
+			"x-opennext": "is-so-cool",
+		} as unknown as http.OutgoingHttpHeaders);
+		expect(headers).toEqual({
+			location: "/target",
+			"x-custom-header": "customValue",
+			"x-multiple-values": "value1,value2",
+			"x-opennext": "is-so-cool",
+		});
+	});
 });
