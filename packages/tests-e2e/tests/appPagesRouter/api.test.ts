@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 
 //TODO: need to fix wrong import for route-turbo in adapter api, maybe because of function splitting?
 test.skip("API call from client", async ({ page }) => {
-  await page.goto("/");
-  await page.locator('[href="/api"]').click();
+	await page.goto("/");
+	await page.locator('[href="/api"]').click();
 
 	await page.waitForURL("/api");
 

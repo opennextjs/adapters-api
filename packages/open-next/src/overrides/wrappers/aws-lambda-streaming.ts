@@ -23,20 +23,16 @@ function formatWarmerResponse(event: WarmerEvent) {
 }
 
 const handler: WrapperHandler = async (handler, converter) =>
-  awslambda.streamifyResponse(
-    async (
-      event: AwsLambdaEvent,
-      responseStream,
-      context,
-    ): Promise<AwsLambdaReturn> => {
-      context.callbackWaitsForEmptyEventLoop = false;
-      if ("type" in event) {
-        const result = await formatWarmerResponse(event);
-        responseStream.end(Buffer.from(JSON.stringify(result)), "utf-8");
-        // disabled for now, we'll need to revisit this later if needed.
-        // await globalThis.__next_route_preloader("warmerEvent");
-        return;
-      }
+	awslambda.streamifyResponse(
+		async (event: AwsLambdaEvent, responseStream, context): Promise<AwsLambdaReturn> => {
+			context.callbackWaitsForEmptyEventLoop = false;
+			if ("type" in event) {
+				const result = await formatWarmerResponse(event);
+				responseStream.end(Buffer.from(JSON.stringify(result)), "utf-8");
+				// disabled for now, we'll need to revisit this later if needed.
+				// await globalThis.__next_route_preloader("warmerEvent");
+				return;
+			}
 
 			const internalEvent = await converter.convertFrom(event);
 

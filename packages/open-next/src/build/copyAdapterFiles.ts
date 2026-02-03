@@ -7,50 +7,42 @@ import { addDebugFile } from "../debug.js";
 import type * as buildHelper from "./helper.js";
 
 export async function copyAdapterFiles(
-  options: buildHelper.BuildOptions,
-  fnName: string,
-  packagePath: string,
-  outputs: NextAdapterOutputs,
+	options: buildHelper.BuildOptions,
+	fnName: string,
+	packagePath: string,
+	outputs: NextAdapterOutputs
 ) {
 	const filesToCopy = new Map<string, string>();
 
-  // Copying the files from outputs to the output dir
-  for (const [key, value] of Object.entries(outputs)) {
-    if (
-      ["pages", "pagesApi", "appPages", "appRoutes", "middleware"].includes(key)
-    ) {
-      const setFileToCopy = (route: any) => {
-        const assets = route.assets;
-        // We need to copy the filepaths to the output dir
-        const relativeFilePath = path.join(
-          packagePath,
-          path.relative(options.appPath, route.filePath),
-        );
-        filesToCopy.set(
-          route.filePath,
-          `${options.outputDir}/server-functions/${fnName}/${relativeFilePath}`,
-        );
+	// Copying the files from outputs to the output dir
+	for (const [key, value] of Object.entries(outputs)) {
+		if (["pages", "pagesApi", "appPages", "appRoutes", "middleware"].includes(key)) {
+			const setFileToCopy = (route: any) => {
+				const assets = route.assets;
+				// We need to copy the filepaths to the output dir
+				const relativeFilePath = path.join(packagePath, path.relative(options.appPath, route.filePath));
+				filesToCopy.set(
+					route.filePath,
+					`${options.outputDir}/server-functions/${fnName}/${relativeFilePath}`
+				);
 
-        for (const [relative, from] of Object.entries(assets || {})) {
-          //  console.log("route.assets", from, relative, packagePath);
-          filesToCopy.set(
-            from as string,
-            `${options.outputDir}/server-functions/${fnName}/${relative}`,
-          );
-        }
-      };
-      if (key === "middleware") {
-        // Middleware is a single object
-        setFileToCopy(value as any);
-      } else {
-        // The rest are arrays
-        for (const route of value as any[]) {
-          setFileToCopy(route);
-          // copyFileSync(from, `${options.outputDir}/${relative}`);
-        }
-      }
-    }
-  }
+				for (const [relative, from] of Object.entries(assets || {})) {
+					//  console.log("route.assets", from, relative, packagePath);
+					filesToCopy.set(from as string, `${options.outputDir}/server-functions/${fnName}/${relative}`);
+				}
+			};
+			if (key === "middleware") {
+				// Middleware is a single object
+				setFileToCopy(value as any);
+			} else {
+				// The rest are arrays
+				for (const route of value as any[]) {
+					setFileToCopy(route);
+					// copyFileSync(from, `${options.outputDir}/${relative}`);
+				}
+			}
+		}
+	}
 
 	console.log("\n### Copying adapter files");
 	const debugCopiedFiles: Record<string, string> = {};

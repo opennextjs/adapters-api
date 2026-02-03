@@ -3,9 +3,9 @@ import { expect, test } from "@playwright/test";
 // NOTE: We don't await page load b/c we want to see the Loading page
 //TODO: Fix SSE tests - Right now it causes Invalid state: WritableStream is closed at the end of the response, crashing node entirely
 test.skip("Server Sent Events", async ({ page }) => {
-  await page.goto("/");
-  await page.locator('[href="/sse"]').click();
-  await page.waitForURL("/sse");
+	await page.goto("/");
+	await page.locator('[href="/sse"]').click();
+	await page.waitForURL("/sse");
 
 	const msg0 = page.getByText(`Message 0: {"message":"open"`);
 	await expect(msg0).toBeVisible();

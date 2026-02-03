@@ -66,40 +66,40 @@ test.describe("Next Config Redirect", () => {
 		// did not redirect
 		await page.waitForURL("/next-config-redirect-has-with-bad-value");
 
-    // 404 not found
-    const el = page.getByText("This page could not be found.", {
-      exact: true,
-    });
-    await expect(el).toBeVisible();
-  });
-  //TODO: fix, was working before the rebase
-  test.skip("Should properly encode the Location header for redirects with query params", async ({
-    page,
-  }) => {
-    await page.goto("/config-redirect");
-    const responsePromise = page.waitForResponse((response) => {
-      return response.status() === 307;
-    });
-    page.getByTestId("redirect-link").click();
-    const res = await responsePromise;
-    //Why is it not encoded in the URL here? It seems to work in a browser though.
-    await page.waitForURL("/config-redirect/dest?q=äöå€");
+		// 404 not found
+		const el = page.getByText("This page could not be found.", {
+			exact: true,
+		});
+		await expect(el).toBeVisible();
+	});
+	//TODO: fix, was working before the rebase
+	test.skip("Should properly encode the Location header for redirects with query params", async ({
+		page,
+	}) => {
+		await page.goto("/config-redirect");
+		const responsePromise = page.waitForResponse((response) => {
+			return response.status() === 307;
+		});
+		page.getByTestId("redirect-link").click();
+		const res = await responsePromise;
+		//Why is it not encoded in the URL here? It seems to work in a browser though.
+		await page.waitForURL("/config-redirect/dest?q=äöå€");
 
 		const locationHeader = res.headers().location;
 		expect(locationHeader).toBe("/config-redirect/dest?q=%C3%A4%C3%B6%C3%A5%E2%82%AC");
 		expect(res.status()).toBe(307);
 
-    const searchParams = page.getByTestId("searchParams");
-    await expect(searchParams).toHaveText("q: äöå€");
-  });
-  test.skip("Should respect already encoded query params", async ({ page }) => {
-    await page.goto("/config-redirect");
-    const responsePromise = page.waitForResponse((response) => {
-      return response.status() === 307;
-    });
-    page.getByTestId("redirect-link-already-encoded").click();
-    const res = await responsePromise;
-    await page.waitForURL("/config-redirect/dest?q=äöå€");
+		const searchParams = page.getByTestId("searchParams");
+		await expect(searchParams).toHaveText("q: äöå€");
+	});
+	test.skip("Should respect already encoded query params", async ({ page }) => {
+		await page.goto("/config-redirect");
+		const responsePromise = page.waitForResponse((response) => {
+			return response.status() === 307;
+		});
+		page.getByTestId("redirect-link-already-encoded").click();
+		const res = await responsePromise;
+		await page.waitForURL("/config-redirect/dest?q=äöå€");
 
 		const locationHeader = res.headers().location;
 		expect(locationHeader).toBe("/config-redirect/dest?q=%C3%A4%C3%B6%C3%A5%E2%82%AC");

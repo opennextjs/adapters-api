@@ -1,29 +1,29 @@
 {
-  "name": "pages-router",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "openbuild:local": "node ../../packages/open-next/dist/index.js build",
-    "openbuild:local:start": "SOME_PROD_VAR=bar PORT=3002 node .open-next/server-functions/default/index.mjs",
-    "dev": "next dev --turbopack --port 3002",
-    "build": "next build",
-    "start": "next start --port 3002",
-    "lint": "next lint",
-    "clean": "rm -rf .turbo node_modules .next .open-next"
-  },
-  "dependencies": {
-    "@example/shared": "workspace:*",
-    "next": "catalog:aws",
-    "react": "catalog:aws",
-    "react-dom": "catalog:aws"
-  },
-  "devDependencies": {
-    "@types/node": "catalog:aws",
-    "@types/react": "catalog:aws",
-    "@types/react-dom": "catalog:aws",
-    "tailwindcss": "catalog:aws",
-    "postcss": "catalog:aws",
-    "autoprefixer": "catalog:aws",
-    "typescript": "catalog:aws"
-  }
+	"name": "pages-router",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"openbuild:local": "node ../../packages/open-next/dist/index.js build",
+		"openbuild:local:start": "SOME_PROD_VAR=bar PORT=3002 node .open-next/server-functions/default/index.mjs",
+		"dev": "next dev --turbopack --port 3002",
+		"build": "next build",
+		"start": "next start --port 3002",
+		"lint": "next lint",
+		"clean": "rm -rf .turbo node_modules .next .open-next"
+	},
+	"dependencies": {
+		"@example/shared": "workspace:*",
+		"next": "catalog:aws",
+		"react": "catalog:aws",
+		"react-dom": "catalog:aws"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:aws",
+		"@types/react": "catalog:aws",
+		"@types/react-dom": "catalog:aws",
+		"autoprefixer": "catalog:aws",
+		"postcss": "catalog:aws",
+		"tailwindcss": "catalog:aws",
+		"typescript": "catalog:aws"
+	}
 }

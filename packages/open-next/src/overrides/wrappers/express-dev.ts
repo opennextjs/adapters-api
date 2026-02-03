@@ -31,14 +31,14 @@ const wrapper: WrapperHandler = async (handler, converter) => {
 		await imageHandler(internalEvent, { streamCreator });
 	});
 
-  app.all(/.*$/, async (req, res) => {
-    if (req.protocol === "http" && req.hostname === "localhost") {
-      // This is used internally by Next.js during redirects in server actions. We need to set it to the origin of the request.
-      process.env.__NEXT_PRIVATE_ORIGIN = `${req.protocol}://${req.hostname}`;
-      // This is to make `next-auth` and other libraries that rely on this header to work locally out of the box.
-      req.headers["x-forwarded-proto"] = req.protocol;
-    }
-    const internalEvent = await converter.convertFrom(req);
+	app.all(/.*$/, async (req, res) => {
+		if (req.protocol === "http" && req.hostname === "localhost") {
+			// This is used internally by Next.js during redirects in server actions. We need to set it to the origin of the request.
+			process.env.__NEXT_PRIVATE_ORIGIN = `${req.protocol}://${req.hostname}`;
+			// This is to make `next-auth` and other libraries that rely on this header to work locally out of the box.
+			req.headers["x-forwarded-proto"] = req.protocol;
+		}
+		const internalEvent = await converter.convertFrom(req);
 
 		const abortController = new AbortController();
 

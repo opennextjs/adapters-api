@@ -39,14 +39,14 @@ export class DetachedPromiseRunner {
 		return detachedPromise;
 	}
 
-  public add<T>(promise: Promise<T>): void {
-    const detachedPromise = new DetachedPromise<T>();
-    this.promises.push(detachedPromise);
-    promise.then(detachedPromise.resolve).catch((e) => {
-      // We just want to log the error here to avoid unhandled promise rejections
-      error("Detached promise rejected:", e);
-    });
-  }
+	public add<T>(promise: Promise<T>): void {
+		const detachedPromise = new DetachedPromise<T>();
+		this.promises.push(detachedPromise);
+		promise.then(detachedPromise.resolve).catch((e) => {
+			// We just want to log the error here to avoid unhandled promise rejections
+			error("Detached promise rejected:", e);
+		});
+	}
 
 	public async await(): Promise<void> {
 		debug(`Awaiting ${this.promises.length} detached promises`);

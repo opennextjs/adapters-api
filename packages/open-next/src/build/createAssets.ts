@@ -79,9 +79,9 @@ export function createCacheAssets(options: buildHelper.BuildOptions) {
 	const buildId = buildHelper.getBuildId(options);
 	let useTagCache = false;
 
-  const dotNextPath = options.config.dangerous?.useAdapterOutputs
-    ? appBuildOutputPath
-    : path.join(appBuildOutputPath, ".next/standalone", packagePath);
+	const dotNextPath = options.config.dangerous?.useAdapterOutputs
+		? appBuildOutputPath
+		: path.join(appBuildOutputPath, ".next/standalone", packagePath);
 
 	const outputCachePath = path.join(outputDir, "cache", buildId);
 	fs.mkdirSync(outputCachePath, { recursive: true });

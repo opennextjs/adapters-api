@@ -187,27 +187,22 @@ async function generateBundle(
 	let tracedFiles: string[] = [];
 	let manifests: any = {};
 
-  // Copy all necessary traced files
-  if (config.dangerous?.useAdapterOutputs) {
-    tracedFiles = await copyAdapterFiles(
-      options,
-      name,
-      packagePath,
-      nextOutputs!,
-    );
-    //TODO: we should load manifests here
-  } else {
-    const oldTracedFileOutput = await copyTracedFiles({
-      buildOutputPath: appBuildOutputPath,
-      packagePath,
-      outputDir: outputPath,
-      routes: fnOptions.routes ?? ["app/page.tsx"],
-      bundledNextServer: isBundled,
-      skipServerFiles: options.config.dangerous?.useAdapterOutputs === true,
-    });
-    tracedFiles = oldTracedFileOutput.tracedFiles;
-    manifests = oldTracedFileOutput.manifests;
-  }
+	// Copy all necessary traced files
+	if (config.dangerous?.useAdapterOutputs) {
+		tracedFiles = await copyAdapterFiles(options, name, packagePath, nextOutputs!);
+		//TODO: we should load manifests here
+	} else {
+		const oldTracedFileOutput = await copyTracedFiles({
+			buildOutputPath: appBuildOutputPath,
+			packagePath,
+			outputDir: outputPath,
+			routes: fnOptions.routes ?? ["app/page.tsx"],
+			bundledNextServer: isBundled,
+			skipServerFiles: options.config.dangerous?.useAdapterOutputs === true,
+		});
+		tracedFiles = oldTracedFileOutput.tracedFiles;
+		manifests = oldTracedFileOutput.manifests;
+	}
 
 	const additionalCodePatches = codeCustomization?.additionalCodePatches ?? [];
 
@@ -253,19 +248,19 @@ async function generateBundle(
 		? codeCustomization.additionalPlugins(updater)
 		: [];
 
-  const plugins = [
-    openNextReplacementPlugin({
-      name: `requestHandlerOverride ${name}`,
-      target: getCrossPlatformPathRegex("core/requestHandler.js"),
-      deletes: [
-        ...(disableNextPrebundledReact ? ["applyNextjsPrebundledReact"] : []),
-        ...(disableRouting ? ["withRouting"] : []),
-        ...(isAfter142 ? ["patchAsyncStorage"] : []),
-        ...(isAfter141 ? ["appendPrefetch"] : []),
-        ...(isAfter154 ? [] : ["setInitialURL"]),
-        ...(useAdapterHandler ? ["useRequestHandler"] : ["useAdapterHandler"]),
-      ],
-    }),
+	const plugins = [
+		openNextReplacementPlugin({
+			name: `requestHandlerOverride ${name}`,
+			target: getCrossPlatformPathRegex("core/requestHandler.js"),
+			deletes: [
+				...(disableNextPrebundledReact ? ["applyNextjsPrebundledReact"] : []),
+				...(disableRouting ? ["withRouting"] : []),
+				...(isAfter142 ? ["patchAsyncStorage"] : []),
+				...(isAfter141 ? ["appendPrefetch"] : []),
+				...(isAfter154 ? [] : ["setInitialURL"]),
+				...(useAdapterHandler ? ["useRequestHandler"] : ["useAdapterHandler"]),
+			],
+		}),
 
 		openNextResolvePlugin({
 			fnName: name,

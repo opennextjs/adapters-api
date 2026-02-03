@@ -1,11 +1,8 @@
+import { createRequire } from "node:module";
 import path from "node:path";
 import url from "node:url";
 
-import { createRequire } from "node:module";
-import {
-  buildNextjsApp,
-  setStandaloneBuildMode,
-} from "./build/buildNextApp.js";
+import { buildNextjsApp, setStandaloneBuildMode } from "./build/buildNextApp.js";
 import { compileCache } from "./build/compileCache.js";
 import { compileOpenNextConfig } from "./build/compileConfig.js";
 import { compileTagCacheProvider } from "./build/compileTagCacheProvider.js";
@@ -47,23 +44,23 @@ export async function build(openNextConfigPath?: string, nodeExternals?: string)
 	buildHelper.printNextjsVersion(options);
 	buildHelper.printOpenNextVersion(options);
 
-  // Build Next.js app
-  printHeader("Building Next.js app");
-  setStandaloneBuildMode(options);
-  if (config.dangerous?.useAdapterOutputs) {
-    logger.info("Using adapter outputs for building OpenNext bundle.");
-    process.env.NEXT_ADAPTER_PATH = require.resolve("./adapter.js");
-  }
-  buildHelper.initOutputDir(options);
-  buildNextjsApp(options);
+	// Build Next.js app
+	printHeader("Building Next.js app");
+	setStandaloneBuildMode(options);
+	if (config.dangerous?.useAdapterOutputs) {
+		logger.info("Using adapter outputs for building OpenNext bundle.");
+		process.env.NEXT_ADAPTER_PATH = require.resolve("./adapter.js");
+	}
+	buildHelper.initOutputDir(options);
+	buildNextjsApp(options);
 
-  if (config.dangerous?.useAdapterOutputs) {
-    logger.info("Using adapter outputs for building OpenNext bundle.");
-    return;
-  }
+	if (config.dangerous?.useAdapterOutputs) {
+		logger.info("Using adapter outputs for building OpenNext bundle.");
+		return;
+	}
 
-  // Generate deployable bundle
-  printHeader("Generating bundle");
+	// Generate deployable bundle
+	printHeader("Generating bundle");
 
 	// Patch the original Next.js config
 	await patchOriginalNextConfig(options);

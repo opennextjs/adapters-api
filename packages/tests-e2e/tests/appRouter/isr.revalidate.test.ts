@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 //TODO: Cache control is wrong for some reason, skipping until figured out
 test.skip("Test revalidate", async ({ request }) => {
-  const result = await request.get("/api/isr");
+	const result = await request.get("/api/isr");
 
 	expect(result.status()).toEqual(200);
 	const json = await result.json();

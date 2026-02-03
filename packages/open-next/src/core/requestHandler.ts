@@ -1,22 +1,15 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { IncomingMessage } from "node:http";
-import type {
-  InternalEvent,
-  InternalResult,
-  ResolvedRoute,
-  RoutingResult,
-} from "@/types/open-next";
+
+import type { InternalEvent, InternalResult, ResolvedRoute, RoutingResult } from "@/types/open-next";
 import type { OpenNextHandlerOptions } from "@/types/overrides";
 import { runWithOpenNextRequestContext } from "@/utils/promise";
+
 import { debug, error } from "../adapters/logger";
 
 import { patchAsyncStorage } from "./patchAsyncStorage";
 import { adapterHandler } from "./routing/adapterHandler";
-import {
-  constructNextUrl,
-  convertRes,
-  createServerResponse,
-} from "./routing/util";
+import { constructNextUrl, convertRes, createServerResponse } from "./routing/util";
 import routingHandler, {
 	INTERNAL_EVENT_REQUEST_ID,
 	INTERNAL_HEADER_REWRITE_STATUS_CODE,
@@ -37,27 +30,27 @@ export async function openNextHandler(
 	internalEvent: InternalEvent,
 	options?: OpenNextHandlerOptions
 ): Promise<InternalResult> {
-  const initialHeaders = internalEvent.headers;
-  // We only use the requestId header if we are using an external middleware
-  // This is to ensure that no one can spoof the requestId
-  // When using an external middleware, we always assume that headers cannot be spoofed
-  const requestId = globalThis.openNextConfig.middleware?.external
-    ? internalEvent.headers[INTERNAL_EVENT_REQUEST_ID]
-    : Math.random().toString(36);
-  // We run everything in the async local storage context so that it is available in the middleware as well as in NextServer
-  return runWithOpenNextRequestContext(
-    {
-      isISRRevalidation: initialHeaders["x-isr"] === "1",
-      waitUntil: options?.waitUntil,
-      requestId,
-    },
-    async () => {
-      // Disabled for now, we'll need to revisit this later if needed.
-      // await globalThis.__next_route_preloader("waitUntil");
-      if (initialHeaders["x-forwarded-host"]) {
-        initialHeaders.host = initialHeaders["x-forwarded-host"];
-      }
-      debug("internalEvent", internalEvent);
+	const initialHeaders = internalEvent.headers;
+	// We only use the requestId header if we are using an external middleware
+	// This is to ensure that no one can spoof the requestId
+	// When using an external middleware, we always assume that headers cannot be spoofed
+	const requestId = globalThis.openNextConfig.middleware?.external
+		? internalEvent.headers[INTERNAL_EVENT_REQUEST_ID]
+		: Math.random().toString(36);
+	// We run everything in the async local storage context so that it is available in the middleware as well as in NextServer
+	return runWithOpenNextRequestContext(
+		{
+			isISRRevalidation: initialHeaders["x-isr"] === "1",
+			waitUntil: options?.waitUntil,
+			requestId,
+		},
+		async () => {
+			// Disabled for now, we'll need to revisit this later if needed.
+			// await globalThis.__next_route_preloader("waitUntil");
+			if (initialHeaders["x-forwarded-host"]) {
+				initialHeaders.host = initialHeaders["x-forwarded-host"];
+			}
+			debug("internalEvent", internalEvent);
 
 			// These 3 will get overwritten by the routing handler if not using an external middleware
 			const internalHeaders = {
@@ -101,38 +94,31 @@ export async function openNextHandler(
 				delete headers[rawKey];
 			}
 
-      if (
-        "isExternalRewrite" in routingResult &&
-        routingResult.isExternalRewrite === true
-      ) {
-        try {
-          routingResult = await globalThis.proxyExternalRequest.proxy(
-            routingResult.internalEvent,
-          );
-        } catch (e) {
-          error("External request failed.", e);
-          routingResult = {
-            internalEvent: {
-              type: "core",
-              rawPath: "/500",
-              method: "GET",
-              headers: {},
-              url: constructNextUrl(internalEvent.url, "/500"),
-              query: {},
-              cookies: {},
-              remoteAddress: "",
-            },
-            // On error we need to rewrite to the 500 page which is an internal rewrite
-            isExternalRewrite: false,
-            isISR: false,
-            origin: false,
-            initialURL: internalEvent.url,
-            resolvedRoutes: [
-              { route: "/500", type: "page", isFallback: false },
-            ],
-          };
-        }
-      }
+			if ("isExternalRewrite" in routingResult && routingResult.isExternalRewrite === true) {
+				try {
+					routingResult = await globalThis.proxyExternalRequest.proxy(routingResult.internalEvent);
+				} catch (e) {
+					error("External request failed.", e);
+					routingResult = {
+						internalEvent: {
+							type: "core",
+							rawPath: "/500",
+							method: "GET",
+							headers: {},
+							url: constructNextUrl(internalEvent.url, "/500"),
+							query: {},
+							cookies: {},
+							remoteAddress: "",
+						},
+						// On error we need to rewrite to the 500 page which is an internal rewrite
+						isExternalRewrite: false,
+						isISR: false,
+						origin: false,
+						initialURL: internalEvent.url,
+						resolvedRoutes: [{ route: "/500", type: "page", isFallback: false }],
+					};
+				}
+			}
 
 			if ("type" in routingResult) {
 				// response is used only in the streaming case
@@ -190,21 +176,17 @@ export async function openNextHandler(
 				store.mergeHeadersPriority = mergeHeadersPriority;
 			}
 
-      // @ts-expect-error - IncomingMessage constructor expects a Socket, but we're passing a plain object
-      // This is a common pattern in OpenNext for mocking requests
-      const req = new IncomingMessage(reqProps);
-      const res = createServerResponse(
-        routingResult,
-        overwrittenResponseHeaders,
-        options?.streamCreator,
-      );
-      // It seems that Next.js doesn't set the status code for 404 and 500 anymore for us, we have to do it ourselves
-      // TODO: check security wise if it's ok to do that
-      if (pathname === "/404") {
-        res.statusCode = 404;
-      } else if (pathname === "/500") {
-        res.statusCode = 500;
-      }
+			// @ts-expect-error - IncomingMessage constructor expects a Socket, but we're passing a plain object
+			// This is a common pattern in OpenNext for mocking requests
+			const req = new IncomingMessage(reqProps);
+			const res = createServerResponse(routingResult, overwrittenResponseHeaders, options?.streamCreator);
+			// It seems that Next.js doesn't set the status code for 404 and 500 anymore for us, we have to do it ourselves
+			// TODO: check security wise if it's ok to do that
+			if (pathname === "/404") {
+				res.statusCode = 404;
+			} else if (pathname === "/500") {
+				res.statusCode = 500;
+			}
 
 			//#override useAdapterHandler
 			await adapterHandler(req, res, routingResult, {
@@ -212,12 +194,7 @@ export async function openNextHandler(
 			});
 			//#endOverride
 
-      const {
-        statusCode,
-        headers: responseHeaders,
-        isBase64Encoded,
-        body,
-      } = convertRes(res);
+			const { statusCode, headers: responseHeaders, isBase64Encoded, body } = convertRes(res);
 
 			const internalResult = {
 				type: internalEvent.type,

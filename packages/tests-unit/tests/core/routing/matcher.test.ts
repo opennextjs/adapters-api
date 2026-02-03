@@ -10,76 +10,76 @@ import type { InternalEvent } from "@opennextjs/aws/types/open-next.js";
 import { vi } from "vitest";
 
 vi.mock("@opennextjs/aws/adapters/config/index.js", () => ({
-  NextConfig: {},
-  PrerenderManifest: {
-    routes: {},
-    dynamicRoutes: {},
-    preview: {
-      previewModeId: "",
-      previewModeEncryptionKey: "",
-      previewModeSigningKey: "",
-    },
-  },
-  AppPathRoutesManifest: {
-    "/api/app/route": "/api/app",
-    "/app/page": "/app",
-    "/catchAll/[...slug]/page": "/catchAll/[...slug]",
-  },
-  RoutesManifest: {
-    version: 3,
-    pages404: true,
-    caseSensitive: false,
-    basePath: "",
-    locales: [],
-    redirects: [],
-    headers: [],
-    routes: {
-      dynamic: [
-        {
-          page: "/catchAll/[...slug]",
-          regex: "^/catchAll/(.+?)(?:/)?$",
-          routeKeys: {
-            nxtPslug: "nxtPslug",
-          },
-          namedRegex: "^/catchAll/(?<nxtPslug>.+?)(?:/)?$",
-        },
-        {
-          page: "/page/catchAll/[...slug]",
-          regex: "^/page/catchAll/(.+?)(?:/)?$",
-          routeKeys: {
-            nxtPslug: "nxtPslug",
-          },
-          namedRegex: "^/page/catchAll/(?<nxtPslug>.+?)(?:/)?$",
-        },
-      ],
-      static: [
-        {
-          page: "/app",
-          regex: "^/app(?:/)?$",
-          routeKeys: {},
-          namedRegex: "^/app(?:/)?$",
-        },
-        {
-          page: "/page",
-          regex: "^/page(?:/)?$",
-          routeKeys: {},
-          namedRegex: "^/page(?:/)?$",
-        },
-        {
-          page: "/page/catchAll/static",
-          regex: "^/page/catchAll/static(?:/)?$",
-          routeKeys: {},
-          namedRegex: "^/page/catchAll/static(?:/)?$",
-        },
-      ],
-    },
-  },
-  PagesManifest: {
-    "/_app": "pages/_app.js",
-    "/_document": "pages/_document.js",
-    "/_error": "pages/_error.js",
-    "/404": "pages/404.html",
-  },
+	NextConfig: {},
+	PrerenderManifest: {
+		routes: {},
+		dynamicRoutes: {},
+		preview: {
+			previewModeId: "",
+			previewModeEncryptionKey: "",
+			previewModeSigningKey: "",
+		},
+	},
+	AppPathRoutesManifest: {
+		"/api/app/route": "/api/app",
+		"/app/page": "/app",
+		"/catchAll/[...slug]/page": "/catchAll/[...slug]",
+	},
+	RoutesManifest: {
+		version: 3,
+		pages404: true,
+		caseSensitive: false,
+		basePath: "",
+		locales: [],
+		redirects: [],
+		headers: [],
+		routes: {
+			dynamic: [
+				{
+					page: "/catchAll/[...slug]",
+					regex: "^/catchAll/(.+?)(?:/)?$",
+					routeKeys: {
+						nxtPslug: "nxtPslug",
+					},
+					namedRegex: "^/catchAll/(?<nxtPslug>.+?)(?:/)?$",
+				},
+				{
+					page: "/page/catchAll/[...slug]",
+					regex: "^/page/catchAll/(.+?)(?:/)?$",
+					routeKeys: {
+						nxtPslug: "nxtPslug",
+					},
+					namedRegex: "^/page/catchAll/(?<nxtPslug>.+?)(?:/)?$",
+				},
+			],
+			static: [
+				{
+					page: "/app",
+					regex: "^/app(?:/)?$",
+					routeKeys: {},
+					namedRegex: "^/app(?:/)?$",
+				},
+				{
+					page: "/page",
+					regex: "^/page(?:/)?$",
+					routeKeys: {},
+					namedRegex: "^/page(?:/)?$",
+				},
+				{
+					page: "/page/catchAll/static",
+					regex: "^/page/catchAll/static(?:/)?$",
+					routeKeys: {},
+					namedRegex: "^/page/catchAll/static(?:/)?$",
+				},
+			],
+		},
+	},
+	PagesManifest: {
+		"/_app": "pages/_app.js",
+		"/_document": "pages/_document.js",
+		"/_error": "pages/_error.js",
+		"/404": "pages/404.html",
+	},
 }));
 
 vi.mock("@opennextjs/aws/core/routing/i18n/index.js", () => ({

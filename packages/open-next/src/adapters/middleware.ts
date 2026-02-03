@@ -50,71 +50,63 @@ const defaultHandler = async (
 
 	const requestId = Math.random().toString(36);
 
-  // We run everything in the async local storage context so that it is available in the external middleware
-  return runWithOpenNextRequestContext(
-    {
-      isISRRevalidation: internalEvent.headers["x-isr"] === "1",
-      waitUntil: options?.waitUntil,
-      requestId,
-    },
-    async () => {
-      const result = await routingHandler(internalEvent, { assetResolver });
-      if ("internalEvent" in result) {
-        debug("Middleware intercepted event", internalEvent);
-        if (!result.isExternalRewrite) {
-          const origin = await originResolver.resolve(
-            result.internalEvent.rawPath,
-          );
-          return {
-            type: "middleware",
-            internalEvent: {
-              ...result.internalEvent,
-              headers: {
-                ...result.internalEvent.headers,
-                [INTERNAL_HEADER_INITIAL_URL]: internalEvent.url,
-                [INTERNAL_HEADER_RESOLVED_ROUTES]: JSON.stringify(
-                  result.resolvedRoutes,
-                ),
-                [INTERNAL_EVENT_REQUEST_ID]: requestId,
-                [INTERNAL_HEADER_REWRITE_STATUS_CODE]: String(
-                  result.rewriteStatusCode,
-                ),
-              },
-            },
-            isExternalRewrite: result.isExternalRewrite,
-            origin,
-            isISR: result.isISR,
-            initialURL: result.initialURL,
-            resolvedRoutes: result.resolvedRoutes,
-          };
-        }
-        try {
-          return externalRequestProxy.proxy(result.internalEvent);
-        } catch (e) {
-          error("External request failed.", e);
-          return {
-            type: "middleware",
-            internalEvent: {
-              ...result.internalEvent,
-              headers: {
-                ...result.internalEvent.headers,
-                [INTERNAL_EVENT_REQUEST_ID]: requestId,
-              },
-              rawPath: "/500",
-              url: constructNextUrl(result.internalEvent.url, "/500"),
-              method: "GET",
-            },
-            // On error we need to rewrite to the 500 page which is an internal rewrite
-            isExternalRewrite: false,
-            origin: false,
-            isISR: result.isISR,
-            initialURL: result.internalEvent.url,
-            resolvedRoutes: [
-              { route: "/500", type: "page", isFallback: false },
-            ],
-          };
-        }
-      }
+	// We run everything in the async local storage context so that it is available in the external middleware
+	return runWithOpenNextRequestContext(
+		{
+			isISRRevalidation: internalEvent.headers["x-isr"] === "1",
+			waitUntil: options?.waitUntil,
+			requestId,
+		},
+		async () => {
+			const result = await routingHandler(internalEvent, { assetResolver });
+			if ("internalEvent" in result) {
+				debug("Middleware intercepted event", internalEvent);
+				if (!result.isExternalRewrite) {
+					const origin = await originResolver.resolve(result.internalEvent.rawPath);
+					return {
+						type: "middleware",
+						internalEvent: {
+							...result.internalEvent,
+							headers: {
+								...result.internalEvent.headers,
+								[INTERNAL_HEADER_INITIAL_URL]: internalEvent.url,
+								[INTERNAL_HEADER_RESOLVED_ROUTES]: JSON.stringify(result.resolvedRoutes),
+								[INTERNAL_EVENT_REQUEST_ID]: requestId,
+								[INTERNAL_HEADER_REWRITE_STATUS_CODE]: String(result.rewriteStatusCode),
+							},
+						},
+						isExternalRewrite: result.isExternalRewrite,
+						origin,
+						isISR: result.isISR,
+						initialURL: result.initialURL,
+						resolvedRoutes: result.resolvedRoutes,
+					};
+				}
+				try {
+					return externalRequestProxy.proxy(result.internalEvent);
+				} catch (e) {
+					error("External request failed.", e);
+					return {
+						type: "middleware",
+						internalEvent: {
+							...result.internalEvent,
+							headers: {
+								...result.internalEvent.headers,
+								[INTERNAL_EVENT_REQUEST_ID]: requestId,
+							},
+							rawPath: "/500",
+							url: constructNextUrl(result.internalEvent.url, "/500"),
+							method: "GET",
+						},
+						// On error we need to rewrite to the 500 page which is an internal rewrite
+						isExternalRewrite: false,
+						origin: false,
+						isISR: result.isISR,
+						initialURL: result.internalEvent.url,
+						resolvedRoutes: [{ route: "/500", type: "page", isFallback: false }],
+					};
+				}
+			}
 
 			if (process.env.OPEN_NEXT_REQUEST_ID_HEADER || globalThis.openNextDebug) {
 				result.headers[INTERNAL_EVENT_REQUEST_ID] = requestId;

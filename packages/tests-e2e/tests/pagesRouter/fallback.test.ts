@@ -1,16 +1,15 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("fallback", () => {
-
-  //TODO: Skipping for now, cache interception does not handle html pages yet
-  // This will be addressed in a proper way when we'll rework the cache stuff
-  test.skip("should work with fully static fallback", async ({ page }) => {
-    await page.goto("/fallback-intercepted/static/");
-    const h1 = page.locator("h1");
-    await expect(h1).toHaveText("Static Fallback Page");
-    const p = page.getByTestId("message");
-    await expect(p).toHaveText("This is a fully static page.");
-  });
+	//TODO: Skipping for now, cache interception does not handle html pages yet
+	// This will be addressed in a proper way when we'll rework the cache stuff
+	test.skip("should work with fully static fallback", async ({ page }) => {
+		await page.goto("/fallback-intercepted/static/");
+		const h1 = page.locator("h1");
+		await expect(h1).toHaveText("Static Fallback Page");
+		const p = page.getByTestId("message");
+		await expect(p).toHaveText("This is a fully static page.");
+	});
 
 	test("should work with static fallback", async ({ page }) => {
 		await page.goto("/fallback-intercepted/ssg/");

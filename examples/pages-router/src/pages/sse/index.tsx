@@ -9,15 +9,14 @@ type Event = {
 //SEEMS mandatory to have getStaticProps for SSG pages
 // TODO: verify if that's the case
 export async function getStaticProps() {
-  return {
-    props: {
-    },
-  };
+	return {
+		props: {},
+	};
 }
 
 export default function Page() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [finished, setFinished] = useState(false);
+	const [events, setEvents] = useState<Event[]>([]);
+	const [finished, setFinished] = useState(false);
 
 	useEffect(() => {
 		const e = new EventSource("/api/streaming");

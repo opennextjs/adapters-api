@@ -128,29 +128,25 @@ export default async function routingHandler(
 		let isExternalRewrite = middlewareEventOrResult.isExternalRewrite ?? false;
 		eventOrResult = middlewareEventOrResult;
 
-    if (!isExternalRewrite) {
-      // First rewrite to be applied
-      const beforeRewrite = handleRewrites(
-        eventOrResult,
-        RoutesManifest.rewrites.beforeFiles,
-      );
-      eventOrResult = beforeRewrite.internalEvent;
-      isExternalRewrite = beforeRewrite.isExternalRewrite;
-      // Check for matching public files after `beforeFiles` rewrites
-      // See:
-      // - https://nextjs.org/docs/app/api-reference/file-conventions/middleware#execution-order
-      // - https://nextjs.org/docs/app/api-reference/config/next-config-js/rewrites
-      if (!isExternalRewrite) {
-        const assetResult =
-          await assetResolver?.maybeGetAssetResult?.(eventOrResult);
-        if (assetResult) {
-          applyMiddlewareHeaders(assetResult, headers);
-          return assetResult;
-        }
-      }
-    }
-    let foundStaticRoute = staticRouteMatcher(eventOrResult.rawPath);
-    const isStaticRoute = !isExternalRewrite && foundStaticRoute.length > 0;
+		if (!isExternalRewrite) {
+			// First rewrite to be applied
+			const beforeRewrite = handleRewrites(eventOrResult, RoutesManifest.rewrites.beforeFiles);
+			eventOrResult = beforeRewrite.internalEvent;
+			isExternalRewrite = beforeRewrite.isExternalRewrite;
+			// Check for matching public files after `beforeFiles` rewrites
+			// See:
+			// - https://nextjs.org/docs/app/api-reference/file-conventions/middleware#execution-order
+			// - https://nextjs.org/docs/app/api-reference/config/next-config-js/rewrites
+			if (!isExternalRewrite) {
+				const assetResult = await assetResolver?.maybeGetAssetResult?.(eventOrResult);
+				if (assetResult) {
+					applyMiddlewareHeaders(assetResult, headers);
+					return assetResult;
+				}
+			}
+		}
+		let foundStaticRoute = staticRouteMatcher(eventOrResult.rawPath);
+		const isStaticRoute = !isExternalRewrite && foundStaticRoute.length > 0;
 
 		if (!(isStaticRoute || isExternalRewrite)) {
 			// Second rewrite to be applied
@@ -168,8 +164,8 @@ export default async function routingHandler(
 			isISR = fallbackResult.isISR;
 		}
 
-    let foundDynamicRoute = dynamicRouteMatcher(eventOrResult.rawPath);
-    const isDynamicRoute = !isExternalRewrite && foundDynamicRoute.length > 0;
+		let foundDynamicRoute = dynamicRouteMatcher(eventOrResult.rawPath);
+		const isDynamicRoute = !isExternalRewrite && foundDynamicRoute.length > 0;
 
 		if (!(isDynamicRoute || isStaticRoute || isExternalRewrite)) {
 			// Fallback rewrite to be applied
@@ -182,34 +178,31 @@ export default async function routingHandler(
 
 		const isRouteFoundBeforeAllRewrites = isStaticRoute || isDynamicRoute || isExternalRewrite;
 
-    // We need to ensure that rewrites are applied before showing the 404 page
-    foundStaticRoute = staticRouteMatcher(eventOrResult.rawPath);
-    // We also want to remove dynamic routes that are fallback false
-    foundDynamicRoute = dynamicRouteMatcher(eventOrResult.rawPath).filter(
-      (route) => !route.isFallback,
-    );
+		// We need to ensure that rewrites are applied before showing the 404 page
+		foundStaticRoute = staticRouteMatcher(eventOrResult.rawPath);
+		// We also want to remove dynamic routes that are fallback false
+		foundDynamicRoute = dynamicRouteMatcher(eventOrResult.rawPath).filter((route) => !route.isFallback);
 
-    // If we still haven't found a route, we show the 404 page
-    if (
-      !(
-        isRouteFoundBeforeAllRewrites ||
-        isNextImageRoute ||
-        // We need to check again once all rewrites have been applied
-        foundStaticRoute.length > 0 ||
-        foundDynamicRoute.length > 0
-      )
-    ) {
-      eventOrResult = {
-        ...eventOrResult,
-        rawPath: "/404",
-        url: constructNextUrl(eventOrResult.url, "/404"),
-        headers: {
-          ...eventOrResult.headers,
-          "x-middleware-response-cache-control":
-            "private, no-cache, no-store, max-age=0, must-revalidate",
-        },
-      };
-    }
+		// If we still haven't found a route, we show the 404 page
+		if (
+			!(
+				isRouteFoundBeforeAllRewrites ||
+				isNextImageRoute ||
+				// We need to check again once all rewrites have been applied
+				foundStaticRoute.length > 0 ||
+				foundDynamicRoute.length > 0
+			)
+		) {
+			eventOrResult = {
+				...eventOrResult,
+				rawPath: "/404",
+				url: constructNextUrl(eventOrResult.url, "/404"),
+				headers: {
+					...eventOrResult.headers,
+					"x-middleware-response-cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+				},
+			};
+		}
 
 		if (globalThis.openNextConfig.dangerous?.enableCacheInterception && !isInternalResult(eventOrResult)) {
 			debug("Cache interception enabled");

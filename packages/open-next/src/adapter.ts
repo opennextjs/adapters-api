@@ -59,22 +59,19 @@ export default {
 
 		const cache = compileCache(buildOpts);
 
-    const packagePath = buildHelper.getPackagePath(buildOpts);
+		const packagePath = buildHelper.getPackagePath(buildOpts);
 
-    // We then have to copy the cache files to the .next dir so that they are available at runtime
-    //TODO: use a better path, this one is temporary just to make it work
-    const tempCachePath = path.join(
-      buildOpts.outputDir,
-      "server-functions/default",
-      packagePath,
-      ".open-next/.build",
-    );
-    fs.mkdirSync(tempCachePath, { recursive: true });
-    fs.copyFileSync(cache.cache, path.join(tempCachePath, "cache.cjs"));
-    fs.copyFileSync(
-      cache.composableCache,
-      path.join(tempCachePath, "composable-cache.cjs"),
-    );
+		// We then have to copy the cache files to the .next dir so that they are available at runtime
+		//TODO: use a better path, this one is temporary just to make it work
+		const tempCachePath = path.join(
+			buildOpts.outputDir,
+			"server-functions/default",
+			packagePath,
+			".open-next/.build"
+		);
+		fs.mkdirSync(tempCachePath, { recursive: true });
+		fs.copyFileSync(cache.cache, path.join(tempCachePath, "cache.cjs"));
+		fs.copyFileSync(cache.composableCache, path.join(tempCachePath, "composable-cache.cjs"));
 
 		//TODO: We should check the version of Next here, below 16 we'd throw or show a warning
 		return {
@@ -132,14 +129,11 @@ export default {
 	},
 } satisfies NextAdapter;
 
-function getAdditionalPluginsFactory(
-  buildOpts: buildHelper.BuildOptions,
-  outputs: NextAdapterOutputs,
-) {
-  //TODO: we should make this a property of buildOpts
-  const packagePath = buildHelper.getPackagePath(buildOpts);
-  return (updater: ContentUpdater) => [
-    inlineRouteHandler(updater, outputs, packagePath),
-    externalChunksPlugin(outputs, packagePath),
-  ];
+function getAdditionalPluginsFactory(buildOpts: buildHelper.BuildOptions, outputs: NextAdapterOutputs) {
+	//TODO: we should make this a property of buildOpts
+	const packagePath = buildHelper.getPackagePath(buildOpts);
+	return (updater: ContentUpdater) => [
+		inlineRouteHandler(updater, outputs, packagePath),
+		externalChunksPlugin(outputs, packagePath),
+	];
 }

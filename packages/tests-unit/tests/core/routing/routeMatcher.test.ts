@@ -2,88 +2,88 @@ import { dynamicRouteMatcher, staticRouteMatcher } from "@opennextjs/aws/core/ro
 import { vi } from "vitest";
 
 vi.mock("@opennextjs/aws/adapters/config/index.js", () => ({
-  PrerenderManifest: {
-    routes: {},
-    dynamicRoutes: {
-      "/fallback/[...slug]": { fallback: false },
-    },
-    preview: {
-      previewModeId: "",
-      previewModeEncryptionKey: "",
-      previewModeSigningKey: "",
-    },
-  },
-  NextConfig: {},
-  AppPathRoutesManifest: {
-    "/api/app/route": "/api/app",
-    "/app/page": "/app",
-    "/catchAll/[...slug]/page": "/catchAll/[...slug]",
-    "/fallback/[...slug]/page": "/fallback/[...slug]",
-  },
-  RoutesManifest: {
-    version: 3,
-    pages404: true,
-    caseSensitive: false,
-    basePath: "",
-    locales: [],
-    redirects: [],
-    headers: [],
-    routes: {
-      dynamic: [
-        {
-          page: "/catchAll/[...slug]",
-          regex: "^/catchAll/(.+?)(?:/)?$",
-          routeKeys: {
-            nxtPslug: "nxtPslug",
-          },
-          namedRegex: "^/catchAll/(?<nxtPslug>.+?)(?:/)?$",
-        },
-        {
-          page: "/page/catchAll/[...slug]",
-          regex: "^/page/catchAll/(.+?)(?:/)?$",
-          routeKeys: {
-            nxtPslug: "nxtPslug",
-          },
-          namedRegex: "^/page/catchAll/(?<nxtPslug>.+?)(?:/)?$",
-        },
-        {
-          page: "/fallback/[...slug]",
-          regex: "^/fallback/(.+?)(?:/)?$",
-          routeKeys: {
-            nxtPslug: "nxtPslug",
-          },
-          namedRegex: "^/fallback/(?<nxtPslug>.+?)(?:/)?$",
-        }
-      ],
-      static: [
-        {
-          page: "/app",
-          regex: "^/app(?:/)?$",
-          routeKeys: {},
-          namedRegex: "^/app(?:/)?$",
-        },
-        {
-          page: "/page",
-          regex: "^/page(?:/)?$",
-          routeKeys: {},
-          namedRegex: "^/page(?:/)?$",
-        },
-        {
-          page: "/page/catchAll/static",
-          regex: "^/page/catchAll/static(?:/)?$",
-          routeKeys: {},
-          namedRegex: "^/page/catchAll/static(?:/)?$",
-        },
-      ],
-    },
-  },
-  PagesManifest: {
-    "/_app": "pages/_app.js",
-    "/_document": "pages/_document.js",
-    "/api/hello": "pages/api/hello.js",
-    "/_error": "pages/_error.js",
-    "/404": "pages/404.html",
-  },
+	PrerenderManifest: {
+		routes: {},
+		dynamicRoutes: {
+			"/fallback/[...slug]": { fallback: false },
+		},
+		preview: {
+			previewModeId: "",
+			previewModeEncryptionKey: "",
+			previewModeSigningKey: "",
+		},
+	},
+	NextConfig: {},
+	AppPathRoutesManifest: {
+		"/api/app/route": "/api/app",
+		"/app/page": "/app",
+		"/catchAll/[...slug]/page": "/catchAll/[...slug]",
+		"/fallback/[...slug]/page": "/fallback/[...slug]",
+	},
+	RoutesManifest: {
+		version: 3,
+		pages404: true,
+		caseSensitive: false,
+		basePath: "",
+		locales: [],
+		redirects: [],
+		headers: [],
+		routes: {
+			dynamic: [
+				{
+					page: "/catchAll/[...slug]",
+					regex: "^/catchAll/(.+?)(?:/)?$",
+					routeKeys: {
+						nxtPslug: "nxtPslug",
+					},
+					namedRegex: "^/catchAll/(?<nxtPslug>.+?)(?:/)?$",
+				},
+				{
+					page: "/page/catchAll/[...slug]",
+					regex: "^/page/catchAll/(.+?)(?:/)?$",
+					routeKeys: {
+						nxtPslug: "nxtPslug",
+					},
+					namedRegex: "^/page/catchAll/(?<nxtPslug>.+?)(?:/)?$",
+				},
+				{
+					page: "/fallback/[...slug]",
+					regex: "^/fallback/(.+?)(?:/)?$",
+					routeKeys: {
+						nxtPslug: "nxtPslug",
+					},
+					namedRegex: "^/fallback/(?<nxtPslug>.+?)(?:/)?$",
+				},
+			],
+			static: [
+				{
+					page: "/app",
+					regex: "^/app(?:/)?$",
+					routeKeys: {},
+					namedRegex: "^/app(?:/)?$",
+				},
+				{
+					page: "/page",
+					regex: "^/page(?:/)?$",
+					routeKeys: {},
+					namedRegex: "^/page(?:/)?$",
+				},
+				{
+					page: "/page/catchAll/static",
+					regex: "^/page/catchAll/static(?:/)?$",
+					routeKeys: {},
+					namedRegex: "^/page/catchAll/static(?:/)?$",
+				},
+			],
+		},
+	},
+	PagesManifest: {
+		"/_app": "pages/_app.js",
+		"/_document": "pages/_document.js",
+		"/api/hello": "pages/api/hello.js",
+		"/_error": "pages/_error.js",
+		"/404": "pages/404.html",
+	},
 }));
 
 describe("routeMatcher", () => {
@@ -91,37 +91,37 @@ describe("routeMatcher", () => {
 		vi.resetAllMocks();
 	});
 
-  describe("staticRouteMatcher", () => {
-    it("should match static app route", () => {
-      const routes = staticRouteMatcher("/app");
-      expect(routes).toEqual([
-        {
-          route: "/app",
-          type: "app",
-          isFallback: false,
-        },
-      ]);
-    });
+	describe("staticRouteMatcher", () => {
+		it("should match static app route", () => {
+			const routes = staticRouteMatcher("/app");
+			expect(routes).toEqual([
+				{
+					route: "/app",
+					type: "app",
+					isFallback: false,
+				},
+			]);
+		});
 
-    it("should match static api route", () => {
-      const routes = staticRouteMatcher("/api/app");
-      expect(routes).toEqual([
-        {
-          route: "/api/app",
-          type: "route",
-          isFallback: false,
-        },
-      ]);
+		it("should match static api route", () => {
+			const routes = staticRouteMatcher("/api/app");
+			expect(routes).toEqual([
+				{
+					route: "/api/app",
+					type: "route",
+					isFallback: false,
+				},
+			]);
 
-      const helloRoute = staticRouteMatcher("/api/hello");
-      expect(helloRoute).toEqual([
-        {
-          route: "/api/hello",
-          type: "page",
-          isFallback: false,
-        },
-      ]);
-    });
+			const helloRoute = staticRouteMatcher("/api/hello");
+			expect(helloRoute).toEqual([
+				{
+					route: "/api/hello",
+					type: "page",
+					isFallback: false,
+				},
+			]);
+		});
 
 		it("should not match app dynamic route", () => {
 			const routes = staticRouteMatcher("/catchAll/slug");
@@ -139,59 +139,59 @@ describe("routeMatcher", () => {
 		});
 	});
 
-  describe("dynamicRouteMatcher", () => {
-    it("should match dynamic app page", () => {
-      const routes = dynamicRouteMatcher("/catchAll/slug/b");
-      expect(routes).toEqual([
-        {
-          route: "/catchAll/[...slug]",
-          type: "app",
-          isFallback: false,
-        },
-      ]);
-    });
+	describe("dynamicRouteMatcher", () => {
+		it("should match dynamic app page", () => {
+			const routes = dynamicRouteMatcher("/catchAll/slug/b");
+			expect(routes).toEqual([
+				{
+					route: "/catchAll/[...slug]",
+					type: "app",
+					isFallback: false,
+				},
+			]);
+		});
 
-    it("should match dynamic page router page", () => {
-      const routes = dynamicRouteMatcher("/page/catchAll/slug/b");
-      expect(routes).toEqual([
-        {
-          route: "/page/catchAll/[...slug]",
-          type: "page",
-          isFallback: false,
-        },
-      ]);
-    });
+		it("should match dynamic page router page", () => {
+			const routes = dynamicRouteMatcher("/page/catchAll/slug/b");
+			expect(routes).toEqual([
+				{
+					route: "/page/catchAll/[...slug]",
+					type: "page",
+					isFallback: false,
+				},
+			]);
+		});
 
-    it("should match fallback false dynamic route", () => {
-      const routes = dynamicRouteMatcher("/fallback/anything/here");
-      expect(routes).toEqual([
-        {
-          route: "/fallback/[...slug]",
-          type: "app",
-          isFallback: true,
-        },
-      ]);
-    });
+		it("should match fallback false dynamic route", () => {
+			const routes = dynamicRouteMatcher("/fallback/anything/here");
+			expect(routes).toEqual([
+				{
+					route: "/fallback/[...slug]",
+					type: "app",
+					isFallback: true,
+				},
+			]);
+		});
 
-    it("should match both the static and dynamic page", () => {
-      const pathToMatch = "/page/catchAll/static";
-      const dynamicRoutes = dynamicRouteMatcher(pathToMatch);
-      expect(dynamicRoutes).toEqual([
-        {
-          route: "/page/catchAll/[...slug]",
-          type: "page",
-          isFallback: false,
-        },
-      ]);
+		it("should match both the static and dynamic page", () => {
+			const pathToMatch = "/page/catchAll/static";
+			const dynamicRoutes = dynamicRouteMatcher(pathToMatch);
+			expect(dynamicRoutes).toEqual([
+				{
+					route: "/page/catchAll/[...slug]",
+					type: "page",
+					isFallback: false,
+				},
+			]);
 
-      const staticRoutes = staticRouteMatcher(pathToMatch);
-      expect(staticRoutes).toEqual([
-        {
-          route: "/page/catchAll/static",
-          type: "page",
-          isFallback: false,
-        },
-      ]);
-    });
-  });
+			const staticRoutes = staticRouteMatcher(pathToMatch);
+			expect(staticRoutes).toEqual([
+				{
+					route: "/page/catchAll/static",
+					type: "page",
+					isFallback: false,
+				},
+			]);
+		});
+	});
 });

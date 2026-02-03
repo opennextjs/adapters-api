@@ -1,27 +1,27 @@
 export default {
-  default: {
-    override: {
-      wrapper: "express-dev",
-      converter: "node",
-      incrementalCache: "fs-dev",
-      queue: "direct",
-      tagCache: "dummy",
-    },
-  },
+	default: {
+		override: {
+			wrapper: "express-dev",
+			converter: "node",
+			incrementalCache: "fs-dev",
+			queue: "direct",
+			tagCache: "dummy",
+		},
+	},
 
-  imageOptimization: {
-    override: {
-      wrapper: "dummy",
-      converter: "dummy",
-    },
-    loader: "fs-dev",
-  },
+	imageOptimization: {
+		override: {
+			wrapper: "dummy",
+			converter: "dummy",
+		},
+		loader: "fs-dev",
+	},
 
-  dangerous: {
-    enableCacheInterception: true,
-    useAdapterOutputs: true,
-  }
+	dangerous: {
+		enableCacheInterception: true,
+		useAdapterOutputs: true,
+	},
 
-  // You can override the build command here so that you don't have to rebuild next every time you make a change
-  //buildCommand: "echo 'No build command'",
+	// You can override the build command here so that you don't have to rebuild next every time you make a change
+	//buildCommand: "echo 'No build command'",
 };

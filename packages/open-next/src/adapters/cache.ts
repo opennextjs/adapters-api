@@ -26,22 +26,22 @@ function isFetchCache(
 }
 // We need to use globalThis client here as this class can be defined at load time in next 12 but client is not available at load time
 export default class Cache {
-  public async get(
-    key: string,
-    // fetchCache is for next 13.5 and above, kindHint is for next 14 and above and boolean is for earlier versions
-    options?:
-      | boolean
-      | {
-          fetchCache?: boolean;
-          kindHint?: "app" | "pages" | "fetch";
-          tags?: string[];
-          softTags?: string[];
-          kind?: "FETCH";
-        },
-  ) {
-    if (globalThis.openNextConfig?.dangerous?.disableIncrementalCache) {
-      return null;
-    }
+	public async get(
+		key: string,
+		// fetchCache is for next 13.5 and above, kindHint is for next 14 and above and boolean is for earlier versions
+		options?:
+			| boolean
+			| {
+					fetchCache?: boolean;
+					kindHint?: "app" | "pages" | "fetch";
+					tags?: string[];
+					softTags?: string[];
+					kind?: "FETCH";
+			  }
+	) {
+		if (globalThis.openNextConfig?.dangerous?.disableIncrementalCache) {
+			return null;
+		}
 
 		const softTags = typeof options === "object" ? options.softTags : [];
 		const tags = typeof options === "object" ? options.tags : [];
@@ -179,117 +179,107 @@ export default class Cache {
 		}
 	}
 
-  async set(
-    key: string,
-    data?: IncrementalCacheValue,
-    ctx?: IncrementalCacheContext,
-  ): Promise<void> {
-    if (globalThis.openNextConfig?.dangerous?.disableIncrementalCache) {
-      return;
-    }
-    // This one might not even be necessary anymore
-    // Better be safe than sorry
-    const detachedPromise = globalThis.__openNextAls
-      .getStore()
-      ?.pendingPromiseRunner.withResolvers<void>();
-    try {
-      if (data === null || data === undefined) {
-        await globalThis.incrementalCache.delete(key);
-      } else {
-        const revalidate = this.extractRevalidateForSet(ctx);
-        switch (data.kind) {
-          case "ROUTE":
-          case "APP_ROUTE": {
-            const { body, status, headers } = data;
-            await globalThis.incrementalCache.set(
-              key,
-              {
-                type: "route",
-                body: body.toString(
-                  isBinaryContentType(String(headers["content-type"]))
-                    ? "base64"
-                    : "utf8",
-                ),
-                meta: {
-                  status,
-                  headers,
-                },
-                revalidate,
-              },
-              "cache",
-            );
-            break;
-          }
-          case "PAGE":
-          case "PAGES": {
-            const { html, pageData, status, headers } = data;
-            const isAppPath = typeof pageData === "string";
-            if (isAppPath) {
-              await globalThis.incrementalCache.set(
-                key,
-                {
-                  type: "app",
-                  html,
-                  rsc: pageData,
-                  meta: {
-                    status,
-                    headers,
-                  },
-                  revalidate,
-                },
-                "cache",
-              );
-            } else {
-              await globalThis.incrementalCache.set(
-                key,
-                {
-                  type: "page",
-                  html,
-                  json: pageData,
-                  revalidate,
-                },
-                "cache",
-              );
-            }
-            break;
-          }
-          case "APP_PAGE": {
-            const { html, rscData, headers, status } = data;
-            await globalThis.incrementalCache.set(
-              key,
-              {
-                type: "app",
-                html,
-                rsc: rscData.toString("utf8"),
-                meta: {
-                  status,
-                  headers,
-                },
-                revalidate,
-              },
-              "cache",
-            );
-            break;
-          }
-          case "FETCH":
-            await globalThis.incrementalCache.set(key, data, "fetch");
-            break;
-          case "REDIRECT":
-            await globalThis.incrementalCache.set(
-              key,
-              {
-                type: "redirect",
-                props: data.props,
-                revalidate,
-              },
-              "cache",
-            );
-            break;
-          case "IMAGE":
-            // Not implemented
-            break;
-        }
-      }
+	async set(key: string, data?: IncrementalCacheValue, ctx?: IncrementalCacheContext): Promise<void> {
+		if (globalThis.openNextConfig?.dangerous?.disableIncrementalCache) {
+			return;
+		}
+		// This one might not even be necessary anymore
+		// Better be safe than sorry
+		const detachedPromise = globalThis.__openNextAls.getStore()?.pendingPromiseRunner.withResolvers<void>();
+		try {
+			if (data === null || data === undefined) {
+				await globalThis.incrementalCache.delete(key);
+			} else {
+				const revalidate = this.extractRevalidateForSet(ctx);
+				switch (data.kind) {
+					case "ROUTE":
+					case "APP_ROUTE": {
+						const { body, status, headers } = data;
+						await globalThis.incrementalCache.set(
+							key,
+							{
+								type: "route",
+								body: body.toString(isBinaryContentType(String(headers["content-type"])) ? "base64" : "utf8"),
+								meta: {
+									status,
+									headers,
+								},
+								revalidate,
+							},
+							"cache"
+						);
+						break;
+					}
+					case "PAGE":
+					case "PAGES": {
+						const { html, pageData, status, headers } = data;
+						const isAppPath = typeof pageData === "string";
+						if (isAppPath) {
+							await globalThis.incrementalCache.set(
+								key,
+								{
+									type: "app",
+									html,
+									rsc: pageData,
+									meta: {
+										status,
+										headers,
+									},
+									revalidate,
+								},
+								"cache"
+							);
+						} else {
+							await globalThis.incrementalCache.set(
+								key,
+								{
+									type: "page",
+									html,
+									json: pageData,
+									revalidate,
+								},
+								"cache"
+							);
+						}
+						break;
+					}
+					case "APP_PAGE": {
+						const { html, rscData, headers, status } = data;
+						await globalThis.incrementalCache.set(
+							key,
+							{
+								type: "app",
+								html,
+								rsc: rscData.toString("utf8"),
+								meta: {
+									status,
+									headers,
+								},
+								revalidate,
+							},
+							"cache"
+						);
+						break;
+					}
+					case "FETCH":
+						await globalThis.incrementalCache.set(key, data, "fetch");
+						break;
+					case "REDIRECT":
+						await globalThis.incrementalCache.set(
+							key,
+							{
+								type: "redirect",
+								props: data.props,
+								revalidate,
+							},
+							"cache"
+						);
+						break;
+					case "IMAGE":
+						// Not implemented
+						break;
+				}
+			}
 
 			await this.updateTagsOnSet(key, data, ctx);
 			debug("Finished setting cache");
@@ -315,27 +305,27 @@ export default class Cache {
 			if (globalThis.tagCache.mode === "nextMode") {
 				const paths = (await globalThis.tagCache.getPathsByTags?.(_tags)) ?? [];
 
-        await writeTags(_tags);
-        if (paths.length > 0) {
-          // TODO: we should introduce a new method in cdnInvalidationHandler to invalidate paths by tags for cdn that supports it
-          // It also means that we'll need to provide the tags used in every request to the wrapper or converter.
-          await globalThis.cdnInvalidationHandler.invalidatePaths(
-            paths.map((path) => ({
-              initialPath: path,
-              rawPath: path,
-              resolvedRoutes: [
-                {
-                  route: path,
-                  // TODO: ideally here we should check if it's an app router page or route
-                  type: "app",
-                  isFallback: false,
-                },
-              ],
-            })),
-          );
-        }
-        return;
-      }
+				await writeTags(_tags);
+				if (paths.length > 0) {
+					// TODO: we should introduce a new method in cdnInvalidationHandler to invalidate paths by tags for cdn that supports it
+					// It also means that we'll need to provide the tags used in every request to the wrapper or converter.
+					await globalThis.cdnInvalidationHandler.invalidatePaths(
+						paths.map((path) => ({
+							initialPath: path,
+							rawPath: path,
+							resolvedRoutes: [
+								{
+									route: path,
+									// TODO: ideally here we should check if it's an app router page or route
+									type: "app",
+									isFallback: false,
+								},
+							],
+						}))
+					);
+				}
+				return;
+			}
 
 			for (const tag of _tags) {
 				debug("revalidateTag", tag);
@@ -370,37 +360,37 @@ export default class Cache {
 				// Update all keys with the given tag with revalidatedAt set to now
 				await writeTags(toInsert);
 
-        // We can now invalidate all paths in the CDN
-        // This only applies to `revalidateTag`, not to `res.revalidate()`
-        const uniquePaths = Array.from(
-          new Set(
-            toInsert
-              // We need to filter fetch cache key as they are not in the CDN
-              .filter((t) => t.tag.startsWith(SOFT_TAG_PREFIX))
-              .map((t) => `/${t.path}`),
-          ),
-        );
-        if (uniquePaths.length > 0) {
-          await globalThis.cdnInvalidationHandler.invalidatePaths(
-            uniquePaths.map((path) => ({
-              initialPath: path,
-              rawPath: path,
-              resolvedRoutes: [
-                {
-                  route: path,
-                  // TODO: ideally here we should check if it's an app router page or route
-                  type: "app",
-                  isFallback: false,
-                },
-              ],
-            })),
-          );
-        }
-      }
-    } catch (e) {
-      error("Failed to revalidate tag", e);
-    }
-  }
+				// We can now invalidate all paths in the CDN
+				// This only applies to `revalidateTag`, not to `res.revalidate()`
+				const uniquePaths = Array.from(
+					new Set(
+						toInsert
+							// We need to filter fetch cache key as they are not in the CDN
+							.filter((t) => t.tag.startsWith(SOFT_TAG_PREFIX))
+							.map((t) => `/${t.path}`)
+					)
+				);
+				if (uniquePaths.length > 0) {
+					await globalThis.cdnInvalidationHandler.invalidatePaths(
+						uniquePaths.map((path) => ({
+							initialPath: path,
+							rawPath: path,
+							resolvedRoutes: [
+								{
+									route: path,
+									// TODO: ideally here we should check if it's an app router page or route
+									type: "app",
+									isFallback: false,
+								},
+							],
+						}))
+					);
+				}
+			}
+		} catch (e) {
+			error("Failed to revalidate tag", e);
+		}
+	}
 
 	// TODO: We should delete/update tags in this method
 	// This will require an update to the tag cache interface

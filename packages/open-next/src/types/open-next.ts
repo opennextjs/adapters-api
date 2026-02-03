@@ -150,13 +150,13 @@ export type IncludedConverter =
 export type RouteType = "route" | "page" | "app";
 
 export interface ResolvedRoute {
-  route: string;
-  type: RouteType;
-  /**
-   * Indicates if the route is a prerendered dynamic fallback route.
-   * They shouldn't be used to serve the request directly.
-   */
-  isFallback: boolean;
+	route: string;
+	type: RouteType;
+	/**
+	 * Indicates if the route is a prerendered dynamic fallback route.
+	 * They shouldn't be used to serve the request directly.
+	 */
+	isFallback: boolean;
 }
 
 /**
