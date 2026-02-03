@@ -103,7 +103,7 @@ const defaultHandler = async (
 						origin: false,
 						isISR: result.isISR,
 						initialURL: result.internalEvent.url,
-						resolvedRoutes: [{ route: "/500", type: "page" }],
+						resolvedRoutes: [{ route: "/500", type: "page", isFallback: false }],
 					};
 				}
 			}

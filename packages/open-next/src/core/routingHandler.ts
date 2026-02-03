@@ -145,7 +145,7 @@ export default async function routingHandler(
 				}
 			}
 		}
-		const foundStaticRoute = staticRouteMatcher(eventOrResult.rawPath);
+		let foundStaticRoute = staticRouteMatcher(eventOrResult.rawPath);
 		const isStaticRoute = !isExternalRewrite && foundStaticRoute.length > 0;
 
 		if (!(isStaticRoute || isExternalRewrite)) {
@@ -164,7 +164,7 @@ export default async function routingHandler(
 			isISR = fallbackResult.isISR;
 		}
 
-		const foundDynamicRoute = dynamicRouteMatcher(eventOrResult.rawPath);
+		let foundDynamicRoute = dynamicRouteMatcher(eventOrResult.rawPath);
 		const isDynamicRoute = !isExternalRewrite && foundDynamicRoute.length > 0;
 
 		if (!(isDynamicRoute || isStaticRoute || isExternalRewrite)) {
@@ -178,15 +178,19 @@ export default async function routingHandler(
 
 		const isRouteFoundBeforeAllRewrites = isStaticRoute || isDynamicRoute || isExternalRewrite;
 
-		// If we still haven't found a route, we show the 404 page
 		// We need to ensure that rewrites are applied before showing the 404 page
+		foundStaticRoute = staticRouteMatcher(eventOrResult.rawPath);
+		// We also want to remove dynamic routes that are fallback false
+		foundDynamicRoute = dynamicRouteMatcher(eventOrResult.rawPath).filter((route) => !route.isFallback);
+
+		// If we still haven't found a route, we show the 404 page
 		if (
 			!(
 				isRouteFoundBeforeAllRewrites ||
 				isNextImageRoute ||
 				// We need to check again once all rewrites have been applied
-				staticRouteMatcher(eventOrResult.rawPath).length > 0 ||
-				dynamicRouteMatcher(eventOrResult.rawPath).length > 0
+				foundStaticRoute.length > 0 ||
+				foundDynamicRoute.length > 0
 			)
 		) {
 			eventOrResult = {
