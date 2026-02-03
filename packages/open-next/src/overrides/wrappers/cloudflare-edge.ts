@@ -15,11 +15,9 @@ interface WorkerContext {
 	waitUntil: (promise: Promise<unknown>) => void;
 }
 
-const handler: WrapperHandler<InternalEvent, InternalResult | MiddlewareResult> = async (
-	handler,
-	converter
-) => {
-	return async (...args: unknown[]): Promise<unknown> => {
+const handler: WrapperHandler<InternalEvent, InternalResult | MiddlewareResult> =
+	async (handler, converter) =>
+	async (...args: unknown[]): Promise<unknown> => {
 		const [request, env, ctx] = args as [Request, Record<string, string>, WorkerContext];
 		globalThis.process = process;
 
@@ -53,7 +51,6 @@ const handler: WrapperHandler<InternalEvent, InternalResult | MiddlewareResult> 
 
 		return result;
 	};
-};
 
 export default {
 	wrapper: handler,

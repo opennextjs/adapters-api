@@ -14,8 +14,9 @@ export function formatWarmerResponse(event: WarmerEvent) {
 	});
 }
 
-const handler: WrapperHandler = async (handler, converter) => {
-	return async (event: unknown): Promise<unknown> => {
+const handler: WrapperHandler =
+	async (handler, converter) =>
+	async (event: unknown): Promise<unknown> => {
 		const lambdaEvent = event as AwsLambdaEvent;
 		// Handle warmer event
 		if ("type" in lambdaEvent) {
@@ -45,7 +46,6 @@ const handler: WrapperHandler = async (handler, converter) => {
 
 		return converter.convertTo(response, lambdaEvent);
 	};
-};
 
 export default {
 	wrapper: handler,

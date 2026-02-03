@@ -6,8 +6,9 @@ import type { Wrapper, WrapperHandler } from "@/types/overrides";
 // Response with null body status (101, 204, 205, or 304) cannot have a body.
 const NULL_BODY_STATUSES = new Set([101, 204, 205, 304]);
 
-const handler: WrapperHandler<InternalEvent, InternalResult> = async (handler, converter) => {
-	return async (...args: unknown[]): Promise<unknown> => {
+const handler: WrapperHandler<InternalEvent, InternalResult> =
+	async (handler, converter) =>
+	async (...args: unknown[]): Promise<unknown> => {
 		const [request, env, ctx, abortSignal] = args as [
 			Request,
 			Record<string, string>,
@@ -120,7 +121,6 @@ const handler: WrapperHandler<InternalEvent, InternalResult> = async (handler, c
 
 		return promiseResponse;
 	};
-};
 
 export default {
 	wrapper: handler,

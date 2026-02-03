@@ -22,8 +22,8 @@ function formatWarmerResponse(event: WarmerEvent) {
 	return result;
 }
 
-const handler: WrapperHandler = async (handler, converter) => {
-	return awslambda.streamifyResponse(
+const handler: WrapperHandler = async (handler, converter) =>
+	awslambda.streamifyResponse(
 		async (event: AwsLambdaEvent, responseStream, context): Promise<AwsLambdaReturn> => {
 			context.callbackWaitsForEmptyEventLoop = false;
 			if ("type" in event) {
@@ -101,7 +101,6 @@ const handler: WrapperHandler = async (handler, converter) => {
 			// return converter.convertTo(response);
 		}
 	) as (...args: unknown[]) => unknown;
-};
 
 export default {
 	wrapper: handler,
