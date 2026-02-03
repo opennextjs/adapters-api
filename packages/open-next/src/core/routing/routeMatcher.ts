@@ -3,9 +3,9 @@ import {
   PagesManifest,
   PrerenderManifest,
   RoutesManifest,
-} from "config/index";
-import type { RouteDefinition } from "types/next-types";
-import type { ResolvedRoute, RouteType } from "types/open-next";
+} from "@/config/index";
+import type { RouteDefinition } from "@/types/next-types";
+import type { ResolvedRoute, RouteType } from "@/types/open-next";
 
 // Add the locale prefix to the regex so we correctly match the rawPath
 const optionalLocalePrefixRegex = `^/(?:${RoutesManifest.locales.map((locale) => `${locale}/?`).join("|")})?`;

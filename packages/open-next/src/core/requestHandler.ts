@@ -1,13 +1,13 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { IncomingMessage } from "http/index.js";
+import { IncomingMessage } from "node:http";
 import type {
   InternalEvent,
   InternalResult,
   ResolvedRoute,
   RoutingResult,
-} from "types/open-next";
-import type { OpenNextHandlerOptions } from "types/overrides";
-import { runWithOpenNextRequestContext } from "utils/promise";
+} from "@/types/open-next";
+import type { OpenNextHandlerOptions } from "@/types/overrides";
+import { runWithOpenNextRequestContext } from "@/utils/promise";
 import { debug, error } from "../adapters/logger";
 
 import { patchAsyncStorage } from "./patchAsyncStorage";
@@ -95,7 +95,7 @@ export async function openNextHandler(
 				// We skip this header here since it is used by Next internally and we don't want it on the response headers.
 				// This header needs to be present in the request headers for processRequest, so cookies().get() from Next will work on initial render.
 				if (key !== "x-middleware-set-cookie") {
-					overwrittenResponseHeaders[key] = value;
+					overwrittenResponseHeaders[key] = value as string | string[];
 				}
 				headers[key] = value;
 				delete headers[rawKey];
@@ -190,6 +190,8 @@ export async function openNextHandler(
 				store.mergeHeadersPriority = mergeHeadersPriority;
 			}
 
+      // @ts-expect-error - IncomingMessage constructor expects a Socket, but we're passing a plain object
+      // This is a common pattern in OpenNext for mocking requests
       const req = new IncomingMessage(reqProps);
       const res = createServerResponse(
         routingResult,
