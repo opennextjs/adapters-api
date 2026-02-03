@@ -86,12 +86,13 @@ function compressBody(body: ReadableStream, encoding: string | null) {
 
 		switch (encoding) {
 			case "br":
+				const quality = Number(process.env.BROTLI_QUALITY);
 				transform = zlib.createBrotliCompress({
 					params: {
 						// This is a compromise between speed and compression ratio.
 						// The default one will most likely timeout an AWS Lambda with default configuration on large bodies (>6mb).
 						// Therefore we set it to 6, which is a good compromise.
-						[zlib.constants.BROTLI_PARAM_QUALITY]: Number(process.env.BROTLI_QUALITY) || 6,
+						[zlib.constants.BROTLI_PARAM_QUALITY]: Number.isNaN(quality) ? 6 : quality,
 					},
 				});
 				break;
