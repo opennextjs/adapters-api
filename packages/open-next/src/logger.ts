@@ -6,13 +6,13 @@ let logLevel: LEVEL = "info";
 
 export default {
 	setLevel: (level: LEVEL) => (logLevel = level),
-	debug: (...args: any[]) => {
+	debug: (...args: unknown[]) => {
 		if (logLevel !== "debug") return;
 		console.log(chalk.magenta("DEBUG"), ...args);
 	},
 	info: console.log,
-	warn: (...args: any[]) => console.warn(chalk.yellow("WARN"), ...args),
-	error: (...args: any[]) => console.error(chalk.red("ERROR"), ...args),
+	warn: (...args: unknown[]) => console.warn(chalk.yellow("WARN"), ...args),
+	error: (...args: unknown[]) => console.error(chalk.red("ERROR"), ...args),
 	time: console.time,
 	timeEnd: console.timeEnd,
 };

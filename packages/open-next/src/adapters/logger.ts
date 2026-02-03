@@ -1,12 +1,12 @@
 import { isOpenNextError } from "@/utils/error.js";
 
-export function debug(...args: any[]) {
+export function debug(...args: unknown[]) {
 	if (globalThis.openNextDebug) {
 		console.log(...args);
 	}
 }
 
-export function warn(...args: any[]) {
+export function warn(...args: unknown[]) {
 	console.warn(...args);
 }
 
@@ -28,16 +28,27 @@ const DOWNPLAYED_ERROR_LOGS: AwsSdkClientCommandErrorInput[] = [
 	},
 ];
 
-const isDownplayedErrorLog = (errorLog: AwsSdkClientCommandErrorLog) =>
-	DOWNPLAYED_ERROR_LOGS.some(
-		(downplayedInput) =>
-			downplayedInput.clientName === errorLog?.clientName &&
-			downplayedInput.commandName === errorLog?.commandName &&
-			(downplayedInput.errorName === errorLog?.error?.name ||
-				downplayedInput.errorName === errorLog?.error?.Code)
-	);
+const isAwsSdkClientCommandErrorLog = (errorLog: unknown): errorLog is AwsSdkClientCommandErrorLog =>
+	errorLog !== null &&
+	typeof errorLog === "object" &&
+	"clientName" in errorLog &&
+	"commandName" in errorLog &&
+	"error" in errorLog;
 
-export function error(...args: any[]) {
+const isDownplayedErrorLog = (errorLog: unknown): boolean => {
+	if (!isAwsSdkClientCommandErrorLog(errorLog)) {
+		return false;
+	}
+	return DOWNPLAYED_ERROR_LOGS.some(
+		(downplayedInput) =>
+			downplayedInput.clientName === errorLog.clientName &&
+			downplayedInput.commandName === errorLog.commandName &&
+			(downplayedInput.errorName === errorLog.error?.name ||
+				downplayedInput.errorName === errorLog.error?.Code)
+	);
+};
+
+export function error(...args: unknown[]) {
 	// we try to catch errors from the aws-sdk client and downplay some of them
 	if (args.some((arg) => isDownplayedErrorLog(arg))) {
 		return debug(...args);

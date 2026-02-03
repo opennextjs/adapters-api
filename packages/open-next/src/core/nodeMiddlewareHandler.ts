@@ -13,11 +13,11 @@ import { AsyncLocalStorage } from "node:async_hooks";
 globalThis.AsyncLocalStorage = AsyncLocalStorage;
 
 interface NodeMiddleware {
-	default: (req: { handler: any; request: EdgeRequest; page: "middleware" }) => Promise<{
+	default: (req: { handler: unknown; request: EdgeRequest; page: "middleware" }) => Promise<{
 		response: Response;
 		waitUntil: Promise<void>;
 	}>;
-	middleware: any;
+	middleware: unknown;
 }
 
 let _module: NodeMiddleware | undefined;

@@ -110,7 +110,7 @@ globalThis.__next_route_preloader = async (stage) => {
 };
 // `getRequestHandlerWithMetadata` is not available in older versions of Next.js
 // It is required to for next 15.2 to pass metadata for page router data route
-export const requestHandler = (metadata: Record<string, any>) =>
+export const requestHandler = (metadata: Record<string, unknown>) =>
 	"getRequestHandlerWithMetadata" in nextServer
 		? nextServer.getRequestHandlerWithMetadata(metadata)
 		: nextServer.getRequestHandler();

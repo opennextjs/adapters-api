@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { AwsClient } from "aws4fetch";
 
-import type { TagCache } from "@/types/overrides";
+import type { OriginalTagCache } from "@/types/overrides";
 import { RecoverableError } from "@/utils/error";
 import { customFetchClient } from "@/utils/fetch";
 
@@ -10,6 +10,16 @@ import { debug, error } from "../../adapters/logger";
 import { chunk, parseNumberFromEnv } from "../../adapters/util";
 
 import { MAX_DYNAMO_BATCH_WRITE_ITEM_COUNT, getDynamoBatchWriteCommandConcurrency } from "./constants";
+
+type DynamoDBItem = {
+	tag?: { S: string };
+	path?: { S: string };
+	revalidatedAt?: { N: string };
+};
+
+type DynamoDBResponse = {
+	Items?: DynamoDBItem[];
+};
 
 let awsClient: AwsClient | null = null;
 
@@ -55,9 +65,9 @@ function buildDynamoObject(path: string, tags: string, revalidatedAt?: number) {
 	};
 }
 
-const tagCache: TagCache = {
+const tagCache: OriginalTagCache = {
 	mode: "original",
-	async getByPath(path) {
+	async getByPath(path: string) {
 		try {
 			if (globalThis.openNextConfig.dangerous?.disableTagCache) {
 				return [];
@@ -79,9 +89,9 @@ const tagCache: TagCache = {
 			if (result.status !== 200) {
 				throw new RecoverableError(`Failed to get tags by path: ${result.status}`);
 			}
-			const { Items } = (await result.json()) as any;
+			const { Items } = (await result.json()) as DynamoDBResponse;
 
-			const tags = Items?.map((item: any) => item.tag.S ?? "") ?? [];
+			const tags = Items?.map((item) => item.tag?.S ?? "") ?? [];
 			debug("tags for path", path, tags);
 			// We need to remove the buildId from the path
 			return tags.map((tag: string) => tag.replace(`${NEXT_BUILD_ID}/`, ""));
@@ -90,7 +100,7 @@ const tagCache: TagCache = {
 			return [];
 		}
 	},
-	async getByTag(tag) {
+	async getByTag(tag: string) {
 		try {
 			if (globalThis.openNextConfig.dangerous?.disableTagCache) {
 				return [];
@@ -111,17 +121,17 @@ const tagCache: TagCache = {
 			if (result.status !== 200) {
 				throw new RecoverableError(`Failed to get by tag: ${result.status}`);
 			}
-			const { Items } = (await result.json()) as any;
+			const { Items } = (await result.json()) as DynamoDBResponse;
 			return (
 				// We need to remove the buildId from the path
-				Items?.map(({ path: { S: key } }: any) => key?.replace(`${NEXT_BUILD_ID}/`, "") ?? "") ?? []
+				Items?.map((item) => item.path?.S?.replace(`${NEXT_BUILD_ID}/`, "") ?? "") ?? []
 			);
 		} catch (e) {
 			error("Failed to get by tag", e);
 			return [];
 		}
 	},
-	async getLastModified(key, lastModified) {
+	async getLastModified(key: string, lastModified?: number) {
 		try {
 			if (globalThis.openNextConfig.dangerous?.disableTagCache) {
 				return lastModified ?? Date.now();
@@ -145,7 +155,7 @@ const tagCache: TagCache = {
 			if (result.status !== 200) {
 				throw new RecoverableError(`Failed to get last modified: ${result.status}`);
 			}
-			const revalidatedTags = ((await result.json()) as any).Items ?? [];
+			const revalidatedTags = ((await result.json()) as DynamoDBResponse).Items ?? [];
 			debug("revalidatedTags", revalidatedTags);
 			// If we have revalidated tags we return -1 to force revalidation
 			return revalidatedTags.length > 0 ? -1 : (lastModified ?? Date.now());
@@ -154,7 +164,7 @@ const tagCache: TagCache = {
 			return lastModified ?? Date.now();
 		}
 	},
-	async writeTags(tags) {
+	async writeTags(tags: { tag: string; path: string; revalidatedAt?: number }[]) {
 		try {
 			const { CACHE_DYNAMO_TABLE } = process.env;
 			if (globalThis.openNextConfig.dangerous?.disableTagCache) {

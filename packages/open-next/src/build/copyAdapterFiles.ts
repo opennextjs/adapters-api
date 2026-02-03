@@ -16,7 +16,7 @@ export async function copyAdapterFiles(
 	// Copying the files from outputs to the output dir
 	for (const [key, value] of Object.entries(outputs)) {
 		if (["pages", "pagesApi", "appPages", "appRoutes"].includes(key)) {
-			for (const route of value as any[]) {
+			for (const route of value) {
 				const assets = route.assets;
 				// We need to copy the filepaths to the output dir
 				const relativeFilePath = path.relative(options.appPath, route.filePath);
@@ -58,8 +58,8 @@ export async function copyAdapterFiles(
 		if (symlink) {
 			try {
 				fs.symlinkSync(symlink, to);
-			} catch (e: any) {
-				if (e.code !== "EEXIST") {
+			} catch (e: unknown) {
+				if (e instanceof Error && (e as NodeJS.ErrnoException).code !== "EEXIST") {
 					throw e;
 				}
 			}

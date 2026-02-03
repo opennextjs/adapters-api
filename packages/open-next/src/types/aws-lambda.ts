@@ -21,7 +21,7 @@ type Handler = (
 	event: APIGatewayProxyEventV2,
 	responseStream: ResponseStream,
 	context: Context
-) => Promise<any>;
+) => Promise<unknown>;
 
 interface Metadata {
 	statusCode: number;

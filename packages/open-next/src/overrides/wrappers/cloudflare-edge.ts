@@ -17,7 +17,8 @@ interface WorkerContext {
 
 const handler: WrapperHandler<InternalEvent, InternalResult | MiddlewareResult> =
 	async (handler, converter) =>
-	async (request: Request, env: Record<string, string>, ctx: WorkerContext): Promise<Response> => {
+	async (...args: unknown[]): Promise<unknown> => {
+		const [request, env, ctx] = args as [Request, Record<string, string>, WorkerContext];
 		globalThis.process = process;
 
 		// Set the environment variables
@@ -33,7 +34,7 @@ const handler: WrapperHandler<InternalEvent, InternalResult | MiddlewareResult> 
 		// Retrieve geo information from the cloudflare request
 		// See https://developers.cloudflare.com/workers/runtime-apis/request
 		// Note: This code could be moved to a cloudflare specific converter when one is created.
-		const cfProperties = (request as any).cf as Record<string, string | null> | undefined;
+		const cfProperties = (request as Request & { cf?: Record<string, string | null> }).cf;
 		for (const [propName, mapping] of Object.entries(cfPropNameMapping)) {
 			const propValue = cfProperties?.[propName];
 			if (propValue != null) {
@@ -46,7 +47,7 @@ const handler: WrapperHandler<InternalEvent, InternalResult | MiddlewareResult> 
 			waitUntil: ctx.waitUntil.bind(ctx),
 		});
 
-		const result: Response = await converter.convertTo(response);
+		const result = (await converter.convertTo(response)) as Response;
 
 		return result;
 	};

@@ -10,6 +10,15 @@ import { isBinaryContentType } from "../utils/binary.js";
 
 import * as buildHelper from "./helper.js";
 
+type CacheFileMeta = {
+	segmentPaths?: string[];
+	headers?: Record<string, string>;
+};
+
+type FetchCacheData = {
+	tags?: string[];
+};
+
 /**
  * Copy the static assets to the output folder
  *
@@ -153,10 +162,10 @@ export function createCacheAssets(options: buildHelper.BuildOptions) {
 	// Generate cache file
 	Object.entries(cacheFilesPath).forEach(([cacheFilePath, files]) => {
 		const cacheFileMeta = files.meta
-			? safeParseJsonFile(fs.readFileSync(files.meta, "utf8"), cacheFilePath)
+			? safeParseJsonFile<CacheFileMeta>(fs.readFileSync(files.meta, "utf8"), cacheFilePath)
 			: undefined;
 		const cacheJson = files.json
-			? safeParseJsonFile(fs.readFileSync(files.json, "utf8"), cacheFilePath)
+			? safeParseJsonFile<Record<string, unknown>>(fs.readFileSync(files.json, "utf8"), cacheFilePath)
 			: undefined;
 		if ((files.meta && !cacheFileMeta) || (files.json && !cacheJson)) {
 			logger.warn(`Skipping invalid cache file: ${cacheFilePath}`);
@@ -186,7 +195,7 @@ export function createCacheAssets(options: buildHelper.BuildOptions) {
 			body: files.body
 				? fs
 						.readFileSync(files.body)
-						.toString(isBinaryContentType(cacheFileMeta.headers["content-type"]) ? "base64" : "utf8")
+						.toString(isBinaryContentType(cacheFileMeta?.headers?.["content-type"]) ? "base64" : "utf8")
 				: undefined,
 			segmentData: Object.keys(segments).length > 0 ? segments : undefined,
 		};
@@ -211,7 +220,7 @@ export function createCacheAssets(options: buildHelper.BuildOptions) {
 			() => true,
 			({ absolutePath, relativePath }) => {
 				const fileContent = fs.readFileSync(absolutePath, "utf8");
-				const fileData = safeParseJsonFile(fileContent, absolutePath);
+				const fileData = safeParseJsonFile<FetchCacheData>(fileContent, absolutePath);
 				fileData?.tags?.forEach((tag: string) => {
 					metaFiles.push({
 						tag: { S: path.posix.join(buildId, tag) },
@@ -234,7 +243,7 @@ export function createCacheAssets(options: buildHelper.BuildOptions) {
 				({ absolutePath, relativePath }) => absolutePath.endsWith(".meta") && !isFileSkipped(relativePath),
 				({ absolutePath, relativePath }) => {
 					const fileContent = fs.readFileSync(absolutePath, "utf8");
-					const fileData = safeParseJsonFile(fileContent, absolutePath);
+					const fileData = safeParseJsonFile<CacheFileMeta>(fileContent, absolutePath);
 					if (fileData?.headers?.["x-next-cache-tags"]) {
 						fileData.headers["x-next-cache-tags"].split(",").forEach((tag: string) => {
 							// TODO: We should split the tag using getDerivedTags from next.js or maybe use an in house implementation

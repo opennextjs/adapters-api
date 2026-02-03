@@ -12,13 +12,14 @@ import { formatWarmerResponse } from "./aws-lambda";
 
 const handler: WrapperHandler =
 	async (handler, converter) =>
-	async (event: AwsLambdaEvent): Promise<AwsLambdaReturn> => {
+	async (event: unknown): Promise<unknown> => {
+		const lambdaEvent = event as AwsLambdaEvent;
 		// Handle warmer event
-		if ("type" in event) {
-			return formatWarmerResponse(event);
+		if ("type" in lambdaEvent) {
+			return formatWarmerResponse(lambdaEvent);
 		}
 
-		const internalEvent = await converter.convertFrom(event);
+		const internalEvent = await converter.convertFrom(lambdaEvent);
 		// This is a workaround
 		// https://github.com/opennextjs/opennextjs-aws/blob/e9b37fd44eb856eb8ae73168bf455ff85dd8b285/packages/open-next/src/overrides/wrappers/aws-lambda.ts#L49-L53
 		const fakeStream: StreamCreator = {
@@ -41,7 +42,7 @@ const handler: WrapperHandler =
 
 		// Return early here if the response is already compressed
 		if (alreadyEncoded) {
-			return converter.convertTo(handlerResponse, event);
+			return converter.convertTo(handlerResponse, lambdaEvent);
 		}
 
 		// We compress the body if the client accepts it
@@ -67,7 +68,7 @@ const handler: WrapperHandler =
 			isBase64Encoded: !!contentEncoding || handlerResponse.isBase64Encoded,
 		};
 
-		return converter.convertTo(response, event);
+		return converter.convertTo(response, lambdaEvent);
 	};
 
 export default {
@@ -85,12 +86,13 @@ function compressBody(body: ReadableStream, encoding: string | null) {
 
 		switch (encoding) {
 			case "br":
+				const quality = Number(process.env.BROTLI_QUALITY);
 				transform = zlib.createBrotliCompress({
 					params: {
 						// This is a compromise between speed and compression ratio.
 						// The default one will most likely timeout an AWS Lambda with default configuration on large bodies (>6mb).
 						// Therefore we set it to 6, which is a good compromise.
-						[zlib.constants.BROTLI_PARAM_QUALITY]: Number(process.env.BROTLI_QUALITY) ?? 6,
+						[zlib.constants.BROTLI_PARAM_QUALITY]: Number.isNaN(quality) ? 6 : quality,
 					},
 				});
 				break;

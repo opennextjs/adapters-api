@@ -260,9 +260,9 @@ async function processRequest(req: IncomingMessage, res: OpenNextNodeResponse, r
 		//#endOverride
 
 		await requestHandler(requestMetadata)(req, res);
-	} catch (e: any) {
+	} catch (e: unknown) {
 		// This might fail when using bundled next, importing won't do the trick either
-		if (e.constructor.name === "NoFallbackError") {
+		if (e instanceof Error && e.constructor.name === "NoFallbackError") {
 			await handleNoFallbackError(req, res, routingResult, requestMetadata);
 		} else {
 			error("NextJS request failed.", e);
@@ -293,8 +293,8 @@ async function handleNoFallbackError(
 		//   ...metadata,
 		// })(req, res);
 		//TODO: find a way to do that without breaking current main
-	} catch (e: any) {
-		if (e.constructor.name === "NoFallbackError") {
+	} catch (e: unknown) {
+		if (e instanceof Error && e.constructor.name === "NoFallbackError") {
 			await handleNoFallbackError(req, res, routingResult, metadata, index + 1);
 		} else {
 			error("NextJS request failed.", e);

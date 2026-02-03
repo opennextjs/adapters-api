@@ -18,7 +18,7 @@ import { getCrossPlatformPathRegex } from "../utils/regex.js";
 import { bundleNextServer } from "./bundleNextServer.js";
 import { compileCache } from "./compileCache.js";
 import { copyAdapterFiles } from "./copyAdapterFiles.js";
-import { copyTracedFiles } from "./copyTracedFiles.js";
+import { copyTracedFiles, getManifests } from "./copyTracedFiles.js";
 import { copyMiddlewareResources, generateEdgeBundle } from "./edge/createEdgeBundle.js";
 import * as buildHelper from "./helper.js";
 import { installDependencies } from "./installDeps.js";
@@ -185,7 +185,7 @@ async function generateBundle(
 	buildHelper.copyEnvFile(appBuildOutputPath, packagePath, outputPath);
 
 	let tracedFiles: string[] = [];
-	let manifests: any = {};
+	let manifests: ReturnType<typeof getManifests> | Record<string, never> = {};
 
 	// Copy all necessary traced files
 	if (config.dangerous?.useAdapterOutputs) {
@@ -206,7 +206,7 @@ async function generateBundle(
 
 	const additionalCodePatches = codeCustomization?.additionalCodePatches ?? [];
 
-	await applyCodePatches(options, tracedFiles, manifests, [
+	await applyCodePatches(options, tracedFiles, manifests as ReturnType<typeof getManifests>, [
 		patches.patchFetchCacheSetMissingWaitUntil,
 		patches.patchFetchCacheForISR,
 		patches.patchUnstableCacheForISR,

@@ -29,12 +29,6 @@
 			}
 		},
 		{
-			"files": ["packages/open-next/**/*"],
-			"rules": {
-				"@typescript-eslint/no-explicit-any": "off"
-			}
-		},
-		{
 			"files": ["packages/tests-*/**", "examples/**", "examples-cloudflare/**"],
 			"rules": {
 				"@typescript-eslint/no-redeclare": "off",

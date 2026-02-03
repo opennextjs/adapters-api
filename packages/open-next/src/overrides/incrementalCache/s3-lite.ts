@@ -3,7 +3,7 @@ import path from "node:path";
 import { AwsClient } from "aws4fetch";
 
 import type { Extension } from "@/types/cache";
-import type { IncrementalCache } from "@/types/overrides";
+import type { CacheEntryType, CacheValue, IncrementalCache } from "@/types/overrides";
 import { IgnorableError, RecoverableError } from "@/utils/error";
 import { customFetchClient } from "@/utils/fetch";
 
@@ -44,7 +44,7 @@ function buildS3Key(key: string, extension: Extension) {
 }
 
 const incrementalCache: IncrementalCache = {
-	async get(key, cacheType) {
+	async get<CacheType extends CacheEntryType = "cache">(key: string, cacheType?: CacheType) {
 		const result = await awsFetch(buildS3Key(key, cacheType ?? "cache"), {
 			method: "GET",
 		});
@@ -55,7 +55,7 @@ const incrementalCache: IncrementalCache = {
 		if (result.status !== 200) {
 			throw new RecoverableError(`Failed to get cache: ${result.status}`);
 		}
-		const cacheData: any = await result.json();
+		const cacheData: CacheValue<CacheType> = await result.json();
 		return {
 			value: cacheData,
 			lastModified: new Date(result.headers.get("last-modified") ?? "").getTime(),

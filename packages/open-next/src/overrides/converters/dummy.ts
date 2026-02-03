@@ -2,7 +2,7 @@ import type { Converter } from "@/types/overrides";
 
 type DummyEventOrResult = {
 	type: "dummy";
-	original: any;
+	original: unknown;
 };
 
 const converter: Converter<DummyEventOrResult, DummyEventOrResult> = {

@@ -11,6 +11,15 @@ import { chunk, parseNumberFromEnv } from "../../adapters/util";
 
 import { MAX_DYNAMO_BATCH_WRITE_ITEM_COUNT, getDynamoBatchWriteCommandConcurrency } from "./constants";
 
+type DynamoDBTagItem = {
+	revalidatedAt: { N: string };
+	tag: { S: string };
+};
+
+type DynamoDBBatchGetResponse = {
+	Responses?: Record<string, DynamoDBTagItem[]>;
+};
+
 let awsClient: AwsClient | null = null;
 
 const getAwsClient = () => {
@@ -95,13 +104,14 @@ export default {
 			throw new RecoverableError(`Failed to query dynamo item: ${response.status}`);
 		}
 		// Now we need to check for every item if lastModified is greater than the revalidatedAt
-		const { Responses } = await response.json();
+		const { Responses } = (await response.json()) as DynamoDBBatchGetResponse;
 		if (!Responses) {
 			return false;
 		}
-		const revalidatedTags = Responses[CACHE_DYNAMO_TABLE ?? ""].filter(
-			(item: any) => Number.parseInt(item.revalidatedAt.N) > (lastModified ?? 0)
-		);
+		const revalidatedTags =
+			Responses?.[CACHE_DYNAMO_TABLE ?? ""]?.filter(
+				(item) => Number.parseInt(item.revalidatedAt.N) > (lastModified ?? 0)
+			) ?? [];
 		debug("retrieved tags", revalidatedTags);
 		return revalidatedTags.length > 0;
 	},

@@ -16,7 +16,7 @@ const maxCacheSize = process.env.OPEN_NEXT_LOCAL_CACHE_SIZE
 	: 1000;
 
 const localCache = new LRUCache<{
-	value: CacheValue<any>;
+	value: CacheValue<CacheEntryType>;
 	lastModified: number;
 }>(maxCacheSize);
 
