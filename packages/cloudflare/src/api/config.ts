@@ -69,7 +69,7 @@ export function defineCloudflareConfig(config: CloudflareOverrides = {}): OpenNe
 		tagCache,
 		queue,
 		cachePurge,
-		enableCacheInterception = false,
+		enableCacheInterception = true,
 		routePreloadingBehavior = "none",
 	} = config;
 

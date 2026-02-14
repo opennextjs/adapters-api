@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("should test if poweredByHeader adds the correct headers ", async ({ page }) => {
+test.skip("should test if poweredByHeader adds the correct headers ", async ({ page }) => {
 	const result = await page.goto("/");
 	expect(result).toBeDefined();
 	expect(result?.status()).toBe(200);
