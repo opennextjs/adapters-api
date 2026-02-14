@@ -21,9 +21,6 @@ const compatibilityMatrix: Record<IncludedWrapper, IncludedConverter[]> = {
 };
 
 function validateFunctionOptions(fnOptions: FunctionOptions) {
-	if (fnOptions.runtime === "edge" && fnOptions.experimentalBundledNextServer) {
-		logger.warn("experimentalBundledNextServer has no effect for edge functions");
-	}
 	const wrapper = typeof fnOptions.override?.wrapper === "string" ? fnOptions.override.wrapper : "aws-lambda";
 	const converter =
 		typeof fnOptions.override?.converter === "string" ? fnOptions.override.converter : "aws-apigw-v2";

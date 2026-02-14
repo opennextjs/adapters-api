@@ -7,20 +7,9 @@ import { debug, error, warn } from "./logger";
 
 export const SOFT_TAG_PREFIX = "_N_T_/";
 
-function isFetchCache(
-	options?:
-		| boolean
-		| {
-				fetchCache?: boolean;
-				kindHint?: "app" | "pages" | "fetch";
-				kind?: "FETCH";
-		  }
-): boolean {
-	if (typeof options === "boolean") {
-		return options;
-	}
+function isFetchCache(options?: { kindHint?: "app" | "pages" | "fetch"; kind?: "FETCH" }): boolean {
 	if (typeof options === "object") {
-		return options.kindHint === "fetch" || options.fetchCache || options.kind === "FETCH";
+		return options.kindHint === "fetch" || options.kind === "FETCH";
 	}
 	return false;
 }
@@ -29,15 +18,12 @@ export default class Cache {
 	public async get(
 		key: string,
 		// fetchCache is for next 13.5 and above, kindHint is for next 14 and above and boolean is for earlier versions
-		options?:
-			| boolean
-			| {
-					fetchCache?: boolean;
-					kindHint?: "app" | "pages" | "fetch";
-					tags?: string[];
-					softTags?: string[];
-					kind?: "FETCH";
-			  }
+		options?: {
+			kindHint?: "app" | "pages" | "fetch";
+			tags?: string[];
+			softTags?: string[];
+			kind?: "FETCH";
+		}
 	) {
 		if (globalThis.openNextConfig?.dangerous?.disableIncrementalCache) {
 			return null;
@@ -119,7 +105,7 @@ export default class Cache {
 				return {
 					lastModified: _lastModified,
 					value: {
-						kind: globalThis.isNextAfter15 ? "APP_ROUTE" : "ROUTE",
+						kind: "APP_ROUTE",
 						body: Buffer.from(
 							cacheData.body ?? Buffer.alloc(0),
 							isBinaryContentType(String(meta?.headers?.["content-type"])) ? "base64" : "utf8"
@@ -130,7 +116,7 @@ export default class Cache {
 				} as CacheHandlerValue;
 			}
 			if (cacheData?.type === "page" || cacheData?.type === "app") {
-				if (globalThis.isNextAfter15 && cacheData?.type === "app") {
+				if (cacheData?.type === "app") {
 					const segmentData = new Map<string, Buffer>();
 					if (cacheData.segmentData) {
 						for (const [segmentPath, segmentContent] of Object.entries(cacheData.segmentData ?? {})) {
@@ -153,9 +139,9 @@ export default class Cache {
 				return {
 					lastModified: _lastModified,
 					value: {
-						kind: globalThis.isNextAfter15 ? "PAGES" : "PAGE",
+						kind: "PAGES",
 						html: cacheData.html,
-						pageData: cacheData.type === "page" ? cacheData.json : cacheData.rsc,
+						pageData: cacheData.json,
 						status: meta?.status,
 						headers: meta?.headers,
 					},

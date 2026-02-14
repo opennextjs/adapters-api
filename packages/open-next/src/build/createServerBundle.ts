@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import path from "node:path";
 
 import type { Plugin } from "esbuild";
@@ -15,7 +14,6 @@ import { openNextReplacementPlugin } from "../plugins/replacement.js";
 import { openNextResolvePlugin } from "../plugins/resolve.js";
 import { getCrossPlatformPathRegex } from "../utils/regex.js";
 
-import { bundleNextServer } from "./bundleNextServer.js";
 import { compileCache } from "./compileCache.js";
 import { copyAdapterFiles } from "./copyAdapterFiles.js";
 import { copyTracedFiles, getManifests } from "./copyTracedFiles.js";
@@ -24,7 +22,6 @@ import * as buildHelper from "./helper.js";
 import { installDependencies } from "./installDeps.js";
 import { type CodePatcher, applyCodePatches } from "./patch/codePatcher.js";
 import * as patches from "./patch/patches/index.js";
-const require = createRequire(import.meta.url);
 
 interface CodeCustomization {
 	// These patches are meant to apply on user and next generated code
@@ -158,14 +155,6 @@ async function generateBundle(
 		addDenoJson(outputPath, packagePath);
 	}
 
-	// Bundle next server if necessary
-	const isBundled = fnOptions.experimentalBundledNextServer ?? false;
-	if (isBundled) {
-		await bundleNextServer(outPackagePath, appPath, {
-			minify: options.minify,
-		});
-	}
-
 	// Copy middleware
 	if (!config.middleware?.external) {
 		fs.copyFileSync(
@@ -197,7 +186,6 @@ async function generateBundle(
 			packagePath,
 			outputDir: outputPath,
 			routes: fnOptions.routes ?? ["app/page.tsx"],
-			bundledNextServer: isBundled,
 			skipServerFiles: options.config.dangerous?.useAdapterOutputs === true,
 		});
 		tracedFiles = oldTracedFileOutput.tracedFiles;
@@ -223,24 +211,9 @@ async function generateBundle(
 	//       "serverless-http" package which is not a dependency in user's
 	//       Next.js app.
 
-	const disableNextPrebundledReact =
-		buildHelper.compareSemver(options.nextVersion, ">=", "13.5.1") ||
-		buildHelper.compareSemver(options.nextVersion, "<=", "13.4.1");
-
 	const overrides = fnOptions.override ?? {};
 
-	const isBefore13413 = buildHelper.compareSemver(options.nextVersion, "<=", "13.4.13");
-	const isAfter141 = buildHelper.compareSemver(options.nextVersion, ">=", "14.1");
-
-	const isAfter142 = buildHelper.compareSemver(options.nextVersion, ">=", "14.2");
-
-	const isAfter152 = buildHelper.compareSemver(options.nextVersion, ">=", "15.2.0");
-
-	const isAfter154 = buildHelper.compareSemver(options.nextVersion, ">=", "15.4.0");
-
-	const useAdapterHandler = config.dangerous?.useAdapterOutputs === true;
-
-	const disableRouting = isBefore13413 || config.middleware?.external;
+	const disableRouting = config.middleware?.external;
 
 	const updater = new ContentUpdater(options);
 
@@ -252,14 +225,7 @@ async function generateBundle(
 		openNextReplacementPlugin({
 			name: `requestHandlerOverride ${name}`,
 			target: getCrossPlatformPathRegex("core/requestHandler.js"),
-			deletes: [
-				...(disableNextPrebundledReact ? ["applyNextjsPrebundledReact"] : []),
-				...(disableRouting ? ["withRouting"] : []),
-				...(isAfter142 ? ["patchAsyncStorage"] : []),
-				...(isAfter141 ? ["appendPrefetch"] : []),
-				...(isAfter154 ? [] : ["setInitialURL"]),
-				...(useAdapterHandler ? ["useRequestHandler"] : ["useAdapterHandler"]),
-			],
+			deletes: disableRouting ? ["withRouting"] : [],
 		}),
 
 		openNextResolvePlugin({
@@ -291,11 +257,6 @@ async function generateBundle(
 				].join(""),
 			},
 			plugins,
-			alias: isBundled
-				? {
-						"next/dist/server/next-server.js": "./next-server.runtime.prod.js",
-					}
-				: {},
 		},
 		options
 	);

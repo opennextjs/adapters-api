@@ -14,8 +14,6 @@ export function compileCache(options: buildHelper.BuildOptions, format: "cjs" | 
 	const ext = format === "cjs" ? "cjs" : "mjs";
 	const compiledCacheFile = path.join(options.buildDir, `cache.${ext}`);
 
-	const isAfter15 = buildHelper.compareSemver(options.nextVersion, ">=", "15.0.0");
-
 	// Normal cache
 	buildHelper.esbuildSync(
 		{
@@ -28,7 +26,6 @@ export function compileCache(options: buildHelper.BuildOptions, format: "cjs" | 
 				js: [
 					`globalThis.disableIncrementalCache = ${config.dangerous?.disableIncrementalCache ?? false};`,
 					`globalThis.disableDynamoDBCache = ${config.dangerous?.disableTagCache ?? false};`,
-					`globalThis.isNextAfter15 = ${isAfter15};`,
 				].join(""),
 			},
 		},
@@ -49,7 +46,6 @@ export function compileCache(options: buildHelper.BuildOptions, format: "cjs" | 
 				js: [
 					`globalThis.disableIncrementalCache = ${config.dangerous?.disableIncrementalCache ?? false};`,
 					`globalThis.disableDynamoDBCache = ${config.dangerous?.disableTagCache ?? false};`,
-					`globalThis.isNextAfter15 = ${isAfter15};`,
 				].join(""),
 			},
 		},
