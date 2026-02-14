@@ -1,7 +1,7 @@
-import type { IncomingMessage } from "node:http";
 import { finished } from "node:stream/promises";
 
 import type { OpenNextNodeResponse } from "@/http/index";
+import type { IncomingMessage } from "@/http/request";
 import type { ResolvedRoute, RoutingResult, WaitUntil } from "@/types/open-next";
 
 /**

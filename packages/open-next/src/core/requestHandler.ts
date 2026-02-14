@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { IncomingMessage } from "node:http";
 
+import { IncomingMessage } from "@/http/request";
 import type { InternalEvent, InternalResult, ResolvedRoute, RoutingResult } from "@/types/open-next";
 import type { OpenNextHandlerOptions } from "@/types/overrides";
 import { runWithOpenNextRequestContext } from "@/utils/promise";
@@ -176,8 +176,6 @@ export async function openNextHandler(
 				store.mergeHeadersPriority = mergeHeadersPriority;
 			}
 
-			// @ts-expect-error - IncomingMessage constructor expects a Socket, but we're passing a plain object
-			// This is a common pattern in OpenNext for mocking requests
 			const req = new IncomingMessage(reqProps);
 			const res = createServerResponse(routingResult, overwrittenResponseHeaders, options?.streamCreator);
 			// It seems that Next.js doesn't set the status code for 404 and 500 anymore for us, we have to do it ourselves
