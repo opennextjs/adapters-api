@@ -9,6 +9,12 @@
 		"e2e:test": {
 			"cache": false
 		},
+		"e2e:cf": {
+			"cache": false
+		},
+		"build:worker:cf": {
+			"cache": false
+		},
 		"test": {
 			"dependsOn": ["^build"],
 			"cache": false

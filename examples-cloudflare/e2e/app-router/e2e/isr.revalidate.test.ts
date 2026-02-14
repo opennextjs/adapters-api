@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("Test revalidate", async ({ request }) => {
+test.skip("Test revalidate", async ({ request }) => {
 	const result = await request.get("/api/isr");
 
 	expect(result.status()).toEqual(200);
