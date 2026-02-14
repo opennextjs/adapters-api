@@ -1,3 +1,5 @@
+import { createRequire } from "node:module";
+
 import type yargs from "yargs";
 
 import { build as buildImpl } from "../build/build.js";
@@ -33,6 +35,12 @@ async function buildCommand(
 	const options = getNormalizedOptions(config, buildDir);
 
 	const projectOpts = { ...args, minify: !args.noMinify, sourceDir: nextAppDir };
+
+	if (config.dangerous?.useAdapterOutputs) {
+		console.log("Using adapter outputs for building OpenNext bundle.");
+		const require = createRequire(import.meta.url);
+		process.env.NEXT_ADAPTER_PATH = require.resolve("../adapter.js");
+	}
 
 	// Ask whether a `wrangler.jsonc` should be created when no config file exists.
 	// Note: We don't ask when a custom config file is specified via `--config`

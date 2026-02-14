@@ -2,7 +2,6 @@
 // Adapted for cloudflare workers
 
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import path from "node:path";
 
 import { loadMiddlewareManifest } from "@opennextjs/aws/adapters/config/util.js";
@@ -140,8 +139,6 @@ async function generateBundle(
 	const { appPath, appBuildOutputPath, config, outputDir, monorepoRoot } = options;
 	logger.info(`Building server function: ${name}...`);
 
-	const require = createRequire(import.meta.url);
-
 	// Create output folder
 	const outputPath = path.join(outputDir, "server-functions", name);
 
@@ -257,7 +254,6 @@ async function generateBundle(
 	const isBefore13413 = buildHelper.compareSemver(options.nextVersion, "<=", "13.4.13");
 	const isAfter141 = buildHelper.compareSemver(options.nextVersion, ">=", "14.1");
 	const isAfter142 = buildHelper.compareSemver(options.nextVersion, ">=", "14.2");
-	const isAfter152 = buildHelper.compareSemver(options.nextVersion, ">=", "15.2.0");
 	const isAfter154 = buildHelper.compareSemver(options.nextVersion, ">=", "15.4.0");
 	const useAdapterHandler = config.dangerous?.useAdapterOutputs === true;
 
@@ -281,18 +277,6 @@ async function generateBundle(
 				...(isAfter154 ? [] : ["setInitialURL"]),
 				...(useAdapterHandler ? ["useRequestHandler"] : ["useAdapterHandler"]),
 			],
-		}),
-		openNextReplacementPlugin({
-			name: `utilOverride ${name}`,
-			target: getCrossPlatformPathRegex("core/util.js"),
-			deletes: [
-				...(disableNextPrebundledReact ? ["requireHooks"] : []),
-				...(isBefore13413 ? ["trustHostHeader"] : ["requestHandlerHost"]),
-				...(isAfter141 ? ["experimentalIncrementalCacheHandler"] : ["stableIncrementalCache"]),
-				...(isAfter152 ? [""] : ["composableCache"]),
-			],
-			replacements: [require.resolve("@opennextjs/aws/core/util.adapter.js")],
-			entireFile: useAdapterHandler,
 		}),
 
 		openNextResolvePlugin({

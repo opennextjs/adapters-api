@@ -28,3 +28,5 @@ test-results
 .open-next/
 
 coverage/
+
+.wrangler/

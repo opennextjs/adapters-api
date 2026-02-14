@@ -4,5 +4,6 @@ import memoryQueue from "@opennextjs/cloudflare/overrides/queue/memory-queue";
 
 export default defineCloudflareConfig({
 	incrementalCache: r2IncrementalCache,
+	enableCacheInterception: true,
 	queue: memoryQueue,
 });

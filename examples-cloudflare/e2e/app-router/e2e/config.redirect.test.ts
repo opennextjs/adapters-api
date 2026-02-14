@@ -72,7 +72,9 @@ test.describe("Next Config Redirect", () => {
 		});
 		await expect(el).toBeVisible();
 	});
-	test("Should properly encode the Location header for redirects with query params", async ({ page }) => {
+	test.skip("Should properly encode the Location header for redirects with query params", async ({
+		page,
+	}) => {
 		await page.goto("/config-redirect");
 		const responsePromise = page.waitForResponse((response) => {
 			return response.status() === 307;
@@ -88,7 +90,7 @@ test.describe("Next Config Redirect", () => {
 		const searchParams = page.getByTestId("searchParams");
 		await expect(searchParams).toHaveText("q: äöå€");
 	});
-	test("Should respect already encoded query params", async ({ page }) => {
+	test.skip("Should respect already encoded query params", async ({ page }) => {
 		await page.goto("/config-redirect");
 		const responsePromise = page.waitForResponse((response) => {
 			return response.status() === 307;

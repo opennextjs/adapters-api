@@ -61,6 +61,11 @@ export async function build(
 		buildNextjsApp(options);
 	}
 
+	if (config.dangerous?.useAdapterOutputs) {
+		logger.info("Using adapter outputs for building OpenNext bundle.");
+		return;
+	}
+
 	// Make sure no Node.js middleware is used
 	if (useNodeMiddleware(options)) {
 		logger.error("Node.js middleware is not currently supported. Consider switching to Edge Middleware.");

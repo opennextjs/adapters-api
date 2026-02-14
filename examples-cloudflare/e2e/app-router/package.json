@@ -9,10 +9,10 @@
 		"start": "next start --port 3001",
 		"lint": "next lint",
 		"clean": "rm -rf .turbo node_modules .next .open-next",
-		"build:worker": "pnpm opennextjs-cloudflare build",
+		"build:worker:cf": "pnpm opennextjs-cloudflare build",
 		"preview:worker": "pnpm opennextjs-cloudflare preview",
 		"preview": "pnpm build:worker && pnpm preview:worker",
-		"e2e": "playwright test -c e2e/playwright.config.ts",
+		"e2e:cf": "playwright test -c e2e/playwright.config.ts",
 		"build:worker-turbopack": "pnpm build:worker --openNextConfigPath open-next.turbopack.config.ts",
 		"e2e-turbopack": "playwright test -c e2e/playwright.turbopack.config.ts"
 	},
