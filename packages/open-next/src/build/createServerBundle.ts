@@ -215,24 +215,9 @@ async function generateBundle(
 	//       "serverless-http" package which is not a dependency in user's
 	//       Next.js app.
 
-	const disableNextPrebundledReact =
-		buildHelper.compareSemver(options.nextVersion, ">=", "13.5.1") ||
-		buildHelper.compareSemver(options.nextVersion, "<=", "13.4.1");
-
 	const overrides = fnOptions.override ?? {};
 
-	const isBefore13413 = buildHelper.compareSemver(options.nextVersion, "<=", "13.4.13");
-	const isAfter141 = buildHelper.compareSemver(options.nextVersion, ">=", "14.1");
-
-	const isAfter142 = buildHelper.compareSemver(options.nextVersion, ">=", "14.2");
-
-	const isAfter152 = buildHelper.compareSemver(options.nextVersion, ">=", "15.2.0");
-
-	const isAfter154 = buildHelper.compareSemver(options.nextVersion, ">=", "15.4.0");
-
-	const useAdapterHandler = config.dangerous?.useAdapterOutputs === true;
-
-	const disableRouting = isBefore13413 || config.middleware?.external;
+	const disableRouting = config.middleware?.external;
 
 	const updater = new ContentUpdater(options);
 
@@ -244,14 +229,7 @@ async function generateBundle(
 		openNextReplacementPlugin({
 			name: `requestHandlerOverride ${name}`,
 			target: getCrossPlatformPathRegex("core/requestHandler.js"),
-			deletes: [
-				...(disableNextPrebundledReact ? ["applyNextjsPrebundledReact"] : []),
-				...(disableRouting ? ["withRouting"] : []),
-				...(isAfter142 ? ["patchAsyncStorage"] : []),
-				...(isAfter141 ? ["appendPrefetch"] : []),
-				...(isAfter154 ? [] : ["setInitialURL"]),
-				...(useAdapterHandler ? ["useRequestHandler"] : ["useAdapterHandler"]),
-			],
+			deletes: disableRouting ? ["withRouting"] : [],
 		}),
 
 		openNextResolvePlugin({
