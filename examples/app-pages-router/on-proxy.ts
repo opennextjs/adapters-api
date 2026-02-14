@@ -19,7 +19,7 @@ spawn("node", [".open-next/server-functions/api/index.mjs"], {
 const app = express();
 
 app.use(
-	/\/api\/.*$/,
+	/\/api\//,
 	proxy("http://localhost:3011", {
 		proxyReqPathResolver: (req) => req.originalUrl,
 		proxyReqOptDecorator: (proxyReqOpts) => {
@@ -31,7 +31,7 @@ app.use(
 
 // Catch-all for everything else
 app.use(
-	/.*$/,
+	/.*/,
 	proxy("http://localhost:3010", {
 		proxyReqPathResolver: (req) => req.originalUrl,
 		proxyReqOptDecorator: (proxyReqOpts) => {

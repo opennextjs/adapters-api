@@ -30,6 +30,7 @@ const handler: WrapperHandler = async (handler, converter) =>
 				const result = await formatWarmerResponse(event);
 				responseStream.end(Buffer.from(JSON.stringify(result)), "utf-8");
 				// disabled for now, we'll need to revisit this later if needed.
+				//TODO: revisit that later
 				// await globalThis.__next_route_preloader("warmerEvent");
 				return;
 			}

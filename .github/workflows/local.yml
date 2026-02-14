@@ -2,7 +2,7 @@ name: Local E2E Tests
 
 on:
   push:
-    branches: [main, experimental]
+    branches: [main]
   pull_request:
 
 concurrency:

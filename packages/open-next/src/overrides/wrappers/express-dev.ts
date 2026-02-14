@@ -31,7 +31,7 @@ const wrapper: WrapperHandler = async (handler, converter) => {
 		await imageHandler(internalEvent, { streamCreator });
 	});
 
-	app.all(/.*$/, async (req, res) => {
+	app.all(/.*/, async (req, res) => {
 		if (req.protocol === "http" && req.hostname === "localhost") {
 			// This is used internally by Next.js during redirects in server actions. We need to set it to the origin of the request.
 			process.env.__NEXT_PRIVATE_ORIGIN = `${req.protocol}://${req.hostname}`;
