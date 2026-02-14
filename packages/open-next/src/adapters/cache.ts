@@ -7,20 +7,9 @@ import { debug, error, warn } from "./logger";
 
 export const SOFT_TAG_PREFIX = "_N_T_/";
 
-function isFetchCache(
-	options?:
-		| boolean
-		| {
-				fetchCache?: boolean;
-				kindHint?: "app" | "pages" | "fetch";
-				kind?: "FETCH";
-		  }
-): boolean {
-	if (typeof options === "boolean") {
-		return options;
-	}
+function isFetchCache(options?: { kindHint?: "app" | "pages" | "fetch"; kind?: "FETCH" }): boolean {
 	if (typeof options === "object") {
-		return options.kindHint === "fetch" || options.fetchCache || options.kind === "FETCH";
+		return options.kindHint === "fetch" || options.kind === "FETCH";
 	}
 	return false;
 }
@@ -29,15 +18,12 @@ export default class Cache {
 	public async get(
 		key: string,
 		// fetchCache is for next 13.5 and above, kindHint is for next 14 and above and boolean is for earlier versions
-		options?:
-			| boolean
-			| {
-					fetchCache?: boolean;
-					kindHint?: "app" | "pages" | "fetch";
-					tags?: string[];
-					softTags?: string[];
-					kind?: "FETCH";
-			  }
+		options?: {
+			kindHint?: "app" | "pages" | "fetch";
+			tags?: string[];
+			softTags?: string[];
+			kind?: "FETCH";
+		}
 	) {
 		if (globalThis.openNextConfig?.dangerous?.disableIncrementalCache) {
 			return null;
