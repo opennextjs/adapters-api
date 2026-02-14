@@ -32,7 +32,7 @@ export function normalizeOptions(config: OpenNextConfig, distDir: string, tempBu
 		appPackageJsonPath = findNextPackageJsonPath(appPath, monorepoRoot);
 	}
 
-	const debug = Boolean(process.env.OPEN_NEXT_DEBUG) ?? false;
+	const debug = Boolean(process.env.OPEN_NEXT_DEBUG);
 
 	return {
 		appBuildOutputPath: buildOutputPath,

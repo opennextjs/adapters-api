@@ -5,8 +5,9 @@ import type { Converter } from "@/types/overrides";
 import type { RevalidateEvent } from "../../adapters/revalidate";
 
 const converter: Converter<RevalidateEvent, RevalidateEvent> = {
-	convertFrom(event: SQSEvent) {
-		const records = event.Records.map((record) => {
+	convertFrom(event: unknown) {
+		const sqsEvent = event as SQSEvent;
+		const records = sqsEvent.Records.map((record) => {
 			const { host, url } = JSON.parse(record.body);
 			return { host, url, id: record.messageId };
 		});

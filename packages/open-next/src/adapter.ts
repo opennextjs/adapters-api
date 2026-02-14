@@ -19,18 +19,24 @@ import { addDebugFile } from "./debug.js";
 import type { ContentUpdater } from "./plugins/content-updater.js";
 import { externalChunksPlugin, inlineRouteHandler } from "./plugins/inlineRouteHandlers.js";
 
+export type NextAdapterOutput = {
+	pathname: string;
+	filePath: string;
+	assets: Record<string, unknown>;
+};
+
 export type NextAdapterOutputs = {
-	pages: any[];
-	pagesApi: any[];
-	appPages: any[];
-	appRoutes: any[];
+	pages: NextAdapterOutput[];
+	pagesApi: NextAdapterOutput[];
+	appPages: NextAdapterOutput[];
+	appRoutes: NextAdapterOutput[];
 };
 
 type NextAdapter = {
 	name: string;
 	modifyConfig: (config: NextConfig, { phase }: { phase: string }) => Promise<NextConfig>;
 	onBuildComplete: (props: {
-		routes: any;
+		routes: unknown;
 		outputs: NextAdapterOutputs;
 		projectDir: string;
 		repoRoot: string;

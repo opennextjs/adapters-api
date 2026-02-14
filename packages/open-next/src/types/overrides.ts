@@ -202,7 +202,7 @@ export type TagCache = NextModeTagCache | OriginalTagCache;
 export type WrapperHandler<
 	E extends BaseEventOrResult = InternalEvent,
 	R extends BaseEventOrResult = InternalResult,
-> = (handler: OpenNextHandler<E, R>, converter: Converter<E, R>) => Promise<(...args: any[]) => any>;
+> = (handler: OpenNextHandler<E, R>, converter: Converter<E, R>) => Promise<(...args: unknown[]) => unknown>;
 
 export type Wrapper<
 	E extends BaseEventOrResult = InternalEvent,
@@ -229,8 +229,8 @@ export type Converter<
 	E extends BaseEventOrResult = InternalEvent,
 	R extends BaseEventOrResult = InternalResult,
 > = BaseOverride & {
-	convertFrom: (event: any) => Promise<E>;
-	convertTo: (result: R, originalRequest?: any) => Promise<any>;
+	convertFrom: (event: unknown) => Promise<E>;
+	convertTo: (result: R, originalRequest?: unknown) => Promise<unknown>;
 };
 
 export type Warmer = BaseOverride & {

@@ -34,7 +34,7 @@ export async function createGenericHandler<
 	const handlerConfig = config[handler.type];
 	const override =
 		handlerConfig && "override" in handlerConfig
-			? (handlerConfig.override as any as DefaultOverrideOptions<E, R>)
+			? (handlerConfig.override as DefaultOverrideOptions<E, R>)
 			: undefined;
 
 	// From the config, we create the converter

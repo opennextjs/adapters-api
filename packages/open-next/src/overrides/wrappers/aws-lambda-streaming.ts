@@ -101,7 +101,7 @@ const handler: WrapperHandler = async (handler, converter) =>
 
 			// return converter.convertTo(response);
 		}
-	);
+	) as (...args: unknown[]) => unknown;
 
 export default {
 	wrapper: handler,

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import type { NextAdapterOutputs } from "../adapter";
+import type { NextAdapterOutput, NextAdapterOutputs } from "../adapter";
 import { addDebugFile } from "../debug.js";
 
 import type * as buildHelper from "./helper.js";
@@ -17,7 +17,7 @@ export async function copyAdapterFiles(
 	// Copying the files from outputs to the output dir
 	for (const [key, value] of Object.entries(outputs)) {
 		if (["pages", "pagesApi", "appPages", "appRoutes", "middleware"].includes(key)) {
-			const setFileToCopy = (route: any) => {
+			const setFileToCopy = (route: NextAdapterOutput) => {
 				const assets = route.assets;
 				// We need to copy the filepaths to the output dir
 				const relativeFilePath = path.join(packagePath, path.relative(options.appPath, route.filePath));
@@ -33,10 +33,10 @@ export async function copyAdapterFiles(
 			};
 			if (key === "middleware") {
 				// Middleware is a single object
-				setFileToCopy(value as any);
+				setFileToCopy(value as unknown as NextAdapterOutput);
 			} else {
 				// The rest are arrays
-				for (const route of value as any[]) {
+				for (const route of value as NextAdapterOutput[]) {
 					setFileToCopy(route);
 					// copyFileSync(from, `${options.outputDir}/${relative}`);
 				}
@@ -62,8 +62,8 @@ export async function copyAdapterFiles(
 		if (symlink) {
 			try {
 				fs.symlinkSync(symlink, to);
-			} catch (e: any) {
-				if (e.code !== "EEXIST") {
+			} catch (e: unknown) {
+				if (e instanceof Error && (e as NodeJS.ErrnoException).code !== "EEXIST") {
 					throw e;
 				}
 			}

@@ -31,12 +31,12 @@ export async function fromReadableStream(
 	return buffer.toString(base64 ? "base64" : "utf8");
 }
 
-export function toReadableStream(value: string, isBase64?: boolean): ReadableStream {
+export function toReadableStream(value: string | Buffer, isBase64?: boolean): ReadableStream {
 	return new ReadableStream(
 		{
 			pull(controller) {
 				// Defer the Buffer.from conversion to when the stream is actually read.
-				controller.enqueue(Buffer.from(value, isBase64 ? "base64" : "utf8"));
+				controller.enqueue(Buffer.isBuffer(value) ? value : Buffer.from(value, isBase64 ? "base64" : "utf8"));
 				controller.close();
 			},
 		},

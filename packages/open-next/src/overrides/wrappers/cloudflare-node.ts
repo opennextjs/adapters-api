@@ -8,12 +8,13 @@ const NULL_BODY_STATUSES = new Set([101, 204, 205, 304]);
 
 const handler: WrapperHandler<InternalEvent, InternalResult> =
 	async (handler, converter) =>
-	async (
-		request: Request,
-		env: Record<string, string>,
-		ctx: any,
-		abortSignal: AbortSignal
-	): Promise<Response> => {
+	async (...args: unknown[]): Promise<unknown> => {
+		const [request, env, ctx, abortSignal] = args as [
+			Request,
+			Record<string, string>,
+			{ waitUntil: (promise: Promise<unknown>) => void },
+			AbortSignal,
+		];
 		globalThis.process = process;
 		// Set the environment variables
 		// Cloudflare suggests to not override the process.env object but instead apply the values to it
@@ -80,8 +81,8 @@ const handler: WrapperHandler<InternalEvent, InternalResult> =
 					write(chunk, encoding, callback) {
 						try {
 							controller.enqueue(chunk);
-						} catch (e: any) {
-							return callback(e);
+						} catch (e: unknown) {
+							return callback(e instanceof Error ? e : new Error(String(e)));
 						}
 						callback();
 					},

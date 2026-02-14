@@ -42,7 +42,8 @@
 	},
 	"scripts": {
 		"build": "tsc && tsc-alias",
-		"dev": "concurrently \"tsc -w\" \"tsc-alias -w\""
+		"dev": "concurrently \"tsc -w\" \"tsc-alias -w\"",
+		"ts:check": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@ast-grep/napi": "^0.40.0",

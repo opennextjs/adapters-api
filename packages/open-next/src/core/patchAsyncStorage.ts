@@ -6,9 +6,9 @@ export function patchAsyncStorage() {
 	mod._resolveFilename = ((
 		originalResolveFilename: typeof resolveFilename,
 		request: string,
-		parent: any,
+		parent: unknown,
 		isMain: boolean,
-		options: any
+		options: unknown
 	) => {
 		if (
 			request.endsWith("static-generation-async-storage.external") ||

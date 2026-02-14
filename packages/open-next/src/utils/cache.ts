@@ -1,11 +1,16 @@
-import type { CacheValue, OriginalTagCacheWriteInput, WithLastModified } from "@/types/overrides";
+import type {
+	CacheEntryType,
+	CacheValue,
+	OriginalTagCacheWriteInput,
+	WithLastModified,
+} from "@/types/overrides";
 
 import { debug } from "../adapters/logger";
 
-export async function hasBeenRevalidated(
+export async function hasBeenRevalidated<T extends CacheEntryType = "cache">(
 	key: string,
 	tags: string[],
-	cacheEntry: WithLastModified<CacheValue<any>>
+	cacheEntry: WithLastModified<CacheValue<T>>
 ): Promise<boolean> {
 	if (globalThis.openNextConfig.dangerous?.disableTagCache) {
 		return false;
@@ -72,5 +77,6 @@ export async function writeTags(tags: (string | OriginalTagCacheWriteInput)[]): 
 	}
 
 	// Here we know that we have the correct type
+	// oxlint-disable-next-line @typescript-eslint/no-explicit-any - writeTags accepts a union type that typescript cannot infer correctly
 	await globalThis.tagCache.writeTags(tagsToWrite as any);
 }

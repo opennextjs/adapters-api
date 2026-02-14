@@ -92,7 +92,7 @@ export async function defaultHandler(
 		}
 		const result = await optimizeImage(headers, imageParams, nextConfig, downloadHandler);
 		return buildSuccessResponse(result, options?.streamCreator, etag);
-	} catch (e: any) {
+	} catch (e: unknown) {
 		error("Failed to optimize image", e);
 		return buildFailureResponse("Internal server error", options?.streamCreator);
 	}
@@ -129,13 +129,23 @@ function computeEtag(imageParams: { href: string; width: number; quality: number
 		.digest("base64");
 }
 
-function buildSuccessResponse(result: any, streamCreator?: StreamCreator, etag?: string): InternalResult {
+type ImageOptimizeResult = {
+	contentType: string;
+	buffer: Buffer;
+	maxAge: number;
+};
+
+function buildSuccessResponse(
+	imageOptimizeResult: ImageOptimizeResult,
+	streamCreator?: StreamCreator,
+	etag?: string
+): InternalResult {
 	const headers: Record<string, string> = {
 		Vary: "Accept",
-		"Content-Type": result.contentType,
-		"Cache-Control": `public,max-age=${result.maxAge},immutable`,
+		"Content-Type": imageOptimizeResult.contentType,
+		"Cache-Control": `public,max-age=${imageOptimizeResult.maxAge},immutable`,
 	};
-	debug("result", result);
+	debug("result", imageOptimizeResult);
 	if (etag) {
 		headers.ETag = etag;
 	}
@@ -147,13 +157,13 @@ function buildSuccessResponse(result: any, streamCreator?: StreamCreator, etag?:
 			streamCreator
 		);
 		response.writeHead(200, headers);
-		response.end(result.buffer);
+		response.end(imageOptimizeResult.buffer);
 	}
 
 	return {
 		type: "core",
 		statusCode: 200,
-		body: toReadableStream(result.buffer, true),
+		body: toReadableStream(imageOptimizeResult.buffer, true),
 		isBase64Encoded: true,
 		headers,
 	};
@@ -239,7 +249,7 @@ async function downloadHandler(_req: IncomingMessage, res: ServerResponse, url: 
 				res.setHeader("Cache-Control", response.cacheControl);
 			}
 		}
-	} catch (e: any) {
+	} catch (e: unknown) {
 		error("Failed to download image", e);
 		throw e;
 	}
