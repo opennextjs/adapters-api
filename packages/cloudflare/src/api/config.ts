@@ -93,6 +93,7 @@ export function defineCloudflareConfig(config: CloudflareOverrides = {}): OpenNe
 		},
 		dangerous: {
 			enableCacheInterception,
+			useAdapterOutputs: true,
 		},
 		middleware: {
 			external: true,
