@@ -69,6 +69,10 @@ jobs:
         shell: bash
         run: pnpm --filter @opennextjs/cloudflare run build
 
+      - name: Build worker with local configuration
+        shell: bash
+        run: pnpm run build:worker:cf
+
       - name: Run E2E Test in Cloudflare Environment
         shell: bash
         run: pnpm turbo run e2e:cf
