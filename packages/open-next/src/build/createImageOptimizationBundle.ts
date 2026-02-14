@@ -36,18 +36,6 @@ export async function createImageOptimizationBundle(options: buildHelper.BuildOp
 		}),
 	];
 
-	if (buildHelper.compareSemver(options.nextVersion, ">=", "14.1.1")) {
-		plugins.push(
-			openNextReplacementPlugin({
-				name: "opennext-14.1.1-image-optimization",
-				target: getCrossPlatformPathRegex("plugins/image-optimization/image-optimization.js"),
-				replacements: [
-					require.resolve("../adapters/plugins/image-optimization/image-optimization.replacement.js"),
-				],
-			})
-		);
-	}
-
 	// Build Lambda code (1st pass)
 	// note: bundle in OpenNext package b/c the adapter relies on the
 	//       "@aws-sdk/client-s3" package which is not a dependency in user's

@@ -27,8 +27,6 @@ const externals = [
 	"next/dist/compiled/ws",
 
 	// externalsMap
-	// In the config they replace it, but we don't use this one inside NextServer anymore 13.4.12+
-	// For earlier versions we might have to alias it
 	"./web/sandbox",
 
 	// pagesExternal

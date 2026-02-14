@@ -236,8 +236,7 @@ File ${serverPath} does not exist
 
 	if (hasAppDir) {
 		//App dir
-		// In next 14.2.0, _not-found is at 'app/_not-found/page'
-		safeComputeCopyFilesForPage("app/_not-found", "app/_not-found/page");
+		safeComputeCopyFilesForPage("app/_not-found/page");
 	}
 
 	//Files we actually want to include

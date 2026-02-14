@@ -119,7 +119,7 @@ export default class Cache {
 				return {
 					lastModified: _lastModified,
 					value: {
-						kind: globalThis.isNextAfter15 ? "APP_ROUTE" : "ROUTE",
+						kind: "APP_ROUTE",
 						body: Buffer.from(
 							cacheData.body ?? Buffer.alloc(0),
 							isBinaryContentType(String(meta?.headers?.["content-type"])) ? "base64" : "utf8"
@@ -130,7 +130,7 @@ export default class Cache {
 				} as CacheHandlerValue;
 			}
 			if (cacheData?.type === "page" || cacheData?.type === "app") {
-				if (globalThis.isNextAfter15 && cacheData?.type === "app") {
+				if (cacheData?.type === "app") {
 					const segmentData = new Map<string, Buffer>();
 					if (cacheData.segmentData) {
 						for (const [segmentPath, segmentContent] of Object.entries(cacheData.segmentData ?? {})) {
@@ -153,9 +153,9 @@ export default class Cache {
 				return {
 					lastModified: _lastModified,
 					value: {
-						kind: globalThis.isNextAfter15 ? "PAGES" : "PAGE",
+						kind: "PAGES",
 						html: cacheData.html,
-						pageData: cacheData.type === "page" ? cacheData.json : cacheData.rsc,
+						pageData: cacheData.json,
 						status: meta?.status,
 						headers: meta?.headers,
 					},

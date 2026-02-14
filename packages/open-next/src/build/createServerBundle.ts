@@ -158,14 +158,6 @@ async function generateBundle(
 		addDenoJson(outputPath, packagePath);
 	}
 
-	// Bundle next server if necessary
-	const isBundled = fnOptions.experimentalBundledNextServer ?? false;
-	if (isBundled) {
-		await bundleNextServer(outPackagePath, appPath, {
-			minify: options.minify,
-		});
-	}
-
 	// Copy middleware
 	if (!config.middleware?.external) {
 		fs.copyFileSync(
@@ -197,7 +189,7 @@ async function generateBundle(
 			packagePath,
 			outputDir: outputPath,
 			routes: fnOptions.routes ?? ["app/page.tsx"],
-			bundledNextServer: isBundled,
+			bundledNextServer: false,
 			skipServerFiles: options.config.dangerous?.useAdapterOutputs === true,
 		});
 		tracedFiles = oldTracedFileOutput.tracedFiles;
@@ -291,11 +283,6 @@ async function generateBundle(
 				].join(""),
 			},
 			plugins,
-			alias: isBundled
-				? {
-						"next/dist/server/next-server.js": "./next-server.runtime.prod.js",
-					}
-				: {},
 		},
 		options
 	);
