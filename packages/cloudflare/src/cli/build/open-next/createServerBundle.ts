@@ -5,7 +5,6 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { loadMiddlewareManifest } from "@opennextjs/aws/adapters/config/util.js";
-import { bundleNextServer } from "@opennextjs/aws/build/bundleNextServer.js";
 import { compileCache } from "@opennextjs/aws/build/compileCache.js";
 import { copyAdapterFiles } from "@opennextjs/aws/build/copyAdapterFiles.js";
 import { copyTracedFiles } from "@opennextjs/aws/build/copyTracedFiles.js";
@@ -165,14 +164,6 @@ async function generateBundle(
 		addDenoJson(outputPath, packagePath);
 	}
 
-	// Bundle next server if necessary
-	const isBundled = fnOptions.experimentalBundledNextServer ?? false;
-	if (isBundled) {
-		await bundleNextServer(outPackagePath, appPath, {
-			minify: options.minify,
-		});
-	}
-
 	// Copy middleware
 	if (!config.middleware?.external) {
 		fs.copyFileSync(
@@ -208,7 +199,7 @@ async function generateBundle(
 			packagePath,
 			outputDir: outputPath,
 			routes: fnOptions.routes ?? ["app/page.tsx"],
-			bundledNextServer: isBundled,
+			bundledNextServer: false,
 			skipServerFiles: options.config.dangerous?.useAdapterOutputs === true,
 		});
 		tracedFiles = oldTracedFileOutput.tracedFiles;
@@ -311,11 +302,6 @@ async function generateBundle(
 				].join(""),
 			},
 			plugins,
-			alias: isBundled
-				? {
-						"next/dist/server/next-server.js": "./next-server.runtime.prod.js",
-					}
-				: {},
 		},
 		options
 	);
