@@ -1,8 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
-import { NextConfig } from "@/config/index";
-import type { OpenNextNodeResponse } from "@/http/index.js";
-import { IncomingMessage } from "@/http/index.js";
+import { IncomingMessage } from "@/http/request";
 import type { InternalEvent, InternalResult, ResolvedRoute, RoutingResult } from "@/types/open-next";
 import type { OpenNextHandlerOptions } from "@/types/overrides";
 import { runWithOpenNextRequestContext } from "@/utils/promise";
@@ -11,13 +9,7 @@ import { debug, error } from "../adapters/logger";
 
 import { patchAsyncStorage } from "./patchAsyncStorage";
 import { adapterHandler } from "./routing/adapterHandler";
-import {
-	constructNextUrl,
-	convertRes,
-	convertToQuery,
-	convertToQueryString,
-	createServerResponse,
-} from "./routing/util";
+import { constructNextUrl, convertRes, createServerResponse } from "./routing/util";
 import routingHandler, {
 	INTERNAL_EVENT_REQUEST_ID,
 	INTERNAL_HEADER_REWRITE_STATUS_CODE,
@@ -26,7 +18,6 @@ import routingHandler, {
 	MIDDLEWARE_HEADER_PREFIX,
 	MIDDLEWARE_HEADER_PREFIX_LEN,
 } from "./routingHandler";
-import { requestHandler, setNextjsPrebundledReact } from "./util";
 
 // This is used to identify requests in the cache
 globalThis.__openNextAls = new AsyncLocalStorage();
@@ -54,7 +45,9 @@ export async function openNextHandler(
 			requestId,
 		},
 		async () => {
-			await globalThis.__next_route_preloader("waitUntil");
+			// Disabled for now, we'll need to revisit this later if needed.
+			//TODO: revisit that later
+			// await globalThis.__next_route_preloader("waitUntil");
 			if (initialHeaders["x-forwarded-host"]) {
 				initialHeaders.host = initialHeaders["x-forwarded-host"];
 			}
@@ -96,7 +89,7 @@ export async function openNextHandler(
 				// We skip this header here since it is used by Next internally and we don't want it on the response headers.
 				// This header needs to be present in the request headers for processRequest, so cookies().get() from Next will work on initial render.
 				if (key !== "x-middleware-set-cookie") {
-					overwrittenResponseHeaders[key] = value;
+					overwrittenResponseHeaders[key] = value as string | string[];
 				}
 				headers[key] = value;
 				delete headers[rawKey];
@@ -123,7 +116,7 @@ export async function openNextHandler(
 						isISR: false,
 						origin: false,
 						initialURL: internalEvent.url,
-						resolvedRoutes: [{ route: "/500", type: "page" }],
+						resolvedRoutes: [{ route: "/500", type: "page", isFallback: false }],
 					};
 				}
 			}
@@ -186,15 +179,18 @@ export async function openNextHandler(
 
 			const req = new IncomingMessage(reqProps);
 			const res = createServerResponse(routingResult, overwrittenResponseHeaders, options?.streamCreator);
+			// It seems that Next.js doesn't set the status code for 404 and 500 anymore for us, we have to do it ourselves
+			// TODO: check security wise if it's ok to do that
+			if (pathname === "/404") {
+				res.statusCode = 404;
+			} else if (pathname === "/500") {
+				res.statusCode = 500;
+			}
 
 			//#override useAdapterHandler
 			await adapterHandler(req, res, routingResult, {
 				waitUntil: options?.waitUntil,
 			});
-			//#endOverride
-
-			//#override useRequestHandler
-			await processRequest(req, res, routingResult);
 			//#endOverride
 
 			const { statusCode, headers: responseHeaders, isBase64Encoded, body } = convertRes(res);
@@ -210,129 +206,4 @@ export async function openNextHandler(
 			return internalResult;
 		}
 	);
-}
-
-async function processRequest(req: IncomingMessage, res: OpenNextNodeResponse, routingResult: RoutingResult) {
-	// @ts-ignore
-	// Next.js doesn't parse body if the property exists
-	// https://github.com/dougmoscrop/serverless-http/issues/227
-	delete req.body;
-
-	// Here we try to apply as much request metadata as possible
-	// We apply every metadata from `resolve-routes` https://github.com/vercel/next.js/blob/916f105b97211de50f8580f0b39c9e7c60de4886/packages/next/src/server/lib/router-utils/resolve-routes.ts
-	// and `router-server` https://github.com/vercel/next.js/blob/916f105b97211de50f8580f0b39c9e7c60de4886/packages/next/src/server/lib/router-server.ts
-	const initialURL = new URL(
-		// We always assume that only the routing layer can set this header.
-		routingResult.internalEvent.headers[INTERNAL_HEADER_INITIAL_URL] ?? routingResult.initialURL
-	);
-	let invokeStatus: number | undefined;
-	if (routingResult.internalEvent.rawPath === "/500") {
-		invokeStatus = 500;
-	} else if (routingResult.internalEvent.rawPath === "/404") {
-		invokeStatus = 404;
-	}
-
-	const requestMetadata = {
-		isNextDataReq: routingResult.internalEvent.query.__nextDataReq === "1",
-		initURL: routingResult.initialURL,
-		initQuery: convertToQuery(initialURL.search),
-		initProtocol: initialURL.protocol,
-		defaultLocale: NextConfig.i18n?.defaultLocale,
-		locale: routingResult.locale,
-		middlewareInvoke: false,
-		// By setting invokePath and invokeQuery we can bypass some of the routing logic in Next.js
-		invokePath: routingResult.internalEvent.rawPath,
-		invokeQuery: routingResult.internalEvent.query,
-		// invokeStatus is only used for error pages
-		invokeStatus,
-	};
-
-	try {
-		//#override applyNextjsPrebundledReact
-		setNextjsPrebundledReact(routingResult.internalEvent.rawPath);
-		//#endOverride
-
-		// Next Server
-		// TODO: only enable this on Next 15.4+
-		// We need to set the pathname to the data request path
-		//#override setInitialURL
-		req.url = initialURL.pathname + convertToQueryString(routingResult.internalEvent.query);
-		//#endOverride
-
-		await requestHandler(requestMetadata)(req, res);
-	} catch (e: unknown) {
-		// This might fail when using bundled next, importing won't do the trick either
-		if (e instanceof Error && e.constructor.name === "NoFallbackError") {
-			await handleNoFallbackError(req, res, routingResult, requestMetadata);
-		} else {
-			error("NextJS request failed.", e);
-			await tryRenderError("500", res, routingResult.internalEvent);
-		}
-	}
-}
-
-async function handleNoFallbackError(
-	req: IncomingMessage,
-	res: OpenNextNodeResponse,
-	routingResult: RoutingResult,
-	metadata: Record<string, unknown>,
-	index = 1
-) {
-	if (index >= 5) {
-		await tryRenderError("500", res, routingResult.internalEvent);
-		return;
-	}
-	if (index >= routingResult.resolvedRoutes.length) {
-		await tryRenderError("404", res, routingResult.internalEvent);
-		return;
-	}
-	try {
-		// await requestHandler({
-		//   ...routingResult,
-		//   invokeOutput: routingResult.resolvedRoutes[index].route,
-		//   ...metadata,
-		// })(req, res);
-		//TODO: find a way to do that without breaking current main
-	} catch (e: unknown) {
-		if (e instanceof Error && e.constructor.name === "NoFallbackError") {
-			await handleNoFallbackError(req, res, routingResult, metadata, index + 1);
-		} else {
-			error("NextJS request failed.", e);
-			await tryRenderError("500", res, routingResult.internalEvent);
-		}
-	}
-}
-
-async function tryRenderError(type: "404" | "500", res: OpenNextNodeResponse, internalEvent: InternalEvent) {
-	try {
-		const _req = new IncomingMessage({
-			method: "GET",
-			url: `/${type}`,
-			headers: internalEvent.headers,
-			body: internalEvent.body,
-			remoteAddress: internalEvent.remoteAddress,
-		});
-		// By setting this it will allow us to bypass and directly render the 404 or 500 page
-		const requestMetadata = {
-			// By setting invokePath and invokeQuery we can bypass some of the routing logic in Next.js
-			invokePath: type === "404" ? "/404" : "/500",
-			invokeStatus: type === "404" ? 404 : 500,
-			middlewareInvoke: false,
-		};
-		// await requestHandler(requestMetadata)(_req, res);
-	} catch (e) {
-		error("NextJS request failed.", e);
-		res.statusCode = 500;
-		res.setHeader("Content-Type", "application/json");
-		res.end(
-			JSON.stringify(
-				{
-					message: "Server failed to respond.",
-					details: e,
-				},
-				null,
-				2
-			)
-		);
-	}
 }

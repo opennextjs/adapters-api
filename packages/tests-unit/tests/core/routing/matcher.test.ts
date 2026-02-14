@@ -11,6 +11,15 @@ import { vi } from "vitest";
 
 vi.mock("@opennextjs/aws/adapters/config/index.js", () => ({
 	NextConfig: {},
+	PrerenderManifest: {
+		routes: {},
+		dynamicRoutes: {},
+		preview: {
+			previewModeId: "",
+			previewModeEncryptionKey: "",
+			previewModeSigningKey: "",
+		},
+	},
 	AppPathRoutesManifest: {
 		"/api/app/route": "/api/app",
 		"/app/page": "/app",

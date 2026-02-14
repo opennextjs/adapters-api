@@ -1,4 +1,4 @@
-import { AppPathRoutesManifest, PagesManifest, RoutesManifest } from "@/config/index";
+import { AppPathRoutesManifest, PagesManifest, PrerenderManifest, RoutesManifest } from "@/config/index";
 import type { RouteDefinition } from "@/types/next-types";
 import type { ResolvedRoute, RouteType } from "@/types/open-next";
 
@@ -16,6 +16,11 @@ function routeMatcher(routeDefinitions: RouteDefinition[]) {
 		regexp: new RegExp(route.regex.replace("^/", optionalPrefix)),
 	}));
 
+	const { dynamicRoutes = {} } = PrerenderManifest ?? {};
+	const prerenderedFallbackRoutes = Object.entries(dynamicRoutes)
+		.filter(([, { fallback }]) => fallback === false)
+		.map(([route]) => route);
+
 	const appPathsSet = new Set();
 	const routePathsSet = new Set();
 	// We need to use AppPathRoutesManifest here
@@ -32,6 +37,9 @@ function routeMatcher(routeDefinitions: RouteDefinition[]) {
 
 		return foundRoutes.map((foundRoute) => {
 			let routeType: RouteType = "page";
+			// Check if the route is a prerendered fallback false route
+			const isFallback = prerenderedFallbackRoutes.includes(foundRoute.page);
+
 			if (appPathsSet.has(foundRoute.page)) {
 				routeType = "app";
 			} else if (routePathsSet.has(foundRoute.page)) {
@@ -40,6 +48,7 @@ function routeMatcher(routeDefinitions: RouteDefinition[]) {
 			return {
 				route: foundRoute.page,
 				type: routeType,
+				isFallback,
 			};
 		});
 	};

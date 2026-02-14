@@ -39,7 +39,7 @@ export default class Cache {
 					kind?: "FETCH";
 			  }
 	) {
-		if (globalThis.openNextConfig.dangerous?.disableIncrementalCache) {
+		if (globalThis.openNextConfig?.dangerous?.disableIncrementalCache) {
 			return null;
 		}
 
@@ -180,7 +180,7 @@ export default class Cache {
 	}
 
 	async set(key: string, data?: IncrementalCacheValue, ctx?: IncrementalCacheContext): Promise<void> {
-		if (globalThis.openNextConfig.dangerous?.disableIncrementalCache) {
+		if (globalThis.openNextConfig?.dangerous?.disableIncrementalCache) {
 			return;
 		}
 		// This one might not even be necessary anymore
@@ -318,6 +318,7 @@ export default class Cache {
 									route: path,
 									// TODO: ideally here we should check if it's an app router page or route
 									type: "app",
+									isFallback: false,
 								},
 							],
 						}))
@@ -379,6 +380,7 @@ export default class Cache {
 									route: path,
 									// TODO: ideally here we should check if it's an app router page or route
 									type: "app",
+									isFallback: false,
 								},
 							],
 						}))

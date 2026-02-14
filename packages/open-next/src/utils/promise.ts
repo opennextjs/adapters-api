@@ -42,7 +42,12 @@ export class DetachedPromiseRunner {
 	public add<T>(promise: Promise<T>): void {
 		const detachedPromise = new DetachedPromise<T>();
 		this.promises.push(detachedPromise as DetachedPromise<unknown>);
-		promise.then(detachedPromise.resolve, detachedPromise.reject);
+		promise.then(detachedPromise.resolve).catch((e) => {
+			// We just want to log the error here to avoid unhandled promise rejections
+			error("Detached promise rejected:", e);
+			// @ts-expect-error - We want to resolve to avoid hanging indefinitely, we don't reject to avoid unhandled promise rejections since we already log the error
+			detachedPromise.resolve(undefined); // Resolve to avoid unhandled promise rejection, we already log the error above
+		});
 	}
 
 	public async await(): Promise<void> {
