@@ -180,14 +180,27 @@ async function generateResult(
 			additionalHeaders = appHeaders;
 
 			if (cachedValue.meta?.postponed) {
-				debug("App router postponed request detected", localizedPath);
-				return createPprPartialResult(
-					event,
-					localizedPath,
-					cachedValue,
-					() => emptyReadableStream(),
-					"text/x-component"
-				);
+				if (event.headers["next-router-prefetch"] === "1") {
+					debug("Prefetch request detected, returning cached response without postponing");
+					// We try to find the corresponding segment for the prefetch request, if it exists.
+					const segmentToFind = event.headers[NEXT_SEGMENT_PREFETCH_HEADER];
+					if (segmentToFind && cachedValue.segmentData?.[segmentToFind]) {
+						body = cachedValue.segmentData[segmentToFind];
+						additionalHeaders = { [NEXT_PRERENDER_HEADER]: "1", [NEXT_POSTPONED_HEADER]: "2" };
+						debug("Found segment for prefetch request, returning it");
+					} else {
+						debug("No segment found for prefetch request, returning full response");
+					}
+				} else {
+					debug("App router postponed request detected", localizedPath);
+					return createPprPartialResult(
+						event,
+						localizedPath,
+						cachedValue,
+						() => emptyReadableStream(),
+						"text/x-component"
+					);
+				}
 			}
 			debug("App router data request detected", localizedPath, body);
 		} else {
