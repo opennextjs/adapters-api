@@ -223,7 +223,7 @@ async function downloadHandler(_req: IncomingMessage, res: ServerResponse, url?:
 
 	try {
 		// Case 1: remote image URL => download the image from the URL
-		if (url?.href.toLowerCase().match(/^https?:\/\//)) {
+		if (url?.href?.toLowerCase().match(/^https?:\/\//)) {
 			pipeRes(https.get(url), res);
 		}
 		// Case 2: local image => download the image from S3

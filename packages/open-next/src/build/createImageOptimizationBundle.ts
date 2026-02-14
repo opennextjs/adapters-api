@@ -1,17 +1,12 @@
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 
 import logger from "../logger.js";
-import { openNextReplacementPlugin } from "../plugins/replacement.js";
 import { openNextResolvePlugin } from "../plugins/resolve.js";
-import { getCrossPlatformPathRegex } from "../utils/regex.js";
 
 import * as buildHelper from "./helper.js";
 import { installDependencies } from "./installDeps.js";
-
-const require = createRequire(import.meta.url);
 
 export async function createImageOptimizationBundle(options: buildHelper.BuildOptions) {
 	logger.info("Bundling image optimization function...");

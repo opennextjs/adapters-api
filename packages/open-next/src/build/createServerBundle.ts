@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import path from "node:path";
 
 import type { Plugin } from "esbuild";
@@ -15,7 +14,6 @@ import { openNextReplacementPlugin } from "../plugins/replacement.js";
 import { openNextResolvePlugin } from "../plugins/resolve.js";
 import { getCrossPlatformPathRegex } from "../utils/regex.js";
 
-import { bundleNextServer } from "./bundleNextServer.js";
 import { compileCache } from "./compileCache.js";
 import { copyAdapterFiles } from "./copyAdapterFiles.js";
 import { copyTracedFiles, getManifests } from "./copyTracedFiles.js";
@@ -24,7 +22,6 @@ import * as buildHelper from "./helper.js";
 import { installDependencies } from "./installDeps.js";
 import { type CodePatcher, applyCodePatches } from "./patch/codePatcher.js";
 import * as patches from "./patch/patches/index.js";
-const require = createRequire(import.meta.url);
 
 interface CodeCustomization {
 	// These patches are meant to apply on user and next generated code
@@ -189,7 +186,6 @@ async function generateBundle(
 			packagePath,
 			outputDir: outputPath,
 			routes: fnOptions.routes ?? ["app/page.tsx"],
-			bundledNextServer: false,
 			skipServerFiles: options.config.dangerous?.useAdapterOutputs === true,
 		});
 		tracedFiles = oldTracedFileOutput.tracedFiles;
