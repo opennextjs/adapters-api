@@ -33,7 +33,7 @@ export async function copyAdapterFiles(
 			};
 			if (key === "middleware") {
 				// Middleware is a single object
-				setFileToCopy(value as unknown as NextAdapterOutput);
+				setFileToCopy(value as NextAdapterOutput);
 			} else {
 				// The rest are arrays
 				for (const route of value as NextAdapterOutput[]) {

@@ -30,6 +30,7 @@ export type NextAdapterOutputs = {
 	pagesApi: NextAdapterOutput[];
 	appPages: NextAdapterOutput[];
 	appRoutes: NextAdapterOutput[];
+	middleware?: NextAdapterOutput;
 };
 
 type NextAdapter = {

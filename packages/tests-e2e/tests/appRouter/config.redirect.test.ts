@@ -72,7 +72,7 @@ test.describe("Next Config Redirect", () => {
 		});
 		await expect(el).toBeVisible();
 	});
-	//TODO: fix, was working before the rebase
+	//TODO: fix both tests, was working before the rebase
 	test.skip("Should properly encode the Location header for redirects with query params", async ({
 		page,
 	}) => {

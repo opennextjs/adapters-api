@@ -16,7 +16,6 @@ function routeMatcher(routeDefinitions: RouteDefinition[]) {
 		regexp: new RegExp(route.regex.replace("^/", optionalPrefix)),
 	}));
 
-	// TODO: add unit test for this
 	const { dynamicRoutes = {} } = PrerenderManifest ?? {};
 	const prerenderedFallbackRoutes = Object.entries(dynamicRoutes)
 		.filter(([, { fallback }]) => fallback === false)
