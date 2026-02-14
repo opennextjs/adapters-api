@@ -71,8 +71,8 @@ jobs:
 
       - name: Build worker with local configuration
         shell: bash
-        run: pnpm run build:worker:cf
+        run: pnpm turbo build:worker:cf
 
       - name: Run E2E Test in Cloudflare Environment
         shell: bash
-        run: pnpm turbo run e2e:cf
+        run: pnpm turbo e2e:cf
