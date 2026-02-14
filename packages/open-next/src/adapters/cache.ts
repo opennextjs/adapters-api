@@ -244,7 +244,13 @@ export default class Cache {
 						break;
 					}
 					case "APP_PAGE": {
-						const { html, rscData, headers, status } = data;
+						const { html, rscData, headers, status, segmentData, postponed } = data;
+						const segmentToWrite: Record<string, string> = {};
+						if (segmentData) {
+							for (const [segmentPath, segmentContent] of segmentData.entries()) {
+								segmentToWrite[segmentPath] = segmentContent.toString("utf8");
+							}
+						}
 						await globalThis.incrementalCache.set(
 							key,
 							{
@@ -254,8 +260,10 @@ export default class Cache {
 								meta: {
 									status,
 									headers,
+									postponed,
 								},
 								revalidate,
+								segmentData: segmentData ? segmentToWrite : undefined,
 							},
 							"cache"
 						);
