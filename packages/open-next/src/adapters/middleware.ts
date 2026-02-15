@@ -80,6 +80,7 @@ const defaultHandler = async (
 						isISR: result.isISR,
 						initialURL: result.initialURL,
 						resolvedRoutes: result.resolvedRoutes,
+						initialResponse: result.initialResponse,
 					};
 				}
 				try {
