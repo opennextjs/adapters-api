@@ -1,33 +1,26 @@
 ---
 name: port-pr
-description: Port PRs or commits from another repository. Use when you need to bring changes from a source repo. Invoke with /port-pr <commit-or-pr> <source-repo-path>
-argument-hint: <commit-or-pr> <source-repo-path>
+description: Port PRs from a GitHub repository. Use when you need to bring changes from a source repo. Invoke with /port-pr <github-pr-url>
+argument-hint: <github-pr-url>
 disable-model-invocation: true
 ---
 
 # Port PR Skill
 
-This skill enables porting PRs/commits from another repository into this repository.
+This skill enables porting PRs from a GitHub repository into this repository.
 
 ## Required Inputs
 
 This skill receives arguments via `$ARGUMENTS`:
-- `$0` or `$ARGUMENTS[0]`: Commit reference (hash or PR URL)
-- `$1` or `$ARGUMENTS[1]`: Source repo path
+
+- `$ARGUMENTS`: GitHub PR URL (e.g., `https://github.com/owner/repo/pull/123`)
 
 ## Workflow
 
-### 1. Extract Commit Information
+### 1. Extract PR Information
 
-**For commit hash:**
 ```bash
-git diff <commit>^..<commit>
-git log -1 --format="%s%n%n%b" <commit>
-```
-
-**For PR URL:**
-```bash
-gh pr view <url> --json mergeCommit,title,body
+gh pr view <url> --json mergeCommit,title,body,headRepository
 git diff <mergeCommit>^..<mergeCommit>
 ```
 
@@ -48,6 +41,7 @@ Run these commands in the source repository using `workdir` parameter.
 ### 4. Ask for Guidance
 
 Before implementing, ask the user for clarification when:
+
 - A file doesn't exist in the target repo
 - The code structure differs significantly between repos
 - The feature/change may not apply to this repository
@@ -56,6 +50,7 @@ Before implementing, ask the user for clarification when:
 ### 5. Implement Changes
 
 Apply similar changes following this repository's conventions:
+
 - Follow AGENTS.md guidelines (formatting, imports, naming)
 - Maintain consistent code style with surrounding code
 - Use explicit file extensions (`.js`) for local imports
@@ -64,6 +59,7 @@ Apply similar changes following this repository's conventions:
 ### 6. Verification
 
 After implementation, run:
+
 ```bash
 pnpm code:checks
 ```
@@ -73,6 +69,7 @@ This runs formatting, linting, and TypeScript checks.
 ### 7. Summary
 
 Provide a summary of:
+
 - What was ported
 - Any adaptations made
 - Files modified/created
