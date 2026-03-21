@@ -63,7 +63,7 @@
 	"devDependencies": {
 		"@cloudflare/workers-types": "catalog:",
 		"@tsconfig/strictest": "catalog:",
-		"@types/comment-json": "^2.4.7",
+		"@types/comment-json": "^2.4.5",
 		"@types/mock-fs": "catalog:",
 		"@types/node": "catalog:",
 		"@types/picomatch": "^4.0.0",
