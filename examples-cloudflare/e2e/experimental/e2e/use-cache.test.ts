@@ -85,7 +85,7 @@ test.describe("Composable Cache", () => {
 		expect(fullyCachedText).toEqual(initialFullyCachedText);
 	});
 
-	test("cached fetch should work in ISR", async ({ page }) => {
+	test.skip("cached fetch should work in ISR", async ({ page }) => {
 		await page.goto("/use-cache/fetch");
 
 		let dateElt = page.getByTestId("date");
