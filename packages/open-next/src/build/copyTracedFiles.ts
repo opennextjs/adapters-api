@@ -43,6 +43,17 @@ const EXCLUDED_PACKAGES = [
 	"next/dist/compiled/amphtml-validator",
 ];
 
+const NON_LINUX_PLATFORMS = ["darwin", "win32", "freebsd"];
+const platformPattern = NON_LINUX_PLATFORMS.join("|");
+const nonLinuxPlatformRegex = getCrossPlatformPathRegex(
+	`/node_modules/(?:@[^/]+/)?(?:[^/]+-)?(${platformPattern})-[^/]+/`,
+	{ escape: false }
+);
+
+export function isNonLinuxPlatformPackage(srcPath: string): boolean {
+	return nonLinuxPlatformRegex.test(srcPath);
+}
+
 export function isExcluded(srcPath: string): boolean {
 	return EXCLUDED_PACKAGES.some((excluded) =>
 		// `pnpm` can create a symbolic link that points to the pnpm store folder
@@ -252,6 +263,14 @@ File ${serverPath} does not exist
 	filesToCopy.forEach((to, from) => {
 		// We don't want to copy excluded packages (e.g. sharp)
 		if (isExcluded(from)) {
+			return;
+		}
+		// Skip non-Linux platform-specific native binaries (e.g. @swc/core-darwin-arm64)
+		if (!process.env.OPEN_NEXT_SKIP_PLATFORM_FILTER && isNonLinuxPlatformPackage(from)) {
+			const match = from.match(/node_modules\/(.+\/)?([^/]+-(?:darwin|win32|freebsd)-[^/]+)/);
+			if (match) {
+				logger.debug(`Skipping non-Linux platform package: ${match[2]}`);
+			}
 			return;
 		}
 		tracedFiles.push(to);
