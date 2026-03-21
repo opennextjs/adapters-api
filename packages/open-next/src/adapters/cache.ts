@@ -243,24 +243,36 @@ export default class Cache {
 						}
 						break;
 					}
-					case "APP_PAGE": {
-						const { html, rscData, headers, status } = data;
-						await globalThis.incrementalCache.set(
-							key,
-							{
-								type: "app",
-								html,
-								rsc: rscData.toString("utf8"),
-								meta: {
-									status,
-									headers,
-								},
-								revalidate,
-							},
-							"cache"
-						);
-						break;
+				case "APP_PAGE": {
+					const { html, rscData, headers, status, segmentData, postponed } =
+						data;
+					const segmentToWrite: Record<string, string> = {};
+					if (segmentData) {
+						for (const [
+							segmentPath,
+							segmentContent,
+						] of segmentData.entries()) {
+							segmentToWrite[segmentPath] = segmentContent.toString("utf8");
+						}
 					}
+					await globalThis.incrementalCache.set(
+						key,
+						{
+							type: "app",
+							html,
+							rsc: rscData.toString("utf8"),
+							meta: {
+								status,
+								headers,
+								postponed,
+							},
+							revalidate,
+							segmentData: segmentData ? segmentToWrite : undefined,
+						},
+						"cache"
+					);
+					break;
+				}
 					case "FETCH":
 						await globalThis.incrementalCache.set(key, data, "fetch");
 						break;
