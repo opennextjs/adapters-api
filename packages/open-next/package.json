@@ -46,7 +46,7 @@
 		"ts:check": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@ast-grep/napi": "^0.40.0",
+		"@ast-grep/napi": "^0.40.5",
 		"@aws-sdk/client-cloudfront": "3.984.0",
 		"@aws-sdk/client-dynamodb": "3.984.0",
 		"@aws-sdk/client-lambda": "3.984.0",

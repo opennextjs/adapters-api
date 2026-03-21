@@ -21,10 +21,13 @@ This skill receives arguments via `$ARGUMENTS`:
 
 ```bash
 gh pr view <url> --json mergeCommit,title,body,headRepository
-git diff <mergeCommit>^..<mergeCommit>
+# Exclude lockfiles from diff - they should be regenerated via pnpm install
+git diff <mergeCommit>^..<mergeCommit> -- . ':!pnpm-lock.yaml' ':!package-lock.json' ':!yarn.lock'
 ```
 
 Run these commands in the source repository using `workdir` parameter.
+
+**Important:** Never read or port lockfile changes (pnpm-lock.yaml, package-lock.json, yarn.lock). Always regenerate the lockfile by running `pnpm install` after updating package.json dependencies.
 
 ### 2. Analyze Changes
 
@@ -68,13 +71,13 @@ This runs formatting, linting, and TypeScript checks.
 
 ### 7. Run Unit Tests
 
-After code checks pass, run only the unit tests:
+After code checks pass, run only the unit tests from the tests-unit package:
 
 ```bash
-pnpm test
+pnpm --filter tests-unit test
 ```
 
-**Important:** Do NOT run `pnpm e2e:test` or any full test suite. Only unit tests should be run during the porting process.
+**Important:** Do NOT run `pnpm test` (which runs all tests), `pnpm e2e:test`, or any full test suite. Only unit tests from the tests-unit package should be run during the porting process.
 
 ### 8. Ask for Package
 
