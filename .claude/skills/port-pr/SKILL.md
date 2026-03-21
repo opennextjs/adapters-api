@@ -66,7 +66,17 @@ pnpm code:checks
 
 This runs formatting, linting, and TypeScript checks.
 
-### 7. Ask for Package
+### 7. Run Unit Tests
+
+After code checks pass, run only the unit tests:
+
+```bash
+pnpm test
+```
+
+**Important:** Do NOT run `pnpm e2e:test` or any full test suite. Only unit tests should be run during the porting process.
+
+### 8. Ask for Package
 
 Before creating the changeset, determine which package the changes apply to:
 
@@ -74,7 +84,7 @@ Ask the user: **"Which package should this changeset be for - `@opennextjs/aws` 
 
 Store the answer in `$PACKAGE_NAME` (e.g., "@opennextjs/cloudflare").
 
-### 8. Create Changeset
+### 9. Create Changeset
 
 Create a patch changeset with the link to the PR:
 
@@ -92,7 +102,7 @@ Ported PR #$PR_NUMBER from source repository
 $ARGUMENTS" > .changeset/port-pr-$PR_NUMBER.md
 ```
 
-### 9. Stage Changes and Prepare Commit
+### 10. Stage Changes and Prepare Commit
 
 Stage the changeset file and prepare a commit message (but do not commit):
 
@@ -113,7 +123,7 @@ cat /tmp/commit-message-port-pr-$PR_NUMBER.txt
 
 The changeset is staged and ready to commit. The commit message is saved at `/tmp/commit-message-port-pr-$PR_NUMBER.txt` for reference.
 
-### 10. Summary
+### 11. Summary
 
 Provide a summary of:
 
