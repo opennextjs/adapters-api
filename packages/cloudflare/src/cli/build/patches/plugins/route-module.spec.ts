@@ -355,6 +355,7 @@ const code = `class n9 {
 `;
 
 test("patch the createSnapshot function", () => {
+    //TODO: add the test for the composable cache handler
 	expect(
 		computePatchDiff(
 			"app-page.runtime.prod.js",
