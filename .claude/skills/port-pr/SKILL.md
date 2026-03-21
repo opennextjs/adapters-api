@@ -66,7 +66,54 @@ pnpm code:checks
 
 This runs formatting, linting, and TypeScript checks.
 
-### 7. Summary
+### 7. Ask for Package
+
+Before creating the changeset, determine which package the changes apply to:
+
+Ask the user: **"Which package should this changeset be for - `@opennextjs/aws` or `@opennextjs/cloudflare`?"**
+
+Store the answer in `$PACKAGE_NAME` (e.g., "@opennextjs/cloudflare").
+
+### 8. Create Changeset
+
+Create a patch changeset with the link to the PR:
+
+```bash
+# Extract PR number from the URL (e.g., "123" from "https://github.com/owner/repo/pull/123")
+PR_NUMBER=$(echo "$ARGUMENTS" | grep -oE '[0-9]+$')
+
+# Create the changeset file with the PR link (use the package name from step 7)
+echo "---
+\"$PACKAGE_NAME\": patch
+---
+
+Ported PR #$PR_NUMBER from source repository
+
+$ARGUMENTS" > .changeset/port-pr-$PR_NUMBER.md
+```
+
+### 9. Stage Changes and Prepare Commit
+
+Stage the changeset file and prepare a commit message (but do not commit):
+
+```bash
+# Stage the changeset file
+git add .changeset/port-pr-$PR_NUMBER.md
+
+# Prepare the commit message with the PR link (stored for later)
+echo "chore: port PR #$PR_NUMBER from source repository
+
+$ARGUMENTS
+
+Changeset: .changeset/port-pr-$PR_NUMBER.md" > /tmp/commit-message-port-pr-$PR_NUMBER.txt
+
+# Display the prepared commit message
+cat /tmp/commit-message-port-pr-$PR_NUMBER.txt
+```
+
+The changeset is staged and ready to commit. The commit message is saved at `/tmp/commit-message-port-pr-$PR_NUMBER.txt` for reference.
+
+### 10. Summary
 
 Provide a summary of:
 
