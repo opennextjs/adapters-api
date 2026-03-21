@@ -71,20 +71,22 @@ async function migrateCommand(args: { forceInstall: boolean }): Promise<void> {
 
 	const devVarsExists = fs.existsSync(".dev.vars");
 	printStepTitle(`${devVarsExists ? "Updating" : "Creating"} .dev.vars file`);
-	conditionalAppendFileSync(
-		".dev.vars",
-		"\nNEXTJS_ENV=development\n",
-		(content) => !/\bNEXTJS_ENV\b/.test(content)
-	);
+	conditionalAppendFileSync(".dev.vars", "NEXTJS_ENV=development\n", {
+		appendIf: (content) => !/\bNEXTJS_ENV\b/.test(content),
+		appendPrefix: "\n",
+	});
 
 	printStepTitle(`${fs.existsSync("public/_headers") ? "Updating" : "Creating"} public/_headers file`);
 	conditionalAppendFileSync(
 		"public/_headers",
-		"\n\n# https://developers.cloudflare.com/workers/static-assets/headers\n" +
+		"# https://developers.cloudflare.com/workers/static-assets/headers\n" +
 			"# https://opennext.js.org/cloudflare/caching#static-assets-caching\n" +
 			"/_next/static/*\n" +
-			"  Cache-Control: public,max-age=31536000,immutable\n\n",
-		(content) => !/^\/_next\/static\/*\b/.test(content)
+			"  Cache-Control: public,max-age=31536000,immutable\n",
+		{
+			appendIf: (content) => !/^\/_next\/static\/*\b/.test(content),
+			appendPrefix: "\n\n",
+		}
 	);
 
 	printStepTitle("Updating package.json scripts");
@@ -114,7 +116,7 @@ async function migrateCommand(args: { forceInstall: boolean }): Promise<void> {
 		logger.warn(
 			"\nPlease ensure that your package.json contains the following scripts:\n" +
 				console.log(
-					[...Object.entries(openNextScripts)].map(([key, value]) => ` - ${key}: ${value}`).join("\n")
+					Object.entries(openNextScripts).map(([key, value]) => ` - ${key}: ${value}`).join("\n")
 				) +
 				"\n"
 		);
@@ -122,18 +124,24 @@ async function migrateCommand(args: { forceInstall: boolean }): Promise<void> {
 
 	const gitIgnoreExists = fs.existsSync(".gitignore");
 	printStepTitle(`${gitIgnoreExists ? "Updating" : "Creating"} .gitignore file`);
-	conditionalAppendFileSync(
-		".gitignore",
-		"\n# OpenNext\n.open-next\n",
-		(content) => !content.includes(".open-next")
-	);
+	conditionalAppendFileSync(".gitignore", "# OpenNext\n.open-next\n", {
+		appendIf: (content) => !content.includes(".open-next"),
+		appendPrefix: "\n",
+	});
 
-	printStepTitle("Updating Next.js config");
-	conditionalAppendFileSync(
-		findNextConfig({ appPath: projectDir })!,
-		"\nimport('@opennextjs/cloudflare').then(m => m.initOpenNextCloudflareForDev());\n",
-		(content) => !content.includes("initOpenNextCloudflareForDev")
-	);
+	const nextConfig = findNextConfig({ appPath: projectDir });
+
+	if (nextConfig) {
+		printStepTitle("Updating Next.js config");
+		conditionalAppendFileSync(
+			nextConfig.path,
+			"import('@opennextjs/cloudflare').then(m => m.initOpenNextCloudflareForDev());\n",
+			{
+				appendIf: (content) => !content.includes("initOpenNextCloudflareForDev"),
+				appendPrefix: "\n",
+			}
+		);
+	}
 
 	printStepTitle("Checking for edge runtime usage");
 	try {

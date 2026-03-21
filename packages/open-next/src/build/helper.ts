@@ -337,8 +337,7 @@ export function copyEnvFile(appPath: string, packagePath: string, outputPath: st
 /**
  * Check we are in a Nextjs app by looking for the Nextjs config file.
  */
-export function checkRunningInsideNextjsApp(options: BuildOptions) {
-	const { appPath } = options;
+export function checkRunningInsideNextjsApp({ appPath }: { appPath: string }) {
 	const extension = ["js", "cjs", "mjs", "ts"].find((ext) =>
 		fs.existsSync(path.join(appPath, `next.config.${ext}`))
 	);
