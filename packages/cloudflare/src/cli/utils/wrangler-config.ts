@@ -70,10 +70,12 @@ async function getLatestCompatDate(): Promise<string | undefined> {
 		const match = latestWorkerdVersion.match(/\d+\.(\d{4})(\d{2})(\d{2})\.\d+/);
 
 		if (match) {
-			const [, year, month, date] = match;
-			const compatDate = `${year}-${month}-${date}`;
+			const [, year, month, day] = match;
+			const compatDate = `${year}-${month}-${day}`;
 
-			return compatDate;
+			const currentDate = new Date().toISOString().slice(0, 10);
+
+			return compatDate < currentDate ? compatDate : currentDate;
 		}
 	} catch {
 		/* empty */
