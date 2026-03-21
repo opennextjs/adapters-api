@@ -64,17 +64,17 @@ Apply similar changes following this repository's conventions:
 After implementation, run:
 
 ```bash
-pnpm code:checks
+pnpm code:checks 2>&1 | tail -20
 ```
 
-This runs formatting, linting, and TypeScript checks.
+This runs formatting, linting, and TypeScript checks. Only the tail of the output is shown to see the result.
 
 ### 7. Run Unit Tests
 
 After code checks pass, run only the unit tests from the tests-unit package:
 
 ```bash
-pnpm --filter tests-unit test
+pnpm --filter tests-unit test 2>&1 | tail -20
 ```
 
 **Important:** Do NOT run `pnpm test` (which runs all tests), `pnpm e2e:test`, or any full test suite. Only unit tests from the tests-unit package should be run during the porting process.
@@ -105,32 +105,46 @@ Ported PR #$PR_NUMBER from source repository
 $ARGUMENTS" > .changeset/port-pr-$PR_NUMBER.md
 ```
 
-### 10. Stage Changes and Prepare Commit
+### 10. Stage All Files
 
-Stage the changeset file and prepare a commit message (but do not commit):
+Stage all files that were modified or created during the port:
 
 ```bash
-# Stage the changeset file
-git add .changeset/port-pr-$PR_NUMBER.md
+git status --short
+git add .changeset/port-pr-$PR_NUMBER.md <other-modified-files>
+```
 
-# Prepare the commit message with the PR link (stored for later)
-echo "chore: port PR #$PR_NUMBER from source repository
+### 11. Ask for Commit
+
+Ask the user if they want to commit the changes directly:
+
+Ask the user: **"Should I stage all files and commit the ported PR changes now?"**
+
+Options:
+
+- "Yes, commit now" - Stage all files and commit with the prepared message
+- "No, I'll commit manually" - Let the user stage and commit themselves
+
+If the user chooses to commit:
+
+```bash
+# Stage all modified and new files
+git add <all-modified-files>
+
+# Commit with the prepared message
+git commit -m "chore: port PR #$PR_NUMBER from source repository
 
 $ARGUMENTS
 
-Changeset: .changeset/port-pr-$PR_NUMBER.md" > /tmp/commit-message-port-pr-$PR_NUMBER.txt
-
-# Display the prepared commit message
-cat /tmp/commit-message-port-pr-$PR_NUMBER.txt
+Changeset: .changeset/port-pr-$PR_NUMBER.md"
 ```
 
-The changeset is staged and ready to commit. The commit message is saved at `/tmp/commit-message-port-pr-$PR_NUMBER.txt` for reference.
-
-### 11. Summary
+### 12. Summary
 
 Provide a summary of:
 
 - What was ported
 - Any adaptations made
 - Files modified/created
+- Whether the changes were committed
 - Any remaining TODOs or follow-up items
