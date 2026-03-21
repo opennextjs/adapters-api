@@ -57,7 +57,7 @@ test("Revalidate tag", async ({ page, request }) => {
 
 	response = await responsePromise;
 	expect(response.headers()["x-opennext-cache"]).toEqual(undefined);
-	expect(response.headers()["x-nextjs-cache"]).toEqual(undefined);
+	expect(response.headers()["x-nextjs-cache"]).toEqual("MISS");
 
 	// If we hit the page again, it should be a hit
 	responsePromise = page.waitForResponse((response) => {
