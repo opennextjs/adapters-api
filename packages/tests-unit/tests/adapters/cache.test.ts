@@ -318,64 +318,64 @@ describe("CacheHandler", () => {
 				});
 			});
 
-		it("Should return value when cache data type is app with segmentData and postponed (Next 15+)", async () => {
-			globalThis.isNextAfter15 = true;
-			incrementalCache.get.mockResolvedValueOnce({
-				value: {
-					type: "app",
-					html: "<html></html>",
-					rsc: "rsc-data",
-					segmentData: {
-						segment1: "data1",
-						segment2: "data2",
+			it("Should return value when cache data type is app with segmentData and postponed (Next 15+)", async () => {
+				globalThis.isNextAfter15 = true;
+				incrementalCache.get.mockResolvedValueOnce({
+					value: {
+						type: "app",
+						html: "<html></html>",
+						rsc: "rsc-data",
+						segmentData: {
+							segment1: "data1",
+							segment2: "data2",
+						},
+						meta: {
+							status: 200,
+							headers: { "x-custom": "value" },
+							postponed: "postponed-data",
+						},
 					},
-					meta: {
+					lastModified: Date.now(),
+				});
+
+				const result = await cache.get("key", { kindHint: "app" });
+
+				expect(getIncrementalCache).toHaveBeenCalled();
+				expect(result).toEqual({
+					value: {
+						kind: "APP_PAGE",
+						html: "<html></html>",
+						rscData: Buffer.from("rsc-data"),
 						status: 200,
 						headers: { "x-custom": "value" },
 						postponed: "postponed-data",
+						segmentData: new Map([
+							["segment1", Buffer.from("data1")],
+							["segment2", Buffer.from("data2")],
+						]),
 					},
-				},
-				lastModified: Date.now(),
+					lastModified: Date.now(),
+				});
 			});
 
-			const result = await cache.get("key", { kindHint: "app" });
+			it("Should return value when cache data type is redirect", async () => {
+				incrementalCache.get.mockResolvedValueOnce({
+					value: {
+						type: "redirect",
+					},
+					lastModified: Date.now(),
+				});
 
-			expect(getIncrementalCache).toHaveBeenCalled();
-			expect(result).toEqual({
-				value: {
-					kind: "APP_PAGE",
-					html: "<html></html>",
-					rscData: Buffer.from("rsc-data"),
-					status: 200,
-					headers: { "x-custom": "value" },
-					postponed: "postponed-data",
-					segmentData: new Map([
-						["segment1", Buffer.from("data1")],
-						["segment2", Buffer.from("data2")],
-					]),
-				},
-				lastModified: Date.now(),
+				const result = await cache.get("key", { kindHint: "app" });
+
+				expect(getIncrementalCache).toHaveBeenCalled();
+				expect(result).toEqual({
+					value: {
+						kind: "REDIRECT",
+					},
+					lastModified: Date.now(),
+				});
 			});
-		});
-
-		it("Should return value when cache data type is redirect", async () => {
-			incrementalCache.get.mockResolvedValueOnce({
-				value: {
-					type: "redirect",
-				},
-				lastModified: Date.now(),
-			});
-
-			const result = await cache.get("key", { kindHint: "app" });
-
-			expect(getIncrementalCache).toHaveBeenCalled();
-			expect(result).toEqual({
-				value: {
-					kind: "REDIRECT",
-				},
-				lastModified: Date.now(),
-			});
-		});
 
 			it("Should return null when incremental cache fails", async () => {
 				incrementalCache.get.mockRejectedValueOnce(new Error("Error"));
