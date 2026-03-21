@@ -27,10 +27,10 @@ import { getCrossPlatformPathRegex } from "@opennextjs/aws/utils/regex.js";
 import type { Plugin } from "esbuild";
 
 import type { BuildCompleteCtx } from "../../adapter.js";
+import { normalizePath } from "../../utils/normalize-path.js";
 import { patchResRevalidate } from "../patches/plugins/res-revalidate.js";
 import { patchTurbopackRuntime } from "../patches/plugins/turbopack.js";
 import { patchUseCacheIO } from "../patches/plugins/use-cache.js";
-import { normalizePath } from "../utils/index.js";
 
 interface CodeCustomization {
 	// These patches are meant to apply on user and next generated code

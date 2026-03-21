@@ -5,17 +5,16 @@ import url from "node:url";
 
 import { compileOpenNextConfig } from "@opennextjs/aws/build/compileConfig.js";
 import { normalizeOptions } from "@opennextjs/aws/build/helper.js";
-import * as buildHelper from "@opennextjs/aws/build/helper.js";
 import { printHeader, showWarningOnWindows } from "@opennextjs/aws/build/utils.js";
 import logger from "@opennextjs/aws/logger.js";
 import { unstable_readConfig } from "wrangler";
 import type yargs from "yargs";
 
-import type { OpenNextConfig } from "../../api/config.js";
-import { createOpenNextConfigIfNotExistent, ensureCloudflareConfig } from "../build/utils/index.js";
+import type { OpenNextConfig } from "../../../api/config.js";
+import { createOpenNextConfigIfNotExistent } from "../../build/utils/create-config-files.js";
+import { ensureCloudflareConfig } from "../../build/utils/ensure-cf-config.js";
 
 export type WithWranglerArgs<T = unknown> = T & {
-	// Array of arguments that can be given to wrangler commands, including the `--config` and `--env` args.
 	wranglerArgs: string[];
 	wranglerConfigPath: string | undefined;
 	env: string | undefined;
@@ -23,59 +22,12 @@ export type WithWranglerArgs<T = unknown> = T & {
 
 export const nextAppDir = process.cwd();
 
-/**
- * Print headers and warnings for the CLI.
- *
- * @param command
- */
 export function printHeaders(command: string) {
 	printHeader(`Cloudflare ${command}`);
 
 	showWarningOnWindows();
 }
 
-/**
- * Validates that the Next.js version is supported and checks wrangler compatibility.
- *
- * Note: this function assumes that wrangler is installed.
- *
- * @param options.nextVersion The detected Next.js version string
- * @throws {Error} If the Next.js version is unsupported
- */
-export async function ensureNextjsVersionSupported({
-	nextVersion,
-}: Pick<buildHelper.BuildOptions, "nextVersion">) {
-	if (buildHelper.compareSemver(nextVersion, "<", "14.2.0")) {
-		throw new Error("Next.js version unsupported, please upgrade to version 14.2 or greater.");
-	}
-
-	const {
-		default: { version: wranglerVersion },
-	} = await import("wrangler/package.json", { with: { type: "json" } });
-
-	// We need a version of workerd that has a fix for setImmediate for Next.js 16.1+
-	// See:
-	// - https://github.com/cloudflare/workerd/pull/5869
-	// - https://github.com/opennextjs/opennextjs-cloudflare/issues/1049
-	if (
-		buildHelper.compareSemver(nextVersion, ">=", "16.1.0") &&
-		buildHelper.compareSemver(wranglerVersion, "<", "4.59.2")
-	) {
-		logger.warn(`Next.js 16.1+ requires wrangler 4.59.2 or greater (${wranglerVersion} detected).`);
-	}
-}
-
-/**
- * Compile the OpenNext config.
- *
- * When users do not specify a custom config file (using `--openNextConfigPath`),
- * the CLI will offer to create one.
- *
- * When users specify a custom config file but it doesn't exist, we throw an Error.
- *
- * @param configPath Optional path to the config file. Absolute or relative to cwd.
- * @returns OpenNext config.
- */
 export async function compileConfig(configPath: string | undefined) {
 	if (configPath && !existsSync(configPath)) {
 		throw new Error(`Custom config file not found at ${configPath}`);
@@ -91,11 +43,6 @@ export async function compileConfig(configPath: string | undefined) {
 	return { config, buildDir };
 }
 
-/**
- * Retrieve a compiled OpenNext config, and ensure it is for Cloudflare.
- *
- * @returns OpenNext config.
- */
 export async function retrieveCompiledConfig() {
 	const configPath = path.join(nextAppDir, ".open-next/.build/open-next.config.edge.mjs");
 
@@ -110,13 +57,6 @@ export async function retrieveCompiledConfig() {
 	return { config };
 }
 
-/**
- * Normalize the OpenNext options and set the logging level.
- *
- * @param config
- * @param buildDir Directory to use when building the application
- * @returns Normalized options.
- */
 export function getNormalizedOptions(config: OpenNextConfig, buildDir = nextAppDir) {
 	const require = createRequire(import.meta.url);
 	const openNextDistDir = path.dirname(require.resolve("@opennextjs/aws/index.js"));
@@ -127,22 +67,10 @@ export function getNormalizedOptions(config: OpenNextConfig, buildDir = nextAppD
 	return options;
 }
 
-/**
- * Read the Wrangler config.
- *
- * @param args Wrangler environment and config path.
- * @returns Wrangler config.
- */
 export async function readWranglerConfig(args: WithWranglerArgs) {
-	// Note: `unstable_readConfig` is sync as of wrangler 4.60.0
-	//       But it will eventually become async.
-	//       See https://github.com/cloudflare/workers-sdk/pull/12031
 	return await unstable_readConfig({ env: args.env, config: args.wranglerConfigPath });
 }
 
-/**
- * Adds flags for the wrangler config path and environment to the yargs configuration.
- */
 export function withWranglerOptions<T extends yargs.Argv>(args: T) {
 	return args
 		.option("config", {
@@ -169,11 +97,6 @@ type WranglerInputArgs = {
 	remote?: boolean | undefined;
 };
 
-/**
- *
- * @param args
- * @returns An array of arguments that can be given to wrangler commands, including the `--config` and `--env` args.
- */
 function getWranglerArgs(
 	args: WranglerInputArgs & {
 		_: (string | number)[];
@@ -196,16 +119,10 @@ function getWranglerArgs(
 		...(args.config ? ["--config", args.config] : []),
 		...(args.env ? ["--env", args.env] : []),
 		...(args.remote ? ["--remote"] : []),
-		// Note: the `args` array contains unrecognised flags.
 		...(args.args?.map((a) => `${a}`) ?? []),
 	];
 }
 
-/**
- *
- * @param args
- * @returns The inputted args, and an array of arguments that can be given to wrangler commands, including the `--config` and `--env` args.
- */
 export function withWranglerPassthroughArgs<T extends yargs.ArgumentsCamelCase<WranglerInputArgs>>(
 	args: T
 ): WithWranglerArgs<T> {

@@ -1328,6 +1328,9 @@ importers:
       cloudflare:
         specifier: ^4.4.1
         version: 4.5.0
+      comment-json:
+        specifier: ^4.5.1
+        version: 4.6.2
       enquirer:
         specifier: ^2.4.1
         version: 2.4.1
@@ -1350,6 +1353,9 @@ importers:
       '@tsconfig/strictest':
         specifier: 'catalog:'
         version: 2.0.8
+      '@types/comment-json':
+        specifier: ^2.4.5
+        version: 2.4.5
       '@types/mock-fs':
         specifier: 'catalog:'
         version: 4.13.4
@@ -6013,6 +6019,10 @@ packages:
   '@types/caseless@0.12.5':
     resolution: {integrity: sha512-hWtVTC2q7hc7xZ/RLbxapMvDMgUnDvKvMOpKal4DrMyfGBUfB1oKaZlIRr6mJL+If3bAP6sV/QneGzF6tJjZDg==}
 
+  '@types/comment-json@2.4.5':
+    resolution: {integrity: sha512-Zc70LYxV8bri2tcIVVAYQ33dsGOvcZ3Hx7MdMKEJ+cWIt5BqpjAi5Kxcxe3rplp+g6qIenPoxx44k9nGqUstmg==}
+    deprecated: This is a stub types definition. comment-json provides its own type definitions, so you do not need this installed.
+
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
 
@@ -6406,6 +6416,9 @@ packages:
 
   array-flatten@1.1.1:
     resolution: {integrity: sha512-PCVAQswWemu6UdxsDFFX/+gVeYqKAod3D3UVm91jHwynguOwAvYPhx8nNlM++NqRcK6CxxpUafjmhIdKiHibqg==}
+
+  array-timsort@1.0.3:
+    resolution: {integrity: sha512-/+3GRL7dDAGEfM6TseQk/U+mi18TU2Ms9I3UlLdUMhz2hbvGNTKdj9xniwXfUqgYhHxRx0+8UnKkvlNwVU+cWQ==}
 
   array-union@2.1.0:
     resolution: {integrity: sha512-HGyxoOTYUyCM6stUe6EJgnd4EoewAI7zMdfqO+kGjnlZmBDz/cR5pf8r/cR4Wq60sL/p0IkcjUEEPwS3GFrIyw==}
@@ -6852,6 +6865,10 @@ packages:
   commander@9.5.0:
     resolution: {integrity: sha512-KRs7WVDKg86PWiuAqhDrAQnTXZKraVcCc6vFdL14qrZ/DcWwuRo7VoiYXalXO7S5GKpqYiVEwCbgFDfxNHKJBQ==}
     engines: {node: ^12.20.0 || >=14}
+
+  comment-json@4.6.2:
+    resolution: {integrity: sha512-R2rze/hDX30uul4NZoIZ76ImSJLFxn/1/ZxtKC1L77y2X1k+yYu1joKbAtMA2Fg3hZrTOiw0I5mwVMo0cf250w==}
+    engines: {node: '>= 6'}
 
   commist@1.1.0:
     resolution: {integrity: sha512-rraC8NXWOEjhADbZe9QBNzLAN5Q3fsTPQtBV+fEVj6xKIgDgNiEVE6ZNfHpZOqfQ21YUzfVNUXLOEZquYvQPPg==}
@@ -17395,6 +17412,10 @@ snapshots:
   '@types/caseless@0.12.5':
     optional: true
 
+  '@types/comment-json@2.4.5':
+    dependencies:
+      comment-json: 4.6.2
+
   '@types/connect@3.4.38':
     dependencies:
       '@types/node': 22.19.7
@@ -17949,6 +17970,8 @@ snapshots:
 
   array-flatten@1.1.1: {}
 
+  array-timsort@1.0.3: {}
+
   array-union@2.1.0: {}
 
   arrify@2.0.1:
@@ -18465,6 +18488,11 @@ snapshots:
   commander@4.1.1: {}
 
   commander@9.5.0: {}
+
+  comment-json@4.6.2:
+    dependencies:
+      array-timsort: 1.0.3
+      esprima: 4.0.1
 
   commist@1.1.0:
     dependencies:
