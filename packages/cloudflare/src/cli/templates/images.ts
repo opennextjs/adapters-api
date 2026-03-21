@@ -89,20 +89,12 @@ export async function handleImageRequest(
 		}
 	}
 
-	const [contentTypeImageStream, imageStream] = imageResponse.body.tee();
-	const imageHeaderBytes = new Uint8Array(32);
-	const contentTypeImageReader = contentTypeImageStream.getReader({
-		mode: "byob",
-	});
-	const readImageHeaderBytesResult = await contentTypeImageReader.readAtLeast(32, imageHeaderBytes);
-	if (readImageHeaderBytesResult.value === undefined) {
-		await imageResponse.body.cancel();
-
-		return new Response('"url" parameter is valid but upstream response is invalid', {
-			status: 400,
-		});
+	const readHeaderResult = await readImageHeader(imageResponse);
+	if (readHeaderResult instanceof Response) {
+		return readHeaderResult;
 	}
-	const contentType = detectImageContentType(readImageHeaderBytesResult.value);
+
+	const { contentType, imageStream } = readHeaderResult;
 	if (contentType === null) {
 		warn(`Failed to detect content type of "${parseResult.url}"`);
 		return new Response('"url" parameter is valid but image type is not allowed', {
@@ -348,6 +340,94 @@ type ErrorResult = {
 	ok: false;
 	message: string;
 };
+
+export function parseCdnCgiImageRequest(
+	pathname: string
+): { ok: true; url: string; static: boolean } | ErrorResult {
+	const match = pathname.match(/^\/cdn-cgi\/image\/(?<options>[^/]+)\/(?<url>.+)$/);
+	if (match === null || !match.groups?.options || !match.groups?.url) {
+		return { ok: false, message: "Invalid /cdn-cgi/image/ URL format" };
+	}
+
+	const imageUrl = match.groups.url;
+	if (imageUrl.startsWith("/")) {
+		return { ok: false, message: '"url" parameter cannot be a protocol-relative URL (//)' };
+	}
+
+	let resolvedUrl: string;
+	if (imageUrl.match(/^https?:\/\//)) {
+		resolvedUrl = imageUrl;
+	} else {
+		resolvedUrl = `/${imageUrl}`;
+	}
+
+	return {
+		ok: true,
+		url: resolvedUrl,
+		static: false,
+	};
+}
+
+export async function handleCdnCgiImageRequest(requestURL: URL, env: CloudflareEnv): Promise<Response> {
+	const parseResult = parseCdnCgiImageRequest(requestURL.pathname);
+	if (!parseResult.ok) {
+		return new Response(parseResult.message, { status: 400 });
+	}
+
+	let imageResponse: Response;
+	if (parseResult.url.startsWith("/")) {
+		if (env.ASSETS === undefined) {
+			return new Response("env.ASSETS binding is not defined", { status: 404 });
+		}
+		const absoluteURL = new URL(parseResult.url, requestURL);
+		imageResponse = await env.ASSETS.fetch(absoluteURL);
+	} else {
+		imageResponse = await fetch(parseResult.url);
+	}
+
+	if (!imageResponse.ok || imageResponse.body === null) {
+		return new Response('"url" parameter is valid but upstream response is invalid', {
+			status: imageResponse.status,
+		});
+	}
+
+	const readHeaderResult = await readImageHeader(imageResponse);
+	if (readHeaderResult instanceof Response) {
+		return readHeaderResult;
+	}
+
+	const { contentType, imageStream } = readHeaderResult;
+	if (contentType === null || !SUPPORTED_CDN_CGI_INPUT_TYPES.has(contentType)) {
+		return new Response('"url" parameter is valid but image type is not allowed', { status: 400 });
+	}
+
+	if (contentType === SVG && !__IMAGES_ALLOW_SVG__) {
+		return new Response('"url" parameter is valid but image type is not allowed', { status: 400 });
+	}
+
+	return new Response(imageStream, {
+		headers: { "Content-Type": contentType },
+	});
+}
+
+async function readImageHeader(
+	imageResponse: Response
+): Promise<{ contentType: ImageContentType | null; imageStream: ReadableStream } | Response> {
+	const [contentTypeStream, imageStream] = imageResponse.body!.tee();
+	const headerBytes = new Uint8Array(32);
+	const reader = contentTypeStream.getReader({ mode: "byob" });
+	const readResult = await reader.readAtLeast(32, headerBytes);
+
+	if (readResult.value === undefined) {
+		await imageResponse.body!.cancel();
+		return new Response('"url" parameter is valid but upstream response is invalid', {
+			status: 400,
+		});
+	}
+
+	const contentType = detectImageContentType(readResult.value);
+	return { contentType, imageStream };
+}
 
 /**
  * Validates that there is exactly one "url" query parameter.
@@ -630,6 +710,8 @@ const ICO = "image/x-icon";
 const ICNS = "image/x-icns";
 const TIFF = "image/tiff";
 const BMP = "image/bmp";
+
+const SUPPORTED_CDN_CGI_INPUT_TYPES: ReadonlySet<string> = new Set([JPEG, PNG, GIF, WEBP, SVG, HEIC]);
 
 type ImageContentType =
 	| "image/avif"

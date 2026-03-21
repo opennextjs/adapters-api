@@ -11,8 +11,9 @@ import { unstable_readConfig } from "wrangler";
 import type yargs from "yargs";
 
 import type { OpenNextConfig } from "../../../api/config.js";
-import { createOpenNextConfigIfNotExistent } from "../../build/utils/create-config-files.js";
 import { ensureCloudflareConfig } from "../../build/utils/ensure-cf-config.js";
+import { askConfirmation } from "../../utils/ask-confirmation.js";
+import { createOpenNextConfigFile, findOpenNextConfig } from "../../utils/create-open-next-config.js";
 
 export type WithWranglerArgs<T = unknown> = T & {
 	wranglerArgs: string[];
@@ -28,13 +29,35 @@ export function printHeaders(command: string) {
 	showWarningOnWindows();
 }
 
+/**
+ * Compile the OpenNext config file.
+ *
+ * When users specify a custom config file but it doesn't exist, we throw an Error.
+ *
+ * @throws If a custom config path is provided but the file does not exist.
+ * @throws If no config file is found and the user declines to create one.
+ *
+ * @param configPath Optional path to the config file. Absolute or relative to cwd.
+ * @returns The compiled OpenNext config and the build directory.
+ *
+ */
 export async function compileConfig(configPath: string | undefined) {
 	if (configPath && !existsSync(configPath)) {
 		throw new Error(`Custom config file not found at ${configPath}`);
 	}
 
+	configPath ??= findOpenNextConfig(nextAppDir);
+
 	if (!configPath) {
-		configPath = await createOpenNextConfigIfNotExistent(nextAppDir);
+		const answer = await askConfirmation(
+			"Missing required `open-next.config.ts` file, do you want to create one?"
+		);
+
+		if (!answer) {
+			throw new Error("The `open-next.config.ts` file is required, aborting!");
+		}
+
+		configPath = createOpenNextConfigFile(nextAppDir, { cache: false });
 	}
 
 	const { config, buildDir } = await compileOpenNextConfig(configPath, { compileEdge: true });
