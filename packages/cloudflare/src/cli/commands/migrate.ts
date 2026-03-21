@@ -116,7 +116,9 @@ async function migrateCommand(args: { forceInstall: boolean }): Promise<void> {
 		logger.warn(
 			"\nPlease ensure that your package.json contains the following scripts:\n" +
 				console.log(
-					Object.entries(openNextScripts).map(([key, value]) => ` - ${key}: ${value}`).join("\n")
+					Object.entries(openNextScripts)
+						.map(([key, value]) => ` - ${key}: ${value}`)
+						.join("\n")
 				) +
 				"\n"
 		);
