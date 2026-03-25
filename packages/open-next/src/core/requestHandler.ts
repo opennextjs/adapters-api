@@ -7,7 +7,6 @@ import { runWithOpenNextRequestContext } from "@/utils/promise";
 
 import { debug, error } from "../adapters/logger";
 
-import { patchAsyncStorage } from "./patchAsyncStorage";
 import { adapterHandler } from "./routing/adapterHandler";
 import { constructNextUrl, convertRes, createServerResponse } from "./routing/util";
 import routingHandler, {
@@ -21,10 +20,6 @@ import routingHandler, {
 
 // This is used to identify requests in the cache
 globalThis.__openNextAls = new AsyncLocalStorage();
-
-//#override patchAsyncStorage
-patchAsyncStorage();
-//#endOverride
 
 export async function openNextHandler(
 	internalEvent: InternalEvent,
@@ -161,9 +156,6 @@ export async function openNextHandler(
 				// 3. OUR CHOICE: We could pass a purpose prefetch header to the serverless function to make next believe that the request is a prefetch request and not trigger revalidation (This could potentially break in the future if next changes the behavior of prefetch requests)
 				headers: {
 					...headers,
-					//#override appendPrefetch
-					purpose: "prefetch",
-					//#endOverride
 				},
 				body: preprocessedEvent.body,
 				remoteAddress: preprocessedEvent.remoteAddress,

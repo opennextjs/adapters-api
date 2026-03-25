@@ -5,7 +5,6 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { loadMiddlewareManifest } from "@opennextjs/aws/adapters/config/util.js";
-import { bundleNextServer } from "@opennextjs/aws/build/bundleNextServer.js";
 import { compileCache } from "@opennextjs/aws/build/compileCache.js";
 import { copyAdapterFiles } from "@opennextjs/aws/build/copyAdapterFiles.js";
 import { copyTracedFiles } from "@opennextjs/aws/build/copyTracedFiles.js";
@@ -165,14 +164,6 @@ async function generateBundle(
 		addDenoJson(outputPath, packagePath);
 	}
 
-	// Bundle next server if necessary
-	const isBundled = fnOptions.experimentalBundledNextServer ?? false;
-	if (isBundled) {
-		await bundleNextServer(outPackagePath, appPath, {
-			minify: options.minify,
-		});
-	}
-
 	// Copy middleware
 	if (!config.middleware?.external) {
 		fs.copyFileSync(
@@ -208,7 +199,6 @@ async function generateBundle(
 			packagePath,
 			outputDir: outputPath,
 			routes: fnOptions.routes ?? ["app/page.tsx"],
-			bundledNextServer: isBundled,
 			skipServerFiles: options.config.dangerous?.useAdapterOutputs === true,
 		});
 		tracedFiles = oldTracedFileOutput.tracedFiles;
@@ -245,19 +235,9 @@ async function generateBundle(
 	//       "serverless-http" package which is not a dependency in user's
 	//       Next.js app.
 
-	const disableNextPrebundledReact =
-		buildHelper.compareSemver(options.nextVersion, ">=", "13.5.1") ||
-		buildHelper.compareSemver(options.nextVersion, "<=", "13.4.1");
-
 	const overrides = fnOptions.override ?? {};
 
-	const isBefore13413 = buildHelper.compareSemver(options.nextVersion, "<=", "13.4.13");
-	const isAfter141 = buildHelper.compareSemver(options.nextVersion, ">=", "14.1");
-	const isAfter142 = buildHelper.compareSemver(options.nextVersion, ">=", "14.2");
-	const isAfter154 = buildHelper.compareSemver(options.nextVersion, ">=", "15.4.0");
-	const useAdapterHandler = config.dangerous?.useAdapterOutputs === true;
-
-	const disableRouting = isBefore13413 || config.middleware?.external;
+	const disableRouting = config.middleware?.external;
 
 	const updater = new ContentUpdater(options);
 
@@ -269,14 +249,7 @@ async function generateBundle(
 		openNextReplacementPlugin({
 			name: `requestHandlerOverride ${name}`,
 			target: getCrossPlatformPathRegex("core/requestHandler.js"),
-			deletes: [
-				...(disableNextPrebundledReact ? ["applyNextjsPrebundledReact"] : []),
-				...(disableRouting ? ["withRouting"] : []),
-				...(isAfter142 ? ["patchAsyncStorage"] : []),
-				...(isAfter141 ? ["appendPrefetch"] : []),
-				...(isAfter154 ? [] : ["setInitialURL"]),
-				...(useAdapterHandler ? ["useRequestHandler"] : ["useAdapterHandler"]),
-			],
+			deletes: disableRouting ? ["withRouting"] : [],
 		}),
 
 		openNextResolvePlugin({
@@ -311,11 +284,6 @@ async function generateBundle(
 				].join(""),
 			},
 			plugins,
-			alias: isBundled
-				? {
-						"next/dist/server/next-server.js": "./next-server.runtime.prod.js",
-					}
-				: {},
 		},
 		options
 	);

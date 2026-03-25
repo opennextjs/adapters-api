@@ -111,12 +111,6 @@ describe("CacheHandler", () => {
 		});
 
 		describe("fetch cache", () => {
-			it("Should retrieve cache from fetch cache when fetch cache is true (next 13.5+)", async () => {
-				await cache.get("key", { fetchCache: true });
-
-				expect(getFetchCacheSpy).toHaveBeenCalled();
-			});
-
 			it("Should retrieve cache from fetch cache when hint is fetch (next14)", async () => {
 				await cache.get("key", { kindHint: "fetch" });
 
@@ -124,10 +118,6 @@ describe("CacheHandler", () => {
 			});
 
 			describe("next15", () => {
-				beforeEach(() => {
-					globalThis.isNextAfter15 = true;
-				});
-
 				it("Should retrieve cache from fetch cache when hint is fetch", async () => {
 					await cache.get("key", { kind: "FETCH" });
 
@@ -228,7 +218,7 @@ describe("CacheHandler", () => {
 				expect(getIncrementalCache).toHaveBeenCalled();
 				expect(result).toEqual({
 					value: {
-						kind: "ROUTE",
+						kind: "APP_ROUTE",
 						body: Buffer.from("{}"),
 					},
 					lastModified: Date.now(),
@@ -254,7 +244,7 @@ describe("CacheHandler", () => {
 				expect(getIncrementalCache).toHaveBeenCalled();
 				expect(result).toEqual({
 					value: {
-						kind: "ROUTE",
+						kind: "APP_ROUTE",
 						body: Buffer.from("hello"),
 						headers: {
 							"content-type": "image/png",
@@ -282,10 +272,13 @@ describe("CacheHandler", () => {
 				expect(getIncrementalCache).toHaveBeenCalled();
 				expect(result).toEqual({
 					value: {
-						kind: "PAGE",
+						kind: "APP_PAGE",
 						html: "<html></html>",
-						pageData: "rsc",
+						rscData: Buffer.from("rsc"),
 						status: 200,
+						headers: undefined,
+						postponed: undefined,
+						segmentData: new Map(),
 					},
 					lastModified: Date.now(),
 				});
@@ -309,10 +302,11 @@ describe("CacheHandler", () => {
 				expect(getIncrementalCache).toHaveBeenCalled();
 				expect(result).toEqual({
 					value: {
-						kind: "PAGE",
+						kind: "PAGES",
 						html: "<html></html>",
 						pageData: {},
 						status: 200,
+						headers: undefined,
 					},
 					lastModified: Date.now(),
 				});
@@ -757,7 +751,7 @@ describe("CacheHandler", () => {
 				expect(tagCache.getLastModified).not.toHaveBeenCalled();
 				expect(tagCache.hasBeenRevalidated).not.toHaveBeenCalled();
 				expect(result).not.toBeNull();
-				expect(result?.value?.kind).toEqual("ROUTE");
+				expect(result?.value?.kind).toEqual("APP_ROUTE");
 			});
 
 			it("Should not bypass tag cache validation when shouldBypassTagCache is false", async () => {
@@ -815,7 +809,7 @@ describe("CacheHandler", () => {
 				expect(tagCache.getLastModified).not.toHaveBeenCalled();
 				expect(tagCache.hasBeenRevalidated).not.toHaveBeenCalled();
 				expect(result).not.toBeNull();
-				expect(result?.value?.kind).toEqual("ROUTE");
+				expect(result?.value?.kind).toEqual("APP_ROUTE");
 			});
 		});
 	});

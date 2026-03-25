@@ -43,7 +43,6 @@ export async function buildExternalNodeMiddleware(options: buildHelper.BuildOpti
 		packagePath,
 		outputDir: outputPath,
 		routes: [],
-		bundledNextServer: false,
 		skipServerFiles: true,
 	});
 

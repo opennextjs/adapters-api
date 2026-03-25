@@ -341,15 +341,6 @@ export interface FunctionOptions extends DefaultFunctionOptions {
 	 */
 	override?: OverrideOptions;
 
-	/**
-	 * Bundle Next server into a single file.
-	 * This results in a way smaller bundle but it might break for some cases.
-	 * This option will probably break on every new Next.js version.
-	 * @default false
-	 * @deprecated This is not supported in 14.2+
-	 */
-	experimentalBundledNextServer?: boolean;
-
 	routePreloadingBehavior?: RoutePreloadingBehavior;
 }
 
