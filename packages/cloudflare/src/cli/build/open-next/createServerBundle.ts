@@ -7,7 +7,6 @@ import path from "node:path";
 import { loadMiddlewareManifest } from "@opennextjs/aws/adapters/config/util.js";
 import { compileCache } from "@opennextjs/aws/build/compileCache.js";
 import { copyAdapterFiles } from "@opennextjs/aws/build/copyAdapterFiles.js";
-import { copyTracedFiles } from "@opennextjs/aws/build/copyTracedFiles.js";
 import { copyMiddlewareResources, generateEdgeBundle } from "@opennextjs/aws/build/edge/createEdgeBundle.js";
 import * as buildHelper from "@opennextjs/aws/build/helper.js";
 import { installDependencies } from "@opennextjs/aws/build/installDeps.js";
@@ -187,23 +186,11 @@ async function generateBundle(
 	let manifests: any = {};
 
 	// Copy all necessary traced files
-	if (config.dangerous?.useAdapterOutputs) {
-		if (!buildCtx) {
-			throw new Error("should not happen");
-		}
-		tracedFiles = await copyAdapterFiles(options, name, packagePath, buildCtx.outputs);
-		//TODO: we should load manifests here
-	} else {
-		const oldTracedFileOutput = await copyTracedFiles({
-			buildOutputPath: appBuildOutputPath,
-			packagePath,
-			outputDir: outputPath,
-			routes: fnOptions.routes ?? ["app/page.tsx"],
-			skipServerFiles: options.config.dangerous?.useAdapterOutputs === true,
-		});
-		tracedFiles = oldTracedFileOutput.tracedFiles;
-		manifests = oldTracedFileOutput.manifests;
+	if (!buildCtx) {
+		throw new Error("should not happen");
 	}
+	tracedFiles = await copyAdapterFiles(options, name, packagePath, buildCtx.outputs);
+	//TODO: we should load manifests here
 
 	// TODO(vicb): what should `nodePackages` be for the adapter
 	// if (getOpenNextConfig(options).cloudflare?.useWorkerdCondition !== false) {

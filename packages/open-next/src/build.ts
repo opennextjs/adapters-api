@@ -47,17 +47,12 @@ export async function build(openNextConfigPath?: string, nodeExternals?: string)
 	// Build Next.js app
 	printHeader("Building Next.js app");
 	setStandaloneBuildMode(options);
-	if (config.dangerous?.useAdapterOutputs) {
-		logger.info("Using adapter outputs for building OpenNext bundle.");
-		process.env.NEXT_ADAPTER_PATH = require.resolve("./adapter.js");
-	}
+	logger.info("Using adapter outputs for building OpenNext bundle.");
+	process.env.NEXT_ADAPTER_PATH = require.resolve("./adapter.js");
 	buildHelper.initOutputDir(options);
 	buildNextjsApp(options);
 
-	if (config.dangerous?.useAdapterOutputs) {
-		logger.info("Using adapter outputs for building OpenNext bundle.");
-		return;
-	}
+	return;
 
 	// Generate deployable bundle
 	printHeader("Generating bundle");

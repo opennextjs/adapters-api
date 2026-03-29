@@ -40,13 +40,11 @@ const defaultHandler = async (
 
 	const assetResolver = await resolveAssetResolver(middlewareConfig?.assetResolver);
 
-	//#override includeCacheInMiddleware
 	globalThis.tagCache = await resolveTagCache(middlewareConfig?.override?.tagCache);
 
 	globalThis.queue = await resolveQueue(middlewareConfig?.override?.queue);
 
 	globalThis.incrementalCache = await resolveIncrementalCache(middlewareConfig?.override?.incrementalCache);
-	//#endOverride
 
 	const requestId = Math.random().toString(36);
 

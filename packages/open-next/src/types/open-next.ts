@@ -100,13 +100,6 @@ export interface DangerousOptions {
 	 */
 	disableIncrementalCache?: boolean;
 	/**
-	 * Enable the cache interception.
-	 * Every request will go through the cache interceptor, if it is found in the cache, it will be returned without going through NextServer.
-	 * Not every feature is covered by the cache interceptor and it should fallback to the NextServer if the cache is not found.
-	 * @default false
-	 */
-	enableCacheInterception?: boolean;
-	/**
 	 * Function to determine which headers or cookies takes precedence.
 	 * By default, the middleware headers and cookies will override the handler headers and cookies.
 	 * This is executed for every request and after next config headers and middleware has executed.
@@ -123,14 +116,6 @@ export interface DangerousOptions {
 	 * @default false
 	 */
 	middlewareHeadersOverrideNextConfigHeaders?: boolean;
-
-	/**
-	 * Whether to use the outputs from Next.js adapter API.
-	 * This is a very experimental feature as it may not be stabilized in Next.js yet.
-	 * This will be the default in the future once Next.js adapter API is stabilized.
-	 * @default false
-	 */
-	useAdapterOutputs?: boolean;
 }
 
 export type BaseOverride = {
