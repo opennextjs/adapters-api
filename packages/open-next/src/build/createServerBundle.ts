@@ -177,7 +177,13 @@ async function generateBundle(
 	let manifests: ReturnType<typeof getManifests> = {} as ReturnType<typeof getManifests>;
 
 	// Copy all necessary traced files
-	tracedFiles = await copyAdapterFiles(options, name, packagePath, nextOutputs!);
+	if (!nextOutputs) {
+		throw new Error(
+			"createServerBundle was called without adapter outputs. " +
+				"Please ensure NextAdapterOutputs is provided to createServerBundle."
+		);
+	}
+	tracedFiles = await copyAdapterFiles(options, name, packagePath, nextOutputs);
 	//TODO: we should load manifests here
 
 	const additionalCodePatches = codeCustomization?.additionalCodePatches ?? [];
