@@ -1,14 +1,29 @@
-const config = {
+import type { OpenNextConfig } from "@opennextjs/aws/types/open-next.js";
+
+export default {
 	default: {
 		override: {
-			wrapper: "aws-lambda-streaming",
-			queue: "sqs-lite",
-			incrementalCache: "s3-lite",
-			tagCache: "dynamodb-lite",
+			wrapper: "express-dev",
+			converter: "node",
+			incrementalCache: "fs-dev",
+			queue: "direct",
+			tagCache: "fs-dev-nextMode",
 		},
 	},
-	functions: {},
-	buildCommand: "npx turbo build",
-};
 
-export default config;
+	imageOptimization: {
+		override: {
+			wrapper: "dummy",
+			converter: "dummy",
+		},
+		loader: "fs-dev",
+	},
+
+	dangerous: {
+		enableCacheInterception: true,
+		useAdapterOutputs: true,
+	},
+
+	// You can override the build command here so that you don't have to rebuild next every time you make a change
+	//buildCommand: "echo 'No build command'",
+} satisfies OpenNextConfig;

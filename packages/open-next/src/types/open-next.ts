@@ -27,6 +27,7 @@ export type InternalEvent = {
 	// Full URL - starts with "https://on/" when the host is not available
 	readonly url: string;
 	readonly body?: Buffer;
+	//TODO: change the type of headers to Record<string, string | string[]>
 	readonly headers: Record<string, string>;
 	readonly query: Record<string, string | string[]>;
 	readonly cookies: Record<string, string>;
@@ -46,6 +47,24 @@ export type InternalResult = {
 	isBase64Encoded: boolean;
 	rewriteStatusCode?: number;
 } & BaseEventOrResult<"core">;
+
+/**
+ * This event is returned by the cache interceptor and the routing handler.
+ * It is then handled by either the external middleware or the classic request handler.
+ * This is designed for PPR support inside the cache interceptor.
+ */
+export type PartialResult = {
+	/**
+	 * Resume request that will be forwarded to the handler
+	 */
+	resumeRequest: InternalEvent;
+	/**
+	 * The result that was generated so far by the cache interceptor
+	 * It contains the first part of the body that we'll need to forward to the client immediately
+	 * As well as the headers and status code
+	 */
+	result: InternalResult;
+};
 
 export interface StreamCreator {
 	writeHeaders(prelude: { statusCode: number; cookies: string[]; headers: Record<string, string> }): Writable;
@@ -188,6 +207,13 @@ export interface RoutingResult {
 	resolvedRoutes: ResolvedRoute[];
 	// The status code applied to a middleware rewrite
 	rewriteStatusCode?: number;
+
+	/**
+	 * This is the response generated when using PPR in the cache interceptor.
+	 * It contains the initial part of the response that should be sent to the client immediately.
+	 * Can only be present when using cache interception and no external middleware.
+	 */
+	initialResponse?: InternalResult;
 }
 
 export interface MiddlewareResult extends RoutingResult, BaseEventOrResult<"middleware"> {}

@@ -29,6 +29,12 @@ export function patchRouteModules(updater: ContentUpdater, buildOpts: BuildOptio
 				const outputPath = path.join(outputDir, "server-functions/default");
 				const cacheHandler = path.join(outputPath, getPackagePath(buildOpts), "cache.cjs");
 				contents = patchCode(contents, getIncrementalCacheRule(cacheHandler));
+				const composableCacheHandler = path.join(
+					outputPath,
+					getPackagePath(buildOpts),
+					"composable-cache.cjs"
+				);
+				contents = patchCode(contents, createComposableCacheHandlersRule(composableCacheHandler));
 				contents = patchCode(contents, forceTrustHostHeader);
 				return contents;
 			},
@@ -58,6 +64,22 @@ rule:
 fix: |-
   const $HANDLER_PATH = null;
   let $CACHE_HANDLER = require('${normalizePath(handlerPath)}').default;
+`;
+}
+
+export function createComposableCacheHandlersRule(handlerPath: string) {
+	return `
+rule:
+  kind: await_expression
+  inside:
+    kind: method_definition
+    stopBy: end
+    has:
+      kind: property_identifier
+      regex: loadCustomCacheHandlers
+
+fix: |-
+  require('${normalizePath(handlerPath)}')
 `;
 }
 
