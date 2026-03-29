@@ -27,6 +27,7 @@ export type InternalEvent = {
 	// Full URL - starts with "https://on/" when the host is not available
 	readonly url: string;
 	readonly body?: Buffer;
+	//TODO: change the type of headers to Record<string, string | string[]>
 	readonly headers: Record<string, string>;
 	readonly query: Record<string, string | string[]>;
 	readonly cookies: Record<string, string>;
@@ -46,6 +47,24 @@ export type InternalResult = {
 	isBase64Encoded: boolean;
 	rewriteStatusCode?: number;
 } & BaseEventOrResult<"core">;
+
+/**
+ * This event is returned by the cache interceptor and the routing handler.
+ * It is then handled by either the external middleware or the classic request handler.
+ * This is designed for PPR support inside the cache interceptor.
+ */
+export type PartialResult = {
+	/**
+	 * Resume request that will be forwarded to the handler
+	 */
+	resumeRequest: InternalEvent;
+	/**
+	 * The result that was generated so far by the cache interceptor
+	 * It contains the first part of the body that we'll need to forward to the client immediately
+	 * As well as the headers and status code
+	 */
+	result: InternalResult;
+};
 
 export interface StreamCreator {
 	writeHeaders(prelude: { statusCode: number; cookies: string[]; headers: Record<string, string> }): Writable;
@@ -81,13 +100,6 @@ export interface DangerousOptions {
 	 */
 	disableIncrementalCache?: boolean;
 	/**
-	 * Enable the cache interception.
-	 * Every request will go through the cache interceptor, if it is found in the cache, it will be returned without going through NextServer.
-	 * Not every feature is covered by the cache interceptor and it should fallback to the NextServer if the cache is not found.
-	 * @default false
-	 */
-	enableCacheInterception?: boolean;
-	/**
 	 * Function to determine which headers or cookies takes precedence.
 	 * By default, the middleware headers and cookies will override the handler headers and cookies.
 	 * This is executed for every request and after next config headers and middleware has executed.
@@ -104,14 +116,6 @@ export interface DangerousOptions {
 	 * @default false
 	 */
 	middlewareHeadersOverrideNextConfigHeaders?: boolean;
-
-	/**
-	 * Whether to use the outputs from Next.js adapter API.
-	 * This is a very experimental feature as it may not be stabilized in Next.js yet.
-	 * This will be the default in the future once Next.js adapter API is stabilized.
-	 * @default false
-	 */
-	useAdapterOutputs?: boolean;
 }
 
 export type BaseOverride = {
@@ -188,6 +192,13 @@ export interface RoutingResult {
 	resolvedRoutes: ResolvedRoute[];
 	// The status code applied to a middleware rewrite
 	rewriteStatusCode?: number;
+
+	/**
+	 * This is the response generated when using PPR in the cache interceptor.
+	 * It contains the initial part of the response that should be sent to the client immediately.
+	 * Can only be present when using cache interception and no external middleware.
+	 */
+	initialResponse?: InternalResult;
 }
 
 export interface MiddlewareResult extends RoutingResult, BaseEventOrResult<"middleware"> {}
@@ -340,15 +351,6 @@ export interface FunctionOptions extends DefaultFunctionOptions {
 	 * Enable overriding the default lambda.
 	 */
 	override?: OverrideOptions;
-
-	/**
-	 * Bundle Next server into a single file.
-	 * This results in a way smaller bundle but it might break for some cases.
-	 * This option will probably break on every new Next.js version.
-	 * @default false
-	 * @deprecated This is not supported in 14.2+
-	 */
-	experimentalBundledNextServer?: boolean;
 
 	routePreloadingBehavior?: RoutePreloadingBehavior;
 }

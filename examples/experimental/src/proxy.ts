@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 
 import { type NextRequest, NextResponse } from "next/server";
 
-export default function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
 	if (request.nextUrl.pathname === "/api/hello") {
 		return NextResponse.json({
 			name: "World",
@@ -22,7 +22,3 @@ export default function middleware(request: NextRequest) {
 		},
 	});
 }
-
-export const config = {
-	runtime: "nodejs",
-};

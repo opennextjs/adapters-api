@@ -43,13 +43,6 @@ export type CloudflareOverrides = {
 	cachePurge?: Override<CDNInvalidationHandler>;
 
 	/**
-	 * Enable cache interception
-	 * Should be `false` when PPR is used
-	 * @default false
-	 */
-	enableCacheInterception?: boolean;
-
-	/**
 	 * Route preloading behavior.
 	 * Using a value other than "none" can result in higher CPU usage on cold starts.
 	 * @default "none"
@@ -64,14 +57,7 @@ export type CloudflareOverrides = {
  * @returns the OpenNext configuration object
  */
 export function defineCloudflareConfig(config: CloudflareOverrides = {}): OpenNextConfig {
-	const {
-		incrementalCache,
-		tagCache,
-		queue,
-		cachePurge,
-		enableCacheInterception = true,
-		routePreloadingBehavior = "none",
-	} = config;
+	const { incrementalCache, tagCache, queue, cachePurge, routePreloadingBehavior = "none" } = config;
 
 	return {
 		default: {
@@ -90,10 +76,6 @@ export function defineCloudflareConfig(config: CloudflareOverrides = {}): OpenNe
 		edgeExternals: ["node:crypto"],
 		cloudflare: {
 			useWorkerdCondition: true,
-		},
-		dangerous: {
-			enableCacheInterception,
-			useAdapterOutputs: true,
 		},
 		middleware: {
 			external: true,

@@ -84,13 +84,14 @@ export default {
 		return {
 			...nextConfig,
 			cacheHandler: cache.cache, //TODO: compute that here,
+			cacheHandlers: {
+				default: cache.composableCache,
+				remote: cache.composableCache,
+			},
 			cacheMaxMemorySize: 0,
 			experimental: {
 				...nextConfig.experimental,
 				trustHostHeader: true,
-				cacheHandlers: {
-					default: cache.composableCache,
-				},
 			},
 		};
 	},

@@ -11,7 +11,6 @@ import {
 	getNormalizedOptions,
 	nextAppDir,
 	printHeaders,
-	readWranglerConfig,
 	withWranglerOptions,
 	withWranglerPassthroughArgs,
 } from "./utils.js";
@@ -36,11 +35,8 @@ async function buildCommand(
 
 	const projectOpts = { ...args, minify: !args.noMinify, sourceDir: nextAppDir };
 
-	if (config.dangerous?.useAdapterOutputs) {
-		console.log("Using adapter outputs for building OpenNext bundle.");
-		const require = createRequire(import.meta.url);
-		process.env.NEXT_ADAPTER_PATH = require.resolve("../adapter.js");
-	}
+	const require = createRequire(import.meta.url);
+	process.env.NEXT_ADAPTER_PATH = require.resolve("../adapter.js");
 
 	// Ask whether a `wrangler.jsonc` should be created when no config file exists.
 	// Note: We don't ask when a custom config file is specified via `--config`
@@ -49,9 +45,7 @@ async function buildCommand(
 		await createWranglerConfigIfNotExistent(projectOpts);
 	}
 
-	const wranglerConfig = await readWranglerConfig(args);
-
-	await buildImpl(options, config, projectOpts, wranglerConfig);
+	await buildImpl(options, projectOpts);
 }
 
 /**
