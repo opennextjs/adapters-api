@@ -332,10 +332,11 @@ export async function cacheInterceptor(
 			// For PPR, we need to check the fallback value to get the correct cache key
 			// We don't want to override a static route though
 			if (isDynamicISR && !isStaticRoute) {
-				pathToUse = Object.entries(PrerenderManifest?.dynamicRoutes ?? {}).find(([, dr]) => {
+				const fallback = Object.entries(PrerenderManifest?.dynamicRoutes ?? {}).find(([, dr]) => {
 					const regex = new RegExp(dr.routeRegex);
 					return regex.test(localizedPath);
-				})?.[1].fallback! as string;
+				})?.[1].fallback;
+				pathToUse = typeof fallback === "string" ? fallback : localizedPath;
 			} else if (localizedPath === "") {
 				pathToUse = "/index";
 			}

@@ -2,7 +2,11 @@ import { expect, test } from "vitest";
 
 import { computePatchDiff } from "../../utils/test-patch.js";
 
-import { forceTrustHostHeader, getIncrementalCacheRule } from "./route-module.js";
+import {
+	createComposableCacheHandlersRule,
+	forceTrustHostHeader,
+	getIncrementalCacheRule,
+} from "./route-module.js";
 
 const code = `class n9 {
     constructor({ userland: e10, definition: t10, distDir: r10, projectDir: n10 }) {
@@ -354,8 +358,55 @@ const code = `class n9 {
 }
 `;
 
-test("patch the createSnapshot function", () => {
-	//TODO: add the test for the composable cache handler
+const composableCacheCode = `class n9 {
+    async loadCustomCacheHandlers(e10, t10) {
+    {
+        const { cacheHandlers: a2 } = t10.experimental;
+        if (!a2) return;
+        for (const [s2, o2] of Object.entries(a2)) {
+        if (!o2) continue;
+        n5(s2, rn(await n6(o2)));
+        }
+    }
+    }
+    async getIncrementalCache(e10, t10, n10) {
+    {
+        let i2, { cacheHandler: a2 } = t10;
+        let o2 = "path/to/project";
+        return await this.loadCustomCacheHandlers(e10, t10), new n3({ CurCacheHandler: i2 });
+    }
+    }
+}
+`;
+
+test("patch the createComposableCacheHandlersRule", () => {
+	expect(
+		computePatchDiff(
+			"app-page.runtime.prod.js",
+			composableCacheCode,
+			createComposableCacheHandlersRule(".open-next/server-functions/default/cache.cjs")
+		)
+	).toMatchInlineSnapshot(`
+		"Index: app-page.runtime.prod.js
+		===================================================================
+		--- app-page.runtime.prod.js
+		+++ app-page.runtime.prod.js
+		@@ -4,9 +4,9 @@
+		         const { cacheHandlers: a2 } = t10.experimental;
+		         if (!a2) return;
+		         for (const [s2, o2] of Object.entries(a2)) {
+		         if (!o2) continue;
+		-        n5(s2, rn(await n6(o2)));
+		+        n5(s2, rn(require('.open-next/server-functions/default/cache.cjs')));
+		         }
+		     }
+		     }
+		     async getIncrementalCache(e10, t10, n10) {
+		"
+	`);
+});
+
+test("patch the getIncrementalCache function", () => {
 	expect(
 		computePatchDiff(
 			"app-page.runtime.prod.js",
