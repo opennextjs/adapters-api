@@ -1,4 +1,5 @@
 import {
+	chmodSync,
 	copyFileSync,
 	cpSync,
 	existsSync,
@@ -30,6 +31,21 @@ import { INSTRUMENTATION_TRACE_FILE, MIDDLEWARE_TRACE_FILE } from "./constant.js
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
+/**
+ * Copies a file and ensures the destination is writable.
+ * This is necessary because copyFileSync preserves file permissions,
+ * and source files may be read-only (e.g., in Bazel's node_modules).
+ * Without this, subsequent patches would fail with EACCES errors.
+ */
+export function copyFileAndMakeOwnerWritable(src: string, dest: string): void {
+	copyFileSync(src, dest);
+	// Ensure the copied file is writable (add owner write permission)
+	const stats = statSync(dest);
+	if (!(stats.mode & 0o200)) {
+		chmodSync(dest, stats.mode | 0o200);
+	}
+}
+
 //TODO: we need to figure which packages we could safely remove
 const EXCLUDED_PACKAGES = [
 	"caniuse-lite",
@@ -42,6 +58,17 @@ const EXCLUDED_PACKAGES = [
 	"next/dist/compiled/babel-packages",
 	"next/dist/compiled/amphtml-validator",
 ];
+
+const NON_LINUX_PLATFORMS = ["darwin", "win32", "freebsd"];
+const platformPattern = NON_LINUX_PLATFORMS.join("|");
+const nonLinuxPlatformRegex = getCrossPlatformPathRegex(
+	`/node_modules/(?:@[^/]+/)?(?:[^/]+-)?(${platformPattern})-[^/]+/`,
+	{ escape: false }
+);
+
+export function isNonLinuxPlatformPackage(srcPath: string): boolean {
+	return nonLinuxPlatformRegex.test(srcPath);
+}
 
 export function isExcluded(srcPath: string): boolean {
 	return EXCLUDED_PACKAGES.some((excluded) =>
@@ -58,7 +85,7 @@ export function isExcluded(srcPath: string): boolean {
 function copyPatchFile(outputDir: string) {
 	const patchFile = path.join(__dirname, "patch", "patchedAsyncStorage.js");
 	const outputPatchFile = path.join(outputDir, "patchedAsyncStorage.cjs");
-	copyFileSync(patchFile, outputPatchFile);
+	copyFileAndMakeOwnerWritable(patchFile, outputPatchFile);
 }
 
 interface CopyTracedFilesOptions {
@@ -196,7 +223,7 @@ File ${serverPath} does not exist
 	// Check for instrumentation trace file
 	if (existsSync(path.join(dotNextDir, INSTRUMENTATION_TRACE_FILE))) {
 		// We still need to copy the nft.json file so that computeCopyFilesForPage doesn't throw
-		copyFileSync(
+		copyFileAndMakeOwnerWritable(
 			path.join(dotNextDir, INSTRUMENTATION_TRACE_FILE),
 			path.join(standaloneNextDir, INSTRUMENTATION_TRACE_FILE)
 		);
@@ -206,7 +233,7 @@ File ${serverPath} does not exist
 
 	if (existsSync(path.join(dotNextDir, MIDDLEWARE_TRACE_FILE))) {
 		// We still need to copy the nft.json file so that computeCopyFilesForPage doesn't throw
-		copyFileSync(
+		copyFileAndMakeOwnerWritable(
 			path.join(dotNextDir, MIDDLEWARE_TRACE_FILE),
 			path.join(standaloneNextDir, MIDDLEWARE_TRACE_FILE)
 		);
@@ -251,6 +278,14 @@ File ${serverPath} does not exist
 		if (isExcluded(from)) {
 			return;
 		}
+		// Skip non-Linux platform-specific native binaries (e.g. @swc/core-darwin-arm64)
+		if (!process.env.OPEN_NEXT_SKIP_PLATFORM_FILTER && isNonLinuxPlatformPackage(from)) {
+			const match = from.match(/node_modules\/(.+\/)?([^/]+-(?:darwin|win32|freebsd)-[^/]+)/);
+			if (match) {
+				logger.debug(`Skipping non-Linux platform package: ${match[2]}`);
+			}
+			return;
+		}
 		tracedFiles.push(to);
 		mkdirSync(path.dirname(to), { recursive: true });
 		let symlink = null;
@@ -274,7 +309,7 @@ File ${serverPath} does not exist
 			// where some files listed in the .nft.json might not be present in the standalone folder
 			// TODO: investigate that further - is it expected?
 			try {
-				copyFileSync(from, to);
+				copyFileAndMakeOwnerWritable(from, to);
 			} catch (e) {
 				logger.debug("Error copying file:", e);
 				erroredFiles.push(to);
@@ -285,7 +320,7 @@ File ${serverPath} does not exist
 	readdirSync(standaloneNextDir)
 		.filter((fileOrDir) => !statSync(path.join(standaloneNextDir, fileOrDir)).isDirectory())
 		.forEach((file) => {
-			copyFileSync(path.join(standaloneNextDir, file), path.join(outputNextDir, file));
+			copyFileAndMakeOwnerWritable(path.join(standaloneNextDir, file), path.join(outputNextDir, file));
 			tracedFiles.push(path.join(outputNextDir, file));
 		});
 
@@ -297,7 +332,10 @@ File ${serverPath} does not exist
 		.filter((fileOrDir) => !statSync(path.join(standaloneServerDir, fileOrDir)).isDirectory())
 		.filter((file) => file !== "server.js")
 		.forEach((file) => {
-			copyFileSync(path.join(standaloneServerDir, file), path.join(path.join(outputNextDir, "server"), file));
+			copyFileAndMakeOwnerWritable(
+				path.join(standaloneServerDir, file),
+				path.join(path.join(outputNextDir, "server"), file)
+			);
 			tracedFiles.push(path.join(outputNextDir, "server", file));
 		});
 
@@ -318,7 +356,10 @@ File ${serverPath} does not exist
 			mkdirSync(path.dirname(path.join(outputNextDir, filePath)), {
 				recursive: true,
 			});
-			copyFileSync(path.join(standaloneNextDir, filePath), path.join(outputNextDir, filePath));
+			copyFileAndMakeOwnerWritable(
+				path.join(standaloneNextDir, filePath),
+				path.join(outputNextDir, filePath)
+			);
 		}
 	};
 

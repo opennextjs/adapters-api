@@ -50,7 +50,7 @@
 		"test:watch": "vitest"
 	},
 	"dependencies": {
-		"@ast-grep/napi": "0.40.0",
+		"@ast-grep/napi": "0.40.5",
 		"@dotenvx/dotenvx": "catalog:",
 		"@opennextjs/aws": "workspace:*",
 		"cloudflare": "^4.4.1",
