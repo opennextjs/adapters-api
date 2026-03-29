@@ -212,8 +212,8 @@ export default async function routingHandler(
 
 		const resolvedRoutes: ResolvedRoute[] = [...foundStaticRoute, ...foundDynamicRoute];
 
-		if (globalThis.openNextConfig.dangerous?.enableCacheInterception && !isInternalResult(eventOrResult)) {
-			debug("Cache interception enabled");
+		if (!isInternalResult(eventOrResult)) {
+			debug("Attempting cache interception");
 			const cacheInterceptionResult = await cacheInterceptor(eventOrResult);
 			if (isInternalResult(cacheInterceptionResult)) {
 				applyMiddlewareHeaders(cacheInterceptionResult, headers);

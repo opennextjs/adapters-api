@@ -16,7 +16,7 @@ import { getCrossPlatformPathRegex } from "../utils/regex.js";
 
 import { compileCache } from "./compileCache.js";
 import { copyAdapterFiles } from "./copyAdapterFiles.js";
-import { copyTracedFiles, getManifests } from "./copyTracedFiles.js";
+import { getManifests } from "./copyTracedFiles.js";
 import { copyMiddlewareResources, generateEdgeBundle } from "./edge/createEdgeBundle.js";
 import * as buildHelper from "./helper.js";
 import { installDependencies } from "./installDeps.js";
@@ -174,23 +174,17 @@ async function generateBundle(
 	buildHelper.copyEnvFile(appBuildOutputPath, packagePath, outputPath);
 
 	let tracedFiles: string[] = [];
-	let manifests: ReturnType<typeof getManifests> | Record<string, never> = {};
+	let manifests: ReturnType<typeof getManifests> = {} as ReturnType<typeof getManifests>;
 
 	// Copy all necessary traced files
-	if (config.dangerous?.useAdapterOutputs) {
-		tracedFiles = await copyAdapterFiles(options, name, packagePath, nextOutputs!);
-		//TODO: we should load manifests here
-	} else {
-		const oldTracedFileOutput = await copyTracedFiles({
-			buildOutputPath: appBuildOutputPath,
-			packagePath,
-			outputDir: outputPath,
-			routes: fnOptions.routes ?? ["app/page.tsx"],
-			skipServerFiles: options.config.dangerous?.useAdapterOutputs === true,
-		});
-		tracedFiles = oldTracedFileOutput.tracedFiles;
-		manifests = oldTracedFileOutput.manifests;
+	if (!nextOutputs) {
+		throw new Error(
+			"createServerBundle was called without adapter outputs. " +
+				"Please ensure NextAdapterOutputs is provided to createServerBundle."
+		);
 	}
+	tracedFiles = await copyAdapterFiles(options, name, packagePath, nextOutputs);
+	//TODO: we should load manifests here
 
 	const additionalCodePatches = codeCustomization?.additionalCodePatches ?? [];
 

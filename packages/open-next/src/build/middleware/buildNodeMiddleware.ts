@@ -34,7 +34,6 @@ export async function buildExternalNodeMiddleware(options: buildHelper.BuildOpti
 		...config.middleware.override,
 		originResolver: config.middleware.originResolver,
 	};
-	const includeCache = config.dangerous?.enableCacheInterception;
 	const packagePath = buildHelper.getPackagePath(options);
 
 	// TODO: change this so that we don't copy unnecessary files
@@ -62,22 +61,13 @@ export async function buildExternalNodeMiddleware(options: buildHelper.BuildOpti
 					overrides: {
 						wrapper: override("wrapper") ?? "aws-lambda",
 						converter: override("converter") ?? "aws-cloudfront",
-						...(includeCache
-							? {
-									tagCache: override("tagCache") ?? "dynamodb-lite",
-									incrementalCache: override("incrementalCache") ?? "s3-lite",
-									queue: override("queue") ?? "sqs-lite",
-								}
-							: {}),
+						tagCache: override("tagCache") ?? "dynamodb-lite",
+						incrementalCache: override("incrementalCache") ?? "s3-lite",
+						queue: override("queue") ?? "sqs-lite",
 						originResolver: override("originResolver") ?? "pattern-env",
 						proxyExternalRequest: override("proxyExternalRequest") ?? "node",
 					},
 					fnName: "middleware",
-				}),
-				openNextReplacementPlugin({
-					name: "externalMiddlewareOverrides",
-					target: getCrossPlatformPathRegex("adapters/middleware.js"),
-					deletes: includeCache ? [] : ["includeCacheInMiddleware"],
 				}),
 				openNextExternalMiddlewarePlugin(
 					path.join(options.openNextDistDir, "core", "nodeMiddlewareHandler.js")
