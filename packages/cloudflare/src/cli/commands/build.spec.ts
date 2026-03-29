@@ -17,6 +17,13 @@ vi.mock("@opennextjs/aws/logger.js", () => ({
 	},
 }));
 
+// Mock node:module to prevent require.resolve from failing in tests
+vi.mock("node:module", () => ({
+	createRequire: vi.fn(() => ({
+		resolve: vi.fn(() => "/mocked/adapter.js"),
+	})),
+}));
+
 // Mock build implementation
 vi.mock("../build/build.js", () => ({
 	build: vi.fn(),
