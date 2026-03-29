@@ -102,7 +102,11 @@ export default {
 					}
 				}
 
-				headers.set("content-encoding", "identity"); // To fix PPR locally
+				// TODO(vicb): this is a workaround to make PPR work with `wrangler dev`
+				// See https://github.com/cloudflare/workers-sdk/issues/8004
+				if (url.hostname === "localhost") {
+					headers.set("Content-Encoding", "identity");
+				}
 
 				return new Response(body, {
 					status: reqOrResp.initialResponse.statusCode,

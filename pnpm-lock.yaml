@@ -1237,11 +1237,11 @@ importers:
         specifier: catalog:aws
         version: 20.17.6
       '@types/react':
-        specifier: 19.2.14
-        version: 19.2.14
+        specifier: catalog:aws
+        version: 19.2.9
       '@types/react-dom':
-        specifier: 19.2.3
-        version: 19.2.3(@types/react@19.2.14)
+        specifier: catalog:aws
+        version: 19.2.3(@types/react@19.2.9)
       typescript:
         specifier: catalog:aws
         version: 5.9.3
@@ -16932,10 +16932,6 @@ snapshots:
     dependencies:
       '@types/react': 19.0.3
 
-  '@types/react-dom@19.2.3(@types/react@19.2.14)':
-    dependencies:
-      '@types/react': 19.2.14
-
   '@types/react-dom@19.2.3(@types/react@19.2.9)':
     dependencies:
       '@types/react': 19.2.9
@@ -16952,6 +16948,7 @@ snapshots:
   '@types/react@19.2.14':
     dependencies:
       csstype: 3.2.3
+    optional: true
 
   '@types/react@19.2.9':
     dependencies:

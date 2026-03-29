@@ -18,14 +18,14 @@
 	"devDependencies": {
 		"@opennextjs/aws": "workspace:*",
 		"@types/node": "catalog:aws",
-		"@types/react": "19.2.14",
-		"@types/react-dom": "19.2.3",
+		"@types/react": "catalog:aws",
+		"@types/react-dom": "catalog:aws",
 		"typescript": "catalog:aws"
 	},
 	"pnpm": {
 		"overrides": {
-			"@types/react": "19.2.14",
-			"@types/react-dom": "19.2.3"
+			"@types/react": "catalog:aws",
+			"@types/react-dom": "catalog:aws"
 		}
 	}
 }
