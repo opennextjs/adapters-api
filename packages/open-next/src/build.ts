@@ -47,43 +47,10 @@ export async function build(openNextConfigPath?: string, nodeExternals?: string)
 	// Build Next.js app
 	printHeader("Building Next.js app");
 	setStandaloneBuildMode(options);
-	if (config.dangerous?.useAdapterOutputs) {
-		logger.info("Using adapter outputs for building OpenNext bundle.");
-		process.env.NEXT_ADAPTER_PATH = require.resolve("./adapter.js");
-	}
+	logger.info("Using adapter outputs for building OpenNext bundle.");
+	process.env.NEXT_ADAPTER_PATH = require.resolve("./adapter.js");
 	buildHelper.initOutputDir(options);
 	buildNextjsApp(options);
 
-	if (config.dangerous?.useAdapterOutputs) {
-		logger.info("Using adapter outputs for building OpenNext bundle.");
-		return;
-	}
-
-	// Generate deployable bundle
-	printHeader("Generating bundle");
-
-	// Patch the original Next.js config
-	await patchOriginalNextConfig(options);
-
-	// Compile cache.ts
-	compileCache(options);
-
-	// Compile middleware
-	await createMiddleware(options);
-
-	createStaticAssets(options);
-
-	if (config.dangerous?.disableIncrementalCache !== true) {
-		const { useTagCache } = createCacheAssets(options);
-		if (useTagCache) {
-			await compileTagCacheProvider(options);
-		}
-	}
-
-	await createServerBundle(options);
-	await createRevalidationBundle(options);
-	await createImageOptimizationBundle(options);
-	await createWarmerBundle(options);
-	await generateOutput(options);
-	logger.info("OpenNext build complete.");
+	return;
 }

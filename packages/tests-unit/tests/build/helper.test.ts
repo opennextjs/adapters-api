@@ -1,7 +1,7 @@
 import fs from "node:fs";
 
 import { compareSemver, findNextConfig } from "@opennextjs/aws/build/helper.js";
-import { afterEach, vi } from "vitest";
+import { vi } from "vitest";
 
 vi.mock("node:fs");
 

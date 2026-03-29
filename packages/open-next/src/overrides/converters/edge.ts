@@ -61,6 +61,12 @@ const converter: Converter<InternalEvent, InternalResult | MiddlewareResult> = {
 			});
 
 			if (globalThis.__dangerous_ON_edge_converter_returns_request === true) {
+				if (result.initialResponse) {
+					return {
+						initialResponse: result.initialResponse,
+						request,
+					};
+				}
 				return request;
 			}
 
@@ -70,6 +76,8 @@ const converter: Converter<InternalEvent, InternalResult | MiddlewareResult> = {
 					? { cacheEverything: true }
 					: {};
 
+			//TODO: we need to handle the PPR case here as well.
+			// We'll revisit this when we'll look at making StreamCreator mandatory.
 			return fetch(request, {
 				// This is a hack to make sure that the response is cached by Cloudflare
 				// See https://developers.cloudflare.com/workers/examples/cache-using-fetch/#caching-html-resources

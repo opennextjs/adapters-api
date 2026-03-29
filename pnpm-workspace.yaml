@@ -35,7 +35,7 @@ catalog:
 
 catalogs:
   aws:
-    next: 16.1.4
+    next: 16.2.1
     react: ^19
     react-dom: ^19
     "@types/node": 20.17.6
@@ -51,7 +51,7 @@ catalogs:
     "@types/react": 19.0.3
     "@types/react-dom": 19.0.3
     autoprefixer: 10.4.15
-    next: 16.1.4
+    next: 16.2.1
     postcss: 8.4.27
     react: 19.0.3
     react-dom: 19.0.3

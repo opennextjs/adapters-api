@@ -35,7 +35,6 @@ interface BuildEdgeBundleOptions {
 	overrides?: Override;
 	defaultConverter?: IncludedConverter;
 	additionalInject?: string;
-	includeCache?: boolean;
 	additionalExternals?: string[];
 	onlyBuildOnce?: boolean;
 	name: string;
@@ -50,7 +49,6 @@ export async function buildEdgeBundle({
 	defaultConverter,
 	overrides,
 	additionalInject,
-	includeCache,
 	additionalExternals,
 	onlyBuildOnce,
 	name,
@@ -77,22 +75,13 @@ export async function buildEdgeBundle({
 					overrides: {
 						wrapper: override("wrapper") ?? "aws-lambda",
 						converter: override("converter") ?? defaultConverter,
-						...(includeCache
-							? {
-									tagCache: override("tagCache") ?? "dynamodb-lite",
-									incrementalCache: override("incrementalCache") ?? "s3-lite",
-									queue: override("queue") ?? "sqs-lite",
-								}
-							: {}),
+						tagCache: override("tagCache") ?? "dynamodb-lite",
+						incrementalCache: override("incrementalCache") ?? "s3-lite",
+						queue: override("queue") ?? "sqs-lite",
 						originResolver: override("originResolver") ?? "pattern-env",
 						proxyExternalRequest: override("proxyExternalRequest") ?? "node",
 					},
 					fnName: name,
-				}),
-				openNextReplacementPlugin({
-					name: "externalMiddlewareOverrides",
-					target: getCrossPlatformPathRegex("adapters/middleware.js"),
-					deletes: includeCache ? [] : ["includeCacheInMiddleware"],
 				}),
 				openNextExternalMiddlewarePlugin(path.join(options.openNextDistDir, "core/edgeFunctionHandler.js")),
 				openNextEdgePlugins({

@@ -1,4 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
+import { Writable } from "node:stream";
+import { finished } from "node:stream/promises";
 
 import { IncomingMessage } from "@/http/request";
 import type { InternalEvent, InternalResult, ResolvedRoute, RoutingResult } from "@/types/open-next";
@@ -7,7 +9,6 @@ import { runWithOpenNextRequestContext } from "@/utils/promise";
 
 import { debug, error } from "../adapters/logger";
 
-import { patchAsyncStorage } from "./patchAsyncStorage";
 import { adapterHandler } from "./routing/adapterHandler";
 import { constructNextUrl, convertRes, createServerResponse } from "./routing/util";
 import routingHandler, {
@@ -21,10 +22,6 @@ import routingHandler, {
 
 // This is used to identify requests in the cache
 globalThis.__openNextAls = new AsyncLocalStorage();
-
-//#override patchAsyncStorage
-patchAsyncStorage();
-//#endOverride
 
 export async function openNextHandler(
 	internalEvent: InternalEvent,
@@ -77,7 +74,7 @@ export async function openNextHandler(
 			});
 			//#endOverride
 
-			const headers = "type" in routingResult ? routingResult.headers : routingResult.internalEvent.headers;
+			const headers = getHeaders(routingResult);
 
 			const overwrittenResponseHeaders: Record<string, string | string[]> = {};
 
@@ -161,9 +158,6 @@ export async function openNextHandler(
 				// 3. OUR CHOICE: We could pass a purpose prefetch header to the serverless function to make next believe that the request is a prefetch request and not trigger revalidation (This could potentially break in the future if next changes the behavior of prefetch requests)
 				headers: {
 					...headers,
-					//#override appendPrefetch
-					purpose: "prefetch",
-					//#endOverride
 				},
 				body: preprocessedEvent.body,
 				remoteAddress: preprocessedEvent.remoteAddress,
@@ -178,7 +172,38 @@ export async function openNextHandler(
 			}
 
 			const req = new IncomingMessage(reqProps);
-			const res = createServerResponse(routingResult, overwrittenResponseHeaders, options?.streamCreator);
+			const res = createServerResponse(
+				routingResult,
+				routingResult.initialResponse ? routingResult.initialResponse.headers : overwrittenResponseHeaders,
+				options?.streamCreator
+			);
+
+			if (routingResult.initialResponse) {
+				res.statusCode = routingResult.initialResponse.statusCode;
+				res.flushHeaders();
+				for await (const chunk of routingResult.initialResponse.body) {
+					res.write(chunk);
+				}
+
+				//We create a special response for the PPR resume request
+				const pprRes = createServerResponse(routingResult, overwrittenResponseHeaders, {
+					writeHeaders: () => {
+						return new Writable({
+							write(chunk, encoding, callback) {
+								res.write(chunk, encoding, callback);
+							},
+						});
+					},
+				});
+				await adapterHandler(req, pprRes, routingResult, {
+					waitUntil: options?.waitUntil,
+				});
+				await finished(pprRes);
+				res.end();
+
+				return convertRes(res);
+			}
+
 			// It seems that Next.js doesn't set the status code for 404 and 500 anymore for us, we have to do it ourselves
 			// TODO: check security wise if it's ok to do that
 			if (pathname === "/404") {
@@ -206,4 +231,12 @@ export async function openNextHandler(
 			return internalResult;
 		}
 	);
+}
+
+function getHeaders(routingResult: RoutingResult | InternalResult) {
+	if ("type" in routingResult) {
+		return routingResult.headers;
+	} else {
+		return routingResult.internalEvent.headers;
+	}
 }

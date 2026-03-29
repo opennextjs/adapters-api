@@ -67,7 +67,6 @@ export async function createMiddleware(
 				originResolver: config.middleware.originResolver,
 			},
 			defaultConverter: "aws-cloudfront",
-			includeCache: config.dangerous?.enableCacheInterception,
 			additionalExternals: config.edgeExternals,
 			onlyBuildOnce: forceOnlyBuildOnce === true,
 			name: "middleware",
