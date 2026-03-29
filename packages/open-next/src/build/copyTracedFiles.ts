@@ -66,7 +66,6 @@ interface CopyTracedFilesOptions {
 	packagePath: string;
 	outputDir: string;
 	routes: string[];
-	bundledNextServer: boolean;
 	skipServerFiles?: boolean;
 }
 
@@ -87,7 +86,6 @@ export async function copyTracedFiles({
 	packagePath,
 	outputDir,
 	routes,
-	bundledNextServer,
 	skipServerFiles,
 }: CopyTracedFilesOptions) {
 	const tsStart = Date.now();
@@ -130,7 +128,7 @@ export async function copyTracedFiles({
 	if (!skipServerFiles) {
 		// On next 14+, we might not have to include those files
 		// For next 13, we need to include them otherwise we get runtime error
-		const nftFile = bundledNextServer ? "next-minimal-server.js.nft.json" : "next-server.js.nft.json";
+		const nftFile = "next-server.js.nft.json";
 
 		processNftFile(nftFile);
 	}
@@ -236,8 +234,7 @@ File ${serverPath} does not exist
 
 	if (hasAppDir) {
 		//App dir
-		// In next 14.2.0, _not-found is at 'app/_not-found/page'
-		safeComputeCopyFilesForPage("app/_not-found", "app/_not-found/page");
+		safeComputeCopyFilesForPage("app/_not-found/page");
 	}
 
 	//Files we actually want to include

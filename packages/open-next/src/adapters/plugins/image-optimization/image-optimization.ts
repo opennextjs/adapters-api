@@ -1,11 +1,9 @@
-// @ts-nocheck
-// This file is used only for Next 14.1 and below. Typing is correct for these versions.
 import type { IncomingMessage, ServerResponse } from "node:http";
 
 import type { APIGatewayProxyEventHeaders } from "aws-lambda";
 import type { NextConfig } from "next/dist/server/config-shared";
 //#override imports
-import { imageOptimizer } from "next/dist/server/image-optimizer";
+import { fetchExternalImage, fetchInternalImage, imageOptimizer } from "next/dist/server/image-optimizer";
 //#endOverride
 import type { NextUrlWithParsedQuery } from "next/dist/server/request-meta";
 
@@ -20,16 +18,29 @@ export async function optimizeImage(
 	handleRequest: (
 		newReq: IncomingMessage,
 		newRes: ServerResponse,
-		newParsedUrl: NextUrlWithParsedQuery
+		newParsedUrl?: NextUrlWithParsedQuery
 	) => Promise<void>
 ) {
+	const { isAbsolute, href } = imageParams;
+
+	const imageUpstream = isAbsolute
+		? //@ts-expect-error - fetchExternalImage signature has changed in Next.js 16, it has an extra boolean parameter.
+			// https://github.com/vercel/next.js/blob/bfe2ab4/packages/next/src/server/image-optimizer.ts#L711
+			await fetchExternalImage(href)
+		: await fetchInternalImage(
+				href,
+				// @ts-expect-error - It is supposed to be an IncomingMessage object, but only the headers are used.
+				{ headers },
+				{}, // res object is not necessary as it's not actually used.
+				handleRequest
+			);
+
 	const result = await imageOptimizer(
-		{ headers },
-		{}, // res object is not necessary as it's not actually used.
+		imageUpstream,
 		imageParams,
+		// @ts-ignore
 		nextConfig,
-		false, // not in dev mode
-		handleRequest
+		false // not in dev mode
 	);
 	debug("optimized result", result);
 	return result;
