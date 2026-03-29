@@ -95,7 +95,7 @@ pnpm --filter @opennextjs/cloudflare ts:check
 ### Formatting
 
 - Tabs for indentation (check .editorconfig if present)
-- Single quotes for strings
+- Double quotes for strings
 - Trailing commas in objects/arrays
 - Semicolons are required
 
