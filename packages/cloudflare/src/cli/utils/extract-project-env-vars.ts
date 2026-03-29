@@ -10,22 +10,6 @@ function readEnvFile(filePath: string) {
 	}
 }
 
-/**
- * Extracts the environment variables defined in various .env files for a project.
- *
- * The `NEXTJS_ENV` environment variable in `.dev.vars` determines the mode.
- *
- * Merged variables respect the following priority order.
- * 1. `.env.{mode}.local`
- * 2. `.env.local` (when mode is not equal to `test`)
- * 3. `.env.{mode}`
- * 4. `.env`
- *
- * https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables#environment-variable-load-order
- *
- * In a monorepo, the env files in an app's directory will take precedence over
- * the env files at the root of the monorepo.
- */
 export function extractProjectEnvVars(mode: string, { monorepoRoot, appPath }: BuildOptions) {
 	return [".env", `.env.${mode}`, ...(mode !== "test" ? [".env.local"] : []), `.env.${mode}.local`]
 		.flatMap((fileName) => [

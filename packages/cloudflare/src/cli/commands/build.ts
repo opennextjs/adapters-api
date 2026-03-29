@@ -1,11 +1,13 @@
 import { createRequire } from "node:module";
 
+import logger from "@opennextjs/aws/logger.js";
 import type yargs from "yargs";
 
 import { build as buildImpl } from "../build/build.js";
-import { createWranglerConfigIfNotExistent } from "../build/utils/index.js";
+import { askConfirmation } from "../utils/ask-confirmation.js";
+import { createWranglerConfigFile, findWranglerConfig } from "../utils/create-wrangler-config.js";
 
-import type { WithWranglerArgs } from "./utils.js";
+import type { WithWranglerArgs } from "./utils/utils.js";
 import {
 	compileConfig,
 	getNormalizedOptions,
@@ -13,14 +15,14 @@ import {
 	printHeaders,
 	withWranglerOptions,
 	withWranglerPassthroughArgs,
-} from "./utils.js";
+} from "./utils/utils.js";
 
 /**
  * Implementation of the `opennextjs-cloudflare build` command.
  *
  * @param args
  */
-async function buildCommand(
+export async function buildCommand(
 	args: WithWranglerArgs<{
 		skipNextBuild: boolean;
 		noMinify: boolean;
@@ -42,7 +44,16 @@ async function buildCommand(
 	// Note: We don't ask when a custom config file is specified via `--config`
 	//       nor when `--skipWranglerConfigCheck` is used.
 	if (!projectOpts.wranglerConfigPath && !args.skipWranglerConfigCheck) {
-		await createWranglerConfigIfNotExistent(projectOpts);
+		if (!findWranglerConfig(projectOpts.sourceDir)) {
+			const confirmCreate = "No `wrangler.(toml|json|jsonc)` config file found, do you want to create one?";
+			if (await askConfirmation(confirmCreate)) {
+				await createWranglerConfigFile(projectOpts.sourceDir);
+			} else {
+				logger.warn(`No Wrangler config file created
+
+(to avoid this check use the \`--skipWranglerConfigCheck\` flag or set a \`SKIP_WRANGLER_CONFIG_CHECK\` environment variable to \`yes\`)`);
+			}
+		}
 	}
 
 	await buildImpl(options, projectOpts);
@@ -55,7 +66,7 @@ async function buildCommand(
  */
 export function addBuildCommand<T extends yargs.Argv>(y: T) {
 	return y.command(
-		"build",
+		"build [args..]",
 		"Build an OpenNext Cloudflare worker",
 		(c) =>
 			withWranglerOptions(c)

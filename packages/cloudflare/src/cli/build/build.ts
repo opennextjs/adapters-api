@@ -4,6 +4,7 @@ import { printHeader } from "@opennextjs/aws/build/utils.js";
 import logger from "@opennextjs/aws/logger.js";
 
 import type { ProjectOptions } from "../project-options.js";
+import { ensureNextjsVersionSupported } from "../utils/nextjs-support.js";
 
 import { getVersion } from "./utils/version.js";
 
@@ -42,26 +43,4 @@ export async function build(options: buildHelper.BuildOptions, projectOpts: Proj
 	}
 
 	logger.info("Using adapter outputs for building OpenNext bundle.");
-}
-
-async function ensureNextjsVersionSupported({ nextVersion }: buildHelper.BuildOptions) {
-	if (buildHelper.compareSemver(nextVersion, "<", "14.2.0")) {
-		logger.error("Next.js version unsupported, please upgrade to version 14.2 or greater.");
-		process.exit(1);
-	}
-
-	const {
-		default: { version: wranglerVersion },
-	} = await import("wrangler/package.json", { with: { type: "json" } });
-
-	// We need a version of workerd that has a fix for setImmediate for Next.js 16.1+
-	// See:
-	// - https://github.com/cloudflare/workerd/pull/5869
-	// - https://github.com/opennextjs/opennextjs-cloudflare/issues/1049
-	if (
-		buildHelper.compareSemver(nextVersion, ">=", "16.1.0") &&
-		buildHelper.compareSemver(wranglerVersion, "<", "4.59.2")
-	) {
-		logger.warn(`Next.js 16.1+ requires wrangler 4.59.2 or greater (${wranglerVersion} detected).`);
-	}
 }

@@ -54,6 +54,7 @@
 		"@dotenvx/dotenvx": "catalog:",
 		"@opennextjs/aws": "workspace:*",
 		"cloudflare": "^4.4.1",
+		"comment-json": "^4.5.1",
 		"enquirer": "^2.4.1",
 		"glob": "catalog:",
 		"ts-tqdm": "^0.8.6",
@@ -62,6 +63,7 @@
 	"devDependencies": {
 		"@cloudflare/workers-types": "catalog:",
 		"@tsconfig/strictest": "catalog:",
+		"@types/comment-json": "^2.4.5",
 		"@types/mock-fs": "catalog:",
 		"@types/node": "catalog:",
 		"@types/picomatch": "^4.0.0",
