@@ -1,11 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
 import type { InternalEvent, InternalResult } from "@/types/open-next";
-import type {
-	CacheEntryType,
-	CacheValue,
-	OpenNextHandlerOptions,
-} from "@/types/overrides";
+import type { CacheEntryType, CacheValue, OpenNextHandlerOptions } from "@/types/overrides";
 
 import { createGenericHandler } from "../core/createGenericHandler.js";
 import { resolveCdnInvalidation, resolveIncrementalCache, resolveTagCache } from "../core/resolve.js";

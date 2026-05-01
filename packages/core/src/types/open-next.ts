@@ -6,6 +6,7 @@ import type { WarmerEvent, WarmerResponse } from "../adapters/warmer-function";
 import type {
 	AssetResolver,
 	CDNInvalidationHandler,
+	Cache,
 	Converter,
 	ImageLoader,
 	IncrementalCache,
@@ -221,6 +222,8 @@ export type IncludedOriginResolver = "pattern-env" | "dummy";
 
 export type IncludedWarmer = "aws-lambda" | "dummy";
 
+export type IncludedCache = "fetch" | "local" | "dummy";
+
 export type IncludedProxyExternalRequest = "node" | "fetch" | "dummy";
 
 export type IncludedCDNInvalidationHandler = "cloudfront" | "dummy";
@@ -280,6 +283,13 @@ export interface OverrideOptions extends DefaultOverrideOptions {
 	 * @default "dummy"
 	 */
 	cdnInvalidation?: IncludedCDNInvalidationHandler | LazyLoadedOverride<CDNInvalidationHandler>;
+
+	/**
+	 * Add possibility to override the default cache client used to communicate with the cache handler function.
+	 * Can be used to connect to a remote cache handler via HTTP fetch or to use a direct in-process cache.
+	 * @default undefined - Falls back to using the incremental cache directly.
+	 */
+	cache?: IncludedCache | LazyLoadedOverride<Cache>;
 }
 
 export interface InstallOptions {

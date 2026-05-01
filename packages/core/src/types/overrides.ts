@@ -253,6 +253,19 @@ export type ProxyExternalRequest = BaseOverride & {
 	proxy: (event: InternalEvent) => Promise<InternalResult>;
 };
 
+export type Cache = BaseOverride & {
+	get<CacheType extends CacheEntryType = "cache">(
+		key: string,
+		cacheType?: CacheType
+	): Promise<WithLastModified<CacheValue<CacheType>> | null>;
+	set<CacheType extends CacheEntryType = "cache">(
+		key: string,
+		value: CacheValue<CacheType>,
+		isFetch?: CacheType
+	): Promise<void>;
+	delete(key: string): Promise<void>;
+};
+
 type CDNPath = {
 	initialPath: string;
 	rawPath: string;
