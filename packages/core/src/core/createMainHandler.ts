@@ -9,10 +9,8 @@ import {
 	resolveCache,
 	resolveCdnInvalidation,
 	resolveConverter,
-	resolveIncrementalCache,
 	resolveProxyRequest,
 	resolveQueue,
-	resolveTagCache,
 	resolveWrapper,
 } from "./resolve";
 
@@ -31,10 +29,6 @@ export async function createMainHandler() {
 
 	// Default queue
 	globalThis.queue = await resolveQueue(thisFunction.override?.queue);
-
-	globalThis.incrementalCache = await resolveIncrementalCache(thisFunction.override?.incrementalCache);
-
-	globalThis.tagCache = await resolveTagCache(thisFunction.override?.tagCache);
 
 	if (config.middleware?.external !== true) {
 		globalThis.assetResolver = await resolveAssetResolver(

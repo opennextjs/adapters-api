@@ -264,6 +264,7 @@ export type Cache = BaseOverride & {
 		isFetch?: CacheType
 	): Promise<void>;
 	delete(key: string): Promise<void>;
+	revalidateTags(tags: string[]): Promise<void>;
 };
 
 type CDNPath = {

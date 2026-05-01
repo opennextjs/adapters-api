@@ -71,6 +71,22 @@ const localCache: Cache = {
 		};
 		await h(event);
 	},
+	revalidateTags: async (tags) => {
+		const h = (await getHandler())!;
+		const url = `https://on/cache/revalidate-tags`;
+		const event: InternalEvent = {
+			type: "core",
+			method: "POST",
+			rawPath: `/cache/revalidate-tags`,
+			url,
+			headers: { "Content-Type": "application/json" },
+			query: {},
+			cookies: {},
+			remoteAddress: "127.0.0.1",
+			body: Buffer.from(JSON.stringify({ tags })),
+		};
+		await h(event);
+	},
 };
 
 export default localCache;

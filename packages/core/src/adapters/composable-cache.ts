@@ -1,6 +1,5 @@
 import type { ComposableCacheEntry, ComposableCacheHandler } from "@/types/cache";
 import type { CacheValue } from "@/types/overrides";
-import { writeTags } from "@/utils/cache";
 import { fromReadableStream, toReadableStream } from "@/utils/stream";
 
 import { debug } from "./logger";
@@ -21,25 +20,12 @@ export default {
 					}));
 				}
 			}
-			const result = await globalThis.incrementalCache.get(cacheKey, "composable");
+			const result = await globalThis.cache.get(cacheKey, "composable");
 			if (!result?.value?.value) {
 				return undefined;
 			}
 
 			debug("composable cache result", result);
-
-			// We need to check if the tags associated with this entry has been revalidated
-			if (globalThis.tagCache.mode === "nextMode" && result.value.tags.length > 0) {
-				const hasBeenRevalidated = result.shouldBypassTagCache
-					? false
-					: await globalThis.tagCache.hasBeenRevalidated(result.value.tags, result.lastModified);
-				if (hasBeenRevalidated) return undefined;
-			} else if (globalThis.tagCache.mode === "original" || globalThis.tagCache.mode === undefined) {
-				const hasBeenRevalidated = result.shouldBypassTagCache
-					? false
-					: (await globalThis.tagCache.getLastModified(cacheKey, result.lastModified)) === -1;
-				if (hasBeenRevalidated) return undefined;
-			}
 
 			return {
 				...result.value,
@@ -61,7 +47,7 @@ export default {
 		const entry = await promiseEntry.finally(() => {
 			pendingWritePromiseMap.delete(cacheKey);
 		});
-		await globalThis.incrementalCache.set(
+		await globalThis.cache.set(
 			cacheKey,
 			{
 				...entry,
@@ -69,13 +55,6 @@ export default {
 			},
 			"composable"
 		);
-		if (globalThis.tagCache.mode === "original") {
-			const storedTags = await globalThis.tagCache.getByPath(cacheKey);
-			const tagsToWrite = entry.tags.filter((tag) => !storedTags.includes(tag));
-			if (tagsToWrite.length > 0) {
-				await writeTags(tagsToWrite.map((tag) => ({ tag, path: cacheKey })));
-			}
-		}
 	},
 
 	async refreshTags() {
@@ -89,12 +68,8 @@ export default {
 	 * - From Next.js 16, the method takes `tags: string[]`
 	 */
 	async getExpiration(...tags: string[] | string[][]) {
-		if (globalThis.tagCache.mode === "nextMode") {
-			// Use `.flat()` to accommodate both signatures
-			return globalThis.tagCache.getLastRevalidated(tags.flat());
-		}
-		// We always return 0 here, original tag cache are handled directly in the get part
-		// TODO: We need to test this more, i'm not entirely sure that this is working as expected
+		// Tag revalidation is handled transparently in the cache layer's get(),
+		// so we always return 0 here to let get() determine freshness.
 		return 0;
 	},
 
@@ -102,29 +77,10 @@ export default {
 	 * This method is only used before Next.js 16
 	 */
 	async expireTags(...tags: string[]) {
-		if (globalThis.tagCache.mode === "nextMode") {
-			return writeTags(tags);
+		const flatTags = tags.flat();
+		if (flatTags.length > 0) {
+			await globalThis.cache.revalidateTags(flatTags);
 		}
-		const tagCache = globalThis.tagCache;
-		const revalidatedAt = Date.now();
-		// For the original mode, we have more work to do here.
-		// We need to find all paths linked to to these tags
-		const pathsToUpdate = await Promise.all(
-			tags.map(async (tag) => {
-				const paths = await tagCache.getByTag(tag);
-				return paths.map((path) => ({
-					path,
-					tag,
-					revalidatedAt,
-				}));
-			})
-		);
-		// We need to deduplicate paths, we use a set for that
-		const setToWrite = new Set<{ path: string; tag: string }>();
-		for (const entry of pathsToUpdate.flat()) {
-			setToWrite.add(entry);
-		}
-		await writeTags(Array.from(setToWrite));
 	},
 
 	// This one is necessary for older versions of next

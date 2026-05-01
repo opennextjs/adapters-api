@@ -2,6 +2,7 @@ import type {
 	CacheEntryType,
 	CacheValue,
 	OriginalTagCacheWriteInput,
+	TagCache,
 	WithLastModified,
 } from "@/types/overrides";
 
@@ -10,7 +11,8 @@ import { debug } from "../adapters/logger";
 export async function hasBeenRevalidated<T extends CacheEntryType = "cache">(
 	key: string,
 	tags: string[],
-	cacheEntry: WithLastModified<CacheValue<T>>
+	cacheEntry: WithLastModified<CacheValue<T>>,
+	tagCache: TagCache = globalThis.tagCache
 ): Promise<boolean> {
 	if (globalThis.openNextConfig.dangerous?.disableTagCache) {
 		return false;
@@ -24,11 +26,11 @@ export async function hasBeenRevalidated<T extends CacheEntryType = "cache">(
 		return false;
 	}
 	const lastModified = cacheEntry.lastModified ?? Date.now();
-	if (globalThis.tagCache.mode === "nextMode") {
-		return tags.length === 0 ? false : await globalThis.tagCache.hasBeenRevalidated(tags, lastModified);
+	if (tagCache.mode === "nextMode") {
+		return tags.length === 0 ? false : await tagCache.hasBeenRevalidated(tags, lastModified);
 	}
 	// TODO: refactor this, we should introduce a new method in the tagCache interface so that both implementations use hasBeenRevalidated
-	const _lastModified = await globalThis.tagCache.getLastModified(key, lastModified);
+	const _lastModified = await tagCache.getLastModified(key, lastModified);
 	return _lastModified === -1;
 }
 
@@ -56,7 +58,7 @@ function getTagKey(tag: string | OriginalTagCacheWriteInput): string {
 	});
 }
 
-export async function writeTags(tags: (string | OriginalTagCacheWriteInput)[]): Promise<void> {
+export async function writeTags(tags: (string | OriginalTagCacheWriteInput)[], tagCache: TagCache = globalThis.tagCache): Promise<void> {
 	const store = globalThis.__openNextAls.getStore();
 	debug("Writing tags", tags, store);
 	if (!store || globalThis.openNextConfig.dangerous?.disableTagCache) {
@@ -78,5 +80,5 @@ export async function writeTags(tags: (string | OriginalTagCacheWriteInput)[]): 
 
 	// Here we know that we have the correct type
 	// oxlint-disable-next-line @typescript-eslint/no-explicit-any - writeTags accepts a union type that typescript cannot infer correctly
-	await globalThis.tagCache.writeTags(tagsToWrite as any);
+	await tagCache.writeTags(tagsToWrite as any);
 }

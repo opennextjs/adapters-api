@@ -8,12 +8,13 @@ import type {
 	CachedFetchValue,
 	CacheValue,
 	OpenNextHandlerOptions,
+	TagCache,
 	WithLastModified,
 } from "@/types/overrides";
 
 import { createGenericHandler } from "../core/createGenericHandler.js";
 import { resolveCdnInvalidation, resolveIncrementalCache, resolveTagCache } from "../core/resolve.js";
-import { writeTags } from "../utils/cache.js";
+import { getTagsFromValue, writeTags } from "../utils/cache.js";
 import { runWithOpenNextRequestContext } from "../utils/promise.js";
 import { toReadableStream } from "../utils/stream.js";
 
@@ -31,11 +32,11 @@ async function initializeCaches() {
 	const config = globalThis.openNextConfig;
 
 	globalThis.incrementalCache = await resolveIncrementalCache(
-		config.cacheHandler?.incrementalCache ?? config.default?.override?.incrementalCache
+		config.cacheHandler?.incrementalCache
 	);
 
 	globalThis.tagCache = await resolveTagCache(
-		config.cacheHandler?.tagCache ?? config.default?.override?.tagCache
+		config.cacheHandler?.tagCache
 	);
 
 	globalThis.cdnInvalidationHandler = await resolveCdnInvalidation(
@@ -127,11 +128,58 @@ async function handleGet(key: string, cacheType: CacheEntryType): Promise<Intern
 			};
 		}
 
+		if (result.value && !result.shouldBypassTagCache) {
+			let tags: string[] = [];
+
+			if (cacheType === "cache") {
+				tags = getTagsFromValue(result.value as CachedFile);
+			} else if (cacheType === "fetch") {
+				const fetchValue = result.value as CachedFetchValue;
+				tags = fetchValue.tags ?? (fetchValue.data?.tags ?? []);
+			} else if (cacheType === "composable") {
+				const composableValue = result.value as StoredComposableCacheEntry;
+				tags = composableValue.tags ?? [];
+			}
+
+			if (tags.length > 0) {
+				const revalidated = await checkTagRevalidation(key, tags, result);
+				if (revalidated) {
+					return {
+						type: "core",
+						statusCode: 404,
+						body: toReadableStream(""),
+						isBase64Encoded: false,
+						headers: {
+							"x-opennext-cache-found": "false",
+							"x-opennext-cache-tag-status": "revalidated",
+							"Cache-Control": "no-store",
+						},
+					};
+				}
+			}
+		}
+
 		return buildCacheGetResponse(result);
 	} catch (e) {
 		error("Failed to get cache entry", e);
 		return buildErrorResponse("Failed to get cache entry", 500);
 	}
+}
+
+async function checkTagRevalidation(
+	key: string,
+	tags: string[],
+	cacheEntry: WithLastModified<CacheValue<CacheEntryType>>
+): Promise<boolean> {
+	if (globalThis.openNextConfig?.dangerous?.disableTagCache) {
+		return false;
+	}
+	const lastModified = cacheEntry.lastModified ?? Date.now();
+	if (globalThis.tagCache.mode === "nextMode") {
+		return tags.length > 0 && (await globalThis.tagCache.hasBeenRevalidated(tags, lastModified));
+	}
+	const _lastModified = await globalThis.tagCache.getLastModified(key, lastModified);
+	return _lastModified === -1;
 }
 
 async function handleSet(key: string, cacheType: CacheEntryType, body?: Buffer): Promise<InternalResult> {
@@ -155,6 +203,37 @@ async function handleSet(key: string, cacheType: CacheEntryType, body?: Buffer):
 
 	try {
 		await globalThis.incrementalCache.set(key, payload.value as CacheValue<CacheEntryType>, cacheType);
+
+		// Write tags for non-composable and non-nextMode tag caches
+		const tagCache = globalThis.tagCache;
+		if (tagCache.mode !== "nextMode" && !globalThis.openNextConfig?.dangerous?.disableTagCache) {
+			let derivedTags: string[] = [];
+
+			if (cacheType === "cache") {
+				const tags = getTagsFromValue(payload.value as Parameters<typeof getTagsFromValue>[0]);
+				derivedTags = tags;
+			} else if (cacheType === "fetch") {
+				const fetchValue = payload.value as Record<string, unknown>;
+				const data = fetchValue.data as Record<string, unknown> | undefined;
+				derivedTags = (fetchValue.tags as string[]) ?? (data?.tags as string[]) ?? [];
+			}
+
+			if (derivedTags.length > 0) {
+				const storedTags = await tagCache.getByPath(key);
+				const tagsToWrite = derivedTags.filter((tag) => !storedTags.includes(tag));
+				if (tagsToWrite.length > 0) {
+					await writeTags(
+						tagsToWrite.map((tag) => ({
+							path: key,
+							tag,
+							revalidatedAt: 1,
+						})),
+						tagCache
+					);
+				}
+			}
+		}
+
 		return buildJsonResponse({ ok: true }, 200);
 	} catch (e) {
 		error("Failed to set cache entry", e);

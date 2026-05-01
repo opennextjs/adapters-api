@@ -12,6 +12,9 @@ const dummyCache: Cache = {
 	delete: async () => {
 		throw new IgnorableError('"Dummy" cache does not cache anything');
 	},
+	revalidateTags: async () => {
+		throw new IgnorableError('"Dummy" cache does not cache anything');
+	},
 };
 
 export default dummyCache;
