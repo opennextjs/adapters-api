@@ -86,6 +86,7 @@ export interface OpenNextOutput {
 		initializationFunction?: BaseFunction;
 		warmer?: BaseFunction;
 		revalidationFunction?: BaseFunction;
+		cacheFunction?: BaseFunction;
 	};
 }
 
@@ -344,6 +345,12 @@ export async function buildOpenNextOutput(options: BuildOptions): Promise<OpenNe
 				: {
 						handler: indexHandler,
 						bundle: ".open-next/revalidation-function",
+					},
+			cacheFunction: config.dangerous?.disableIncrementalCache
+				? undefined
+				: {
+						handler: indexHandler,
+						bundle: ".open-next/cache-function",
 					},
 		},
 	};

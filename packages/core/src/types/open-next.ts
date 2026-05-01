@@ -483,6 +483,29 @@ export interface OpenNextConfig {
 	};
 
 	/**
+	 * Override the default cache handler function.
+	 * By default, works on lambda.
+	 * Supports only node runtime
+	 */
+	cacheHandler?: DefaultFunctionOptions & {
+		/**
+		 * Override the default incremental cache.
+		 * @default "s3"
+		 */
+		incrementalCache?: IncludedIncrementalCache | LazyLoadedOverride<IncrementalCache>;
+		/**
+		 * Override the default tag cache.
+		 * @default "dynamodb"
+		 */
+		tagCache?: IncludedTagCache | LazyLoadedOverride<TagCache>;
+		/**
+		 * Override the default cdn invalidation handler for on demand revalidation.
+		 * @default "dummy"
+		 */
+		cdnInvalidation?: IncludedCDNInvalidationHandler | LazyLoadedOverride<CDNInvalidationHandler>;
+	};
+
+	/**
 	 * Dangerous options. This break some functionnality but can be useful in some cases.
 	 */
 	dangerous?: DangerousOptions;
