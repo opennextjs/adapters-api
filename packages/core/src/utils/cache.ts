@@ -58,7 +58,10 @@ function getTagKey(tag: string | OriginalTagCacheWriteInput): string {
 	});
 }
 
-export async function writeTags(tags: (string | OriginalTagCacheWriteInput)[], tagCache: TagCache = globalThis.tagCache): Promise<void> {
+export async function writeTags(
+	tags: (string | OriginalTagCacheWriteInput)[],
+	tagCache: TagCache = globalThis.tagCache
+): Promise<void> {
 	const store = globalThis.__openNextAls.getStore();
 	debug("Writing tags", tags, store);
 	if (!store || globalThis.openNextConfig.dangerous?.disableTagCache) {

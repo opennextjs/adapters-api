@@ -6,7 +6,7 @@ type HeadersMap = Record<string, string | string[]>;
 type Base = {
 	lastModified?: number;
 	shouldBypassTagCache?: boolean;
-}
+};
 
 function getHeaderValue(headers: HeadersMap, name: string): string | undefined {
 	const v = headers[name];
@@ -48,7 +48,7 @@ export function parseCacheGetResponse(
 	const lastModified = getHeaderNumber(headers, "x-opennext-cache-last-modified");
 	const shouldBypass = getHeaderValue(headers, "x-opennext-cache-should-bypass") === "true";
 
-	const base : Base = {
+	const base: Base = {
 		...(lastModified !== undefined ? { lastModified } : {}),
 		...(shouldBypass ? { shouldBypassTagCache: true as const } : {}),
 	};
@@ -64,11 +64,7 @@ export function parseCacheGetResponse(
 	return reconstructCachedFile(headers, bodyText, base);
 }
 
-function reconstructComposable(
-	headers: HeadersMap,
-	bodyText: string,
-	base: Base
-) {
+function reconstructComposable(headers: HeadersMap, bodyText: string, base: Base) {
 	const stale = getHeaderNumber(headers, "x-opennext-cache-composable-stale");
 	const expire = getHeaderNumber(headers, "x-opennext-cache-composable-expire");
 	const timestamp = getHeaderNumber(headers, "x-opennext-cache-composable-timestamp");
@@ -93,11 +89,7 @@ function reconstructComposable(
 	};
 }
 
-function reconstructFetch(
-	headers: HeadersMap,
-	bodyText: string,
-	base: Base
-) {
+function reconstructFetch(headers: HeadersMap, bodyText: string, base: Base) {
 	const kind = getHeaderValue(headers, "x-opennext-cache-fetch-kind");
 	if (kind !== "FETCH") return null;
 
@@ -127,11 +119,7 @@ function reconstructFetch(
 	return { value, ...base };
 }
 
-function reconstructCachedFile(
-	headers: HeadersMap,
-	bodyText: string,
-	base: Base
-) {
+function reconstructCachedFile(headers: HeadersMap, bodyText: string, base: Base) {
 	const subType = getHeaderValue(headers, "x-opennext-cache-sub-type");
 	const metaStatus = getHeaderNumber(headers, "x-opennext-cache-meta-status");
 	const metaPostponed = getHeaderValue(headers, "x-opennext-cache-meta-postponed");

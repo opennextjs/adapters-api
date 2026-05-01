@@ -8,7 +8,6 @@ import type {
 	CachedFetchValue,
 	CacheValue,
 	OpenNextHandlerOptions,
-	TagCache,
 	WithLastModified,
 } from "@/types/overrides";
 
@@ -31,13 +30,9 @@ async function initializeCaches() {
 	if (initialized) return;
 	const config = globalThis.openNextConfig;
 
-	globalThis.incrementalCache = await resolveIncrementalCache(
-		config.cacheHandler?.incrementalCache
-	);
+	globalThis.incrementalCache = await resolveIncrementalCache(config.cacheHandler?.incrementalCache);
 
-	globalThis.tagCache = await resolveTagCache(
-		config.cacheHandler?.tagCache
-	);
+	globalThis.tagCache = await resolveTagCache(config.cacheHandler?.tagCache);
 
 	globalThis.cdnInvalidationHandler = await resolveCdnInvalidation(
 		config.cacheHandler?.cdnInvalidation ?? config.default?.override?.cdnInvalidation
@@ -135,7 +130,7 @@ async function handleGet(key: string, cacheType: CacheEntryType): Promise<Intern
 				tags = getTagsFromValue(result.value as CachedFile);
 			} else if (cacheType === "fetch") {
 				const fetchValue = result.value as CachedFetchValue;
-				tags = fetchValue.tags ?? (fetchValue.data?.tags ?? []);
+				tags = fetchValue.tags ?? fetchValue.data?.tags ?? [];
 			} else if (cacheType === "composable") {
 				const composableValue = result.value as StoredComposableCacheEntry;
 				tags = composableValue.tags ?? [];
