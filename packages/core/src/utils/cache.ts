@@ -1,12 +1,29 @@
 import type {
 	CacheEntryType,
 	CacheValue,
+	NextModeTagCacheWriteInput,
 	OriginalTagCacheWriteInput,
 	TagCache,
 	WithLastModified,
 } from "@/types/overrides";
 
 import { debug } from "../adapters/logger";
+
+export async function isStale(
+	key: string,
+	tags: string[],
+	lastModified: number,
+	tagCache: TagCache = globalThis.tagCache
+): Promise<boolean> {
+	if (globalThis.openNextConfig.dangerous?.disableTagCache) {
+		return false;
+	}
+	if (tagCache.mode === "nextMode") {
+		return tags.length > 0 && (await tagCache.isStale?.(tags, lastModified)) === true;
+	}
+	const isCacheStale = await tagCache.isStale?.(key, lastModified);
+	return isCacheStale === true;
+}
 
 export async function hasBeenRevalidated<T extends CacheEntryType = "cache">(
 	key: string,
@@ -48,18 +65,23 @@ export function getTagsFromValue(value?: CacheValue<"cache">) {
 	}
 }
 
-function getTagKey(tag: string | OriginalTagCacheWriteInput): string {
+type WriteTagInput = string | NextModeTagCacheWriteInput | OriginalTagCacheWriteInput;
+
+function getTagKey(tag: WriteTagInput): string {
 	if (typeof tag === "string") {
 		return tag;
 	}
-	return JSON.stringify({
-		tag: tag.tag,
-		path: tag.path,
-	});
+	if ("path" in tag) {
+		return JSON.stringify({
+			tag: tag.tag,
+			path: tag.path,
+		});
+	}
+	return JSON.stringify({ tag: tag.tag });
 }
 
 export async function writeTags(
-	tags: (string | OriginalTagCacheWriteInput)[],
+	tags: WriteTagInput[],
 	tagCache: TagCache = globalThis.tagCache
 ): Promise<void> {
 	const store = globalThis.__openNextAls.getStore();

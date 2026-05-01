@@ -10,11 +10,7 @@ function toHeadersMap(headers: Record<string, string>): Map<string, string> {
 	return map;
 }
 
-function mockFetch(resp: {
-	headers: Record<string, string>;
-	body: string;
-	status?: number;
-}) {
+function mockFetch(resp: { headers: Record<string, string>; body: string; status?: number }) {
 	const response = {
 		ok: true,
 		status: resp.status ?? 200,

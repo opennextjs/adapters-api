@@ -13,7 +13,7 @@ import type {
 
 import { createGenericHandler } from "../core/createGenericHandler.js";
 import { resolveCdnInvalidation, resolveIncrementalCache, resolveTagCache } from "../core/resolve.js";
-import { getTagsFromValue, writeTags } from "../utils/cache.js";
+import { getTagsFromValue, isStale, writeTags } from "../utils/cache.js";
 import { runWithOpenNextRequestContext } from "../utils/promise.js";
 import { toReadableStream } from "../utils/stream.js";
 
@@ -136,6 +136,8 @@ async function handleGet(key: string, cacheType: CacheEntryType): Promise<Intern
 				tags = composableValue.tags ?? [];
 			}
 
+			const lastModified = result.lastModified ?? Date.now();
+
 			if (tags.length > 0) {
 				const revalidated = await checkTagRevalidation(key, tags, result);
 				if (revalidated) {
@@ -151,6 +153,12 @@ async function handleGet(key: string, cacheType: CacheEntryType): Promise<Intern
 						},
 					};
 				}
+			}
+
+			// Check if the cache entry is stale (valid but needs background revalidation)
+			const _isStale = tags.length > 0 ? await isStale(key, tags, lastModified) : false;
+			if (_isStale) {
+				result.lastModified = 1;
 			}
 		}
 
@@ -221,7 +229,7 @@ async function handleSet(key: string, cacheType: CacheEntryType, body?: Buffer):
 						tagsToWrite.map((tag) => ({
 							path: key,
 							tag,
-							revalidatedAt: 1,
+							revalidatedAt: Date.now(),
 						})),
 						tagCache
 					);
@@ -255,24 +263,38 @@ async function handleRevalidateTags(body?: Buffer): Promise<InternalResult> {
 		return buildErrorResponse("Missing request body", 400);
 	}
 
-	let tags: string[];
+	let parsed: { tags?: string[]; durations?: { expire?: number } };
 	try {
-		const parsed = JSON.parse(body.toString("utf-8"));
-		tags = Array.isArray(parsed.tags) ? parsed.tags : [];
+		parsed = JSON.parse(body.toString("utf-8"));
 	} catch {
 		return buildErrorResponse("Invalid JSON body", 400);
 	}
 
+	const tags = Array.isArray(parsed.tags) ? parsed.tags : [];
 	if (tags.length === 0) {
 		return buildErrorResponse("Missing 'tags' array in request body", 400);
 	}
+
+	const { durations } = parsed;
 
 	try {
 		await runWithOpenNextRequestContext({ isISRRevalidation: false }, async () => {
 			if (globalThis.tagCache.mode === "nextMode") {
 				const paths = (await globalThis.tagCache.getPathsByTags?.(tags)) ?? [];
 
-				await writeTags(tags);
+				const now = Date.now();
+				const tagsToWrite = tags.map((tag) => {
+					if (durations) {
+						return {
+							tag,
+							stale: now,
+							expire: durations.expire !== undefined ? now + durations.expire * 1000 : undefined,
+						};
+					}
+					return { tag, expire: now };
+				});
+
+				await writeTags(tagsToWrite);
 				if (paths.length > 0) {
 					await globalThis.cdnInvalidationHandler.invalidatePaths(
 						paths.map((path) => ({
@@ -291,14 +313,22 @@ async function handleRevalidateTags(body?: Buffer): Promise<InternalResult> {
 				return;
 			}
 
+			const now = Date.now();
 			for (const tag of tags) {
 				debug("revalidateTag", tag);
 				const paths = await globalThis.tagCache.getByTag(tag);
 				debug("Items", paths);
-				const toInsert = paths.map((path) => ({
-					path,
-					tag,
-				}));
+				const toInsert = paths.map((path) => {
+					const baseEntry = { path, tag };
+					if (durations) {
+						return {
+							...baseEntry,
+							stale: now,
+							expire: durations.expire !== undefined ? now + durations.expire * 1000 : undefined,
+						};
+					}
+					return { ...baseEntry, expire: now };
+				});
 
 				if (tag.startsWith(SOFT_TAG_PREFIX)) {
 					for (const path of paths) {
@@ -308,10 +338,17 @@ async function handleRevalidateTags(body?: Buffer): Promise<InternalResult> {
 							const _paths = await globalThis.tagCache.getByTag(hardTag);
 							debug({ hardTag, _paths });
 							toInsert.push(
-								..._paths.map((path) => ({
-									path,
-									tag: hardTag,
-								}))
+								..._paths.map((path) => {
+									const baseEntry = { path, tag: hardTag };
+									if (durations) {
+										return {
+											...baseEntry,
+											stale: now,
+											expire: durations.expire !== undefined ? now + durations.expire * 1000 : undefined,
+										};
+									}
+									return { ...baseEntry, expire: now };
+								})
 							);
 						}
 					}

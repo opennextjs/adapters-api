@@ -118,6 +118,38 @@ const tagCache: TagCache = {
 			return lastModified ?? Date.now();
 		}
 	},
+	async isStale(key, lastModified) {
+		if (globalThis.openNextConfig.dangerous?.disableTagCache) {
+			return false;
+		}
+		try {
+			const command = new QueryCommand({
+				TableName: CACHE_DYNAMO_TABLE,
+				IndexName: "revalidate",
+				KeyConditionExpression: "#key = :key AND #revalidatedAt > :lastModified",
+				ExpressionAttributeNames: {
+					"#key": "path",
+					"#revalidatedAt": "revalidatedAt",
+				},
+				ExpressionAttributeValues: {
+					":key": { S: buildDynamoKey(key) },
+					":lastModified": { N: String(lastModified ?? 0) },
+				},
+			});
+			const result = await dynamoClient.send(command);
+			const items = result.Items ?? [];
+			return items.some((item) => {
+				if (!item.stale?.N) return false;
+				return (
+					Number.parseInt(item.revalidatedAt?.N ?? "0") > (lastModified ?? 0) &&
+					Number.parseInt(item.stale.N) > (lastModified ?? 0)
+				);
+			});
+		} catch (e) {
+			error("Failed to check stale tags", e);
+			return false;
+		}
+	},
 	async writeTags(tags) {
 		try {
 			if (globalThis.openNextConfig.dangerous?.disableTagCache) {

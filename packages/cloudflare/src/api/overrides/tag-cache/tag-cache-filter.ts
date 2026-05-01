@@ -1,17 +1,16 @@
-import { NextModeTagCache } from "@opennextjs/core/types/overrides.js";
+import { NextModeTagCache, NextModeTagCacheWriteInput } from "@opennextjs/core/types/overrides.js";
 
 interface WithFilterOptions {
 	/**
 	 * The original tag cache.
-	 * Call to this will receive only the filtered tags.
 	 */
 	tagCache: NextModeTagCache;
+
 	/**
-	 * The function to filter tags.
-	 * @param tag The tag to filter.
+	 * Filter function that returns true if the tag should be forwarded to the underlying tag cache.
 	 * @returns true if the tag should be forwarded, false otherwise.
 	 */
-	filterFn: (tag: string) => boolean;
+	filterFn: (tag: string | NextModeTagCacheWriteInput) => boolean;
 }
 
 /**
@@ -60,6 +59,7 @@ export function withFilter({ tagCache, filterFn }: WithFilterOptions): NextModeT
  * This is used to filter out internal soft tags.
  * Can be used if `revalidatePath` is not used.
  */
-export function softTagFilter(tag: string): boolean {
-	return !tag.startsWith("_N_T_");
+export function softTagFilter(tag: string | { tag: string }): boolean {
+	const tagStr = typeof tag === "string" ? tag : tag.tag;
+	return !tagStr.startsWith("_N_T_");
 }

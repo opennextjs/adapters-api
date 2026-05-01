@@ -14,6 +14,8 @@ type DynamoDBItem = {
 	tag?: { S: string };
 	path?: { S: string };
 	revalidatedAt?: { N: string };
+	stale?: { N: string };
+	expire?: { N: string };
 };
 
 type DynamoDBResponse = {
@@ -161,6 +163,43 @@ const tagCache: OriginalTagCache = {
 		} catch (e) {
 			error("Failed to get revalidated tags", e);
 			return lastModified ?? Date.now();
+		}
+	},
+	async isStale(key: string, lastModified?: number) {
+		if (globalThis.openNextConfig.dangerous?.disableTagCache) {
+			return false;
+		}
+		try {
+			const { CACHE_DYNAMO_TABLE } = process.env;
+			const response = await awsFetch(
+				JSON.stringify({
+					TableName: CACHE_DYNAMO_TABLE,
+					IndexName: "revalidate",
+					KeyConditionExpression: "#key = :key AND #revalidatedAt > :lastModified",
+					ExpressionAttributeNames: {
+						"#key": "path",
+						"#revalidatedAt": "revalidatedAt",
+					},
+					ExpressionAttributeValues: {
+						":key": { S: buildDynamoKey(key) },
+						":lastModified": { N: String(lastModified ?? 0) },
+					},
+				})
+			);
+			if (response.status !== 200) {
+				throw new RecoverableError(`Failed to check stale tags: ${response.status}`);
+			}
+			const items = ((await response.json()) as DynamoDBResponse).Items ?? [];
+			return items.some((entry) => {
+				if (!entry.stale?.N) return false;
+				return (
+					Number.parseInt(entry.revalidatedAt?.N ?? "0") > (lastModified ?? 0) &&
+					Number.parseInt(entry.stale.N) > (lastModified ?? 0)
+				);
+			});
+		} catch (e) {
+			error("Failed to check stale tags", e);
+			return false;
 		}
 	},
 	async writeTags(tags: { tag: string; path: string; revalidatedAt?: number }[]) {
