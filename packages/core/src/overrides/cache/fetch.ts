@@ -1,4 +1,5 @@
 import type { Cache } from "@/types/overrides";
+import { parseCacheGetResponse } from "@/utils/cache-get";
 
 const CACHE_URL = process.env.OPEN_NEXT_CACHE_URL ?? "";
 
@@ -7,25 +8,13 @@ const fetchCache: Cache = {
 	get: async (key, cacheType) => {
 		const url = `${CACHE_URL}/cache/${encodeURIComponent(key)}${cacheType ? `?type=${cacheType}` : ""}`;
 		const response = await fetch(url, { method: "GET" });
-		if (!response.ok) {
-			return null;
-		}
-		const data = (await response.json()) as {
-			found: boolean;
-			value?: unknown;
-			lastModified?: number;
-			shouldBypassTagCache?: boolean;
-		};
-		if (!data.found) {
-			return null;
-		}
-		const result: Record<string, unknown> = {
-			value: data.value,
-			lastModified: data.lastModified,
-			shouldBypassTagCache: data.shouldBypassTagCache,
-		};
+		const bodyText = await response.text();
+		const headers: Record<string, string> = {};
+		response.headers.forEach((v, k) => {
+			headers[k] = v;
+		});
 		// oxlint-disable-next-line @typescript-eslint/no-explicit-any
-		return result as any;
+		return parseCacheGetResponse(headers, bodyText) as any;
 	},
 	set: async (key, value, _cacheType) => {
 		const url = `${CACHE_URL}/cache/${encodeURIComponent(key)}`;

@@ -1,7 +1,15 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
+import type { StoredComposableCacheEntry } from "@/types/cache";
 import type { InternalEvent, InternalResult } from "@/types/open-next";
-import type { CacheEntryType, CacheValue, OpenNextHandlerOptions } from "@/types/overrides";
+import type {
+	CacheEntryType,
+	CachedFile,
+	CachedFetchValue,
+	CacheValue,
+	OpenNextHandlerOptions,
+	WithLastModified,
+} from "@/types/overrides";
 
 import { createGenericHandler } from "../core/createGenericHandler.js";
 import { resolveCdnInvalidation, resolveIncrementalCache, resolveTagCache } from "../core/resolve.js";
@@ -106,19 +114,20 @@ async function handleGet(key: string, cacheType: CacheEntryType): Promise<Intern
 	try {
 		const result = await globalThis.incrementalCache.get(key, cacheType);
 
-		if (!result) {
-			return buildJsonResponse({ found: false, value: null }, 200);
+		if (!result?.value) {
+			return {
+				type: "core",
+				statusCode: 404,
+				body: toReadableStream(""),
+				isBase64Encoded: false,
+				headers: {
+					"x-opennext-cache-found": "false",
+					"Cache-Control": "no-store",
+				},
+			};
 		}
 
-		return buildJsonResponse(
-			{
-				found: true,
-				value: result.value ?? null,
-				lastModified: result.lastModified,
-				shouldBypassTagCache: result.shouldBypassTagCache,
-			},
-			200
-		);
+		return buildCacheGetResponse(result);
 	} catch (e) {
 		error("Failed to get cache entry", e);
 		return buildErrorResponse("Failed to get cache entry", 500);
@@ -264,9 +273,158 @@ async function handleRevalidateTags(body?: Buffer): Promise<InternalResult> {
 	}
 }
 
-////////////////////////
+/////////////////////////////
+// Cache GET response builder //
+/////////////////////////////
+
+function buildCacheGetResponse(result: WithLastModified<CacheValue<CacheEntryType>>): InternalResult {
+	const value = result.value!;
+
+	const headers: Record<string, string | string[]> = {
+		"x-opennext-cache-found": "true",
+		"Cache-Control": "no-store",
+	};
+
+	if (result.lastModified !== undefined) {
+		headers["x-opennext-cache-last-modified"] = String(result.lastModified);
+	}
+	if (result.shouldBypassTagCache) {
+		headers["x-opennext-cache-should-bypass"] = "true";
+	}
+
+	if ("kind" in value && value.kind === "FETCH") {
+		return buildFetchResponse(value as CachedFetchValue, headers);
+	}
+
+	if ("type" in value) {
+		return buildCachedFileResponse(value as CachedFile, headers);
+	}
+
+	return buildComposableResponse(value as StoredComposableCacheEntry, headers);
+}
+
+function buildFetchResponse(
+	value: CachedFetchValue,
+	headers: Record<string, string | string[]>
+): InternalResult {
+	headers["x-opennext-cache-type"] = "fetch";
+	headers["x-opennext-cache-fetch-kind"] = "FETCH";
+	headers["x-opennext-cache-fetch-data-url"] = value.data.url;
+
+	if (value.data.status !== undefined) {
+		headers["x-opennext-cache-fetch-data-status"] = String(value.data.status);
+	}
+	if (value.data.tags) {
+		headers["x-opennext-cache-fetch-data-tags"] = JSON.stringify(value.data.tags);
+	}
+	if (value.tags) {
+		headers["x-opennext-cache-fetch-tags"] = JSON.stringify(value.tags);
+	}
+
+	for (const [key, val] of Object.entries(value.data.headers)) {
+		headers[`x-opennext-cache-header-${key}`] = val;
+	}
+
+	const body = value.data.body;
+	return {
+		type: "core",
+		statusCode: 200,
+		body: toReadableStream(body),
+		isBase64Encoded: false,
+		headers: { ...headers, "Content-Type": "text/plain" },
+	};
+}
+
+function buildCachedFileResponse(
+	value: CachedFile,
+	headers: Record<string, string | string[]>
+): InternalResult {
+	headers["x-opennext-cache-type"] = "cache";
+	headers["x-opennext-cache-sub-type"] = value.type;
+
+	if (value.meta?.status !== undefined) {
+		headers["x-opennext-cache-meta-status"] = String(value.meta.status);
+	}
+	if (value.meta?.postponed !== undefined) {
+		headers["x-opennext-cache-meta-postponed"] = value.meta.postponed;
+	}
+	if (value.meta?.headers) {
+		for (const [key, val] of Object.entries(value.meta.headers)) {
+			if (val !== undefined) {
+				headers[`x-opennext-cache-header-${key}`] = val;
+			}
+		}
+	}
+
+	switch (value.type) {
+		case "route": {
+			return {
+				type: "core",
+				statusCode: 200,
+				body: toReadableStream(value.body),
+				isBase64Encoded: false,
+				headers: { ...headers, "Content-Type": "text/plain" },
+			};
+		}
+		case "page": {
+			return {
+				type: "core",
+				statusCode: 200,
+				body: toReadableStream(JSON.stringify({ json: value.json, html: value.html })),
+				isBase64Encoded: false,
+				headers: { ...headers, "Content-Type": "application/json" },
+			};
+		}
+		case "app": {
+			return {
+				type: "core",
+				statusCode: 200,
+				body: toReadableStream(
+					JSON.stringify({
+						html: value.html,
+						rsc: value.rsc,
+						segmentData: value.segmentData,
+					})
+				),
+				isBase64Encoded: false,
+				headers: { ...headers, "Content-Type": "application/json" },
+			};
+		}
+		case "redirect": {
+			return {
+				type: "core",
+				statusCode: 200,
+				body: toReadableStream(JSON.stringify(value.props ?? {})),
+				isBase64Encoded: false,
+				headers: { ...headers, "Content-Type": "application/json" },
+			};
+		}
+	}
+}
+
+function buildComposableResponse(
+	value: StoredComposableCacheEntry,
+	headers: Record<string, string | string[]>
+): InternalResult {
+	headers["x-opennext-cache-type"] = "composable";
+	headers["x-opennext-cache-composable-stale"] = String(value.stale);
+	headers["x-opennext-cache-composable-expire"] = String(value.expire);
+	headers["x-opennext-cache-composable-timestamp"] = String(value.timestamp);
+	headers["x-opennext-cache-composable-revalidate"] = String(value.revalidate);
+	headers["x-opennext-cache-composable-tags"] = JSON.stringify(value.tags);
+
+	return {
+		type: "core",
+		statusCode: 200,
+		body: toReadableStream(value.value),
+		isBase64Encoded: false,
+		headers: { ...headers, "Content-Type": "text/plain" },
+	};
+}
+
+//////////////////////////
 // Response builders  //
-////////////////////////
+//////////////////////////
 
 function buildJsonResponse(data: unknown, statusCode: number): InternalResult {
 	const body = JSON.stringify(data);

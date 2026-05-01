@@ -2,6 +2,7 @@ import path from "node:path";
 
 import type { InternalEvent, InternalResult } from "@/types/open-next";
 import type { Cache } from "@/types/overrides";
+import { parseCacheGetResponse } from "@/utils/cache-get";
 import { getMonorepoRelativePath } from "@/utils/normalize-path";
 import { fromReadableStream } from "@/utils/stream";
 
@@ -34,22 +35,8 @@ const localCache: Cache = {
 		};
 		const result = await h(event);
 		const bodyText = await fromReadableStream(result.body);
-		const data = JSON.parse(bodyText) as {
-			found: boolean;
-			value?: unknown;
-			lastModified?: number;
-			shouldBypassTagCache?: boolean;
-		};
-		if (!data.found) {
-			return null;
-		}
-		const res = {
-			value: data.value,
-			lastModified: data.lastModified,
-			shouldBypassTagCache: data.shouldBypassTagCache,
-		};
 		// oxlint-disable-next-line @typescript-eslint/no-explicit-any
-		return res as any;
+		return parseCacheGetResponse(result.headers, bodyText) as any;
 	},
 	set: async (key, value, _cacheType) => {
 		const h = (await getHandler())!;
