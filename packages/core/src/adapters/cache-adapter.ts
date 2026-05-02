@@ -82,7 +82,8 @@ async function defaultHandler(
 			return buildErrorResponse("Missing cache key", 400);
 		}
 
-		const cacheType: CacheEntryType = query?.type === "fetch" ? "fetch" : "cache";
+		const cacheType: CacheEntryType =
+			query?.type === "fetch" ? "fetch" : query?.type === "composable" ? "composable" : "cache";
 
 		const additionalTags = query?.tags ? (query.tags as string).split(",") : [];
 

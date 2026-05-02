@@ -100,7 +100,9 @@ export default {
 			return;
 		}
 		try {
-			await globalThis.cache.revalidateTags(tags, durations);
+			await globalThis.cache.revalidateTags(tags, {
+				expire: durations?.expire ? Date.now() + durations.expire * 1000 : undefined,
+			});
 		} catch (e) {
 			debug("Failed to update tags", e);
 		}
