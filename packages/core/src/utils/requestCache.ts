@@ -1,35 +1,28 @@
 /**
- * A simple utility to cache values scoped to a request.
- * It uses our internal AsyncLocalStorage (globalThis.__openNextAls) to store the cache.
+ * A per-request cache that provides named Map instances.
+ * Overrides can use this to store and share data within the scope of a single request
+ * without polluting global state.
  *
- * This is useful for deduplicating operations within the same request,
- * such as DynamoDB queries for tag cache lookups.
+ * Retrieve it from the ALS context:
+ * ```ts
+ * const store = globalThis.__openNextAls.getStore();
+ * const myMap = store?.requestCache.getOrCreate<MyKey, MyValue>("my-override");
+ * ```
  */
-export class RequestCache<K, V> {
-	getOrSet(key: K, factory: () => Promise<V>): Promise<V> {
-		const store = globalThis.__openNextAls.getStore();
-		if (!store) {
-			return factory();
-		}
-		// We use "requestCache" as a property on the store
-		// and lazily initialize a Map for each cache instance
-		// oxlint-disable-next-line @typescript-eslint/no-explicit-any
-		const reqCache = (store as any).requestCache as Map<RequestCache<K, V>, Map<K, Promise<V>>> | undefined;
-		if (!reqCache) {
-			// oxlint-disable-next-line @typescript-eslint/no-explicit-any
-			(store as any).requestCache = new Map();
-		}
-		// oxlint-disable-next-line @typescript-eslint/no-explicit-any
-		const cache = (store as any).requestCache as Map<RequestCache<K, V>, Map<K, Promise<V>>>;
-		if (!cache.has(this)) {
-			cache.set(this, new Map());
-		}
-		const innerCache = cache.get(this)!;
-		if (innerCache.has(key)) {
-			return innerCache.get(key)!;
-		}
-		const promise = factory();
-		innerCache.set(key, promise);
-		return promise;
-	}
+export class RequestCache {
+  private _caches = new Map<string, Map<unknown, unknown>>();
+
+  /**
+   * Returns the Map registered under `key`.
+   * If no Map exists yet for that key, a new empty Map is created, stored, and returned.
+   * Repeated calls with the same key always return the **same** Map instance.
+   */
+  getOrCreate<K = unknown, V = unknown>(key: string): Map<K, V> {
+    let cache = this._caches.get(key) as Map<K, V> | undefined;
+    if (!cache) {
+      cache = new Map<K, V>();
+      this._caches.set(key, cache);
+    }
+    return cache;
+  }
 }

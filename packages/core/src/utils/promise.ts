@@ -1,6 +1,7 @@
 import type { WaitUntil } from "@/types/open-next";
 
 import { debug, error } from "../adapters/logger";
+import { RequestCache } from "./requestCache";
 
 /**
  * A `Promise.withResolvers` implementation that exposes the `resolve` and
@@ -113,14 +114,15 @@ export function runWithOpenNextRequestContext<T>(
 	},
 	fn: () => Promise<T>
 ): Promise<T> {
-	return globalThis.__openNextAls.run(
-		{
-			requestId,
-			pendingPromiseRunner: new DetachedPromiseRunner(),
-			isISRRevalidation,
-			waitUntil,
-			writtenTags: new Set<string>(),
-		},
+		return globalThis.__openNextAls.run(
+			{
+				requestId,
+				pendingPromiseRunner: new DetachedPromiseRunner(),
+				isISRRevalidation,
+				waitUntil,
+				writtenTags: new Set<string>(),
+				requestCache: new RequestCache(),
+			},
 		async () => {
 			provideNextAfterProvider();
 			let result: T;

@@ -4,25 +4,21 @@ import { debug, error } from "@opennextjs/core/adapters/logger.js";
 import { chunk, parseNumberFromEnv } from "@opennextjs/core/adapters/util.js";
 import type { NextModeTagCache, NextModeTagCacheWriteInput } from "@opennextjs/core/types/overrides.js";
 import { RecoverableError } from "@opennextjs/core/utils/error.js";
-import { RequestCache } from "@opennextjs/core/utils/requestCache.js";
 import { AwsClient } from "aws4fetch";
 
 import { customFetchClient } from "../../utils/fetch.js";
 
 import { MAX_DYNAMO_BATCH_WRITE_ITEM_COUNT, getDynamoBatchWriteCommandConcurrency } from "./constants.js";
 
-type DynamoDBTagItem = {
-	revalidatedAt: { N: string };
-	tag: { S: string };
+let awsClient: AwsClient | null = null;
+
+type DynamoDBItem = {
+	tag?: { S: string };
+	path?: { S: string };
+	revalidatedAt?: { N: string };
 	stale?: { N: string };
 	expire?: { N: string };
 };
-
-type DynamoDBBatchGetResponse = {
-	Responses?: Record<string, DynamoDBTagItem[]>;
-};
-
-let awsClient: AwsClient | null = null;
 
 const getAwsClient = () => {
 	const { CACHE_BUCKET_REGION } = process.env;
@@ -71,14 +67,44 @@ function buildDynamoObject(tag: string, revalidatedAt?: number, stale?: number, 
 	};
 }
 
-function fetchTagItems(tags: string[]): Promise<DynamoDBTagItem[]> {
-	const { CACHE_DYNAMO_TABLE } = process.env;
+// This implementation does not support automatic invalidation of paths by the cdn
 
-	return awsFetch(
+/**
+ * Checks the items cache for each tag. Returns tags not yet cached and whether
+ * a positive result was already found among the cached ones.
+ */
+function checkItemsCache(
+	tags: string[],
+	itemsCache: Map<string, DynamoDBItem> | undefined,
+	compute: (item: DynamoDBItem) => boolean
+): { uncachedTags: string[]; hasMatch: boolean } {
+	const uncachedTags: string[] = [];
+	let hasMatch = false;
+	for (const tag of tags) {
+		if (itemsCache?.has(tag)) {
+			if (compute(itemsCache.get(tag)!)) hasMatch = true;
+		} else {
+			uncachedTags.push(tag);
+		}
+	}
+	return { uncachedTags, hasMatch };
+}
+
+/**
+ * Fetches uncached tags from DynamoDB via BatchGetItem, populates the items
+ * cache (storing null for absent tags), and returns whether any tag matched.
+ */
+async function fetchAndCacheItems(
+	uncachedTags: string[],
+	itemsCache: Map<string, DynamoDBItem> | undefined,
+	compute: (item: DynamoDBItem) => boolean
+): Promise<boolean> {
+	const { CACHE_DYNAMO_TABLE } = process.env;
+	const response = await awsFetch(
 		JSON.stringify({
 			RequestItems: {
 				[CACHE_DYNAMO_TABLE ?? ""]: {
-					Keys: tags.map((tag) => ({
+					Keys: uncachedTags.map((tag) => ({
 						path: { S: buildDynamoKey(tag) },
 						tag: { S: buildDynamoKey(tag) },
 					})),
@@ -86,23 +112,29 @@ function fetchTagItems(tags: string[]): Promise<DynamoDBTagItem[]> {
 			},
 		}),
 		"query"
-	).then(async (response) => {
-		if (response.status !== 200) {
-			throw new RecoverableError(`Failed to query dynamo item: ${response.status}`);
-		}
-		const { Responses } = (await response.json()) as DynamoDBBatchGetResponse;
-		return Responses?.[CACHE_DYNAMO_TABLE ?? ""] ?? [];
-	});
+	);
+	if (response.status !== 200) {
+		throw new RecoverableError(`Failed to query dynamo item: ${response.status}`);
+	}
+	const { Responses } = await response.json();
+	const responseItems: DynamoDBItem[] = Responses?.[CACHE_DYNAMO_TABLE ?? ""] ?? [];
+
+	// Build a lookup map: DynamoDB key → item
+	const responseByKey = new Map<string, DynamoDBItem>();
+	for (const item of responseItems) {
+		responseByKey.set(item.tag?.S ?? "", item);
+	}
+
+	let hasMatch = false;
+	for (const tag of uncachedTags) {
+		const item = responseByKey.get(buildDynamoKey(tag)) ?? null;
+		if (!item) continue;
+		itemsCache?.set(tag, item);
+		if (compute(item)) hasMatch = true;
+	}
+	return hasMatch;
 }
 
-const requestCache = new RequestCache<string, DynamoDBTagItem[]>();
-
-function getCachedTagItems(tags: string[]): Promise<DynamoDBTagItem[]> {
-	const cacheKey = [...tags].sort().join(",");
-	return requestCache.getOrSet(cacheKey, () => fetchTagItems(tags));
-}
-
-// This implementation does not support automatic invalidation of paths by the cdn
 export default {
 	name: "ddb-nextMode",
 	mode: "nextMode",
@@ -119,71 +151,78 @@ export default {
 				"Cannot query more than 100 tags at once. You should not be using this tagCache implementation for this amount of tags"
 			);
 		}
-		const items = await getCachedTagItems(tags);
+
+		const store = globalThis.__openNextAls.getStore();
+		const itemsCache = store?.requestCache.getOrCreate<string, DynamoDBItem>("ddb-nextMode:tagItems");
 
 		const now = Date.now();
-		const revalidatedTags = items.filter((item) => {
-			const revalidatedAt = Number.parseInt(item.revalidatedAt.N);
-			if (revalidatedAt > (lastModified ?? 0)) {
-				return true;
-			}
-			// If the tag has expired (expire time is in the past), it counts as revalidated
+		const compute = (item: DynamoDBItem): boolean => {
+			if (!item) return false;
 			if (item.expire?.N) {
-				const expireTime = Number.parseInt(item.expire.N);
-				if (expireTime <= now && expireTime > (lastModified ?? 0)) {
-					return true;
-				}
+				const expiry = Number.parseInt(item.expire.N);
+				if (expiry <= now && expiry > (lastModified ?? 0)) return true;
 			}
-			return false;
-		});
-		debug("retrieved tags", revalidatedTags);
-		return revalidatedTags.length > 0;
+			return Number.parseInt(item.revalidatedAt?.N ?? "0") > (lastModified ?? 0);
+		};
+
+		const { uncachedTags, hasMatch } = checkItemsCache(tags, itemsCache, compute);
+		if (hasMatch) return true;
+		if (uncachedTags.length === 0) return false;
+
+		// It's unlikely that we will have more than 100 items to query
+		// If that's the case, you should not use this tagCache implementation
+		const result = await fetchAndCacheItems(uncachedTags, itemsCache, compute);
+		debug("retrieved tags for hasBeenRevalidated", tags);
+		return result;
 	},
 	isStale: async (tags: string[], lastModified?: number) => {
 		if (globalThis.openNextConfig.dangerous?.disableTagCache) {
 			return false;
 		}
-		if (tags.length === 0) {
-			return false;
-		}
+		if (tags.length === 0) return false;
 		if (tags.length > 100) {
 			throw new RecoverableError(
 				"Cannot query more than 100 tags at once. You should not be using this tagCache implementation for this amount of tags"
 			);
 		}
-		const items = await getCachedTagItems(tags);
 
-		const hasStaleTag = items.some((item) => {
+		const store = globalThis.__openNextAls.getStore();
+		const itemsCache = store?.requestCache.getOrCreate<string, DynamoDBItem>("ddb-nextMode:tagItems");
+
+		const compute = (item: DynamoDBItem): boolean => {
 			if (!item?.stale?.N) return false;
 			const revalidatedAt = Number.parseInt(item.revalidatedAt?.N ?? "0");
 			// A tag is stale when both its stale timestamp and its revalidatedAt are newer than the page.
 			// revalidatedAt > lastModified ensures the revalidation that set this stale window happened
 			// after the page was generated, preventing a stale signal from a previous ISR cycle.
 			return revalidatedAt > (lastModified ?? 0) && Number.parseInt(item.stale.N) >= (lastModified ?? 0);
-		});
-		debug("isStale result:", hasStaleTag);
-		return hasStaleTag;
+		};
+
+		const { uncachedTags, hasMatch } = checkItemsCache(tags, itemsCache, compute);
+		if (hasMatch) return true;
+		if (uncachedTags.length === 0) return false;
+
+		const result = await fetchAndCacheItems(uncachedTags, itemsCache, compute);
+		debug("isStale result:", result);
+		return result;
 	},
-	writeTags: async (tags: (string | NextModeTagCacheWriteInput)[]) => {
+	writeTags: async (tags) => {
 		try {
 			const { CACHE_DYNAMO_TABLE } = process.env;
 			if (globalThis.openNextConfig.dangerous?.disableTagCache) {
 				return;
 			}
-			const now = Date.now();
 			const dataChunks = chunk(tags, MAX_DYNAMO_BATCH_WRITE_ITEM_COUNT).map((Items) => ({
 				RequestItems: {
 					[CACHE_DYNAMO_TABLE ?? ""]: Items.map((tag) => {
-						if (typeof tag === "string") {
-							return {
-								PutRequest: {
-									Item: buildDynamoObject(tag, now),
-								},
-							};
-						}
+						const tagStr = typeof tag === "string" ? tag : tag.tag;
+						const stale = typeof tag === "string" ? undefined : tag.stale;
+						const expiry = typeof tag === "string" ? undefined : tag.expire;
 						return {
 							PutRequest: {
-								Item: buildDynamoObject(tag.tag, now, tag.stale, tag.expire),
+								Item: {
+									...buildDynamoObject(tagStr, undefined, stale, expiry),
+								},
 							},
 						};
 					}),
