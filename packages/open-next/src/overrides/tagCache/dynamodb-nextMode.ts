@@ -202,7 +202,11 @@ export default {
 		// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 		const compute = (item: any): boolean => {
 			if (!item?.stale?.N) return false;
-			return Number.parseInt(item.stale.N) > (lastModified ?? 0);
+			const revalidatedAt = Number.parseInt(item.revalidatedAt?.N ?? "0");
+			// A tag is stale when both its stale timestamp and its revalidatedAt are newer than the page.
+			// revalidatedAt > lastModified ensures the revalidation that set this stale window happened
+			// after the page was generated, preventing a stale signal from a previous ISR cycle.
+			return revalidatedAt > (lastModified ?? 0) && Number.parseInt(item.stale.N) >= (lastModified ?? 0);
 		};
 
 		const { uncachedTags, hasMatch } = checkItemsCache(tags, itemsCache, compute);

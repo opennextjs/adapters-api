@@ -4,7 +4,7 @@ import { NextConfig, PrerenderManifest } from "@/config/index";
 import type { InternalEvent, InternalResult, MiddlewareEvent, PartialResult } from "@/types/open-next";
 import type { CacheValue } from "@/types/overrides";
 import { isBinaryContentType } from "@/utils/binary";
-import { getTagsFromValue, hasBeenRevalidated } from "@/utils/cache";
+import { getTagsFromValue, hasBeenRevalidated, isStale } from "@/utils/cache";
 import { emptyReadableStream, toReadableStream } from "@/utils/stream";
 
 import { debug, error } from "../../adapters/logger";
@@ -35,7 +35,8 @@ async function computeCacheControl(
 	body: string,
 	host: string,
 	revalidate?: number | false,
-	lastModified?: number
+	lastModified?: number,
+	isStaleFromTagCache = false
 ) {
 	let finalRevalidate = CACHE_ONE_YEAR;
 
@@ -60,19 +61,25 @@ async function computeCacheControl(
 			etag,
 		};
 	}
-	if (finalRevalidate !== CACHE_ONE_YEAR) {
-		const sMaxAge = Math.max(finalRevalidate - age, 1);
+	// SSG uses one year cache
+	const isSSG = finalRevalidate === CACHE_ONE_YEAR;
+	const remainingTtl = Math.max(finalRevalidate - age, 1);
+
+	const isStaleFromTime = !isSSG && remainingTtl === 1;
+	const _isStale = isStaleFromTime || isStaleFromTagCache;
+
+	if (!isSSG || isStaleFromTagCache) {
+		const sMaxAge = isStaleFromTagCache ? 1 : remainingTtl;
 		debug("sMaxAge", {
 			finalRevalidate,
 			age,
 			lastModified,
 			revalidate,
+			isStaleFromTagCache,
 		});
-		const isStale = sMaxAge === 1;
-		if (isStale) {
+		if (_isStale) {
 			let url = NextConfig.trailingSlash ? `${path}/` : path;
 			if (NextConfig.basePath) {
-				// We need to add the basePath to the url
 				url = `${NextConfig.basePath}${url}`;
 			}
 			await globalThis.queue.send({
@@ -88,7 +95,7 @@ async function computeCacheControl(
 		}
 		return {
 			"cache-control": `s-maxage=${sMaxAge}, stale-while-revalidate=${CACHE_ONE_MONTH}`,
-			"x-opennext-cache": isStale ? "STALE" : "HIT",
+			"x-opennext-cache": _isStale ? "STALE" : "HIT",
 			etag,
 		};
 	}
@@ -165,7 +172,8 @@ async function generateResult(
 	event: MiddlewareEvent,
 	localizedPath: string,
 	cachedValue: CacheValue<"cache">,
-	lastModified?: number
+	lastModified?: number,
+	isStaleFromTagCache = false
 ): Promise<InternalResult | PartialResult | InternalEvent> {
 	debug("Returning result from experimental cache");
 	let body = "";
@@ -232,7 +240,8 @@ async function generateResult(
 		body,
 		event.headers.host,
 		cachedValue.revalidate,
-		lastModified
+		lastModified,
+		isStaleFromTagCache
 	);
 	return {
 		type: "core",
@@ -346,10 +355,9 @@ export async function cacheInterceptor(
 			if (!cachedData?.value) {
 				return event;
 			}
+			const tags = getTagsFromValue(cachedData.value);
 			// We need to check the tag cache now
 			if (cachedData.value?.type === "app" || cachedData.value?.type === "route") {
-				const tags = getTagsFromValue(cachedData.value);
-
 				const _hasBeenRevalidated = cachedData.shouldBypassTagCache
 					? false
 					: await hasBeenRevalidated(localizedPath, tags, cachedData);
@@ -358,18 +366,25 @@ export async function cacheInterceptor(
 					return event;
 				}
 			}
+
+			// Check if the cache entry is stale (valid but needs background revalidation)
+			const _isStale = cachedData.shouldBypassTagCache
+				? false
+				: await isStale(localizedPath, tags, cachedData.lastModified ?? Date.now());
+
 			const host = event.headers.host;
 			switch (cachedData?.value?.type) {
 				case "app":
 				case "page":
-					return generateResult(event, localizedPath, cachedData.value, cachedData.lastModified);
+					return generateResult(event, localizedPath, cachedData.value, cachedData.lastModified, _isStale);
 				case "redirect": {
 					const cacheControl = await computeCacheControl(
 						localizedPath,
 						"",
 						host,
 						cachedData.value.revalidate,
-						cachedData.lastModified
+						cachedData.lastModified,
+						_isStale
 					);
 					return {
 						type: "core",
@@ -388,7 +403,8 @@ export async function cacheInterceptor(
 						cachedData.value.body,
 						host,
 						cachedData.value.revalidate,
-						cachedData.lastModified
+						cachedData.lastModified,
+						_isStale
 					);
 
 					const isBinary = isBinaryContentType(String(cachedData.value.meta?.headers?.["content-type"]));
