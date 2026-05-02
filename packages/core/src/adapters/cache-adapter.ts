@@ -84,9 +84,11 @@ async function defaultHandler(
 
 		const cacheType: CacheEntryType = query?.type === "fetch" ? "fetch" : "cache";
 
+		const additionalTags = query?.tags ? (query.tags as string).split(",") : [];
+
 		switch (method) {
 			case "GET":
-				return await handleGet(key, cacheType);
+				return await handleGet(key, cacheType, additionalTags);
 			case "PUT":
 				return await handleSet(key, cacheType, body);
 			case "DELETE":
@@ -104,8 +106,12 @@ async function defaultHandler(
 // Route handlers   //
 //////////////////////
 
-async function handleGet(key: string, cacheType: CacheEntryType): Promise<InternalResult> {
-	debug("get", { key, cacheType });
+async function handleGet(
+	key: string,
+	cacheType: CacheEntryType,
+	additionalTags: string[]
+): Promise<InternalResult> {
+	debug("get", { key, cacheType, additionalTags });
 
 	try {
 		const result = await globalThis.incrementalCache.get(key, cacheType);
@@ -124,16 +130,16 @@ async function handleGet(key: string, cacheType: CacheEntryType): Promise<Intern
 		}
 
 		if (result.value && !result.shouldBypassTagCache) {
-			let tags: string[] = [];
+			let tags: string[] = [...additionalTags];
 
 			if (cacheType === "cache") {
-				tags = getTagsFromValue(result.value as CachedFile);
+				tags = [...tags, ...getTagsFromValue(result.value as CacheValue<"cache">)];
 			} else if (cacheType === "fetch") {
 				const fetchValue = result.value as CachedFetchValue;
-				tags = fetchValue.tags ?? fetchValue.data?.tags ?? [];
+				tags = [...tags, ...(fetchValue.tags ?? []), ...(fetchValue.data?.tags ?? [])];
 			} else if (cacheType === "composable") {
 				const composableValue = result.value as StoredComposableCacheEntry;
-				tags = composableValue.tags ?? [];
+				tags = [...tags, ...(composableValue.tags ?? [])];
 			}
 
 			const lastModified = result.lastModified ?? Date.now();
@@ -174,12 +180,12 @@ async function checkTagRevalidation(
 	tags: string[],
 	cacheEntry: WithLastModified<CacheValue<CacheEntryType>>
 ): Promise<boolean> {
-	if (globalThis.openNextConfig?.dangerous?.disableTagCache) {
+	if (globalThis.openNextConfig?.dangerous?.disableTagCache || tags.length === 0) {
 		return false;
 	}
 	const lastModified = cacheEntry.lastModified ?? Date.now();
 	if (globalThis.tagCache.mode === "nextMode") {
-		return tags.length > 0 && (await globalThis.tagCache.hasBeenRevalidated(tags, lastModified));
+		return globalThis.tagCache.hasBeenRevalidated(tags, lastModified);
 	}
 	const _lastModified = await globalThis.tagCache.getLastModified(key, lastModified);
 	return _lastModified === -1;
@@ -209,16 +215,20 @@ async function handleSet(key: string, cacheType: CacheEntryType, body?: Buffer):
 
 		// Write tags for non-composable and non-nextMode tag caches
 		const tagCache = globalThis.tagCache;
+		// TODO: fix this horrible typing
 		if (tagCache.mode !== "nextMode" && !globalThis.openNextConfig?.dangerous?.disableTagCache) {
 			let derivedTags: string[] = [];
 
 			if (cacheType === "cache") {
-				const tags = getTagsFromValue(payload.value as Parameters<typeof getTagsFromValue>[0]);
+				const tags = getTagsFromValue(payload.value as CacheValue<"cache">);
 				derivedTags = tags;
 			} else if (cacheType === "fetch") {
-				const fetchValue = payload.value as Record<string, unknown>;
+				const fetchValue = payload.value as CacheValue<"fetch">;
 				const data = fetchValue.data as Record<string, unknown> | undefined;
 				derivedTags = (fetchValue.tags as string[]) ?? (data?.tags as string[]) ?? [];
+			} else if (cacheType === "composable") {
+				const composableValue = payload.value as CacheValue<"composable">;
+				derivedTags = composableValue.tags ?? [];
 			}
 
 			if (derivedTags.length > 0) {

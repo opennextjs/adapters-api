@@ -19,17 +19,20 @@ async function getHandler() {
 
 const localCache: Cache = {
 	name: "local-cache",
-	get: async (key, cacheType) => {
+	get: async (key, cacheType, additionalTags) => {
 		const h = (await getHandler())!;
 		const encodedKey = encodeURIComponent(key);
 		const url = `https://on/cache/${encodedKey}`;
+		const query: Record<string, string> = {};
+		if (cacheType) query.type = cacheType;
+		if (additionalTags && additionalTags.length > 0) query.tags = additionalTags.join(",");
 		const event: InternalEvent = {
 			type: "core",
 			method: "GET",
 			rawPath: `/cache/${encodedKey}`,
 			url,
 			headers: {},
-			query: cacheType ? { type: cacheType } : {},
+			query,
 			cookies: {},
 			remoteAddress: "127.0.0.1",
 		};
@@ -71,7 +74,7 @@ const localCache: Cache = {
 		};
 		await h(event);
 	},
-	revalidateTags: async (tags) => {
+	revalidateTags: async (tags, durations) => {
 		const h = (await getHandler())!;
 		const url = `https://on/cache/revalidate-tags`;
 		const event: InternalEvent = {
@@ -83,7 +86,7 @@ const localCache: Cache = {
 			query: {},
 			cookies: {},
 			remoteAddress: "127.0.0.1",
-			body: Buffer.from(JSON.stringify({ tags })),
+			body: Buffer.from(JSON.stringify({ tags, durations })),
 		};
 		await h(event);
 	},

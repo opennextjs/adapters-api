@@ -102,7 +102,6 @@ export async function writeTags(
 	if (tagsToWrite.length === 0) {
 		return;
 	}
-
 	// Here we know that we have the correct type
 	// oxlint-disable-next-line @typescript-eslint/no-explicit-any - writeTags accepts a union type that typescript cannot infer correctly
 	await tagCache.writeTags(tagsToWrite as any);

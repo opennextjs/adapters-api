@@ -26,13 +26,15 @@ export default class Cache {
 			return null;
 		}
 
-		return isFetchCache(options) ? this.getFetchCache(key) : this.getIncrementalCache(key);
+		return isFetchCache(options)
+			? this.getFetchCache(key, [...(options?.tags ?? []), ...(options?.softTags ?? [])])
+			: this.getIncrementalCache(key);
 	}
 
-	async getFetchCache(key: string) {
+	async getFetchCache(key: string, additionalTags: string[] = []): Promise<CacheHandlerValue | null> {
 		debug("get fetch cache", { key });
 		try {
-			const result = await globalThis.cache.get(key, "fetch");
+			const result = await globalThis.cache.get(key, "fetch", additionalTags);
 
 			if (!result?.value) return null;
 
