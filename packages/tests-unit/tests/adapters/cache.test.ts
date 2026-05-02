@@ -1,11 +1,11 @@
 import Cache, { SOFT_TAG_PREFIX } from "@opennextjs/aws/adapters/cache.js";
-import { type Mock, vi } from "vitest";
+import { type Mock, vi, describe, it, expect, beforeEach } from "vitest";
 
 declare global {
 	var openNextConfig: {
 		dangerous: { disableIncrementalCache?: boolean; disableTagCache?: boolean };
 	};
-	var isNextAfter15: boolean;
+	var nextVersion: string;
 }
 
 describe("CacheHandler", () => {
@@ -37,6 +37,7 @@ describe("CacheHandler", () => {
 		getByPath: vi.fn(),
 		getLastModified: vi.fn().mockResolvedValue(new Date("2024-01-02T00:00:00Z").getTime()),
 		writeTags: vi.fn(),
+		isStale: vi.fn().mockResolvedValue(false),
 		getPathsByTags: undefined as Mock | undefined,
 	};
 	globalThis.tagCache = tagCache;
@@ -48,18 +49,21 @@ describe("CacheHandler", () => {
 	globalThis.cdnInvalidationHandler = invalidateCdnHandler;
 
 	globalThis.__openNextAls = {
-		getStore: vi.fn().mockReturnValue({
+		getStore: vi.fn(),
+	};
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+
+		// Reset the getStore mock to return a fresh set for each test
+		(globalThis.__openNextAls.getStore as Mock).mockReturnValue({
 			pendingPromiseRunner: {
 				withResolvers: vi.fn().mockReturnValue({
 					resolve: vi.fn(),
 				}),
 			},
 			writtenTags: new Set(),
-		}),
-	};
-
-	beforeEach(() => {
-		vi.clearAllMocks();
+		});
 
 		cache = new Cache();
 
@@ -68,7 +72,7 @@ describe("CacheHandler", () => {
 				disableIncrementalCache: false,
 			},
 		};
-		globalThis.isNextAfter15 = false;
+		globalThis.nextVersion = "15.0.0";
 		tagCache.mode = "original";
 		tagCache.getPathsByTags = undefined;
 	});
@@ -118,6 +122,10 @@ describe("CacheHandler", () => {
 			});
 
 			describe("next15", () => {
+				beforeEach(() => {
+					globalThis.nextVersion = "15.0.0";
+				});
+
 				it("Should retrieve cache from fetch cache when hint is fetch", async () => {
 					await cache.get("key", { kind: "FETCH" });
 
@@ -460,6 +468,86 @@ describe("CacheHandler", () => {
 				expect(result).toBeNull();
 			});
 		});
+
+		describe("stale tags", () => {
+			beforeEach(() => {
+				globalThis.nextVersion = "16.0.0";
+			});
+
+			it("Should return lastModified as 1 when tag is stale", async () => {
+				tagCache.mode = "nextMode";
+				tagCache.hasBeenRevalidated.mockResolvedValueOnce(false);
+				tagCache.isStale.mockResolvedValueOnce(true);
+				const cachedLastModified = Date.now();
+				incrementalCache.get.mockResolvedValueOnce({
+					value: {
+						kind: "FETCH",
+						data: {
+							headers: {},
+							body: "{}",
+							url: "https://example.com",
+							status: 200,
+						},
+					},
+					lastModified: cachedLastModified,
+				});
+
+				const result = await cache.get("key", {
+					kind: "FETCH",
+					tags: ["tag1"],
+				});
+
+				expect(result).not.toBeNull();
+				expect(result?.lastModified).toEqual(1);
+			});
+
+			it("Should return original lastModified when tag is not stale", async () => {
+				tagCache.mode = "nextMode";
+				tagCache.hasBeenRevalidated.mockResolvedValueOnce(false);
+				tagCache.isStale.mockResolvedValueOnce(false);
+				const cachedLastModified = Date.now();
+				incrementalCache.get.mockResolvedValueOnce({
+					value: {
+						kind: "FETCH",
+						data: {
+							headers: {},
+							body: "{}",
+							url: "https://example.com",
+							status: 200,
+						},
+					},
+					lastModified: cachedLastModified,
+				});
+
+				const result = await cache.get("key", {
+					kind: "FETCH",
+					tags: ["tag1"],
+				});
+
+				expect(result).not.toBeNull();
+				expect(result?.lastModified).toEqual(cachedLastModified);
+			});
+
+			it("Should not call isStale when shouldBypassTagCache is true", async () => {
+				incrementalCache.get.mockResolvedValueOnce({
+					value: {
+						kind: "FETCH",
+						data: {
+							headers: {},
+							body: "{}",
+							url: "https://example.com",
+							status: 200,
+						},
+					},
+					lastModified: Date.now(),
+					shouldBypassTagCache: true,
+				});
+
+				await cache.get("key", { kind: "FETCH", tags: ["tag1"] });
+
+				expect(tagCache.isStale).not.toHaveBeenCalled();
+			});
+		});
 	});
 
 	describe("set", () => {
@@ -698,6 +786,7 @@ describe("CacheHandler", () => {
 				{
 					path: "/path",
 					tag: "tag",
+					expire: expect.any(Number),
 				},
 			]);
 		});
@@ -712,6 +801,7 @@ describe("CacheHandler", () => {
 				{
 					path: "/path",
 					tag: `${SOFT_TAG_PREFIX}path`,
+					expire: expect.any(Number),
 				},
 			]);
 
@@ -727,6 +817,7 @@ describe("CacheHandler", () => {
 				{
 					path: "123456",
 					tag: "tag",
+					expire: expect.any(Number),
 				},
 			]);
 
@@ -738,7 +829,10 @@ describe("CacheHandler", () => {
 			await cache.revalidateTag(["tag1", "tag2"]);
 
 			expect(tagCache.writeTags).toHaveBeenCalledTimes(1);
-			expect(tagCache.writeTags).toHaveBeenCalledWith(["tag1", "tag2"]);
+			expect(tagCache.writeTags).toHaveBeenCalledWith([
+				{ tag: "tag1", expire: expect.any(Number) },
+				{ tag: "tag2", expire: expect.any(Number) },
+			]);
 			expect(invalidateCdnHandler.invalidatePaths).not.toHaveBeenCalled();
 		});
 
@@ -756,7 +850,7 @@ describe("CacheHandler", () => {
 			await cache.revalidateTag("tag");
 
 			expect(tagCache.writeTags).toHaveBeenCalledTimes(1);
-			expect(tagCache.writeTags).toHaveBeenCalledWith(["tag"]);
+			expect(tagCache.writeTags).toHaveBeenCalledWith([{ tag: "tag", expire: expect.any(Number) }]);
 			expect(invalidateCdnHandler.invalidatePaths).toHaveBeenCalledWith([
 				{
 					initialPath: "/path",

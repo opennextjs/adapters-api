@@ -11,6 +11,7 @@ import type {
 } from "@/types/overrides";
 
 import type { DetachedPromiseRunner } from "../utils/promise";
+import type { RequestCache } from "../utils/requestCache";
 
 import type { i18nConfig } from "./next-types.js";
 import type { OpenNextConfig, WaitUntil } from "./open-next";
@@ -68,6 +69,8 @@ interface OpenNextRequestContext {
 	waitUntil?: WaitUntil;
 	/** We use this to deduplicate write of the tags*/
 	writtenTags: Set<string>;
+	/** Per-request in-memory cache. Overrides can use this to store data scoped to the current request. */
+	requestCache: RequestCache;
 }
 
 declare global {
@@ -187,6 +190,13 @@ declare global {
 	 * Defined in createEdgeBundle.
 	 */
 	var AsyncLocalStorage: typeof NodeAsyncLocalStorage;
+
+	/**
+	 * The Next.js version of the application.
+	 * Only available in the cache adapter.
+	 * Defined in the esbuild banner for the cache adapter.
+	 */
+	var nextVersion: string;
 
 	/**
 	 * The version of the Open Next runtime.

@@ -1,4 +1,4 @@
-import { NextModeTagCache } from "@opennextjs/aws/types/overrides.js";
+import type { NextModeTagCache, NextModeTagCacheWriteInput } from "@opennextjs/aws/types/overrides.js";
 
 interface WithFilterOptions {
 	/**
@@ -46,7 +46,10 @@ export function withFilter({ tagCache, filterFn }: WithFilterOptions): NextModeT
 			return tagCache.hasBeenRevalidated(filteredTags, lastModified);
 		},
 		writeTags: async (tags) => {
-			const filteredTags = tags.filter(filterFn);
+			const filteredTags = (tags as NextModeTagCacheWriteInput[]).filter((t) => {
+				const tagStr = typeof t === "string" ? t : t.tag;
+				return filterFn(tagStr);
+			});
 			if (filteredTags.length === 0) {
 				return;
 			}

@@ -3,9 +3,10 @@ import {
 	createEmptyBodyRule,
 	disablePreloadingRule,
 	emptyHandleNextImageRequestRule,
+	provideInternalWaitUntil,
 	removeMiddlewareManifestRule,
 } from "@opennextjs/aws/build/patch/patches/patchNextServer.js";
-import { describe, it } from "vitest";
+import { describe, it, expect, test } from "vitest";
 
 import { computePatchDiff } from "./util.js";
 
@@ -412,6 +413,26 @@ async imageOptimizer(req, res, paramsResult, previousCacheEntry) {
 `;
 
 describe("patchNextServer", () => {
+	it("should provide internal waitUntil", () => {
+		const code = `
+class NextNodeServer extends _baseserver.default {
+    getInternalWaitUntil() {
+        this.internalWaitUntil ??= this.createInternalWaitUntil();
+        return this.internalWaitUntil;
+    }
+}
+`;
+		expect(patchCode(code, provideInternalWaitUntil)).toMatchInlineSnapshot(`
+			"class NextNodeServer extends _baseserver.default {
+			    getInternalWaitUntil() {
+			        this.internalWaitUntil ??= this.createInternalWaitUntil();
+			        return globalThis.__openNextAls.getStore()?.waitUntil;
+			    }
+			}
+			"
+		`);
+	});
+
 	it("should patch getMiddlewareManifest", async () => {
 		expect(patchCode(nextServerGetMiddlewareManifestCode, removeMiddlewareManifestRule))
 			.toMatchInlineSnapshot(`

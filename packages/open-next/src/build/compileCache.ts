@@ -26,6 +26,7 @@ export function compileCache(options: buildHelper.BuildOptions, format: "cjs" | 
 				js: [
 					`globalThis.disableIncrementalCache = ${config.dangerous?.disableIncrementalCache ?? false};`,
 					`globalThis.disableDynamoDBCache = ${config.dangerous?.disableTagCache ?? false};`,
+					`globalThis.nextVersion = "${options.nextVersion}";`,
 				].join(""),
 			},
 		},
@@ -46,6 +47,7 @@ export function compileCache(options: buildHelper.BuildOptions, format: "cjs" | 
 				js: [
 					`globalThis.disableIncrementalCache = ${config.dangerous?.disableIncrementalCache ?? false};`,
 					`globalThis.disableDynamoDBCache = ${config.dangerous?.disableTagCache ?? false};`,
+					`globalThis.nextVersion = "${options.nextVersion}";`,
 				].join(""),
 			},
 		},
