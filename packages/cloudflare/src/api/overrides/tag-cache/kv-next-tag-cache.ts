@@ -166,8 +166,11 @@ export class KVNextModeTagCache implements NextModeTagCache {
 			const isStale = [...result.values()].some((v) => {
 				if (v == null) return false;
 				const stale = getStale(v);
-				if (stale == null || stale <= (lastModified ?? now)) return false;
 				const expire = getExpire(v);
+				const lastModifiedOrNow = lastModified ?? now;
+				const isInStaleWindow =
+					stale != null && getRevalidatedAt(v) > lastModifiedOrNow && lastModifiedOrNow <= stale;
+				if (!isInStaleWindow) return false;
 				return expire == null || expire > now;
 			});
 

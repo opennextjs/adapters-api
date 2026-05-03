@@ -98,8 +98,11 @@ export class D1NextModeTagCache implements NextModeTagCache {
 
 			const isStale = [...result.values()].some((v) => {
 				if (v == null) return false;
-				const { stale, expire } = v;
-				if (stale == null || stale <= (lastModified ?? now)) return false;
+				const { revalidatedAt, stale, expire } = v;
+				const lastModifiedOrNow = lastModified ?? now;
+				const isInStaleWindow =
+					stale != null && revalidatedAt > lastModifiedOrNow && lastModifiedOrNow <= stale;
+				if (!isInStaleWindow) return false;
 				return expire == null || expire > now;
 			});
 

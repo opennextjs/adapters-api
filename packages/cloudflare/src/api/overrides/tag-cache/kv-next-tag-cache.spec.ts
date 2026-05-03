@@ -347,6 +347,18 @@ describe("KVNextModeTagCache", () => {
 			expect(result).toBe(false);
 		});
 
+		it("should return false when revalidatedAt <= lastModified even if stale > lastModified", async () => {
+			const now = 2000;
+			vi.spyOn(Date, "now").mockReturnValue(now);
+			mockGet.mockResolvedValue(
+				new Map([[`${FALLBACK_BUILD_ID}/tag1`, { revalidatedAt: 500, stale: 1500, expire: null }]])
+			);
+
+			const result = await tagCache.isStale(["tag1"], 1000);
+
+			expect(result).toBe(false);
+		});
+
 		it("should return false when expire <= now (tag expired)", async () => {
 			const now = 2000;
 			vi.spyOn(Date, "now").mockReturnValue(now);
