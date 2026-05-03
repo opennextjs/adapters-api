@@ -162,7 +162,7 @@ importers:
     dependencies:
       '@opennextjs/cloudflare':
         specifier: ^1.17.1
-        version: 1.18.0(next@16.1.4(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4))(wrangler@4.60.0(@cloudflare/workers-types@4.20260123.0))
+        version: 1.18.0(aws-crt@1.23.0)(next@16.1.4(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4))(wrangler@4.60.0(@cloudflare/workers-types@4.20260123.0))
       next:
         specifier: 16.1.4
         version: 16.1.4(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
@@ -1437,6 +1437,9 @@ importers:
         specifier: workspace:*
         version: link:../open-next
     devDependencies:
+      '@aws-sdk/client-dynamodb':
+        specifier: 3.984.0
+        version: 3.984.0(aws-crt@1.23.0)
       '@types/testing-library__jest-dom':
         specifier: ^5.14.9
         version: 5.14.9
@@ -14857,7 +14860,7 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 22.2.0
 
-  '@opennextjs/aws@3.9.16(next@16.1.4(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4))':
+  '@opennextjs/aws@3.9.16(aws-crt@1.23.0)(next@16.1.4(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4))':
     dependencies:
       '@ast-grep/napi': 0.40.5
       '@aws-sdk/client-cloudfront': 3.984.0(aws-crt@1.23.0)
@@ -14881,11 +14884,11 @@ snapshots:
       - aws-crt
       - supports-color
 
-  '@opennextjs/cloudflare@1.18.0(next@16.1.4(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4))(wrangler@4.60.0(@cloudflare/workers-types@4.20260123.0))':
+  '@opennextjs/cloudflare@1.18.0(aws-crt@1.23.0)(next@16.1.4(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4))(wrangler@4.60.0(@cloudflare/workers-types@4.20260123.0))':
     dependencies:
       '@ast-grep/napi': 0.40.5
       '@dotenvx/dotenvx': 1.31.0
-      '@opennextjs/aws': 3.9.16(next@16.1.4(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4))
+      '@opennextjs/aws': 3.9.16(aws-crt@1.23.0)(next@16.1.4(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4))
       cloudflare: 4.5.0
       comment-json: 4.6.2
       enquirer: 2.4.1
