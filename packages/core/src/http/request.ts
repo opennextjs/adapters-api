@@ -4,6 +4,7 @@
 
 // @ts-nocheck
 import http from "node:http";
+import type { ReadableStream } from "node:stream/web";
 
 export class IncomingMessage extends http.IncomingMessage {
 	constructor({
@@ -16,7 +17,7 @@ export class IncomingMessage extends http.IncomingMessage {
 		method: string;
 		url: string;
 		headers: Record<string, string | string[]>;
-		body?: Buffer;
+		body?: ReadableStream;
 		remoteAddress?: string;
 	}) {
 		super({
@@ -27,12 +28,6 @@ export class IncomingMessage extends http.IncomingMessage {
 			end: Function.prototype,
 			destroy: Function.prototype,
 		});
-
-		// Set the content length when there is a body.
-		// See https://httpwg.org/specs/rfc9110.html#field.content-length
-		if (body) {
-			headers["content-length"] ??= String(Buffer.byteLength(body));
-		}
 
 		Object.assign(this, {
 			ip: remoteAddress,
@@ -46,9 +41,30 @@ export class IncomingMessage extends http.IncomingMessage {
 			url,
 		});
 
-		this._read = () => {
-			this.push(body);
-			this.push(null);
-		};
+		this._read = (() => {
+			if (!body) {
+				return () => {
+					this.push(null);
+				};
+			}
+			let started = false;
+			const reader = body.getReader();
+			const pump = () => {
+				reader.read().then(({ done, value }) => {
+					if (done) {
+						this.push(null);
+					} else {
+						this.push(value);
+						pump();
+					}
+				});
+			};
+			return () => {
+				if (!started) {
+					started = true;
+					pump();
+				}
+			};
+		})();
 	}
 }

@@ -1,5 +1,6 @@
 import { IncomingMessage } from "@opennextjs/core/http/request.js";
 import converter from "@opennextjs/core/overrides/converters/node.js";
+import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream.js";
 
 describe("convertFrom", () => {
 	it("should convert GET request", async () => {
@@ -23,7 +24,7 @@ describe("convertFrom", () => {
 				"content-length": "0",
 			},
 			remoteAddress: "::1",
-			body: Buffer.from(""),
+			body: expect.any(ReadableStream),
 			cookies: {},
 			query: {},
 		});
@@ -52,7 +53,7 @@ describe("convertFrom", () => {
 				host: "localhost",
 			},
 			remoteAddress: "127.0.0.1",
-			body: Buffer.from(""),
+			body: expect.any(ReadableStream),
 			cookies: {},
 			query: {},
 		});
@@ -78,7 +79,7 @@ describe("convertFrom", () => {
 				"content-length": "0",
 			},
 			remoteAddress: "::1",
-			body: Buffer.from(""),
+			body: expect.any(ReadableStream),
 			cookies: {},
 			query: {},
 		});
@@ -107,7 +108,7 @@ describe("convertFrom", () => {
 				"x-forwarded-for": "127.0.0.2",
 			},
 			remoteAddress: "127.0.0.2",
-			body: Buffer.from(""),
+			body: expect.any(ReadableStream),
 			cookies: {},
 			query: {},
 		});
@@ -136,7 +137,7 @@ describe("convertFrom", () => {
 				host: "localhost",
 			},
 			remoteAddress: "::1",
-			body: Buffer.from(""),
+			body: expect.any(ReadableStream),
 			cookies: {},
 			query: {
 				search: "1",
@@ -155,7 +156,7 @@ describe("convertFrom", () => {
 					cookie: "foo=bar",
 				},
 				remoteAddress: "::1",
-				body: Buffer.from("{}"),
+				body: toReadableStream("{}"),
 			})
 		);
 
@@ -170,12 +171,13 @@ describe("convertFrom", () => {
 				cookie: "foo=bar",
 			},
 			remoteAddress: "::1",
-			body: Buffer.from("{}"),
+			body: expect.any(ReadableStream),
 			cookies: {
 				foo: "bar",
 			},
 			query: {},
 		});
+		expect(await fromReadableStream(result.body!)).toEqual("{}");
 	});
 
 	it("should convert PUT request with multiple cookie headers", async () => {
@@ -189,7 +191,7 @@ describe("convertFrom", () => {
 					cookie: "foo=bar; hello=world",
 				},
 				remoteAddress: "::1",
-				body: Buffer.from("{}"),
+				body: toReadableStream("{}"),
 			})
 		);
 
@@ -204,12 +206,13 @@ describe("convertFrom", () => {
 				cookie: "foo=bar; hello=world",
 			},
 			remoteAddress: "::1",
-			body: Buffer.from("{}"),
+			body: expect.any(ReadableStream),
 			cookies: {
 				foo: "bar",
 				hello: "world",
 			},
 			query: {},
 		});
+		expect(await fromReadableStream(result.body!)).toEqual("{}");
 	});
 });

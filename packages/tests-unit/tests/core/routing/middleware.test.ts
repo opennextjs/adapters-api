@@ -54,7 +54,7 @@ function createEvent(event: PartialEvent): InternalEvent {
 		method: event.method ?? "GET",
 		rawPath: pathname,
 		url,
-		body: Buffer.from(event.body ?? ""),
+		body: event.body !== undefined ? toReadableStream(event.body) : undefined,
 		headers: event.headers ?? {},
 		query: convertFromQueryString(search.slice(1)),
 		cookies: event.cookies ?? {},

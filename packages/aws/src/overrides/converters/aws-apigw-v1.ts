@@ -5,11 +5,10 @@ import {
 } from "@opennextjs/core/overrides/converters/utils.js";
 import type { InternalEvent, InternalResult } from "@opennextjs/core/types/open-next.js";
 import type { Converter } from "@opennextjs/core/types/overrides.js";
-import { fromReadableStream } from "@opennextjs/core/utils/stream.js";
+import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream.js";
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 
 function normalizeAPIGatewayProxyEventHeaders(event: APIGatewayProxyEvent): Record<string, string> {
-	event.multiValueHeaders;
 	const headers: Record<string, string> = {};
 
 	for (const [key, values] of Object.entries(event.multiValueHeaders || {})) {
@@ -73,7 +72,7 @@ async function convertFromAPIGatewayProxyEvent(event: APIGatewayProxyEvent): Pro
 		method: httpMethod,
 		rawPath: path,
 		url: `https://${extractHostFromHeaders(headers)}${path}${normalizeAPIGatewayProxyEventQueryParams(event)}`,
-		body: Buffer.from(body ?? "", isBase64Encoded ? "base64" : "utf8"),
+		body: body ? toReadableStream(body, isBase64Encoded) : undefined,
 		headers,
 		remoteAddress: requestContext.identity.sourceIp,
 		query: removeUndefinedFromQuery(normalizeAPIGatewayProxyEventMultiValueQueryStringParameters(event)),

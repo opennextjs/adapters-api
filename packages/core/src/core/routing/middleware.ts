@@ -65,6 +65,8 @@ export async function handleMiddleware(
 
 	const middleware = await middlewareLoader();
 
+	const [bodyForMiddleware, bodyForForward] = internalEvent.body?.tee() ?? [undefined, undefined];
+
 	const result: Response = await middleware.default({
 		// `geo` is pre Next 15.
 		geo: {
@@ -84,7 +86,7 @@ export async function handleMiddleware(
 			trailingSlash: NextConfig.trailingSlash,
 		},
 		url,
-		body: convertBodyToReadableStream(internalEvent.method, internalEvent.body),
+		body: convertBodyToReadableStream(internalEvent.method, bodyForMiddleware),
 	} as unknown as Request);
 	const statusCode = result.status;
 
@@ -175,7 +177,7 @@ export async function handleMiddleware(
 		rawPath: new URL(newUrl).pathname,
 		type: internalEvent.type,
 		headers: { ...internalEvent.headers, ...reqHeaders },
-		body: internalEvent.body,
+		body: bodyForForward,
 		method: internalEvent.method,
 		query: middlewareQuery,
 		cookies: internalEvent.cookies,

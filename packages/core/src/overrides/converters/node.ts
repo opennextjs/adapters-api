@@ -1,4 +1,6 @@
 import type { IncomingMessage } from "node:http";
+import { Readable } from "node:stream";
+import type { ReadableStream } from "node:stream/web";
 
 import cookieParser from "cookie";
 
@@ -10,15 +12,7 @@ import { extractHostFromHeaders, getQueryFromSearchParams } from "./utils.js";
 const converter: Converter = {
 	convertFrom: async (event: unknown) => {
 		const req = event as IncomingMessage & { protocol?: string };
-		const body = await new Promise<Buffer>((resolve) => {
-			const chunks: Uint8Array[] = [];
-			req.on("data", (chunk) => {
-				chunks.push(chunk);
-			});
-			req.on("end", () => {
-				resolve(Buffer.concat(chunks));
-			});
-		});
+		const body: ReadableStream = Readable.toWeb(req);
 
 		const headers = Object.fromEntries(
 			Object.entries(req.headers ?? {})
