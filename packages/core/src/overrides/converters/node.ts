@@ -12,7 +12,8 @@ import { extractHostFromHeaders, getQueryFromSearchParams } from "./utils.js";
 const converter: Converter = {
 	convertFrom: async (event: unknown) => {
 		const req = event as IncomingMessage & { protocol?: string };
-		const body: ReadableStream = Readable.toWeb(req);
+		const shouldHaveBody = req.method !== "GET" && req.method !== "HEAD";
+		const body: ReadableStream | undefined = shouldHaveBody ? Readable.toWeb(req) : undefined;
 
 		const headers = Object.fromEntries(
 			Object.entries(req.headers ?? {})

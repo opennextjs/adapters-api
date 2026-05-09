@@ -36,6 +36,15 @@ const nodeProxy: ProxyExternalRequest = {
 		const { url, headers, method, body } = internalEvent;
 		debug("proxyRequest", url);
 		return new Promise<InternalResult>((resolve, reject) => {
+			let hasRejected = false;
+			const rejectOnce = (e: Error) => {
+				if (hasRejected) {
+					return;
+				}
+
+				hasRejected = true;
+				reject(e);
+			};
 			const filteredHeaders = filterHeadersForProxy(headers);
 			debug("filteredHeaders", filteredHeaders);
 			const req = request(
@@ -68,14 +77,18 @@ const nodeProxy: ProxyExternalRequest = {
 
 					_res.on("error", (e) => {
 						error("proxyRequest error", e);
-						reject(e);
+						rejectOnce(e);
 					});
 				}
 			);
+			req.on("error", (e) => {
+				error("proxyRequest error", e);
+				rejectOnce(e);
+			});
 
 			if (body && method !== "GET" && method !== "HEAD") {
 				Readable.fromWeb(body as ReadableStream<Uint8Array>)
-					.on("error", reject)
+					.on("error", rejectOnce)
 					.pipe(req);
 			} else {
 				req.end();

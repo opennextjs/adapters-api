@@ -47,21 +47,44 @@ export class IncomingMessage extends http.IncomingMessage {
 					this.push(null);
 				};
 			}
-			let started = false;
 			const reader = body.getReader();
+			let reading = false;
+			let streamDone = false;
+
+			this.once("close", () => {
+				if (!streamDone) {
+					streamDone = true;
+					reader.cancel().catch(() => {});
+				}
+			});
+
 			const pump = () => {
-				reader.read().then(({ done, value }) => {
-					if (done) {
-						this.push(null);
-					} else {
-						this.push(value);
-						pump();
-					}
-				});
+				reading = true;
+				reader
+					.read()
+					.then(({ done, value }) => {
+						if (done) {
+							streamDone = true;
+							reader.releaseLock();
+							this.push(null);
+						} else {
+							const canContinue = this.push(value);
+							if (canContinue) {
+								pump();
+							} else {
+								reading = false;
+							}
+						}
+					})
+					.catch((err) => {
+						streamDone = true;
+						reader.cancel().catch(() => {});
+						this.destroy(err);
+					});
 			};
+
 			return () => {
-				if (!started) {
-					started = true;
+				if (!reading) {
 					pump();
 				}
 			};
