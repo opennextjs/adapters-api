@@ -24,7 +24,7 @@ describe("convertFrom", () => {
 				"content-length": "0",
 			},
 			remoteAddress: "::1",
-			body: expect.any(ReadableStream),
+			body: undefined,
 			cookies: {},
 			query: {},
 		});
@@ -53,7 +53,7 @@ describe("convertFrom", () => {
 				host: "localhost",
 			},
 			remoteAddress: "127.0.0.1",
-			body: expect.any(ReadableStream),
+			body: undefined,
 			cookies: {},
 			query: {},
 		});
@@ -79,7 +79,7 @@ describe("convertFrom", () => {
 				"content-length": "0",
 			},
 			remoteAddress: "::1",
-			body: expect.any(ReadableStream),
+			body: undefined,
 			cookies: {},
 			query: {},
 		});
@@ -108,7 +108,7 @@ describe("convertFrom", () => {
 				"x-forwarded-for": "127.0.0.2",
 			},
 			remoteAddress: "127.0.0.2",
-			body: expect.any(ReadableStream),
+			body: undefined,
 			cookies: {},
 			query: {},
 		});
@@ -137,7 +137,7 @@ describe("convertFrom", () => {
 				host: "localhost",
 			},
 			remoteAddress: "::1",
-			body: expect.any(ReadableStream),
+			body: undefined,
 			cookies: {},
 			query: {
 				search: "1",
