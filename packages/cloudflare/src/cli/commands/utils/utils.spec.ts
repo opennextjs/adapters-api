@@ -16,7 +16,7 @@ vi.mock("node:fs", async (importOriginal) => {
 });
 
 // Mock logger
-vi.mock("@opennextjs/aws/logger.js", () => ({
+vi.mock("@opennextjs/core/logger.js", () => ({
 	default: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), setLevel: vi.fn() },
 }));
 
@@ -25,7 +25,7 @@ const mockCompileOpenNextConfig = vi.fn(async () => ({
 	config: { default: {} },
 	buildDir: "/build",
 }));
-vi.mock("@opennextjs/aws/build/compileConfig.js", () => ({
+vi.mock("@opennextjs/core/build/compileConfig.js", () => ({
 	compileOpenNextConfig: (...args: unknown[]) => mockCompileOpenNextConfig(...args),
 }));
 
@@ -51,13 +51,13 @@ vi.mock("wrangler", () => ({
 }));
 
 // Mock build utils
-vi.mock("@opennextjs/aws/build/utils.js", () => ({
+vi.mock("@opennextjs/core/build/utils.js", () => ({
 	printHeader: vi.fn(),
 	showWarningOnWindows: vi.fn(),
 }));
 
 // Mock build helper
-vi.mock("@opennextjs/aws/build/helper.js", () => ({
+vi.mock("@opennextjs/core/build/helper.js", () => ({
 	normalizeOptions: vi.fn(() => ({})),
 }));
 

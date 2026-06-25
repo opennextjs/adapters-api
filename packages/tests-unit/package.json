@@ -9,7 +9,8 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
-		"@opennextjs/aws": "workspace:*"
+		"@opennextjs/aws": "workspace:*",
+		"@opennextjs/core": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/testing-library__jest-dom": "^5.14.9",

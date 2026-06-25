@@ -1,4 +1,4 @@
-import type { NextConfig } from "@opennextjs/aws/types/next-types.js";
+import type { NextConfig } from "@opennextjs/core/types/next-types.js";
 
 interface ExtendedNextConfig extends NextConfig {
 	experimental: {

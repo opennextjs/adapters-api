@@ -1,4 +1,4 @@
-import { generateMessageGroupId } from "@opennextjs/aws/core/routing/queue.js";
+import { generateMessageGroupId } from "@opennextjs/core/core/routing/queue.js";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import cache, { DEFAULT_REVALIDATION_TIMEOUT_MS } from "./memory-queue.js";

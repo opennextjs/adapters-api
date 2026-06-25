@@ -3,9 +3,9 @@
  * Without the patch it uses `fetch` to make a call to itself, which doesn't work once deployed in cloudflare workers
  * This patch will replace this fetch by a call to `WORKER_SELF_REFERENCE` service binding
  */
-import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
-import type { CodePatcher } from "@opennextjs/aws/build/patch/codePatcher.js";
-import { getCrossPlatformPathRegex } from "@opennextjs/aws/utils/regex.js";
+import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
+import type { CodePatcher } from "@opennextjs/core/build/patch/codePatcher.js";
+import { getCrossPlatformPathRegex } from "@opennextjs/core/utils/regex.js";
 
 export const rule = `
 rule:

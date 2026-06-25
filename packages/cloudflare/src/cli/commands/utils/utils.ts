@@ -3,10 +3,10 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import url from "node:url";
 
-import { compileOpenNextConfig } from "@opennextjs/aws/build/compileConfig.js";
-import { normalizeOptions } from "@opennextjs/aws/build/helper.js";
-import { printHeader, showWarningOnWindows } from "@opennextjs/aws/build/utils.js";
-import logger from "@opennextjs/aws/logger.js";
+import { compileOpenNextConfig } from "@opennextjs/core/build/compileConfig.js";
+import { normalizeOptions } from "@opennextjs/core/build/helper.js";
+import { printHeader, showWarningOnWindows } from "@opennextjs/core/build/utils.js";
+import logger from "@opennextjs/core/logger.js";
 import { unstable_readConfig } from "wrangler";
 import type yargs from "yargs";
 
@@ -82,7 +82,7 @@ export async function retrieveCompiledConfig() {
 
 export function getNormalizedOptions(config: OpenNextConfig, buildDir = nextAppDir) {
 	const require = createRequire(import.meta.url);
-	const openNextDistDir = path.dirname(require.resolve("@opennextjs/aws/index.js"));
+	const openNextDistDir = path.dirname(require.resolve("@opennextjs/core/index.js"));
 
 	const options = normalizeOptions(config, openNextDistDir, buildDir);
 	logger.setLevel(options.debug ? "debug" : "info");

@@ -1,5 +1,5 @@
-import * as config from "@opennextjs/aws/adapters/config/index.js";
-import { NextConfig } from "@opennextjs/aws/adapters/config/index.js";
+import * as config from "@/config/index.js";
+import { NextConfig } from "@/config/index.js";
 import {
 	addOpenNextHeader,
 	constructNextUrl,
@@ -23,7 +23,7 @@ import {
 import { fromReadableStream } from "@opennextjs/aws/utils/stream.js";
 import { vi } from "vitest";
 
-vi.mock("@opennextjs/aws/adapters/config/index.js", () => ({
+vi.mock("@/config/index.js", () => ({
 	NextConfig: {
 		basePath: "",
 	},

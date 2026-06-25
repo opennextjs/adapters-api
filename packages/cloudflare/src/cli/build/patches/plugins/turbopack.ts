@@ -1,6 +1,6 @@
-import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
-import type { CodePatcher } from "@opennextjs/aws/build/patch/codePatcher.js";
-import { getCrossPlatformPathRegex } from "@opennextjs/aws/utils/regex.js";
+import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
+import type { CodePatcher } from "@opennextjs/core/build/patch/codePatcher.js";
+import { getCrossPlatformPathRegex } from "@opennextjs/core/utils/regex.js";
 
 const inlineChunksRule = `
 rule:

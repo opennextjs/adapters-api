@@ -1,10 +1,10 @@
-import { error } from "@opennextjs/aws/adapters/logger.js";
+import { error } from "@opennextjs/core/adapters/logger.js";
 import {
 	CacheEntryType,
 	CacheValue,
 	IncrementalCache,
 	WithLastModified,
-} from "@opennextjs/aws/types/overrides.js";
+} from "@opennextjs/core/types/overrides.js";
 
 import { getCloudflareContext } from "../../cloudflare-context.js";
 import { debugCache, FALLBACK_BUILD_ID, IncrementalCacheEntry, isPurgeCacheEnabled } from "../internal.js";

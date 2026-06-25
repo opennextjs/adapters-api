@@ -1,7 +1,7 @@
 import { dynamicRouteMatcher, staticRouteMatcher } from "@opennextjs/aws/core/routing/routeMatcher.js";
 import { vi } from "vitest";
 
-vi.mock("@opennextjs/aws/adapters/config/index.js", () => ({
+vi.mock("@/config/index.js", () => ({
 	PrerenderManifest: {
 		routes: {},
 		dynamicRoutes: {

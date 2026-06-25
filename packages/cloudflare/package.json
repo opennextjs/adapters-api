@@ -53,6 +53,7 @@
 		"@ast-grep/napi": "0.40.5",
 		"@dotenvx/dotenvx": "catalog:",
 		"@opennextjs/aws": "workspace:*",
+		"@opennextjs/core": "workspace:*",
 		"cloudflare": "^4.4.1",
 		"comment-json": "^4.5.1",
 		"enquirer": "^2.4.1",

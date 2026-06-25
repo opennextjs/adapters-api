@@ -1,8 +1,8 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 
-import { loadBuildId, loadPrerenderManifest } from "@opennextjs/aws/adapters/config/util.js";
-import { type BuildOptions, esbuildSync } from "@opennextjs/aws/build/helper.js";
+import { loadBuildId, loadPrerenderManifest } from "@opennextjs/core/adapters/config/util.js";
+import { type BuildOptions, esbuildSync } from "@opennextjs/core/build/helper.js";
 
 export function compileDurableObjects(buildOpts: BuildOptions) {
 	const _require = createRequire(import.meta.url);

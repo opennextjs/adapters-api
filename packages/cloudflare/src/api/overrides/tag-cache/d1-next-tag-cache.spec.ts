@@ -1,7 +1,7 @@
 /**
  * Author: Copilot (Claude Sonnet 4)
  */
-import { error } from "@opennextjs/aws/adapters/logger.js";
+import { error } from "@opennextjs/core/adapters/logger.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getCloudflareContext } from "../../cloudflare-context.js";
@@ -10,7 +10,7 @@ import { debugCache, FALLBACK_BUILD_ID, purgeCacheByTags } from "../internal.js"
 import { BINDING_NAME, D1NextModeTagCache, NAME } from "./d1-next-tag-cache.js";
 
 // Mock dependencies
-vi.mock("@opennextjs/aws/adapters/logger.js", () => ({
+vi.mock("@opennextjs/core/adapters/logger.js", () => ({
 	error: vi.fn(),
 }));
 

@@ -54,6 +54,7 @@
 		"@aws-sdk/client-sqs": "3.984.0",
 		"@node-minify/core": "^8.0.6",
 		"@node-minify/terser": "^8.0.6",
+		"@opennextjs/core": "workspace:*",
 		"@tsconfig/node18": "^1.0.3",
 		"aws4fetch": "^1.0.20",
 		"chalk": "^5.6.2",

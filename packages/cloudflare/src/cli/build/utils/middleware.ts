@@ -1,7 +1,7 @@
 import path from "node:path";
 
-import { loadFunctionsConfigManifest, loadMiddlewareManifest } from "@opennextjs/aws/adapters/config/util.js";
-import * as buildHelper from "@opennextjs/aws/build/helper.js";
+import { loadFunctionsConfigManifest, loadMiddlewareManifest } from "@opennextjs/core/adapters/config/util.js";
+import * as buildHelper from "@opennextjs/core/build/helper.js";
 
 /**
  * Returns whether the project is using a Node.js middleware.

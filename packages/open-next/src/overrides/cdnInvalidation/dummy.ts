@@ -1,8 +1,2 @@
-import type { CDNInvalidationHandler } from "@/types/overrides";
-
-export default {
-	name: "dummy",
-	invalidatePaths: (_) => {
-		return Promise.resolve();
-	},
-} satisfies CDNInvalidationHandler;
+export { default } from "@opennextjs/core/overrides/cdnInvalidation/dummy.js";
+export * from "@opennextjs/core/overrides/cdnInvalidation/dummy.js";

@@ -1,4 +1,4 @@
-import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
+import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
 import { describe, expect, test } from "vitest";
 
 import { computePatchDiff } from "../../utils/test-patch.js";

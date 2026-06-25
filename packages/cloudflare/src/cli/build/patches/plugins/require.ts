@@ -1,4 +1,4 @@
-import type { ContentUpdater, Plugin } from "@opennextjs/aws/plugins/content-updater.js";
+import type { ContentUpdater, Plugin } from "@opennextjs/core/plugins/content-updater.js";
 
 export function fixRequire(updater: ContentUpdater): Plugin {
 	return updater.updateContent("fix-require", [

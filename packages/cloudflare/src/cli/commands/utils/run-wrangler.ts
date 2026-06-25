@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { compareSemver } from "@opennextjs/aws/build/helper.js";
+import { compareSemver } from "@opennextjs/core/build/helper.js";
 
 export type PackagerDetails = {
 	packager: "npm" | "pnpm" | "yarn" | "bun";

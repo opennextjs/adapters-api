@@ -1,10 +1,2 @@
-import type { OriginResolver } from "@/types/overrides";
-
-const dummyOriginResolver: OriginResolver = {
-	name: "dummy",
-	resolve: async (_path: string) => {
-		return false as const;
-	},
-};
-
-export default dummyOriginResolver;
+export { default } from "@opennextjs/core/overrides/originResolver/dummy.js";
+export * from "@opennextjs/core/overrides/originResolver/dummy.js";

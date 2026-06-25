@@ -8,8 +8,8 @@ import {
 	findNextConfig,
 	findPackagerAndRoot,
 	getNextVersion,
-} from "@opennextjs/aws/build/helper.js";
-import logger from "@opennextjs/aws/logger.js";
+} from "@opennextjs/core/build/helper.js";
+import logger from "@opennextjs/core/logger.js";
 import type yargs from "yargs";
 
 import { askConfirmation } from "../utils/ask-confirmation.js";

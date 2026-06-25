@@ -4,7 +4,7 @@ import converter from "@opennextjs/aws/overrides/converters/aws-cloudfront.js";
 import type { CloudFrontRequestEvent, CloudFrontRequestResult } from "aws-lambda";
 import { vi } from "vitest";
 
-vi.mock("@opennextjs/aws/adapters/config/index.js", () => ({}));
+vi.mock("@/config/index.js", () => ({}));
 
 describe("convertTo", () => {
 	it("Should parse the headers", async () => {

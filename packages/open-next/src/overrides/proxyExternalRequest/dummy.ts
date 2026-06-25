@@ -1,11 +1,2 @@
-import type { ProxyExternalRequest } from "@/types/overrides";
-import { FatalError } from "@/utils/error";
-
-const DummyProxyExternalRequest: ProxyExternalRequest = {
-	name: "dummy",
-	proxy: async (_event) => {
-		throw new FatalError("This is a dummy implementation");
-	},
-};
-
-export default DummyProxyExternalRequest;
+export { default } from "@opennextjs/core/overrides/proxyExternalRequest/dummy.js";
+export * from "@opennextjs/core/overrides/proxyExternalRequest/dummy.js";

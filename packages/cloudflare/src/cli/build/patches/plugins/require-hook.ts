@@ -1,7 +1,7 @@
 import { join } from "node:path";
 
-import type { BuildOptions } from "@opennextjs/aws/build/helper.js";
-import { getCrossPlatformPathRegex } from "@opennextjs/aws/utils/regex.js";
+import type { BuildOptions } from "@opennextjs/core/build/helper.js";
+import { getCrossPlatformPathRegex } from "@opennextjs/core/utils/regex.js";
 import type { Plugin } from "esbuild";
 
 export function shimRequireHook(options: BuildOptions): Plugin {

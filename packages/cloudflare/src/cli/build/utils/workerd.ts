@@ -1,10 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { loadConfig } from "@opennextjs/aws/adapters/config/util.js";
-import type { BuildOptions } from "@opennextjs/aws/build/helper.js";
-import logger from "@opennextjs/aws/logger.js";
-import { getCrossPlatformPathRegex } from "@opennextjs/aws/utils/regex.js";
+import { loadConfig } from "@opennextjs/core/adapters/config/util.js";
+import type { BuildOptions } from "@opennextjs/core/build/helper.js";
+import logger from "@opennextjs/core/logger.js";
+import { getCrossPlatformPathRegex } from "@opennextjs/core/utils/regex.js";
 
 /**
  * This function transforms the exports (or imports) object from the package.json

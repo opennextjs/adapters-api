@@ -9,9 +9,9 @@
  * ALS context from next (i.e. cookies, headers ...)
  * TODO: Find a better fix for this issue.
  */
-import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
-import type { CodePatcher } from "@opennextjs/aws/build/patch/codePatcher.js";
-import { getCrossPlatformPathRegex } from "@opennextjs/aws/utils/regex.js";
+import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
+import type { CodePatcher } from "@opennextjs/core/build/patch/codePatcher.js";
+import { getCrossPlatformPathRegex } from "@opennextjs/core/utils/regex.js";
 
 export const rule = `
 rule:

@@ -1,0 +1,298 @@
+import { BuildId, ConfigHeaders, NextConfig, PrerenderManifest, RoutesManifest } from "@/config/index";
+import type {
+	InternalEvent,
+	InternalResult,
+	PartialResult,
+	ResolvedRoute,
+	RoutingResult,
+} from "@/types/open-next";
+import type { AssetResolver } from "@/types/overrides";
+
+import { debug, error } from "../adapters/logger";
+
+import { cacheInterceptor } from "./routing/cacheInterceptor";
+import { detectLocale } from "./routing/i18n";
+import {
+	fixDataPage,
+	getNextConfigHeaders,
+	handleFallbackFalse,
+	handleRedirects,
+	handleRewrites,
+} from "./routing/matcher";
+import { handleMiddleware } from "./routing/middleware";
+import { dynamicRouteMatcher, staticRouteMatcher } from "./routing/routeMatcher";
+import { constructNextUrl, normalizeLocationHeader } from "./routing/util";
+
+export const MIDDLEWARE_HEADER_PREFIX = "x-middleware-response-";
+export const MIDDLEWARE_HEADER_PREFIX_LEN = MIDDLEWARE_HEADER_PREFIX.length;
+export const INTERNAL_HEADER_PREFIX = "x-opennext-";
+export const INTERNAL_HEADER_INITIAL_URL = `${INTERNAL_HEADER_PREFIX}initial-url`;
+export const INTERNAL_HEADER_LOCALE = `${INTERNAL_HEADER_PREFIX}locale`;
+export const INTERNAL_HEADER_RESOLVED_ROUTES = `${INTERNAL_HEADER_PREFIX}resolved-routes`;
+export const INTERNAL_HEADER_REWRITE_STATUS_CODE = `${INTERNAL_HEADER_PREFIX}rewrite-status-code`;
+export const INTERNAL_EVENT_REQUEST_ID = `${INTERNAL_HEADER_PREFIX}request-id`;
+
+// Geolocation headers starting from Nextjs 15
+// See https://github.com/vercel/vercel/blob/7714b1c/packages/functions/src/headers.ts
+const geoHeaderToNextHeader = {
+	"x-open-next-city": "x-vercel-ip-city",
+	"x-open-next-country": "x-vercel-ip-country",
+	"x-open-next-region": "x-vercel-ip-country-region",
+	"x-open-next-latitude": "x-vercel-ip-latitude",
+	"x-open-next-longitude": "x-vercel-ip-longitude",
+};
+
+/**
+ * Adds the middleware headers to an event or result.
+ *
+ * @param eventOrResult
+ * @param middlewareHeaders
+ */
+function applyMiddlewareHeaders(
+	eventOrResult: InternalEvent | InternalResult,
+	middlewareHeaders: Record<string, string | string[] | undefined>
+) {
+	// Use the `MIDDLEWARE_HEADER_PREFIX` prefix for events, they will be processed by the request handler later.
+	// Results do not go through the request handler and should not be prefixed.
+	const isResult = isInternalResult(eventOrResult);
+	const headers = eventOrResult.headers;
+	const keyPrefix = isResult ? "" : MIDDLEWARE_HEADER_PREFIX;
+	Object.entries(middlewareHeaders).forEach(([key, value]) => {
+		if (value) {
+			headers[keyPrefix + key] = Array.isArray(value) ? value.join(",") : value;
+		}
+	});
+}
+
+export default async function routingHandler(
+	event: InternalEvent,
+	{ assetResolver }: { assetResolver?: AssetResolver }
+): Promise<InternalResult | RoutingResult> {
+	try {
+		// Add Next geo headers
+		for (const [openNextGeoName, nextGeoName] of Object.entries(geoHeaderToNextHeader)) {
+			const value = event.headers[openNextGeoName];
+			if (value) {
+				event.headers[nextGeoName] = value;
+			}
+		}
+
+		// First we remove internal headers
+		// We don't want to allow users to set these headers
+		for (const key of Object.keys(event.headers)) {
+			if (key.startsWith(INTERNAL_HEADER_PREFIX) || key.startsWith(MIDDLEWARE_HEADER_PREFIX)) {
+				delete event.headers[key];
+			}
+		}
+
+		// Headers from the Next config and middleware (the later are applied further down).
+		let headers: Record<string, string | string[] | undefined> = getNextConfigHeaders(event, ConfigHeaders);
+
+		let eventOrResult = fixDataPage(event, BuildId);
+
+		if (isInternalResult(eventOrResult)) {
+			return eventOrResult;
+		}
+
+		const redirect = handleRedirects(eventOrResult, RoutesManifest.redirects);
+		if (redirect) {
+			// We need to encode the value in the Location header to make sure it is valid according to RFC
+			redirect.headers.Location = normalizeLocationHeader(
+				redirect.headers.Location as string,
+				event.url,
+				true
+			);
+			debug("redirect", redirect);
+			return redirect;
+		}
+		const middlewareEventOrResult = await handleMiddleware(
+			eventOrResult,
+			// We need to pass the initial search without any decoding
+			// TODO: we'd need to refactor InternalEvent to include the initial querystring directly
+			// Should be done in another PR because it is a breaking change
+			new URL(event.url).search
+		);
+		if (isInternalResult(middlewareEventOrResult)) {
+			return middlewareEventOrResult;
+		}
+
+		const middlewareHeadersPrioritized =
+			globalThis.openNextConfig.dangerous?.middlewareHeadersOverrideNextConfigHeaders ?? false;
+
+		if (middlewareHeadersPrioritized) {
+			headers = {
+				...headers,
+				...middlewareEventOrResult.responseHeaders,
+			};
+		} else {
+			headers = {
+				...middlewareEventOrResult.responseHeaders,
+				...headers,
+			};
+		}
+
+		let isExternalRewrite = middlewareEventOrResult.isExternalRewrite ?? false;
+		eventOrResult = middlewareEventOrResult;
+
+		if (!isExternalRewrite) {
+			// First rewrite to be applied
+			const beforeRewrite = handleRewrites(eventOrResult, RoutesManifest.rewrites.beforeFiles);
+			eventOrResult = beforeRewrite.internalEvent;
+			isExternalRewrite = beforeRewrite.isExternalRewrite;
+			// Check for matching public files after `beforeFiles` rewrites
+			// See:
+			// - https://nextjs.org/docs/app/api-reference/file-conventions/middleware#execution-order
+			// - https://nextjs.org/docs/app/api-reference/config/next-config-js/rewrites
+			if (!isExternalRewrite) {
+				const assetResult = await assetResolver?.maybeGetAssetResult?.(eventOrResult);
+				if (assetResult) {
+					applyMiddlewareHeaders(assetResult, headers);
+					return assetResult;
+				}
+			}
+		}
+		let foundStaticRoute = staticRouteMatcher(eventOrResult.rawPath);
+		const isStaticRoute = !isExternalRewrite && foundStaticRoute.length > 0;
+
+		if (!(isStaticRoute || isExternalRewrite)) {
+			// Second rewrite to be applied
+			const afterRewrite = handleRewrites(eventOrResult, RoutesManifest.rewrites.afterFiles);
+			eventOrResult = afterRewrite.internalEvent;
+			isExternalRewrite = afterRewrite.isExternalRewrite;
+		}
+
+		let isISR = false;
+		// We want to run this just before the dynamic route check
+		// We can skip it if its an external rewrite
+		if (!isExternalRewrite) {
+			const fallbackResult = handleFallbackFalse(eventOrResult, PrerenderManifest);
+			eventOrResult = fallbackResult.event;
+			isISR = fallbackResult.isISR;
+		}
+
+		let foundDynamicRoute = dynamicRouteMatcher(eventOrResult.rawPath);
+		const isDynamicRoute = !isExternalRewrite && foundDynamicRoute.length > 0;
+
+		if (!(isDynamicRoute || isStaticRoute || isExternalRewrite)) {
+			// Fallback rewrite to be applied
+			const fallbackRewrites = handleRewrites(eventOrResult, RoutesManifest.rewrites.fallback);
+			eventOrResult = fallbackRewrites.internalEvent;
+			isExternalRewrite = fallbackRewrites.isExternalRewrite;
+		}
+
+		const isNextImageRoute = eventOrResult.rawPath.startsWith("/_next/image");
+
+		const isRouteFoundBeforeAllRewrites = isStaticRoute || isDynamicRoute || isExternalRewrite;
+
+		// We need to ensure that rewrites are applied before showing the 404 page
+		foundStaticRoute = staticRouteMatcher(eventOrResult.rawPath);
+		// We also want to remove dynamic routes that are fallback false
+		foundDynamicRoute = dynamicRouteMatcher(eventOrResult.rawPath).filter((route) => !route.isFallback);
+
+		// If we still haven't found a route, we show the 404 page
+		if (
+			!(
+				isRouteFoundBeforeAllRewrites ||
+				isNextImageRoute ||
+				// We need to check again once all rewrites have been applied
+				foundStaticRoute.length > 0 ||
+				foundDynamicRoute.length > 0
+			)
+		) {
+			eventOrResult = {
+				...eventOrResult,
+				rawPath: "/404",
+				url: constructNextUrl(eventOrResult.url, "/404"),
+				headers: {
+					...eventOrResult.headers,
+					"x-middleware-response-cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+				},
+			};
+		}
+
+		const resolvedRoutes: ResolvedRoute[] = [...foundStaticRoute, ...foundDynamicRoute];
+
+		if (!isInternalResult(eventOrResult)) {
+			debug("Attempting cache interception");
+			const cacheInterceptionResult = await cacheInterceptor(eventOrResult);
+			if (isInternalResult(cacheInterceptionResult)) {
+				applyMiddlewareHeaders(cacheInterceptionResult, headers);
+				return cacheInterceptionResult;
+			} else if (isPartialResult(cacheInterceptionResult)) {
+				// We need to apply the headers to both the result (the streamed response) and the resume request
+				applyMiddlewareHeaders(cacheInterceptionResult.result, headers);
+				applyMiddlewareHeaders(cacheInterceptionResult.resumeRequest, headers);
+				return {
+					internalEvent: cacheInterceptionResult.resumeRequest,
+					isExternalRewrite: false,
+					origin: false,
+					isISR: false,
+					resolvedRoutes,
+					initialURL: event.url,
+					locale: NextConfig.i18n ? detectLocale(eventOrResult, NextConfig.i18n) : undefined,
+					rewriteStatusCode: middlewareEventOrResult.rewriteStatusCode,
+					initialResponse: cacheInterceptionResult.result,
+				};
+			}
+		}
+
+		// We apply the headers from the middleware response last
+		applyMiddlewareHeaders(eventOrResult, headers);
+
+		debug("resolvedRoutes", resolvedRoutes);
+
+		return {
+			internalEvent: eventOrResult,
+			isExternalRewrite,
+			origin: false,
+			isISR,
+			resolvedRoutes,
+			initialURL: event.url,
+			locale: NextConfig.i18n ? detectLocale(eventOrResult, NextConfig.i18n) : undefined,
+			rewriteStatusCode: middlewareEventOrResult.rewriteStatusCode,
+		};
+	} catch (e) {
+		error("Error in routingHandler", e);
+		// In case of an error, we want to return the 500 page from Next.js
+		return {
+			internalEvent: {
+				type: "core",
+				method: "GET",
+				rawPath: "/500",
+				url: constructNextUrl(event.url, "/500"),
+				headers: {
+					...event.headers,
+				},
+				query: event.query,
+				cookies: event.cookies,
+				remoteAddress: event.remoteAddress,
+			},
+			isExternalRewrite: false,
+			origin: false,
+			isISR: false,
+			resolvedRoutes: [],
+			initialURL: event.url,
+			locale: NextConfig.i18n ? detectLocale(event, NextConfig.i18n) : undefined,
+		};
+	}
+}
+
+/**
+ * @param eventOrResult
+ * @returns Whether the event is an instance of `InternalResult`
+ */
+export function isInternalResult(
+	eventOrResult: InternalEvent | InternalResult | PartialResult
+): eventOrResult is InternalResult {
+	return eventOrResult != null && "statusCode" in eventOrResult;
+}
+
+/**
+ * @param eventOrResult
+ * @returns Whether the event is an instance of `PartialResult` (i.e. for PPR responses)
+ */
+export function isPartialResult(
+	eventOrResult: InternalEvent | InternalResult | PartialResult
+): eventOrResult is PartialResult {
+	return eventOrResult != null && "resumeRequest" in eventOrResult;
+}

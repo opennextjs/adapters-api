@@ -1,27 +1,27 @@
-// Copy-Edit of @opennextjs/aws packages/open-next/src/build/createServerBundle.ts
+// Copy-Edit of @opennextjs/core packages/open-next/src/build/createServerBundle.ts
 // Adapted for cloudflare workers
 
 import fs from "node:fs";
 import path from "node:path";
 
-import { loadMiddlewareManifest } from "@opennextjs/aws/adapters/config/util.js";
-import { compileCache } from "@opennextjs/aws/build/compileCache.js";
-import { copyAdapterFiles } from "@opennextjs/aws/build/copyAdapterFiles.js";
-import { copyMiddlewareResources, generateEdgeBundle } from "@opennextjs/aws/build/edge/createEdgeBundle.js";
-import * as buildHelper from "@opennextjs/aws/build/helper.js";
-import { installDependencies } from "@opennextjs/aws/build/installDeps.js";
-import type { CodePatcher } from "@opennextjs/aws/build/patch/codePatcher.js";
-import { applyCodePatches } from "@opennextjs/aws/build/patch/codePatcher.js";
-import * as awsPatches from "@opennextjs/aws/build/patch/patches/index.js";
-import logger from "@opennextjs/aws/logger.js";
-import { minifyAll } from "@opennextjs/aws/minimize-js.js";
-import { ContentUpdater } from "@opennextjs/aws/plugins/content-updater.js";
-import { openNextEdgePlugins } from "@opennextjs/aws/plugins/edge.js";
-import { openNextExternalMiddlewarePlugin } from "@opennextjs/aws/plugins/externalMiddleware.js";
-import { openNextReplacementPlugin } from "@opennextjs/aws/plugins/replacement.js";
-import { openNextResolvePlugin } from "@opennextjs/aws/plugins/resolve.js";
-import type { FunctionOptions, SplittedFunctionOptions } from "@opennextjs/aws/types/open-next.js";
-import { getCrossPlatformPathRegex } from "@opennextjs/aws/utils/regex.js";
+import { loadMiddlewareManifest } from "@opennextjs/core/adapters/config/util.js";
+import { compileCache } from "@opennextjs/core/build/compileCache.js";
+import { copyAdapterFiles } from "@opennextjs/core/build/copyAdapterFiles.js";
+import { copyMiddlewareResources, generateEdgeBundle } from "@opennextjs/core/build/edge/createEdgeBundle.js";
+import * as buildHelper from "@opennextjs/core/build/helper.js";
+import { installDependencies } from "@opennextjs/core/build/installDeps.js";
+import type { CodePatcher } from "@opennextjs/core/build/patch/codePatcher.js";
+import { applyCodePatches } from "@opennextjs/core/build/patch/codePatcher.js";
+import * as awsPatches from "@opennextjs/core/build/patch/patches/index.js";
+import logger from "@opennextjs/core/logger.js";
+import { minifyAll } from "@opennextjs/core/minimize-js.js";
+import { ContentUpdater } from "@opennextjs/core/plugins/content-updater.js";
+import { openNextEdgePlugins } from "@opennextjs/core/plugins/edge.js";
+import { openNextExternalMiddlewarePlugin } from "@opennextjs/core/plugins/externalMiddleware.js";
+import { openNextReplacementPlugin } from "@opennextjs/core/plugins/replacement.js";
+import { openNextResolvePlugin } from "@opennextjs/core/plugins/resolve.js";
+import type { FunctionOptions, SplittedFunctionOptions } from "@opennextjs/core/types/open-next.js";
+import { getCrossPlatformPathRegex } from "@opennextjs/core/utils/regex.js";
 import type { Plugin } from "esbuild";
 
 import type { BuildCompleteCtx } from "../../adapter.js";

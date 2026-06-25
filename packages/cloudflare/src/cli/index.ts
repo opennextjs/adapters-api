@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import logger from "@opennextjs/aws/logger.js";
+import logger from "@opennextjs/core/logger.js";
 import yargs from "yargs";
 
 import { getVersion } from "./build/utils/version.js";

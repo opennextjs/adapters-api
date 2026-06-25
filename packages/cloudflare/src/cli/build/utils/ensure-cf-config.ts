@@ -1,5 +1,5 @@
-import logger from "@opennextjs/aws/logger.js";
-import type { ExternalMiddlewareConfig } from "@opennextjs/aws/types/open-next.js";
+import logger from "@opennextjs/core/logger.js";
+import type { ExternalMiddlewareConfig } from "@opennextjs/core/types/open-next.js";
 
 import type { OpenNextConfig } from "../../../api/config.js";
 

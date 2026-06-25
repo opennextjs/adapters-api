@@ -1,4 +1,4 @@
-import { type BuildOptions } from "@opennextjs/aws/build/helper.js";
+import { type BuildOptions } from "@opennextjs/core/build/helper.js";
 import { getPlatformProxy, type GetPlatformProxyOptions } from "wrangler";
 
 import { extractProjectEnvVars } from "../../utils/extract-project-env-vars.js";

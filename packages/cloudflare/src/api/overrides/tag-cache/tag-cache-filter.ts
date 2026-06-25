@@ -1,4 +1,4 @@
-import { NextModeTagCache } from "@opennextjs/aws/types/overrides.js";
+import { NextModeTagCache } from "@opennextjs/core/types/overrides.js";
 
 interface WithFilterOptions {
 	/**

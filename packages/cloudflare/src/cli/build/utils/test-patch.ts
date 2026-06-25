@@ -1,4 +1,4 @@
-import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
+import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
 import { createPatch } from "diff";
 
 /**

@@ -1,5 +1,5 @@
-import { error } from "@opennextjs/aws/adapters/logger.js";
-import type { NextModeTagCache } from "@opennextjs/aws/types/overrides.js";
+import { error } from "@opennextjs/core/adapters/logger.js";
+import type { NextModeTagCache } from "@opennextjs/core/types/overrides.js";
 
 import { getCloudflareContext } from "../../cloudflare-context.js";
 import { debugCache, FALLBACK_BUILD_ID, isPurgeCacheEnabled, purgeCacheByTags } from "../internal.js";

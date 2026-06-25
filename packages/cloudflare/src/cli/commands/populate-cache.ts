@@ -3,15 +3,15 @@ import fsp from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import type { BuildOptions } from "@opennextjs/aws/build/helper.js";
-import logger from "@opennextjs/aws/logger.js";
+import type { BuildOptions } from "@opennextjs/core/build/helper.js";
+import logger from "@opennextjs/core/logger.js";
 import type {
 	IncludedIncrementalCache,
 	IncludedTagCache,
 	LazyLoadedOverride,
 	OpenNextConfig,
-} from "@opennextjs/aws/types/open-next.js";
-import type { IncrementalCache, TagCache } from "@opennextjs/aws/types/overrides.js";
+} from "@opennextjs/core/types/open-next.js";
+import type { IncrementalCache, TagCache } from "@opennextjs/core/types/overrides.js";
 import { globSync } from "glob";
 import { tqdm } from "ts-tqdm";
 import type { Unstable_Config as WranglerConfig } from "wrangler";

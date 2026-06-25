@@ -3,16 +3,16 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-import { compileCache } from "@opennextjs/aws/build/compileCache.js";
-import { compileOpenNextConfig } from "@opennextjs/aws/build/compileConfig.js";
-import { compileTagCacheProvider } from "@opennextjs/aws/build/compileTagCacheProvider.js";
-import { createCacheAssets, createStaticAssets } from "@opennextjs/aws/build/createAssets.js";
-import { createMiddleware } from "@opennextjs/aws/build/createMiddleware.js";
-import * as buildHelper from "@opennextjs/aws/build/helper.js";
-import { addDebugFile } from "@opennextjs/aws/debug.js";
-import type { ContentUpdater } from "@opennextjs/aws/plugins/content-updater.js";
-import { inlineRouteHandler } from "@opennextjs/aws/plugins/inlineRouteHandlers.js";
-import type { NextConfig } from "@opennextjs/aws/types/next-types.js";
+import { compileCache } from "@opennextjs/core/build/compileCache.js";
+import { compileOpenNextConfig } from "@opennextjs/core/build/compileConfig.js";
+import { compileTagCacheProvider } from "@opennextjs/core/build/compileTagCacheProvider.js";
+import { createCacheAssets, createStaticAssets } from "@opennextjs/core/build/createAssets.js";
+import { createMiddleware } from "@opennextjs/core/build/createMiddleware.js";
+import * as buildHelper from "@opennextjs/core/build/helper.js";
+import { addDebugFile } from "@opennextjs/core/debug.js";
+import type { ContentUpdater } from "@opennextjs/core/plugins/content-updater.js";
+import { inlineRouteHandler } from "@opennextjs/core/plugins/inlineRouteHandlers.js";
+import type { NextConfig } from "@opennextjs/core/types/next-types.js";
 
 import { bundleServer } from "./build/bundle-server.js";
 import { compileEnvFiles } from "./build/open-next/compile-env-files.js";
@@ -59,7 +59,7 @@ export default {
 		});
 
 		const require = createRequire(import.meta.url);
-		const openNextDistDir = path.dirname(require.resolve("@opennextjs/aws/index.js"));
+		const openNextDistDir = path.dirname(require.resolve("@opennextjs/core/index.js"));
 
 		buildOpts = buildHelper.normalizeOptions(config, openNextDistDir, buildDir);
 

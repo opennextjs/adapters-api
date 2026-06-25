@@ -1,4 +1,4 @@
-import { error } from "@opennextjs/aws/adapters/logger.js";
+import { error } from "@opennextjs/core/adapters/logger.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getCloudflareContext } from "../../cloudflare-context.js";
@@ -7,7 +7,7 @@ import { FALLBACK_BUILD_ID, purgeCacheByTags } from "../internal.js";
 import { BINDING_NAME, KVNextModeTagCache, NAME } from "./kv-next-tag-cache.js";
 
 // Mock dependencies
-vi.mock("@opennextjs/aws/adapters/logger.js", () => ({
+vi.mock("@opennextjs/core/adapters/logger.js", () => ({
 	error: vi.fn(),
 }));
 

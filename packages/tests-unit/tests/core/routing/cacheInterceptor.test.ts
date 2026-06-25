@@ -5,7 +5,7 @@ import type { Queue } from "@opennextjs/aws/types/overrides.js";
 import { fromReadableStream } from "@opennextjs/aws/utils/stream.js";
 import { vi } from "vitest";
 
-vi.mock("@opennextjs/aws/adapters/config/index.js", () => ({
+vi.mock("@/config/index.js", () => ({
 	NextConfig: {},
 	PrerenderManifest: {
 		routes: {

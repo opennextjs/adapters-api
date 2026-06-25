@@ -1,10 +1,10 @@
-import { NextConfig } from "@opennextjs/aws/adapters/config/index.js";
+import { NextConfig } from "@/config/index.js";
 import { handleLocaleRedirect, localizePath } from "@opennextjs/aws/core/routing/i18n/index.js";
 import { convertFromQueryString } from "@opennextjs/aws/core/routing/util.js";
 import type { InternalEvent } from "@opennextjs/aws/types/open-next.js";
 import { expect, vi } from "vitest";
 
-vi.mock("@opennextjs/aws/adapters/config/index.js", () => {
+vi.mock("@/config/index.js", () => {
 	return {
 		NextConfig: {
 			i18n: {

@@ -4,7 +4,7 @@ import type { InternalEvent } from "@opennextjs/aws/types/open-next.js";
 import { toReadableStream } from "@opennextjs/aws/utils/stream.js";
 import { vi } from "vitest";
 
-vi.mock("@opennextjs/aws/adapters/config/index.js", () => ({
+vi.mock("@/config/index.js", () => ({
 	NextConfig: {},
 	MiddlewareManifest: {
 		sortedMiddleware: ["/"],
