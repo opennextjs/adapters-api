@@ -24,7 +24,7 @@
 		"@types/node": "catalog:e2e",
 		"@types/react": "catalog:e2e",
 		"@types/react-dom": "catalog:e2e",
-		"typescript": "catalog:default",
+		"typescript": "catalog:",
 		"wrangler": "catalog:"
 	}
 }
