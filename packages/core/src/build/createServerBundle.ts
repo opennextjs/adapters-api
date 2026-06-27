@@ -29,6 +29,9 @@ interface CodeCustomization {
 	// These plugins are meant to apply during the esbuild bundling process.
 	// This will only apply to OpenNext code.
 	additionalPlugins?: (contentUpdater: ContentUpdater) => Plugin[];
+	useEdgeConfig?: boolean;
+	externals?: string[];
+	banner?: string[] | ((name: string) => string[]);
 }
 
 export async function createServerBundle(
@@ -168,7 +171,7 @@ async function generateBundle(
 	}
 
 	// Copy open-next.config.mjs
-	buildHelper.copyOpenNextConfig(options.buildDir, outPackagePath);
+	buildHelper.copyOpenNextConfig(options.buildDir, outPackagePath, codeCustomization?.useEdgeConfig ?? false);
 
 	// Copy env files
 	buildHelper.copyEnvFile(appBuildOutputPath, packagePath, outputPath);
@@ -232,23 +235,29 @@ async function generateBundle(
 	];
 
 	const outfileExt = fnOptions.runtime === "deno" ? "ts" : "mjs";
+	const defaultBanner = [
+		`globalThis.monorepoPackagePath = "${packagePath}";`,
+		"import process from 'node:process';",
+		"import { Buffer } from 'node:buffer';",
+		"import { createRequire as topLevelCreateRequire } from 'module';",
+		"const require = topLevelCreateRequire(import.meta.url);",
+		"import bannerUrl from 'url';",
+		"const __dirname = bannerUrl.fileURLToPath(new URL('.', import.meta.url));",
+		"const __filename = bannerUrl.fileURLToPath(import.meta.url);",
+		name === "default" ? "" : `globalThis.fnName = "${name}";`,
+	];
+	const bannerLines =
+		typeof codeCustomization?.banner === "function"
+			? codeCustomization.banner(name)
+			: (codeCustomization?.banner ?? defaultBanner);
+
 	await buildHelper.esbuildAsync(
 		{
 			entryPoints: [path.join(options.openNextDistDir, "adapters", "server-adapter.js")],
-			external: ["next", "./middleware.mjs", "./next-server.runtime.prod.js"],
+			external: codeCustomization?.externals ?? ["next", "./middleware.mjs", "./next-server.runtime.prod.js"],
 			outfile: path.join(outputPath, packagePath, `index.${outfileExt}`),
 			banner: {
-				js: [
-					`globalThis.monorepoPackagePath = "${packagePath}";`,
-					"import process from 'node:process';",
-					"import { Buffer } from 'node:buffer';",
-					"import { createRequire as topLevelCreateRequire } from 'module';",
-					"const require = topLevelCreateRequire(import.meta.url);",
-					"import bannerUrl from 'url';",
-					"const __dirname = bannerUrl.fileURLToPath(new URL('.', import.meta.url));",
-					"const __filename = bannerUrl.fileURLToPath(import.meta.url);",
-					name === "default" ? "" : `globalThis.fnName = "${name}";`,
-				].join(""),
+				js: bannerLines.join(""),
 			},
 			plugins,
 		},
