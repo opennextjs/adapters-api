@@ -16,5 +16,5 @@
 		},
 		"ignoreDeprecations": "6.0"
 	},
-	"exclude": ["src/**/*.spec.ts"]
+	"exclude": ["src/**/*.spec.ts", "dist"]
 }
