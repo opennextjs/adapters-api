@@ -905,9 +905,6 @@ importers:
       '@dotenvx/dotenvx':
         specifier: 'catalog:'
         version: 1.31.0
-      '@opennextjs/aws':
-        specifier: workspace:*
-        version: link:../aws
       '@opennextjs/core':
         specifier: workspace:*
         version: link:../core
