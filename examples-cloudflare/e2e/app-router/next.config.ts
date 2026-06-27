@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
 	poweredByHeader: false,
 	cleanDistDir: true,
-	transpilePackages: ["examples-cloudflare/e2e-shared"],
+	transpilePackages: ["@examples-cloudflare/e2e-shared"],
 	output: "standalone",
 	// outputFileTracingRoot: "../sst",
 	typescript: {

@@ -18,7 +18,7 @@
 	},
 	"dependencies": {
 		"@opennextjs/cloudflare": "workspace:*",
-		"examples-cloudflare/e2e-shared": "workspace:*",
+		"@examples-cloudflare/e2e-shared": "workspace:*",
 		"next": "catalog:e2e",
 		"react": "catalog:e2e",
 		"react-dom": "catalog:e2e"
