@@ -19,12 +19,12 @@
 	},
 	"devDependencies": {
 		"@opennextjs/aws": "workspace:*",
-		"@types/node": "catalog:aws",
+		"@types/node": "catalog:",
 		"@types/react": "catalog:aws",
 		"@types/react-dom": "catalog:aws",
 		"autoprefixer": "catalog:aws",
 		"postcss": "catalog:aws",
 		"tailwindcss": "catalog:aws",
-		"typescript": "catalog:aws"
+		"typescript": "catalog:"
 	}
 }

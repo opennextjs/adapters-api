@@ -2,7 +2,12 @@
 	"name": "@opennextjs/core",
 	"version": "0.1.0",
 	"description": "OpenNext core - platform-agnostic Next.js adapter infrastructure",
-	"keywords": ["next.js", "adapter", "serverless", "opennext"],
+	"keywords": [
+		"adapter",
+		"next.js",
+		"opennext",
+		"serverless"
+	],
 	"homepage": "https://opennext.js.org",
 	"bugs": {
 		"url": "https://github.com/opennextjs/opennextjs-aws/issues"
@@ -13,11 +18,15 @@
 		"url": "https://github.com/opennextjs/opennextjs-aws",
 		"directory": "packages/core"
 	},
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"type": "module",
 	"typesVersions": {
 		"*": {
-			"*": ["dist/*"]
+			"*": [
+				"dist/*"
+			]
 		}
 	},
 	"exports": {
@@ -49,10 +58,10 @@
 	},
 	"devDependencies": {
 		"@types/express": "5.0.6",
-		"@types/node": "catalog:aws",
+		"@types/node": "catalog:",
 		"concurrently": "^9.2.1",
 		"tsc-alias": "^1.8.16",
-		"typescript": "catalog:aws"
+		"typescript": "catalog:"
 	},
 	"peerDependencies": {
 		"next": "^16.0.10"

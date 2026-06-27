@@ -6,9 +6,6 @@ settings:
 
 catalogs:
   aws:
-    '@types/node':
-      specifier: 20.17.6
-      version: 20.17.6
     '@types/react':
       specifier: ^19
       version: 19.2.9
@@ -36,9 +33,6 @@ catalogs:
     tailwindcss:
       specifier: 3.3.3
       version: 3.3.3
-    typescript:
-      specifier: 5.9.3
-      version: 5.9.3
   default:
     '@cloudflare/workers-types':
       specifier: ^4.20260114.0
@@ -1077,7 +1071,7 @@ importers:
         version: link:../shared
       '@opennextjs/aws':
         specifier: workspace:*
-        version: link:../../packages/open-next
+        version: link:../../packages/aws
       express:
         specifier: ^5.2.1
         version: 5.2.1
@@ -1101,8 +1095,8 @@ importers:
         specifier: 1.6.7
         version: 1.6.7
       '@types/node':
-        specifier: catalog:aws
-        version: 20.17.6
+        specifier: 'catalog:'
+        version: 22.19.7
       '@types/react':
         specifier: catalog:aws
         version: 19.2.9
@@ -1117,12 +1111,12 @@ importers:
         version: 8.4.27
       tailwindcss:
         specifier: catalog:aws
-        version: 3.3.3(ts-node@10.9.1(@types/node@20.17.6)(typescript@5.9.3))
+        version: 3.3.3(ts-node@10.9.1(@types/node@22.19.7)(typescript@5.9.3))
       tsx:
         specifier: 4.20.5
         version: 4.20.5
       typescript:
-        specifier: catalog:aws
+        specifier: 'catalog:'
         version: 5.9.3
 
   examples/app-router:
@@ -1142,10 +1136,10 @@ importers:
     devDependencies:
       '@opennextjs/aws':
         specifier: workspace:*
-        version: link:../../packages/open-next
+        version: link:../../packages/aws
       '@types/node':
-        specifier: catalog:aws
-        version: 20.17.6
+        specifier: 'catalog:'
+        version: 22.19.7
       '@types/react':
         specifier: catalog:aws
         version: 19.2.9
@@ -1160,9 +1154,9 @@ importers:
         version: 8.4.27
       tailwindcss:
         specifier: catalog:aws
-        version: 3.3.3(ts-node@10.9.1(@types/node@20.17.6)(typescript@5.9.3))
+        version: 3.3.3(ts-node@10.9.1(@types/node@22.19.7)(typescript@5.9.3))
       typescript:
-        specifier: catalog:aws
+        specifier: 'catalog:'
         version: 5.9.3
 
   examples/experimental:
@@ -1179,10 +1173,10 @@ importers:
     devDependencies:
       '@opennextjs/aws':
         specifier: workspace:*
-        version: link:../../packages/open-next
+        version: link:../../packages/aws
       '@types/node':
-        specifier: catalog:aws
-        version: 20.17.6
+        specifier: 'catalog:'
+        version: 22.19.7
       '@types/react':
         specifier: catalog:aws
         version: 19.2.9
@@ -1190,7 +1184,7 @@ importers:
         specifier: catalog:aws
         version: 19.2.3(@types/react@19.2.9)
       typescript:
-        specifier: catalog:aws
+        specifier: 'catalog:'
         version: 5.9.3
 
   examples/pages-router:
@@ -1209,8 +1203,8 @@ importers:
         version: 19.2.3(react@19.2.3)
     devDependencies:
       '@types/node':
-        specifier: catalog:aws
-        version: 20.17.6
+        specifier: 'catalog:'
+        version: 22.19.7
       '@types/react':
         specifier: catalog:aws
         version: 19.2.9
@@ -1225,9 +1219,9 @@ importers:
         version: 8.4.27
       tailwindcss:
         specifier: catalog:aws
-        version: 3.3.3(ts-node@10.9.1(@types/node@20.17.6)(typescript@5.9.3))
+        version: 3.3.3(ts-node@10.9.1(@types/node@22.19.7)(typescript@5.9.3))
       typescript:
-        specifier: catalog:aws
+        specifier: 'catalog:'
         version: 5.9.3
 
   examples/shared:
@@ -1261,6 +1255,88 @@ importers:
         specifier: ^2.43.6
         version: 2.44.0(@aws-sdk/client-sso-oidc@3.678.0(@aws-sdk/client-sts@3.678.0(aws-crt@1.23.0))(aws-crt@1.23.0))(@types/react@19.2.9)(aws-crt@1.23.0)(better-sqlite3@11.10.0)
 
+  packages/aws:
+    dependencies:
+      '@ast-grep/napi':
+        specifier: ^0.40.5
+        version: 0.40.5
+      '@aws-sdk/client-cloudfront':
+        specifier: 3.984.0
+        version: 3.984.0(aws-crt@1.23.0)
+      '@aws-sdk/client-dynamodb':
+        specifier: 3.984.0
+        version: 3.984.0(aws-crt@1.23.0)
+      '@aws-sdk/client-lambda':
+        specifier: 3.984.0
+        version: 3.984.0(aws-crt@1.23.0)
+      '@aws-sdk/client-s3':
+        specifier: 3.984.0
+        version: 3.984.0(aws-crt@1.23.0)
+      '@aws-sdk/client-sqs':
+        specifier: 3.984.0
+        version: 3.984.0(aws-crt@1.23.0)
+      '@node-minify/core':
+        specifier: ^8.0.6
+        version: 8.0.6
+      '@node-minify/terser':
+        specifier: ^8.0.6
+        version: 8.0.6
+      '@opennextjs/core':
+        specifier: workspace:*
+        version: link:../core
+      '@tsconfig/node18':
+        specifier: ^1.0.3
+        version: 1.0.3
+      aws4fetch:
+        specifier: ^1.0.20
+        version: 1.0.20
+      chalk:
+        specifier: ^5.6.2
+        version: 5.6.2
+      cookie:
+        specifier: ^1.0.2
+        version: 1.0.2
+      esbuild:
+        specifier: catalog:aws
+        version: 0.27.0
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
+      next:
+        specifier: ^16.0.10
+        version: 16.1.4(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      path-to-regexp:
+        specifier: ^6.3.0
+        version: 6.3.0
+      urlpattern-polyfill:
+        specifier: ^10.1.0
+        version: 10.1.0
+      yaml:
+        specifier: ^2.8.1
+        version: 2.8.1
+    devDependencies:
+      '@tsconfig/node22':
+        specifier: ^22.0.5
+        version: 22.0.5
+      '@types/aws-lambda':
+        specifier: ^8.10.158
+        version: 8.10.158
+      '@types/express':
+        specifier: 5.0.6
+        version: 5.0.6
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.7
+      concurrently:
+        specifier: ^9.2.1
+        version: 9.2.1
+      tsc-alias:
+        specifier: ^1.8.16
+        version: 1.8.16
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
   packages/cloudflare:
     dependencies:
       '@ast-grep/napi':
@@ -1271,7 +1347,7 @@ importers:
         version: 1.31.0
       '@opennextjs/aws':
         specifier: workspace:*
-        version: link:../open-next
+        version: link:../aws
       '@opennextjs/core':
         specifier: workspace:*
         version: link:../core
@@ -1389,8 +1465,8 @@ importers:
         specifier: 5.0.6
         version: 5.0.6
       '@types/node':
-        specifier: catalog:aws
-        version: 20.17.6
+        specifier: 'catalog:'
+        version: 22.19.7
       concurrently:
         specifier: ^9.2.1
         version: 9.2.1
@@ -1398,86 +1474,7 @@ importers:
         specifier: ^1.8.16
         version: 1.8.16
       typescript:
-        specifier: catalog:aws
-        version: 5.9.3
-
-  packages/open-next:
-    dependencies:
-      '@ast-grep/napi':
-        specifier: ^0.40.5
-        version: 0.40.5
-      '@aws-sdk/client-cloudfront':
-        specifier: 3.984.0
-        version: 3.984.0(aws-crt@1.23.0)
-      '@aws-sdk/client-dynamodb':
-        specifier: 3.984.0
-        version: 3.984.0(aws-crt@1.23.0)
-      '@aws-sdk/client-lambda':
-        specifier: 3.984.0
-        version: 3.984.0(aws-crt@1.23.0)
-      '@aws-sdk/client-s3':
-        specifier: 3.984.0
-        version: 3.984.0(aws-crt@1.23.0)
-      '@aws-sdk/client-sqs':
-        specifier: 3.984.0
-        version: 3.984.0(aws-crt@1.23.0)
-      '@node-minify/core':
-        specifier: ^8.0.6
-        version: 8.0.6
-      '@node-minify/terser':
-        specifier: ^8.0.6
-        version: 8.0.6
-      '@opennextjs/core':
-        specifier: workspace:*
-        version: link:../core
-      '@tsconfig/node18':
-        specifier: ^1.0.3
-        version: 1.0.3
-      aws4fetch:
-        specifier: ^1.0.20
-        version: 1.0.20
-      chalk:
-        specifier: ^5.6.2
-        version: 5.6.2
-      cookie:
-        specifier: ^1.0.2
-        version: 1.0.2
-      esbuild:
-        specifier: catalog:aws
-        version: 0.27.0
-      express:
-        specifier: ^5.2.1
-        version: 5.2.1
-      next:
-        specifier: ^16.0.10
-        version: 16.1.4(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      path-to-regexp:
-        specifier: ^6.3.0
-        version: 6.3.0
-      urlpattern-polyfill:
-        specifier: ^10.1.0
-        version: 10.1.0
-      yaml:
-        specifier: ^2.8.1
-        version: 2.8.1
-    devDependencies:
-      '@types/aws-lambda':
-        specifier: ^8.10.158
-        version: 8.10.158
-      '@types/express':
-        specifier: 5.0.6
-        version: 5.0.6
-      '@types/node':
-        specifier: catalog:aws
-        version: 20.17.6
-      concurrently:
-        specifier: ^9.2.1
-        version: 9.2.1
-      tsc-alias:
-        specifier: ^1.8.16
-        version: 1.8.16
-      typescript:
-        specifier: catalog:aws
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/tests-e2e:
@@ -1496,7 +1493,7 @@ importers:
     dependencies:
       '@opennextjs/aws':
         specifier: workspace:*
-        version: link:../open-next
+        version: link:../aws
       '@opennextjs/core':
         specifier: workspace:*
         version: link:../core
@@ -5665,6 +5662,9 @@ packages:
 
   '@tsconfig/node18@1.0.3':
     resolution: {integrity: sha512-RbwvSJQsuN9TB04AQbGULYfOGE/RnSFk/FLQ5b0NmDf5Kx2q/lABZbHQPKCO1vZ6Fiwkplu+yb9pGdLy1iGseQ==}
+
+  '@tsconfig/node22@22.0.5':
+    resolution: {integrity: sha512-hLf2ld+sYN/BtOJjHUWOk568dvjFQkHnLNa6zce25GIH+vxKfvTgm3qpaH6ToF5tu/NN0IH66s+Bb5wElHrLcw==}
 
   '@tsconfig/strictest@2.0.8':
     resolution: {integrity: sha512-XnQ7vNz5HRN0r88GYf1J9JJjqtZPiHt2woGJOo2dYqyHGGcd6OLGqSlBB6p1j9mpzja6Oe5BoPqWmeDx6X9rLw==}
@@ -10993,32 +10993,32 @@ snapshots:
       '@aws-sdk/util-endpoints': 3.984.0
       '@aws-sdk/util-user-agent-browser': 3.972.8
       '@aws-sdk/util-user-agent-node': 3.973.12(aws-crt@1.23.0)
-      '@smithy/config-resolver': 4.4.6
+      '@smithy/config-resolver': 4.4.13
       '@smithy/core': 3.23.12
-      '@smithy/fetch-http-handler': 5.3.9
-      '@smithy/hash-node': 4.2.8
-      '@smithy/invalid-dependency': 4.2.8
-      '@smithy/middleware-content-length': 4.2.8
+      '@smithy/fetch-http-handler': 5.3.15
+      '@smithy/hash-node': 4.2.12
+      '@smithy/invalid-dependency': 4.2.12
+      '@smithy/middleware-content-length': 4.2.12
       '@smithy/middleware-endpoint': 4.4.27
       '@smithy/middleware-retry': 4.4.44
-      '@smithy/middleware-serde': 4.2.9
-      '@smithy/middleware-stack': 4.2.8
-      '@smithy/node-config-provider': 4.3.8
-      '@smithy/node-http-handler': 4.4.8
-      '@smithy/protocol-http': 5.3.8
+      '@smithy/middleware-serde': 4.2.15
+      '@smithy/middleware-stack': 4.2.12
+      '@smithy/node-config-provider': 4.3.12
+      '@smithy/node-http-handler': 4.5.0
+      '@smithy/protocol-http': 5.3.12
       '@smithy/smithy-client': 4.12.7
-      '@smithy/types': 4.12.0
-      '@smithy/url-parser': 4.2.8
-      '@smithy/util-base64': 4.3.0
-      '@smithy/util-body-length-browser': 4.2.0
-      '@smithy/util-body-length-node': 4.2.1
+      '@smithy/types': 4.13.1
+      '@smithy/url-parser': 4.2.12
+      '@smithy/util-base64': 4.3.2
+      '@smithy/util-body-length-browser': 4.2.2
+      '@smithy/util-body-length-node': 4.2.3
       '@smithy/util-defaults-mode-browser': 4.3.43
       '@smithy/util-defaults-mode-node': 4.2.47
-      '@smithy/util-endpoints': 3.2.8
-      '@smithy/util-middleware': 4.2.8
-      '@smithy/util-retry': 4.2.8
-      '@smithy/util-stream': 4.5.10
-      '@smithy/util-utf8': 4.2.0
+      '@smithy/util-endpoints': 3.3.3
+      '@smithy/util-middleware': 4.2.12
+      '@smithy/util-retry': 4.2.12
+      '@smithy/util-stream': 4.5.20
+      '@smithy/util-utf8': 4.2.2
       '@smithy/util-waiter': 4.2.8
       tslib: 2.8.1
     transitivePeerDependencies:
@@ -11087,31 +11087,31 @@ snapshots:
       '@aws-sdk/util-endpoints': 3.984.0
       '@aws-sdk/util-user-agent-browser': 3.972.8
       '@aws-sdk/util-user-agent-node': 3.973.12(aws-crt@1.23.0)
-      '@smithy/config-resolver': 4.4.6
+      '@smithy/config-resolver': 4.4.13
       '@smithy/core': 3.23.12
-      '@smithy/fetch-http-handler': 5.3.9
-      '@smithy/hash-node': 4.2.8
-      '@smithy/invalid-dependency': 4.2.8
-      '@smithy/middleware-content-length': 4.2.8
+      '@smithy/fetch-http-handler': 5.3.15
+      '@smithy/hash-node': 4.2.12
+      '@smithy/invalid-dependency': 4.2.12
+      '@smithy/middleware-content-length': 4.2.12
       '@smithy/middleware-endpoint': 4.4.27
       '@smithy/middleware-retry': 4.4.44
-      '@smithy/middleware-serde': 4.2.9
-      '@smithy/middleware-stack': 4.2.8
-      '@smithy/node-config-provider': 4.3.8
-      '@smithy/node-http-handler': 4.4.8
-      '@smithy/protocol-http': 5.3.8
+      '@smithy/middleware-serde': 4.2.15
+      '@smithy/middleware-stack': 4.2.12
+      '@smithy/node-config-provider': 4.3.12
+      '@smithy/node-http-handler': 4.5.0
+      '@smithy/protocol-http': 5.3.12
       '@smithy/smithy-client': 4.12.7
-      '@smithy/types': 4.12.0
-      '@smithy/url-parser': 4.2.8
-      '@smithy/util-base64': 4.3.0
-      '@smithy/util-body-length-browser': 4.2.0
-      '@smithy/util-body-length-node': 4.2.1
+      '@smithy/types': 4.13.1
+      '@smithy/url-parser': 4.2.12
+      '@smithy/util-base64': 4.3.2
+      '@smithy/util-body-length-browser': 4.2.2
+      '@smithy/util-body-length-node': 4.2.3
       '@smithy/util-defaults-mode-browser': 4.3.43
       '@smithy/util-defaults-mode-node': 4.2.47
-      '@smithy/util-endpoints': 3.2.8
-      '@smithy/util-middleware': 4.2.8
-      '@smithy/util-retry': 4.2.8
-      '@smithy/util-utf8': 4.2.0
+      '@smithy/util-endpoints': 3.3.3
+      '@smithy/util-middleware': 4.2.12
+      '@smithy/util-retry': 4.2.12
+      '@smithy/util-utf8': 4.2.2
       '@smithy/util-waiter': 4.2.8
       tslib: 2.8.1
     transitivePeerDependencies:
@@ -11421,35 +11421,35 @@ snapshots:
       '@aws-sdk/util-endpoints': 3.984.0
       '@aws-sdk/util-user-agent-browser': 3.972.8
       '@aws-sdk/util-user-agent-node': 3.973.12(aws-crt@1.23.0)
-      '@smithy/config-resolver': 4.4.6
+      '@smithy/config-resolver': 4.4.13
       '@smithy/core': 3.23.12
       '@smithy/eventstream-serde-browser': 4.2.8
       '@smithy/eventstream-serde-config-resolver': 4.3.8
       '@smithy/eventstream-serde-node': 4.2.8
-      '@smithy/fetch-http-handler': 5.3.9
-      '@smithy/hash-node': 4.2.8
-      '@smithy/invalid-dependency': 4.2.8
-      '@smithy/middleware-content-length': 4.2.8
+      '@smithy/fetch-http-handler': 5.3.15
+      '@smithy/hash-node': 4.2.12
+      '@smithy/invalid-dependency': 4.2.12
+      '@smithy/middleware-content-length': 4.2.12
       '@smithy/middleware-endpoint': 4.4.27
       '@smithy/middleware-retry': 4.4.44
-      '@smithy/middleware-serde': 4.2.9
-      '@smithy/middleware-stack': 4.2.8
-      '@smithy/node-config-provider': 4.3.8
-      '@smithy/node-http-handler': 4.4.8
-      '@smithy/protocol-http': 5.3.8
+      '@smithy/middleware-serde': 4.2.15
+      '@smithy/middleware-stack': 4.2.12
+      '@smithy/node-config-provider': 4.3.12
+      '@smithy/node-http-handler': 4.5.0
+      '@smithy/protocol-http': 5.3.12
       '@smithy/smithy-client': 4.12.7
-      '@smithy/types': 4.12.0
-      '@smithy/url-parser': 4.2.8
-      '@smithy/util-base64': 4.3.0
-      '@smithy/util-body-length-browser': 4.2.0
-      '@smithy/util-body-length-node': 4.2.1
+      '@smithy/types': 4.13.1
+      '@smithy/url-parser': 4.2.12
+      '@smithy/util-base64': 4.3.2
+      '@smithy/util-body-length-browser': 4.2.2
+      '@smithy/util-body-length-node': 4.2.3
       '@smithy/util-defaults-mode-browser': 4.3.43
       '@smithy/util-defaults-mode-node': 4.2.47
-      '@smithy/util-endpoints': 3.2.8
-      '@smithy/util-middleware': 4.2.8
-      '@smithy/util-retry': 4.2.8
-      '@smithy/util-stream': 4.5.10
-      '@smithy/util-utf8': 4.2.0
+      '@smithy/util-endpoints': 3.3.3
+      '@smithy/util-middleware': 4.2.12
+      '@smithy/util-retry': 4.2.12
+      '@smithy/util-stream': 4.5.20
+      '@smithy/util-utf8': 4.2.2
       '@smithy/util-waiter': 4.2.8
       tslib: 2.8.1
     transitivePeerDependencies:
@@ -11584,38 +11584,38 @@ snapshots:
       '@aws-sdk/util-endpoints': 3.984.0
       '@aws-sdk/util-user-agent-browser': 3.972.8
       '@aws-sdk/util-user-agent-node': 3.973.12(aws-crt@1.23.0)
-      '@smithy/config-resolver': 4.4.6
+      '@smithy/config-resolver': 4.4.13
       '@smithy/core': 3.23.12
       '@smithy/eventstream-serde-browser': 4.2.8
       '@smithy/eventstream-serde-config-resolver': 4.3.8
       '@smithy/eventstream-serde-node': 4.2.8
-      '@smithy/fetch-http-handler': 5.3.9
+      '@smithy/fetch-http-handler': 5.3.15
       '@smithy/hash-blob-browser': 4.2.9
-      '@smithy/hash-node': 4.2.8
+      '@smithy/hash-node': 4.2.12
       '@smithy/hash-stream-node': 4.2.8
-      '@smithy/invalid-dependency': 4.2.8
+      '@smithy/invalid-dependency': 4.2.12
       '@smithy/md5-js': 4.2.8
-      '@smithy/middleware-content-length': 4.2.8
+      '@smithy/middleware-content-length': 4.2.12
       '@smithy/middleware-endpoint': 4.4.27
       '@smithy/middleware-retry': 4.4.44
-      '@smithy/middleware-serde': 4.2.9
-      '@smithy/middleware-stack': 4.2.8
-      '@smithy/node-config-provider': 4.3.8
-      '@smithy/node-http-handler': 4.4.8
-      '@smithy/protocol-http': 5.3.8
+      '@smithy/middleware-serde': 4.2.15
+      '@smithy/middleware-stack': 4.2.12
+      '@smithy/node-config-provider': 4.3.12
+      '@smithy/node-http-handler': 4.5.0
+      '@smithy/protocol-http': 5.3.12
       '@smithy/smithy-client': 4.12.7
-      '@smithy/types': 4.12.0
-      '@smithy/url-parser': 4.2.8
-      '@smithy/util-base64': 4.3.0
-      '@smithy/util-body-length-browser': 4.2.0
-      '@smithy/util-body-length-node': 4.2.1
+      '@smithy/types': 4.13.1
+      '@smithy/url-parser': 4.2.12
+      '@smithy/util-base64': 4.3.2
+      '@smithy/util-body-length-browser': 4.2.2
+      '@smithy/util-body-length-node': 4.2.3
       '@smithy/util-defaults-mode-browser': 4.3.43
       '@smithy/util-defaults-mode-node': 4.2.47
-      '@smithy/util-endpoints': 3.2.8
-      '@smithy/util-middleware': 4.2.8
-      '@smithy/util-retry': 4.2.8
-      '@smithy/util-stream': 4.5.10
-      '@smithy/util-utf8': 4.2.0
+      '@smithy/util-endpoints': 3.3.3
+      '@smithy/util-middleware': 4.2.12
+      '@smithy/util-retry': 4.2.12
+      '@smithy/util-stream': 4.5.20
+      '@smithy/util-utf8': 4.2.2
       '@smithy/util-waiter': 4.2.8
       tslib: 2.8.1
     transitivePeerDependencies:
@@ -11637,32 +11637,32 @@ snapshots:
       '@aws-sdk/util-endpoints': 3.984.0
       '@aws-sdk/util-user-agent-browser': 3.972.8
       '@aws-sdk/util-user-agent-node': 3.973.12(aws-crt@1.23.0)
-      '@smithy/config-resolver': 4.4.6
+      '@smithy/config-resolver': 4.4.13
       '@smithy/core': 3.23.12
-      '@smithy/fetch-http-handler': 5.3.9
-      '@smithy/hash-node': 4.2.8
-      '@smithy/invalid-dependency': 4.2.8
+      '@smithy/fetch-http-handler': 5.3.15
+      '@smithy/hash-node': 4.2.12
+      '@smithy/invalid-dependency': 4.2.12
       '@smithy/md5-js': 4.2.8
-      '@smithy/middleware-content-length': 4.2.8
+      '@smithy/middleware-content-length': 4.2.12
       '@smithy/middleware-endpoint': 4.4.27
       '@smithy/middleware-retry': 4.4.44
-      '@smithy/middleware-serde': 4.2.9
-      '@smithy/middleware-stack': 4.2.8
-      '@smithy/node-config-provider': 4.3.8
-      '@smithy/node-http-handler': 4.4.8
-      '@smithy/protocol-http': 5.3.8
+      '@smithy/middleware-serde': 4.2.15
+      '@smithy/middleware-stack': 4.2.12
+      '@smithy/node-config-provider': 4.3.12
+      '@smithy/node-http-handler': 4.5.0
+      '@smithy/protocol-http': 5.3.12
       '@smithy/smithy-client': 4.12.7
-      '@smithy/types': 4.12.0
-      '@smithy/url-parser': 4.2.8
-      '@smithy/util-base64': 4.3.0
-      '@smithy/util-body-length-browser': 4.2.0
-      '@smithy/util-body-length-node': 4.2.1
+      '@smithy/types': 4.13.1
+      '@smithy/url-parser': 4.2.12
+      '@smithy/util-base64': 4.3.2
+      '@smithy/util-body-length-browser': 4.2.2
+      '@smithy/util-body-length-node': 4.2.3
       '@smithy/util-defaults-mode-browser': 4.3.43
       '@smithy/util-defaults-mode-node': 4.2.47
-      '@smithy/util-endpoints': 3.2.8
-      '@smithy/util-middleware': 4.2.8
-      '@smithy/util-retry': 4.2.8
-      '@smithy/util-utf8': 4.2.0
+      '@smithy/util-endpoints': 3.3.3
+      '@smithy/util-middleware': 4.2.12
+      '@smithy/util-retry': 4.2.12
+      '@smithy/util-utf8': 4.2.2
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
@@ -12763,9 +12763,9 @@ snapshots:
     dependencies:
       '@aws-sdk/middleware-sdk-s3': 3.972.26
       '@aws-sdk/types': 3.973.6
-      '@smithy/protocol-http': 5.3.8
-      '@smithy/signature-v4': 5.3.8
-      '@smithy/types': 4.12.0
+      '@smithy/protocol-http': 5.3.12
+      '@smithy/signature-v4': 5.3.12
+      '@smithy/types': 4.13.1
       tslib: 2.8.1
 
   '@aws-sdk/smithy-client@3.374.0':
@@ -12865,9 +12865,9 @@ snapshots:
   '@aws-sdk/util-endpoints@3.984.0':
     dependencies:
       '@aws-sdk/types': 3.973.6
-      '@smithy/types': 4.12.0
-      '@smithy/url-parser': 4.2.8
-      '@smithy/util-endpoints': 3.2.8
+      '@smithy/types': 4.13.1
+      '@smithy/url-parser': 4.2.12
+      '@smithy/util-endpoints': 3.3.3
       tslib: 2.8.1
 
   '@aws-sdk/util-endpoints@3.996.5':
@@ -16419,6 +16419,8 @@ snapshots:
   '@tsconfig/node16@1.0.4': {}
 
   '@tsconfig/node18@1.0.3': {}
+
+  '@tsconfig/node22@22.0.5': {}
 
   '@tsconfig/strictest@2.0.8': {}
 
@@ -21638,6 +21640,33 @@ snapshots:
       postcss-import: 15.1.0(postcss@8.5.6)
       postcss-js: 4.0.1(postcss@8.5.6)
       postcss-load-config: 4.0.2(postcss@8.5.6)(ts-node@10.9.1(@types/node@20.17.6)(typescript@5.9.3))
+      postcss-nested: 6.2.0(postcss@8.5.6)
+      postcss-selector-parser: 6.1.2
+      resolve: 1.22.8
+      sucrase: 3.35.0
+    transitivePeerDependencies:
+      - ts-node
+
+  tailwindcss@3.3.3(ts-node@10.9.1(@types/node@22.19.7)(typescript@5.9.3)):
+    dependencies:
+      '@alloc/quick-lru': 5.2.0
+      arg: 5.0.2
+      chokidar: 3.6.0
+      didyoumean: 1.2.2
+      dlv: 1.1.3
+      fast-glob: 3.3.2
+      glob-parent: 6.0.2
+      is-glob: 4.0.3
+      jiti: 1.21.7
+      lilconfig: 2.1.0
+      micromatch: 4.0.8
+      normalize-path: 3.0.0
+      object-hash: 3.0.0
+      picocolors: 1.1.1
+      postcss: 8.5.6
+      postcss-import: 15.1.0(postcss@8.5.6)
+      postcss-js: 4.0.1(postcss@8.5.6)
+      postcss-load-config: 4.0.2(postcss@8.5.6)(ts-node@10.9.1(@types/node@22.19.7)(typescript@5.9.3))
       postcss-nested: 6.2.0(postcss@8.5.6)
       postcss-selector-parser: 6.1.2
       resolve: 1.22.8

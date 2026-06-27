@@ -66,12 +66,13 @@
 		"yaml": "^2.8.1"
 	},
 	"devDependencies": {
+		"@tsconfig/node22": "^22.0.5",
 		"@types/aws-lambda": "^8.10.158",
 		"@types/express": "5.0.6",
-		"@types/node": "catalog:aws",
+		"@types/node": "catalog:",
 		"concurrently": "^9.2.1",
 		"tsc-alias": "^1.8.16",
-		"typescript": "catalog:aws"
+		"typescript": "catalog:"
 	},
 	"peerDependencies": {
 		"next": "^16.0.10"

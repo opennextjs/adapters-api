@@ -23,13 +23,13 @@
 	"devDependencies": {
 		"@types/express": "^5.0.6",
 		"@types/express-http-proxy": "1.6.7",
-		"@types/node": "catalog:aws",
+		"@types/node": "catalog:",
 		"@types/react": "catalog:aws",
 		"@types/react-dom": "catalog:aws",
 		"autoprefixer": "catalog:aws",
 		"postcss": "catalog:aws",
 		"tailwindcss": "catalog:aws",
 		"tsx": "4.20.5",
-		"typescript": "catalog:aws"
+		"typescript": "catalog:"
 	}
 }
