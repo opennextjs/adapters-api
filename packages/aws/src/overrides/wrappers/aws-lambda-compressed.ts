@@ -2,13 +2,13 @@ import { Readable, type Transform, Writable } from "node:stream";
 import type { ReadableStream } from "node:stream/web";
 import zlib from "node:zlib";
 
-import type { AwsLambdaEvent, AwsLambdaReturn } from "../../types/aws-lambda.js";
+import { error } from "@opennextjs/core/adapters/logger.js";
 import type { InternalResult, StreamCreator } from "@opennextjs/core/types/open-next.js";
 import type { WrapperHandler } from "@opennextjs/core/types/overrides.js";
 
-import { error } from "@opennextjs/core/adapters/logger.js";
+import type { AwsLambdaEvent, AwsLambdaReturn } from "../../types/aws-lambda.js";
 
-import { formatWarmerResponse } from "./aws-lambda";
+import { formatWarmerResponse } from "./aws-lambda.js";
 
 const handler: WrapperHandler =
 	async (handler, converter) =>

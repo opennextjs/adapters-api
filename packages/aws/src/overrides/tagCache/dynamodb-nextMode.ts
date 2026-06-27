@@ -1,15 +1,14 @@
 import path from "node:path";
 
-import { AwsClient } from "aws4fetch";
-
-import type { NextModeTagCache } from "@opennextjs/core/types/overrides.js";
-import { RecoverableError } from "@opennextjs/core/utils/error.js";
-import { customFetchClient } from "../../utils/fetch.js";
-
 import { debug, error } from "@opennextjs/core/adapters/logger.js";
 import { chunk, parseNumberFromEnv } from "@opennextjs/core/adapters/util.js";
+import type { NextModeTagCache } from "@opennextjs/core/types/overrides.js";
+import { RecoverableError } from "@opennextjs/core/utils/error.js";
+import { AwsClient } from "aws4fetch";
 
-import { MAX_DYNAMO_BATCH_WRITE_ITEM_COUNT, getDynamoBatchWriteCommandConcurrency } from "./constants";
+import { customFetchClient } from "../../utils/fetch.js";
+
+import { MAX_DYNAMO_BATCH_WRITE_ITEM_COUNT, getDynamoBatchWriteCommandConcurrency } from "./constants.js";
 
 type DynamoDBTagItem = {
 	revalidatedAt: { N: string };

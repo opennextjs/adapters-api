@@ -1,10 +1,10 @@
+import { debug } from "@opennextjs/core/adapters/logger.js";
 import type { CacheEntryType, CacheValue, IncrementalCache } from "@opennextjs/core/types/overrides.js";
-import { customFetchClient } from "../../utils/fetch.js";
 import { LRUCache } from "@opennextjs/core/utils/lru.js";
 
-import { debug } from "@opennextjs/core/adapters/logger.js";
+import { customFetchClient } from "../../utils/fetch.js";
 
-import S3Cache, { getAwsClient } from "./s3-lite";
+import S3Cache, { getAwsClient } from "./s3-lite.js";
 
 // TTL for the local cache in milliseconds
 const localCacheTTL = process.env.OPEN_NEXT_LOCAL_CACHE_TTL_MS
