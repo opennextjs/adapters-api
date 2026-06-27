@@ -14,7 +14,7 @@ catalog:
   "@playwright/test": ^1.51.1
   "@tsconfig/strictest": ^2.0.5
   "@types/mock-fs": ^4.13.4
-  "@types/node": ^22.2.0
+  "@types/node": ^24.0.0
   "@types/react": ^18
   "@types/react-dom": ^18
   "@types/yargs": ^17.0.33
@@ -45,7 +45,7 @@ catalogs:
     tailwindcss: 3.3.3
     esbuild: 0.27.0
   e2e:
-    "@types/node": 20.17.6
+    "@types/node": 24.0.0
     "@types/react": 19.0.3
     "@types/react-dom": 19.0.3
     autoprefixer: 10.4.15

@@ -1,8 +1,9 @@
 {
-	"extends": "@tsconfig/node18/tsconfig.json",
+	"extends": "@tsconfig/node24/tsconfig.json",
 	"compilerOptions": {
 		"declaration": true,
 		"module": "esnext",
+		"moduleResolution": "bundler",
 		"lib": ["DOM", "ESNext"],
 		"rootDir": "./src",
 		"outDir": "./dist",

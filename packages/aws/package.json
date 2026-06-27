@@ -55,7 +55,7 @@
 		"@node-minify/core": "^8.0.6",
 		"@node-minify/terser": "^8.0.6",
 		"@opennextjs/core": "workspace:*",
-		"@tsconfig/node18": "^1.0.3",
+		"@tsconfig/node24": "^24.0.4",
 		"aws4fetch": "^1.0.20",
 		"chalk": "^5.6.2",
 		"cookie": "^1.0.2",
@@ -66,7 +66,7 @@
 		"yaml": "^2.8.1"
 	},
 	"devDependencies": {
-		"@tsconfig/node22": "^22.0.5",
+		"@tsconfig/node24": "^24.0.4",
 		"@types/aws-lambda": "^8.10.158",
 		"@types/express": "5.0.6",
 		"@types/node": "catalog:",

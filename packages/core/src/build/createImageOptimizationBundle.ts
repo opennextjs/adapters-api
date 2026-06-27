@@ -93,7 +93,7 @@ export async function createImageOptimizationBundle(options: buildHelper.BuildOp
 			arch: isDev ? undefined : "arm64",
 			// Use the local platform in dev
 			os: isDev ? os.platform() : "linux",
-			nodeVersion: "18",
+			nodeVersion: "24",
 			libc: "glibc",
 		}
 	);
