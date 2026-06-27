@@ -20,6 +20,7 @@ import { ContentUpdater } from "../../plugins/content-updater.js";
 import { openNextEdgePlugins } from "../../plugins/edge.js";
 import { openNextExternalMiddlewarePlugin } from "../../plugins/externalMiddleware.js";
 import { openNextReplacementPlugin } from "../../plugins/replacement.js";
+import type { DefaultOverrides } from "../../plugins/resolve.js";
 import { openNextResolvePlugin } from "../../plugins/resolve.js";
 import { getCrossPlatformPathRegex } from "../../utils/regex.js";
 import { type BuildOptions, isEdgeRuntime, copyOpenNextConfig, esbuildAsync } from "../helper.js";
@@ -39,6 +40,7 @@ interface BuildEdgeBundleOptions {
 	onlyBuildOnce?: boolean;
 	name: string;
 	additionalPlugins?: (contentUpdater: ContentUpdater) => Plugin[];
+	defaultOverrides?: DefaultOverrides;
 }
 
 export async function buildEdgeBundle({
@@ -53,6 +55,7 @@ export async function buildEdgeBundle({
 	onlyBuildOnce,
 	name,
 	additionalPlugins: additionalPluginsFn,
+	defaultOverrides,
 }: BuildEdgeBundleOptions) {
 	const isInCloudflare = await isEdgeRuntime(overrides);
 	function override<T extends keyof Override>(target: T) {
@@ -73,13 +76,22 @@ export async function buildEdgeBundle({
 			plugins: [
 				openNextResolvePlugin({
 					overrides: {
-						wrapper: override("wrapper") ?? "aws-lambda",
-						converter: override("converter") ?? defaultConverter,
-						tagCache: override("tagCache") ?? "dynamodb-lite",
-						incrementalCache: override("incrementalCache") ?? "s3-lite",
-						queue: override("queue") ?? "sqs-lite",
-						originResolver: override("originResolver") ?? "pattern-env",
-						proxyExternalRequest: override("proxyExternalRequest") ?? "node",
+						wrapper: override("wrapper"),
+						converter: override("converter"),
+						tagCache: override("tagCache"),
+						incrementalCache: override("incrementalCache"),
+						queue: override("queue"),
+						originResolver: override("originResolver"),
+						proxyExternalRequest: override("proxyExternalRequest"),
+					},
+					defaultOverrides: {
+						wrapper: defaultOverrides?.wrapper ?? "aws-lambda",
+						converter: defaultOverrides?.converter ?? defaultConverter,
+						tagCache: defaultOverrides?.tagCache ?? "dynamodb-lite",
+						incrementalCache: defaultOverrides?.incrementalCache ?? "s3-lite",
+						queue: defaultOverrides?.queue ?? "sqs-lite",
+						originResolver: defaultOverrides?.originResolver ?? "pattern-env",
+						proxyExternalRequest: defaultOverrides?.proxyExternalRequest ?? "node",
 					},
 					fnName: name,
 				}),
@@ -167,7 +179,8 @@ export async function generateEdgeBundle(
 	name: string,
 	options: BuildOptions,
 	fnOptions: SplittedFunctionOptions,
-	additionalPlugins: (contentUpdater: ContentUpdater) => Plugin[] = () => []
+	additionalPlugins: (contentUpdater: ContentUpdater) => Plugin[] = () => [],
+	defaultOverrides?: DefaultOverrides
 ) {
 	logger.info(`Generating edge bundle for: ${name}`);
 
@@ -204,6 +217,7 @@ export async function generateEdgeBundle(
 		additionalExternals: options.config.edgeExternals,
 		name,
 		additionalPlugins,
+		defaultOverrides,
 	});
 }
 

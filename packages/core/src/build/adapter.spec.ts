@@ -214,7 +214,10 @@ describe("buildAdapter", () => {
 		const ctx = createMockContext();
 		await adapter.onBuildComplete(ctx);
 
-		expect(createMiddleware).toHaveBeenCalledWith(expect.any(Object), { forceOnlyBuildOnce: true });
+		expect(createMiddleware).toHaveBeenCalledWith(
+			expect.any(Object),
+			expect.objectContaining({ forceOnlyBuildOnce: true })
+		);
 	});
 
 	test("onBuildComplete skips createRevalidationBundle when skipRevalidation is true", async () => {
@@ -421,7 +424,7 @@ describe("buildAdapter", () => {
 		const ctx = createMockContext();
 		await adapter.onBuildComplete(ctx);
 
-		expect(compileTagCacheProvider).toHaveBeenCalledWith(expect.any(Object));
+		expect(compileTagCacheProvider).toHaveBeenCalledWith(expect.any(Object), undefined);
 	});
 
 	test("onBuildComplete skips cache assets when disableIncrementalCache is true", async () => {

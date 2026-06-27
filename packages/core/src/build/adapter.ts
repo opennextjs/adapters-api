@@ -6,6 +6,7 @@ import type { Plugin } from "esbuild";
 
 import { addDebugFile } from "../debug.js";
 import type { ContentUpdater } from "../plugins/content-updater.js";
+import type { BundleDefaults } from "../plugins/resolve.js";
 import type { NextAdapterOutputs } from "../types/adapter.js";
 import type { NextConfig } from "../types/next-types.js";
 import type { OpenNextConfig } from "../types/open-next.js";
@@ -66,6 +67,14 @@ export type OpenNextAdapterOptions = {
 	beforeMiddleware?: (buildOpts: buildHelper.BuildOptions, config: OpenNextConfig) => Promise<void>;
 	afterServerBundle?: (buildOpts: buildHelper.BuildOptions, config: OpenNextConfig) => Promise<void>;
 	tempCachePath?: (buildOpts: buildHelper.BuildOptions, packagePath: string) => string;
+	/**
+	 * Bundle-specific default override names applied when the user's
+	 * open-next.config.ts does not specify an override for a given key.
+	 * Each bundle type (server, middleware, edge, imageOptimization,
+	 * revalidation, warmer, tagCache) can have its own separate defaults map.
+	 * Precedence: config override > platform default > core node default.
+	 */
+	defaultOverrides?: BundleDefaults;
 };
 
 /**
@@ -156,8 +165,10 @@ export function buildAdapter(
 			// Step 2: Call beforeMiddleware hook
 			await adapterOptions.beforeMiddleware?.(buildOpts, config);
 
+			const bundleDefaults = adapterOptions.defaultOverrides;
+
 			// Step 3: Create middleware
-			await createMiddleware(buildOpts, adapterOptions.middlewareOptions ?? {});
+			await createMiddleware(buildOpts, { ...adapterOptions.middlewareOptions, defaultOverrides: bundleDefaults?.middleware });
 			console.log("Middleware created");
 
 			// Step 4: Create static assets
@@ -169,7 +180,7 @@ export function buildAdapter(
 				const { useTagCache } = createCacheAssets(buildOpts);
 				console.log("Cache assets created");
 				if (useTagCache) {
-					await compileTagCacheProvider(buildOpts);
+					await compileTagCacheProvider(buildOpts, bundleDefaults?.tagCache);
 					console.log("Tag cache provider compiled");
 				}
 			}
@@ -188,6 +199,7 @@ export function buildAdapter(
 					useEdgeConfig: adapterOptions.serverBundle?.useEdgeConfig,
 					externals: adapterOptions.serverBundle?.externals,
 					banner: adapterOptions.serverBundle?.banner,
+					bundleDefaults,
 				},
 				ctx.outputs
 			);
@@ -198,19 +210,19 @@ export function buildAdapter(
 
 			// Step 9: Revalidation bundle
 			if (!adapterOptions.skipRevalidation) {
-				await createRevalidationBundle(buildOpts);
+				await createRevalidationBundle(buildOpts, bundleDefaults?.revalidation);
 				console.log("Revalidation bundle created");
 			}
 
 			// Step 10: Image optimization bundle
 			if (!adapterOptions.skipImageOptimization) {
-				await createImageOptimizationBundle(buildOpts);
+				await createImageOptimizationBundle(buildOpts, bundleDefaults?.imageOptimization);
 				console.log("Image optimization bundle created");
 			}
 
 			// Step 11: Warmer bundle
 			if (!adapterOptions.skipWarmer) {
-				await createWarmerBundle(buildOpts);
+				await createWarmerBundle(buildOpts, bundleDefaults?.warmer);
 				console.log("Warmer bundle created");
 			}
 

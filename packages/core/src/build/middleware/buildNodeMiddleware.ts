@@ -7,6 +7,7 @@ import { getCrossPlatformPathRegex } from "@/utils/regex.js";
 
 import { openNextExternalMiddlewarePlugin } from "../../plugins/externalMiddleware.js";
 import { openNextReplacementPlugin } from "../../plugins/replacement.js";
+import type { DefaultOverrides } from "../../plugins/resolve.js";
 import { openNextResolvePlugin } from "../../plugins/resolve.js";
 import { copyTracedFiles } from "../copyTracedFiles.js";
 import * as buildHelper from "../helper.js";
@@ -16,7 +17,10 @@ type Override = OverrideOptions & {
 	originResolver?: LazyLoadedOverride<OriginResolver> | IncludedOriginResolver;
 };
 
-export async function buildExternalNodeMiddleware(options: buildHelper.BuildOptions) {
+export async function buildExternalNodeMiddleware(
+	options: buildHelper.BuildOptions,
+	defaultOverrides?: DefaultOverrides
+) {
 	const { appBuildOutputPath, config, outputDir } = options;
 	if (!config.middleware?.external) {
 		throw new Error("This function should only be called for external middleware");
@@ -59,13 +63,22 @@ export async function buildExternalNodeMiddleware(options: buildHelper.BuildOpti
 			plugins: [
 				openNextResolvePlugin({
 					overrides: {
-						wrapper: override("wrapper") ?? "aws-lambda",
-						converter: override("converter") ?? "aws-cloudfront",
-						tagCache: override("tagCache") ?? "dynamodb-lite",
-						incrementalCache: override("incrementalCache") ?? "s3-lite",
-						queue: override("queue") ?? "sqs-lite",
-						originResolver: override("originResolver") ?? "pattern-env",
-						proxyExternalRequest: override("proxyExternalRequest") ?? "node",
+						wrapper: override("wrapper"),
+						converter: override("converter"),
+						tagCache: override("tagCache"),
+						incrementalCache: override("incrementalCache"),
+						queue: override("queue"),
+						originResolver: override("originResolver"),
+						proxyExternalRequest: override("proxyExternalRequest"),
+					},
+					defaultOverrides: {
+						wrapper: defaultOverrides?.wrapper ?? "aws-lambda",
+						converter: defaultOverrides?.converter ?? "aws-cloudfront",
+						tagCache: defaultOverrides?.tagCache ?? "dynamodb-lite",
+						incrementalCache: defaultOverrides?.incrementalCache ?? "s3-lite",
+						queue: defaultOverrides?.queue ?? "sqs-lite",
+						originResolver: defaultOverrides?.originResolver ?? "pattern-env",
+						proxyExternalRequest: defaultOverrides?.proxyExternalRequest ?? "node",
 					},
 					fnName: "middleware",
 				}),
