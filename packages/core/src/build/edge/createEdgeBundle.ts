@@ -6,7 +6,6 @@ import { type Plugin, build } from "esbuild";
 import { loadMiddlewareManifest } from "@/config/util.js";
 import type { MiddlewareInfo } from "@/types/next-types";
 import type {
-	IncludedConverter,
 	IncludedOriginResolver,
 	LazyLoadedOverride,
 	OverrideOptions,
@@ -34,7 +33,7 @@ interface BuildEdgeBundleOptions {
 	outfile: string;
 	options: BuildOptions;
 	overrides?: Override;
-	defaultConverter?: IncludedConverter;
+	defaultConverter?: string;
 	additionalInject?: string;
 	additionalExternals?: string[];
 	onlyBuildOnce?: boolean;
@@ -85,13 +84,17 @@ export async function buildEdgeBundle({
 						proxyExternalRequest: override("proxyExternalRequest"),
 					},
 					defaultOverrides: {
-						wrapper: defaultOverrides?.wrapper ?? "aws-lambda",
+						wrapper: defaultOverrides?.wrapper ?? "@opennextjs/core/overrides/wrappers/dummy.js",
 						converter: defaultOverrides?.converter ?? defaultConverter,
-						tagCache: defaultOverrides?.tagCache ?? "dynamodb-lite",
-						incrementalCache: defaultOverrides?.incrementalCache ?? "s3-lite",
-						queue: defaultOverrides?.queue ?? "sqs-lite",
-						originResolver: defaultOverrides?.originResolver ?? "pattern-env",
-						proxyExternalRequest: defaultOverrides?.proxyExternalRequest ?? "node",
+						tagCache: defaultOverrides?.tagCache ?? "@opennextjs/core/overrides/tagCache/dummy.js",
+						incrementalCache:
+							defaultOverrides?.incrementalCache ?? "@opennextjs/core/overrides/incrementalCache/dummy.js",
+						queue: defaultOverrides?.queue ?? "@opennextjs/core/overrides/queue/direct.js",
+						originResolver:
+							defaultOverrides?.originResolver ?? "@opennextjs/core/overrides/originResolver/pattern-env.js",
+						proxyExternalRequest:
+							defaultOverrides?.proxyExternalRequest ??
+							"@opennextjs/core/overrides/proxyExternalRequest/node.js",
 					},
 					fnName: name,
 				}),

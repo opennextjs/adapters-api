@@ -70,7 +70,7 @@ export async function createMiddleware(
 				...config.middleware.override,
 				originResolver: config.middleware.originResolver,
 			},
-			defaultConverter: "aws-cloudfront",
+			defaultConverter: "@opennextjs/core/overrides/converters/edge.js",
 			additionalExternals: config.edgeExternals,
 			onlyBuildOnce: forceOnlyBuildOnce === true,
 			name: "middleware",

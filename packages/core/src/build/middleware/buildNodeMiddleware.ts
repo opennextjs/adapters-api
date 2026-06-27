@@ -72,13 +72,17 @@ export async function buildExternalNodeMiddleware(
 						proxyExternalRequest: override("proxyExternalRequest"),
 					},
 					defaultOverrides: {
-						wrapper: defaultOverrides?.wrapper ?? "aws-lambda",
-						converter: defaultOverrides?.converter ?? "aws-cloudfront",
-						tagCache: defaultOverrides?.tagCache ?? "dynamodb-lite",
-						incrementalCache: defaultOverrides?.incrementalCache ?? "s3-lite",
-						queue: defaultOverrides?.queue ?? "sqs-lite",
-						originResolver: defaultOverrides?.originResolver ?? "pattern-env",
-						proxyExternalRequest: defaultOverrides?.proxyExternalRequest ?? "node",
+						wrapper: defaultOverrides?.wrapper ?? "@opennextjs/core/overrides/wrappers/node.js",
+						converter: defaultOverrides?.converter ?? "@opennextjs/core/overrides/converters/node.js",
+						tagCache: defaultOverrides?.tagCache ?? "@opennextjs/core/overrides/tagCache/dummy.js",
+						incrementalCache:
+							defaultOverrides?.incrementalCache ?? "@opennextjs/core/overrides/incrementalCache/dummy.js",
+						queue: defaultOverrides?.queue ?? "@opennextjs/core/overrides/queue/direct.js",
+						originResolver:
+							defaultOverrides?.originResolver ?? "@opennextjs/core/overrides/originResolver/pattern-env.js",
+						proxyExternalRequest:
+							defaultOverrides?.proxyExternalRequest ??
+							"@opennextjs/core/overrides/proxyExternalRequest/node.js",
 					},
 					fnName: "middleware",
 				}),
