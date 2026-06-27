@@ -168,7 +168,10 @@ export function buildAdapter(
 			const bundleDefaults = adapterOptions.defaultOverrides;
 
 			// Step 3: Create middleware
-			await createMiddleware(buildOpts, { ...adapterOptions.middlewareOptions, defaultOverrides: bundleDefaults?.middleware });
+			await createMiddleware(buildOpts, {
+				...adapterOptions.middlewareOptions,
+				defaultOverrides: bundleDefaults?.middleware,
+			});
 			console.log("Middleware created");
 
 			// Step 4: Create static assets
