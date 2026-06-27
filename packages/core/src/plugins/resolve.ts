@@ -1,10 +1,10 @@
 import { readFile } from "node:fs/promises";
 
+import { type Edit, Lang, parse } from "@ast-grep/napi";
 import chalk from "chalk";
 import type { Plugin } from "esbuild";
 
 import type {
-	BaseOverride,
 	DefaultOverrideOptions,
 	IncludedImageLoader,
 	IncludedOriginResolver,
@@ -36,14 +36,6 @@ export interface IPluginSettings {
 	fnName?: string;
 }
 
-function getOverrideOrDummy<Override extends string | LazyLoadedOverride<BaseOverride>>(override: Override) {
-	if (typeof override === "string") {
-		return override;
-	}
-	// We can return dummy here because if it's not a string, it's a LazyLoadedOverride
-	return "dummy";
-}
-
 // This could be useful in the future to map overrides to nested folders
 const nameToFolder = {
 	wrapper: "wrappers",
@@ -61,6 +53,34 @@ const nameToFolder = {
 export type OverrideKey = keyof typeof nameToFolder;
 export type DefaultOverrides = Partial<Record<OverrideKey, string>>;
 
+// Maps override key to resolve function name (docs / future ast-grep use)
+const resolveFunctionName: Record<OverrideKey, string> = {
+	wrapper: "resolveWrapper",
+	converter: "resolveConverter",
+	tagCache: "resolveTagCache",
+	queue: "resolveQueue",
+	incrementalCache: "resolveIncrementalCache",
+	imageLoader: "resolveImageLoader",
+	originResolver: "resolveOriginResolver",
+	warmer: "resolveWarmerInvoke",
+	proxyExternalRequest: "resolveProxyRequest",
+	cdnInvalidation: "resolveCdnInvalidation",
+};
+
+// Relative-path fallback anchors matching the compiled resolve.js imports.
+const resolveAnchors: Record<OverrideKey, string> = {
+	wrapper: "../overrides/wrappers/node.js",
+	converter: "../overrides/converters/node.js",
+	tagCache: "../overrides/tagCache/fs-dev-nextMode.js",
+	queue: "../overrides/queue/direct.js",
+	incrementalCache: "../overrides/incrementalCache/fs-dev.js",
+	imageLoader: "../overrides/imageLoader/fs-dev.js",
+	originResolver: "../overrides/originResolver/pattern-env.js",
+	warmer: "../overrides/warmer/dummy.js",
+	proxyExternalRequest: "../overrides/proxyExternalRequest/node.js",
+	cdnInvalidation: "../overrides/cdnInvalidation/dummy.js",
+};
+
 export type BundleType =
 	| "server"
 	| "middleware"
@@ -71,18 +91,13 @@ export type BundleType =
 	| "tagCache";
 export type BundleDefaults = Partial<Record<BundleType, DefaultOverrides>>;
 
-const coreResolveDefaults = {
-	wrapper: "node",
-	converter: "node",
-	tagCache: "fs-dev-nextMode",
-	queue: "direct",
-	incrementalCache: "fs-dev",
-	imageLoader: "fs-dev",
-	originResolver: "pattern-env",
-	warmer: "dummy",
-	proxyExternalRequest: "node",
-	cdnInvalidation: "dummy",
-};
+/**
+ * Checks if a string is a full package-specifier path (starts with @ or contains /).
+ * Bare names like "node", "edge", "aws-lambda" return false.
+ */
+function isFullPath(s: string): boolean {
+	return s.startsWith("@") || s.includes("/");
+}
 
 /**
  * @param opts.overrides - The name of the overrides to use
@@ -100,6 +115,12 @@ export function openNextResolvePlugin({
 			build.onLoad({ filter: getCrossPlatformPathRegex("core/resolve.js") }, async (args) => {
 				let contents = await readFile(args.path, "utf-8");
 				const allKeys = new Set([...Object.keys(overrides ?? {}), ...Object.keys(defaultValues ?? {})]);
+
+				// Primary: ast-grep edits. Fallback: string-replace anchors (post-commit).
+				const edits: Edit[] = [];
+				const fallbackKeys: Array<{ key: OverrideKey; targetPath: string }> = [];
+				const astRoot = parse(Lang.JavaScript, contents).root();
+
 				for (const overrideName of allKeys) {
 					const configValue = overrides?.[overrideName as keyof typeof overrides];
 					const defaultValue = defaultValues?.[overrideName as keyof typeof defaultValues];
@@ -107,20 +128,70 @@ export function openNextResolvePlugin({
 					if (!overrideValue) {
 						continue;
 					}
-					if (overrideName === "wrapper" && overrideValue === "cloudflare") {
-						// "cloudflare" is deprecated and replaced by "cloudflare-edge".
-						overrideValue = "cloudflare-edge";
-					}
-					const folder = nameToFolder[overrideName as keyof typeof nameToFolder];
-					const searchTarget = coreResolveDefaults[overrideName as keyof typeof coreResolveDefaults];
-					if (!folder || !searchTarget) {
+
+					const key = overrideName as OverrideKey;
+					const folder = nameToFolder[key];
+					if (!folder) {
 						continue;
 					}
-					contents = contents.replace(
-						`../overrides/${folder}/${searchTarget}.js`,
-						`../overrides/${folder}/${getOverrideOrDummy(overrideValue)}.js`
-					);
+
+					if (overrideName === "wrapper" && overrideValue === "cloudflare") {
+						overrideValue = "cloudflare-edge";
+					}
+
+					let targetPath: string;
+					if (typeof overrideValue === "string") {
+						if (isFullPath(overrideValue)) {
+							targetPath = overrideValue;
+						} else {
+							targetPath = `../overrides/${folder}/${overrideValue}.js`;
+						}
+					} else {
+						targetPath = `@opennextjs/core/overrides/${folder}/dummy.js`;
+					}
+
+					// Primary: use ast-grep to find the resolve function by name
+					// and replace the string inside `await import($PATH)`.
+					const fnName_ = resolveFunctionName[key];
+					try {
+						const fnNode = astRoot.find({
+							rule: {
+								kind: "function_declaration",
+								has: { kind: "identifier", pattern: fnName_ },
+							},
+						});
+						if (fnNode) {
+							const importNode = fnNode.find({
+								rule: {
+									kind: "string",
+									inside: { kind: "await_expression", stopBy: "end" },
+								},
+							});
+							if (importNode) {
+								edits.push(importNode.replace('"' + targetPath + '"'));
+								continue;
+							}
+						}
+					} catch {
+						// ast-grep lookup failed — fall through to fallback
+					}
+					fallbackKeys.push({ key, targetPath });
 				}
+
+				// Commit all ast-grep edits at once (no interleaving).
+				if (edits.length > 0) {
+					contents = astRoot.commitEdits(edits);
+				}
+
+				// Fallback: string-replace on post-commitEdits contents for any
+				// keys ast-grep didn't handle.
+				for (const fb of fallbackKeys) {
+					const anchor = resolveAnchors[fb.key];
+					if (anchor) {
+						contents = contents.replace(anchor, fb.targetPath);
+					}
+				}
+
 				return {
 					contents,
 				};

@@ -21,6 +21,7 @@ const compatibilityMatrix: Record<IncludedWrapper, IncludedConverter[]> = {
 };
 
 function validateFunctionOptions(fnOptions: FunctionOptions) {
+	// TODO: validateConfig needs to be updated to normalize full-path override strings to bare names before the compatibilityMatrix lookup (full-path user overrides currently crash L41)
 	const wrapper = typeof fnOptions.override?.wrapper === "string" ? fnOptions.override.wrapper : "aws-lambda";
 	const converter =
 		typeof fnOptions.override?.converter === "string" ? fnOptions.override.converter : "aws-apigw-v2";

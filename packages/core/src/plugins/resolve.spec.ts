@@ -1,4 +1,4 @@
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -7,19 +7,60 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import { openNextResolvePlugin } from "./resolve.js";
 
-const FIXTURE_CONTENT = [
-	'await import("../overrides/converters/node.js")',
-	'await import("../overrides/wrappers/node.js")',
-	'await import("../overrides/tagCache/fs-dev-nextMode.js")',
-	'await import("../overrides/queue/direct.js")',
-	'await import("../overrides/incrementalCache/fs-dev.js")',
-	'await import("../overrides/imageLoader/fs-dev.js")',
-	'await import("../overrides/originResolver/pattern-env.js")',
-	'await import("../overrides/assetResolver/dummy.js")',
-	'await import("../overrides/warmer/dummy.js")',
-	'await import("../overrides/proxyExternalRequest/node.js")',
-	'await import("../overrides/cdnInvalidation/dummy.js")',
-].join("\n");
+// Synthetic resolve.js module body mirroring compiled output with relative-path imports.
+// Each function has exactly ONE await import with a relative ../overrides/ path.
+const FIXTURE_CONTENT = `
+export async function resolveConverter(converter) {
+  if (typeof converter === "function") return converter();
+  const m_1 = await import("../overrides/converters/node.js");
+  return m_1.default;
+}
+export async function resolveWrapper(wrapper) {
+  if (typeof wrapper === "function") return wrapper();
+  const m_1 = await import("../overrides/wrappers/node.js");
+  return m_1.default;
+}
+export async function resolveTagCache(tagCache) {
+  if (typeof tagCache === "function") return tagCache();
+  const m_1 = await import("../overrides/tagCache/fs-dev-nextMode.js");
+  return m_1.default;
+}
+export async function resolveQueue(queue) {
+  if (typeof queue === "function") return queue();
+  const m_1 = await import("../overrides/queue/direct.js");
+  return m_1.default;
+}
+export async function resolveIncrementalCache(incrementalCache) {
+  if (typeof incrementalCache === "function") return incrementalCache();
+  const m_1 = await import("../overrides/incrementalCache/fs-dev.js");
+  return m_1.default;
+}
+export async function resolveImageLoader(imageLoader) {
+  if (typeof imageLoader === "function") return imageLoader();
+  const m_1 = await import("../overrides/imageLoader/fs-dev.js");
+  return m_1.default;
+}
+export async function resolveOriginResolver(originResolver) {
+  if (typeof originResolver === "function") return originResolver();
+  const m_1 = await import("../overrides/originResolver/pattern-env.js");
+  return m_1.default;
+}
+export async function resolveWarmerInvoke(warmer) {
+  if (typeof warmer === "function") return warmer();
+  const m_1 = await import("../overrides/warmer/dummy.js");
+  return m_1.default;
+}
+export async function resolveProxyRequest(proxyRequest) {
+  if (typeof proxyRequest === "function") return proxyRequest();
+  const m_1 = await import("../overrides/proxyExternalRequest/node.js");
+  return m_1.default;
+}
+export async function resolveCdnInvalidation(cdnInvalidation) {
+  if (typeof cdnInvalidation === "function") return cdnInvalidation();
+  const m_1 = await import("../overrides/cdnInvalidation/dummy.js");
+  return m_1.default;
+}
+`.trim();
 
 type OnLoadCallback = (args: { path: string }) => Promise<{ contents: string }>;
 
@@ -57,27 +98,27 @@ describe("openNextResolvePlugin", () => {
 		return cb({ path: fixturePath });
 	}
 
-	test("A - platform default applied when no config override", async () => {
+	test("A - full-path default verbatim: core full path default replaces anchor", async () => {
 		const result = await runPlugin({
 			overrides: {},
-			defaultOverrides: { converter: "edge" },
+			defaultOverrides: { converter: "@opennextjs/core/overrides/converters/edge.js" },
 			fnName: "test",
 		});
-		expect(result.contents).toContain("../overrides/converters/edge.js");
-		expect(result.contents).not.toContain("../overrides/converters/node.js");
+		expect(result.contents).toContain("@opennextjs/core/overrides/converters/edge.js");
+		expect(result.contents).not.toContain("@opennextjs/core/overrides/converters/node.js");
 	});
 
-	test("B - config override wins over platform default", async () => {
+	test("B - cross-package user full aws path wins over core default", async () => {
 		const result = await runPlugin({
-			overrides: { converter: "aws-apigw-v2" },
-			defaultOverrides: { converter: "edge" },
+			overrides: { converter: "@opennextjs/aws/overrides/converters/aws-apigw-v2.js" },
+			defaultOverrides: { converter: "@opennextjs/core/overrides/converters/edge.js" },
 			fnName: "test",
 		});
-		expect(result.contents).toContain("../overrides/converters/aws-apigw-v2.js");
-		expect(result.contents).not.toContain("../overrides/converters/edge.js");
+		expect(result.contents).toContain("@opennextjs/aws/overrides/converters/aws-apigw-v2.js");
+		expect(result.contents).not.toContain("@opennextjs/core/overrides/converters/edge.js");
 	});
 
-	test("C - no rewrite when neither provided", async () => {
+	test("C - no-op anchor stays: no override no default keeps relative core path", async () => {
 		const result = await runPlugin({
 			overrides: {},
 			defaultOverrides: {},
@@ -86,54 +127,83 @@ describe("openNextResolvePlugin", () => {
 		expect(result.contents).toContain("../overrides/converters/node.js");
 	});
 
-	test("D - all 10 keys covered", async () => {
+	test("D - 10-key mixed aws+core full paths all rewritten", async () => {
 		const result = await runPlugin({
 			overrides: {},
 			defaultOverrides: {
-				wrapper: "aws-lambda",
-				converter: "edge",
-				tagCache: "dynamodb",
-				queue: "sqs",
-				incrementalCache: "s3",
-				imageLoader: "host",
-				originResolver: "dummy",
-				warmer: "aws-lambda",
-				proxyExternalRequest: "fetch",
-				cdnInvalidation: "cloudfront",
+				wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda.js",
+				converter: "@opennextjs/core/overrides/converters/edge.js",
+				tagCache: "@opennextjs/aws/overrides/tagCache/dynamodb.js",
+				queue: "@opennextjs/aws/overrides/queue/sqs.js",
+				incrementalCache: "@opennextjs/aws/overrides/incrementalCache/s3.js",
+				imageLoader: "@opennextjs/core/overrides/imageLoader/dummy.js",
+				originResolver: "@opennextjs/core/overrides/originResolver/dummy.js",
+				warmer: "@opennextjs/aws/overrides/warmer/aws-lambda.js",
+				proxyExternalRequest: "@opennextjs/core/overrides/proxyExternalRequest/fetch.js",
+				cdnInvalidation: "@opennextjs/aws/overrides/cdnInvalidation/cloudfront.js",
 			},
 			fnName: "test",
 		});
-		expect(result.contents).toContain("../overrides/wrappers/aws-lambda.js");
-		expect(result.contents).toContain("../overrides/converters/edge.js");
-		expect(result.contents).toContain("../overrides/tagCache/dynamodb.js");
-		expect(result.contents).toContain("../overrides/queue/sqs.js");
-		expect(result.contents).toContain("../overrides/incrementalCache/s3.js");
-		expect(result.contents).toContain("../overrides/imageLoader/host.js");
-		expect(result.contents).toContain("../overrides/originResolver/dummy.js");
-		expect(result.contents).toContain("../overrides/warmer/aws-lambda.js");
-		expect(result.contents).toContain("../overrides/proxyExternalRequest/fetch.js");
-		expect(result.contents).toContain("../overrides/cdnInvalidation/cloudfront.js");
+		expect(result.contents).toContain("@opennextjs/aws/overrides/wrappers/aws-lambda.js");
+		expect(result.contents).toContain("@opennextjs/core/overrides/converters/edge.js");
+		expect(result.contents).toContain("@opennextjs/aws/overrides/tagCache/dynamodb.js");
+		expect(result.contents).toContain("@opennextjs/aws/overrides/queue/sqs.js");
+		expect(result.contents).toContain("@opennextjs/aws/overrides/incrementalCache/s3.js");
+		expect(result.contents).toContain("@opennextjs/core/overrides/imageLoader/dummy.js");
+		expect(result.contents).toContain("@opennextjs/core/overrides/originResolver/dummy.js");
+		expect(result.contents).toContain("@opennextjs/aws/overrides/warmer/aws-lambda.js");
+		expect(result.contents).toContain("@opennextjs/core/overrides/proxyExternalRequest/fetch.js");
+		expect(result.contents).toContain("@opennextjs/aws/overrides/cdnInvalidation/cloudfront.js");
 	});
 
-	test("E - cloudflare to cloudflare-edge deprecation with platform defaults", async () => {
+	test("E - deprecated cloudflare bare name becomes legacy relative core path", async () => {
 		const result = await runPlugin({
-			overrides: {},
-			defaultOverrides: { wrapper: "cloudflare" },
+			overrides: { wrapper: "cloudflare" },
+			defaultOverrides: {},
 			fnName: "test",
 		});
 		expect(result.contents).toContain("../overrides/wrappers/cloudflare-edge.js");
-		expect(result.contents).not.toContain("../overrides/wrappers/cloudflare.js");
+		expect(result.contents).not.toContain("cloudflare.js");
 	});
 
-	test("F - function config override preserved over platform default", async () => {
+	test("F - function override becomes full dummy core path", async () => {
 		// oxlint-disable-next-line @typescript-eslint/no-explicit-any - testing function override
 		const fnOverride = (() => ({})) as any;
 		const result = await runPlugin({
 			overrides: { converter: fnOverride },
-			defaultOverrides: { converter: "edge" },
+			defaultOverrides: { converter: "@opennextjs/core/overrides/converters/edge.js" },
 			fnName: "test",
 		});
-		expect(result.contents).toContain("../overrides/converters/dummy.js");
-		expect(result.contents).not.toContain("../overrides/converters/edge.js");
+		expect(result.contents).toContain("@opennextjs/core/overrides/converters/dummy.js");
+		expect(result.contents).not.toContain("@opennextjs/core/overrides/converters/edge.js");
+	});
+
+	test("G - AWS server defaults produce aws full paths", async () => {
+		const result = await runPlugin({
+			overrides: {},
+			defaultOverrides: {
+				wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda-streaming.js",
+				converter: "@opennextjs/aws/overrides/converters/aws-apigw-v2.js",
+				incrementalCache: "@opennextjs/aws/overrides/incrementalCache/s3.js",
+				tagCache: "@opennextjs/aws/overrides/tagCache/dynamodb.js",
+				queue: "@opennextjs/aws/overrides/queue/sqs.js",
+			},
+			fnName: "server",
+		});
+		expect(result.contents).toContain("@opennextjs/aws/overrides/wrappers/aws-lambda-streaming.js");
+		expect(result.contents).toContain("@opennextjs/aws/overrides/converters/aws-apigw-v2.js");
+		expect(result.contents).toContain("@opennextjs/aws/overrides/incrementalCache/s3.js");
+		expect(result.contents).toContain("@opennextjs/aws/overrides/tagCache/dynamodb.js");
+		expect(result.contents).toContain("@opennextjs/aws/overrides/queue/sqs.js");
+	});
+
+	test("H - bare-name user override becomes legacy relative core path", async () => {
+		const result = await runPlugin({
+			overrides: { converter: "edge" },
+			defaultOverrides: {},
+			fnName: "test",
+		});
+		expect(result.contents).toContain("../overrides/converters/edge.js");
+		expect(result.contents).not.toContain("@opennextjs/core/overrides/converters/node.js");
 	});
 });

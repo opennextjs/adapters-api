@@ -102,6 +102,20 @@ async function canStream(opts: FunctionOptions) {
 	return wrapper.supportStreaming;
 }
 
+/**
+ * Extracts the bare name from a full-path override string.
+ * Full paths like "@opennextjs/aws/overrides/wrappers/aws-lambda.js" → "aws-lambda".
+ * Bare names like "edge" pass through unchanged.
+ */
+function bare(s: string): string {
+	if (s.startsWith("@") || s.includes("/")) {
+		const lastSlash = s.lastIndexOf("/");
+		const filename = lastSlash >= 0 ? s.slice(lastSlash + 1) : s;
+		return filename.replace(/\.js$/, "");
+	}
+	return s;
+}
+
 async function extractOverrideName(
 	defaultName: string,
 	override?: LazyLoadedOverride<BaseOverride> | string
@@ -110,7 +124,7 @@ async function extractOverrideName(
 		return defaultName;
 	}
 	if (typeof override === "string") {
-		return override;
+		return bare(override);
 	}
 	const overrideModule = await override();
 	return overrideModule.name;
