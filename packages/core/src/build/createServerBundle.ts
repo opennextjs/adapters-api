@@ -11,6 +11,7 @@ import logger from "../logger.js";
 import { minifyAll } from "../minimize-js.js";
 import { ContentUpdater } from "../plugins/content-updater.js";
 import { openNextReplacementPlugin } from "../plugins/replacement.js";
+import type { BundleDefaults } from "../plugins/resolve.js";
 import { openNextResolvePlugin } from "../plugins/resolve.js";
 import { getCrossPlatformPathRegex } from "../utils/regex.js";
 
@@ -32,6 +33,7 @@ interface CodeCustomization {
 	useEdgeConfig?: boolean;
 	externals?: string[];
 	banner?: string[] | ((name: string) => string[]);
+	bundleDefaults?: BundleDefaults;
 }
 
 export async function createServerBundle(
@@ -54,7 +56,7 @@ export async function createServerBundle(
 		const routes = fnOptions.routes;
 		routes.forEach((route) => foundRoutes.add(route));
 		if (fnOptions.runtime === "edge") {
-			await generateEdgeBundle(name, options, fnOptions);
+			await generateEdgeBundle(name, options, fnOptions, undefined, codeCustomization?.bundleDefaults?.edge);
 		} else {
 			await generateBundle(name, options, fnOptions, codeCustomization, nextOutputs);
 		}
@@ -209,6 +211,7 @@ async function generateBundle(
 	//       Next.js app.
 
 	const overrides = fnOptions.override ?? {};
+	const defaultOverrides = codeCustomization?.bundleDefaults?.server;
 
 	const disableRouting = config.middleware?.external;
 
@@ -228,6 +231,7 @@ async function generateBundle(
 		openNextResolvePlugin({
 			fnName: name,
 			overrides,
+			defaultOverrides,
 		}),
 		...additionalPlugins,
 		// The content updater plugin must be the last plugin

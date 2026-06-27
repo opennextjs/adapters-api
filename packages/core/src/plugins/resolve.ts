@@ -32,6 +32,7 @@ export interface IPluginSettings {
 		proxyExternalRequest?: OverrideOptions["proxyExternalRequest"];
 		cdnInvalidation?: OverrideOptions["cdnInvalidation"];
 	};
+	defaultOverrides?: DefaultOverrides;
 	fnName?: string;
 }
 
@@ -57,7 +58,20 @@ const nameToFolder = {
 	cdnInvalidation: "cdnInvalidation",
 };
 
-const defaultOverrides = {
+export type OverrideKey = keyof typeof nameToFolder;
+export type DefaultOverrides = Partial<Record<OverrideKey, string>>;
+
+export type BundleType =
+	| "server"
+	| "middleware"
+	| "edge"
+	| "imageOptimization"
+	| "revalidation"
+	| "warmer"
+	| "tagCache";
+export type BundleDefaults = Partial<Record<BundleType, DefaultOverrides>>;
+
+const coreResolveDefaults = {
 	wrapper: "node",
 	converter: "node",
 	tagCache: "fs-dev-nextMode",
@@ -74,15 +88,22 @@ const defaultOverrides = {
  * @param opts.overrides - The name of the overrides to use
  * @returns
  */
-export function openNextResolvePlugin({ overrides, fnName }: IPluginSettings): Plugin {
+export function openNextResolvePlugin({
+	overrides,
+	defaultOverrides: defaultValues,
+	fnName,
+}: IPluginSettings): Plugin {
 	return {
 		name: "opennext-resolve",
 		setup(build) {
 			logger.debug(chalk.blue("OpenNext Resolve plugin"), fnName ? `for ${fnName}` : "");
 			build.onLoad({ filter: getCrossPlatformPathRegex("core/resolve.js") }, async (args) => {
 				let contents = await readFile(args.path, "utf-8");
-				const overridesEntries = Object.entries(overrides ?? {});
-				for (let [overrideName, overrideValue] of overridesEntries) {
+				const allKeys = new Set([...Object.keys(overrides ?? {}), ...Object.keys(defaultValues ?? {})]);
+				for (const overrideName of allKeys) {
+					const configValue = overrides?.[overrideName as keyof typeof overrides];
+					const defaultValue = defaultValues?.[overrideName as keyof typeof defaultValues];
+					let overrideValue = configValue ?? defaultValue;
 					if (!overrideValue) {
 						continue;
 					}
@@ -91,10 +112,12 @@ export function openNextResolvePlugin({ overrides, fnName }: IPluginSettings): P
 						overrideValue = "cloudflare-edge";
 					}
 					const folder = nameToFolder[overrideName as keyof typeof nameToFolder];
-					const defaultOverride = defaultOverrides[overrideName as keyof typeof defaultOverrides];
-
+					const searchTarget = coreResolveDefaults[overrideName as keyof typeof coreResolveDefaults];
+					if (!folder || !searchTarget) {
+						continue;
+					}
 					contents = contents.replace(
-						`../overrides/${folder}/${defaultOverride}.js`,
+						`../overrides/${folder}/${searchTarget}.js`,
 						`../overrides/${folder}/${getOverrideOrDummy(overrideValue)}.js`
 					);
 				}
