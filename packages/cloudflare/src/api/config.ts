@@ -13,9 +13,6 @@ import type {
 } from "@opennextjs/core/types/overrides.js";
 
 import assetResolver from "./overrides/asset-resolver/index.js";
-import r2IncrementalCache from "./overrides/incremental-cache/r2-incremental-cache.js";
-import doQueue from "./overrides/queue/do-queue.js";
-import d1NextTagCache from "./overrides/tag-cache/d1-next-tag-cache.js";
 
 export type Override<T extends BaseOverride> = "dummy" | T | LazyLoadedOverride<T>;
 
@@ -60,13 +57,7 @@ export type CloudflareOverrides = {
  * @returns the OpenNext configuration object
  */
 export function defineCloudflareConfig(config: CloudflareOverrides = {}): OpenNextConfig {
-	const {
-		incrementalCache = r2IncrementalCache,
-		tagCache = d1NextTagCache,
-		queue = doQueue,
-		cachePurge,
-		routePreloadingBehavior = "none",
-	} = config;
+	const { incrementalCache, tagCache, queue, cachePurge, routePreloadingBehavior = "none" } = config;
 
 	return {
 		default: {
