@@ -82,7 +82,7 @@ export async function retrieveCompiledConfig() {
 
 export function getNormalizedOptions(config: OpenNextConfig, buildDir = nextAppDir) {
 	const require = createRequire(import.meta.url);
-	const openNextDistDir = path.dirname(require.resolve("@opennextjs/core/index.js"));
+	const openNextDistDir = path.dirname(require.resolve("@opennextjs/core/debug.js"));
 
 	const options = normalizeOptions(config, openNextDistDir, buildDir);
 	logger.setLevel(options.debug ? "debug" : "info");

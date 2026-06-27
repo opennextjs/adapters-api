@@ -59,7 +59,7 @@ export default {
 		});
 
 		const require = createRequire(import.meta.url);
-		const openNextDistDir = path.dirname(require.resolve("@opennextjs/core/index.js"));
+		const openNextDistDir = path.dirname(require.resolve("@opennextjs/core/debug.js"));
 
 		buildOpts = buildHelper.normalizeOptions(config, openNextDistDir, buildDir);
 
