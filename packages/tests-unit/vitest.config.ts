@@ -9,7 +9,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@opennextjs/core": path.resolve(__dirname, "../core/src"),
-			"@opennextjs/aws": path.resolve(__dirname, "../open-next/src"),
+			"@opennextjs/aws": path.resolve(__dirname, "../aws/src"),
 		},
 	},
 	test: {

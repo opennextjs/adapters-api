@@ -2,7 +2,7 @@ import { Readable } from "node:stream";
 
 import converter from "@opennextjs/aws/overrides/converters/aws-cloudfront.js";
 import type { CloudFrontRequestEvent, CloudFrontRequestResult } from "aws-lambda";
-import { vi } from "vitest";
+import { vi, describe, it, expect } from "vitest";
 
 vi.mock("@/config/index.js", () => ({}));
 
