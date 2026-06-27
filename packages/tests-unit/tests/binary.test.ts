@@ -1,4 +1,4 @@
-import { isBinaryContentType } from "@opennextjs/aws/utils/binary.js";
+import { isBinaryContentType } from "@opennextjs/core/utils/binary.js";
 
 describe("isBinaryContentType", () => {
 	const tests = [

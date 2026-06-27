@@ -1,4 +1,4 @@
-import { rule } from "@opennextjs/aws/build/patch/patches/patchNodeEnvironment.js";
+import { rule } from "@opennextjs/core/build/patch/patches/patchNodeEnvironment.js";
 
 import { computePatchDiff } from "./util.js";
 

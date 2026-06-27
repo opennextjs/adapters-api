@@ -1,4 +1,4 @@
-import type { OpenNextConfig } from "@opennextjs/aws/types/open-next.js";
+import type { OpenNextConfig } from "@opennextjs/core/types/open-next.js";
 
 export default {
 	default: {

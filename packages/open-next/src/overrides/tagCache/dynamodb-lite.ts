@@ -2,12 +2,12 @@ import path from "node:path";
 
 import { AwsClient } from "aws4fetch";
 
-import type { OriginalTagCache } from "@/types/overrides";
-import { RecoverableError } from "@/utils/error";
-import { customFetchClient } from "@/utils/fetch";
+import type { OriginalTagCache } from "@opennextjs/core/types/overrides.js";
+import { RecoverableError } from "@opennextjs/core/utils/error.js";
+import { customFetchClient } from "../../utils/fetch.js";
 
-import { debug, error } from "../../adapters/logger";
-import { chunk, parseNumberFromEnv } from "../../adapters/util";
+import { debug, error } from "@opennextjs/core/adapters/logger.js";
+import { chunk, parseNumberFromEnv } from "@opennextjs/core/adapters/util.js";
 
 import { MAX_DYNAMO_BATCH_WRITE_ITEM_COUNT, getDynamoBatchWriteCommandConcurrency } from "./constants";
 

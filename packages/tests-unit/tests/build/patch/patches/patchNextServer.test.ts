@@ -1,10 +1,10 @@
-import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
+import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
 import {
 	createEmptyBodyRule,
 	disablePreloadingRule,
 	emptyHandleNextImageRequestRule,
 	removeMiddlewareManifestRule,
-} from "@opennextjs/aws/build/patch/patches/patchNextServer.js";
+} from "@opennextjs/core/build/patch/patches/patchNextServer.js";
 import { describe, it } from "vitest";
 
 import { computePatchDiff } from "./util.js";

@@ -8,15 +8,15 @@ import type {
 	CloudFrontRequestResult,
 } from "aws-lambda";
 
-import { parseSetCookieHeader } from "@/http/util";
-import type { InternalEvent, InternalResult, MiddlewareResult } from "@/types/open-next";
-import type { Converter } from "@/types/overrides";
-import { fromReadableStream } from "@/utils/stream";
+import { parseSetCookieHeader } from "@opennextjs/core/http/util.js";
+import type { InternalEvent, InternalResult, MiddlewareResult } from "@opennextjs/core/types/open-next.js";
+import type { Converter } from "@opennextjs/core/types/overrides.js";
+import { fromReadableStream } from "@opennextjs/core/utils/stream.js";
 
-import { debug } from "../../adapters/logger";
-import { convertToQuery, convertToQueryString } from "../../core/routing/util";
+import { debug } from "@opennextjs/core/adapters/logger.js";
+import { convertToQuery, convertToQueryString } from "@opennextjs/core/core/routing/util.js";
 
-import { extractHostFromHeaders } from "./utils";
+import { extractHostFromHeaders } from "@opennextjs/core/overrides/converters/utils.js";
 
 const cloudfrontBlacklistedHeaders = [
 	// Disallowed headers, see: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/edge-function-restrictions-all.html#function-restrictions-disallowed-headers

@@ -1,4 +1,4 @@
-import Cache, { SOFT_TAG_PREFIX } from "@opennextjs/aws/adapters/cache.js";
+import Cache, { SOFT_TAG_PREFIX } from "@opennextjs/core/adapters/cache.js";
 import { type Mock, vi } from "vitest";
 
 declare global {

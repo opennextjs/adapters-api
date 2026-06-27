@@ -19,8 +19,8 @@ import {
 	normalizeLocationHeader,
 	revalidateIfRequired,
 	unescapeRegex,
-} from "@opennextjs/aws/core/routing/util.js";
-import { fromReadableStream } from "@opennextjs/aws/utils/stream.js";
+} from "@opennextjs/core/core/routing/util.js";
+import { fromReadableStream } from "@opennextjs/core/utils/stream.js";
 import { vi } from "vitest";
 
 vi.mock("@/config/index.js", () => ({

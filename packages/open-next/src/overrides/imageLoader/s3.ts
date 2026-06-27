@@ -2,10 +2,10 @@ import type { Readable } from "node:stream";
 
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
-import type { ImageLoader } from "@/types/overrides";
-import { FatalError } from "@/utils/error";
+import type { ImageLoader } from "@opennextjs/core/types/overrides.js";
+import { FatalError } from "@opennextjs/core/utils/error.js";
 
-import { awsLogger } from "../../adapters/logger";
+import { awsLogger } from "@opennextjs/core/adapters/logger.js";
 
 const { BUCKET_NAME, BUCKET_KEY_PREFIX } = process.env;
 

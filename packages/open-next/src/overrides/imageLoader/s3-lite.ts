@@ -3,8 +3,8 @@ import type { ReadableStream } from "node:stream/web";
 
 import { AwsClient } from "aws4fetch";
 
-import type { ImageLoader } from "@/types/overrides";
-import { FatalError } from "@/utils/error";
+import type { ImageLoader } from "@opennextjs/core/types/overrides.js";
+import { FatalError } from "@opennextjs/core/utils/error.js";
 
 let awsClient: AwsClient | null = null;
 

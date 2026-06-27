@@ -1,7 +1,7 @@
-import { handleMiddleware } from "@opennextjs/aws/core/routing/middleware.js";
-import { convertFromQueryString } from "@opennextjs/aws/core/routing/util.js";
-import type { InternalEvent } from "@opennextjs/aws/types/open-next.js";
-import { toReadableStream } from "@opennextjs/aws/utils/stream.js";
+import { handleMiddleware } from "@opennextjs/core/core/routing/middleware.js";
+import { convertFromQueryString } from "@opennextjs/core/core/routing/util.js";
+import type { InternalEvent } from "@opennextjs/core/types/open-next.js";
+import { toReadableStream } from "@opennextjs/core/utils/stream.js";
 import { vi } from "vitest";
 
 vi.mock("@/config/index.js", () => ({
@@ -35,7 +35,7 @@ vi.mock("@/config/index.js", () => ({
 	},
 }));
 
-vi.mock("@opennextjs/aws/core/routing/i18n/index.js", () => ({
+vi.mock("@opennextjs/core/core/routing/i18n/index.js", () => ({
 	localizePath: (event: InternalEvent) => event.rawPath,
 }));
 

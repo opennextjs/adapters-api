@@ -1,4 +1,4 @@
-import { isVersionInRange, parseVersions } from "@opennextjs/aws/build/patch/codePatcher.js";
+import { isVersionInRange, parseVersions } from "@opennextjs/core/build/patch/codePatcher.js";
 
 describe("isVersionInRange", () => {
 	test("before", () => {

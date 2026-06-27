@@ -1,14 +1,14 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 
-import { parseSetCookieHeader } from "@/http/util";
-import type { InternalEvent, InternalResult } from "@/types/open-next";
-import type { Converter } from "@/types/overrides";
-import { fromReadableStream } from "@/utils/stream";
+import { parseSetCookieHeader } from "@opennextjs/core/http/util.js";
+import type { InternalEvent, InternalResult } from "@opennextjs/core/types/open-next.js";
+import type { Converter } from "@opennextjs/core/types/overrides.js";
+import { fromReadableStream } from "@opennextjs/core/utils/stream.js";
 
-import { debug } from "../../adapters/logger";
-import { convertToQuery } from "../../core/routing/util";
+import { debug } from "@opennextjs/core/adapters/logger.js";
+import { convertToQuery } from "@opennextjs/core/core/routing/util.js";
 
-import { extractHostFromHeaders, removeUndefinedFromQuery } from "./utils";
+import { extractHostFromHeaders, removeUndefinedFromQuery } from "@opennextjs/core/overrides/converters/utils.js";
 
 // Not sure which one is really needed as this is not documented anywhere but server actions redirect are not working without this,
 // it causes a 500 error from cloudfront itself with a 'x-amzErrortype: InternalFailure' header

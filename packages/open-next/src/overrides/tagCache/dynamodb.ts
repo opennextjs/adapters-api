@@ -3,10 +3,10 @@ import path from "node:path";
 import type { DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
 import { BatchWriteItemCommand, DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
 
-import type { TagCache } from "@/types/overrides";
+import type { TagCache } from "@opennextjs/core/types/overrides.js";
 
-import { awsLogger, debug, error } from "../../adapters/logger";
-import { chunk, parseNumberFromEnv } from "../../adapters/util";
+import { awsLogger, debug, error } from "@opennextjs/core/adapters/logger.js";
+import { chunk, parseNumberFromEnv } from "@opennextjs/core/adapters/util.js";
 
 import { MAX_DYNAMO_BATCH_WRITE_ITEM_COUNT, getDynamoBatchWriteCommandConcurrency } from "./constants";
 

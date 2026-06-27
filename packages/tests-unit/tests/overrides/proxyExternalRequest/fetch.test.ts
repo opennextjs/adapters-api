@@ -1,4 +1,4 @@
-import fetchProxy from "@opennextjs/aws/overrides/proxyExternalRequest/fetch.js";
+import fetchProxy from "@opennextjs/core/overrides/proxyExternalRequest/fetch.js";
 import { vi } from "vitest";
 
 describe("proxyExternalRequest/fetch", () => {

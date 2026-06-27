@@ -1,6 +1,6 @@
 import type http from "node:http";
 
-import { parseHeaders, parseSetCookieHeader } from "@opennextjs/aws/http/util.js";
+import { parseHeaders, parseSetCookieHeader } from "@opennextjs/core/http/util.js";
 
 describe("parseSetCookieHeader", () => {
 	it("returns an empty list if cookies is emptyish", () => {

@@ -1,5 +1,5 @@
-import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
-import { envVarRuleCreator } from "@opennextjs/aws/build/patch/patches/patchEnvVar.js";
+import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
+import { envVarRuleCreator } from "@opennextjs/core/build/patch/patches/patchEnvVar.js";
 import { describe, it } from "vitest";
 
 const moduleCompiledCode = `

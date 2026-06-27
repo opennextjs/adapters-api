@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
-import { createGenericHandler } from "../core/createGenericHandler.js";
-import { resolveTagCache } from "../core/resolve.js";
+import { createGenericHandler } from "@opennextjs/core/core/createGenericHandler.js";
+import { resolveTagCache } from "@opennextjs/core/core/resolve.js";
 
 const PHYSICAL_RESOURCE_ID = "dynamodb-cache" as const;
 

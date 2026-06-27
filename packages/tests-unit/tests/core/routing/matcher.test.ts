@@ -4,9 +4,9 @@ import {
 	getNextConfigHeaders,
 	handleRedirects,
 	handleRewrites,
-} from "@opennextjs/aws/core/routing/matcher.js";
-import { convertFromQueryString } from "@opennextjs/aws/core/routing/util.js";
-import type { InternalEvent } from "@opennextjs/aws/types/open-next.js";
+} from "@opennextjs/core/core/routing/matcher.js";
+import { convertFromQueryString } from "@opennextjs/core/core/routing/util.js";
+import type { InternalEvent } from "@opennextjs/core/types/open-next.js";
 import { vi } from "vitest";
 
 vi.mock("@/config/index.js", () => ({
@@ -82,7 +82,7 @@ vi.mock("@/config/index.js", () => ({
 	},
 }));
 
-vi.mock("@opennextjs/aws/core/routing/i18n/index.js", () => ({
+vi.mock("@opennextjs/core/core/routing/i18n/index.js", () => ({
 	localizePath: (event: InternalEvent) => event.rawPath,
 	handleLocaleRedirect: (_event: InternalEvent) => false,
 }));

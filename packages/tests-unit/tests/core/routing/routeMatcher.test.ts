@@ -1,4 +1,4 @@
-import { dynamicRouteMatcher, staticRouteMatcher } from "@opennextjs/aws/core/routing/routeMatcher.js";
+import { dynamicRouteMatcher, staticRouteMatcher } from "@opennextjs/core/core/routing/routeMatcher.js";
 import { vi } from "vitest";
 
 vi.mock("@/config/index.js", () => ({

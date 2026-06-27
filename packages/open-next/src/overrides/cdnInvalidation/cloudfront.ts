@@ -1,6 +1,6 @@
 import { CloudFrontClient, CreateInvalidationCommand } from "@aws-sdk/client-cloudfront";
 
-import type { CDNInvalidationHandler } from "@/types/overrides";
+import type { CDNInvalidationHandler } from "@opennextjs/core/types/overrides.js";
 
 const cloudfront = new CloudFrontClient({});
 export default {

@@ -1,4 +1,4 @@
-import { removeUndefinedFromQuery } from "@opennextjs/aws/overrides/converters/utils.js";
+import { removeUndefinedFromQuery } from "@opennextjs/core/overrides/converters/utils.js";
 
 describe("removeUndefinedFromQuery", () => {
 	it("should remove undefined from query", () => {

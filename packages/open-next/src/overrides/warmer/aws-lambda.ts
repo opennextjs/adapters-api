@@ -1,7 +1,7 @@
-import type { Warmer } from "@/types/overrides";
+import type { Warmer } from "@opennextjs/core/types/overrides.js";
 
-import { debug, error } from "../../adapters/logger";
-import type { WarmerEvent, WarmerResponse } from "../../adapters/warmer-function";
+import { debug, error } from "@opennextjs/core/adapters/logger.js";
+import type { WarmerEvent, WarmerResponse } from "@opennextjs/core/adapters/warmer-function.js";
 
 const lambdaWarmerInvoke: Warmer = {
 	name: "aws-invoke",

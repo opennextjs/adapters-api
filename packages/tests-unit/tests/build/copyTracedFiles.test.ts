@@ -1,4 +1,4 @@
-import { isExcluded, isNonLinuxPlatformPackage } from "@opennextjs/aws/build/copyTracedFiles.js";
+import { isExcluded, isNonLinuxPlatformPackage } from "@opennextjs/core/build/copyTracedFiles.js";
 
 describe("isExcluded", () => {
 	test("should exclude sharp", () => {

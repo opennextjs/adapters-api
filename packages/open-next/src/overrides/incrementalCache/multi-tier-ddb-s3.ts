@@ -1,8 +1,8 @@
-import type { CacheEntryType, CacheValue, IncrementalCache } from "@/types/overrides";
-import { customFetchClient } from "@/utils/fetch";
-import { LRUCache } from "@/utils/lru";
+import type { CacheEntryType, CacheValue, IncrementalCache } from "@opennextjs/core/types/overrides.js";
+import { customFetchClient } from "../../utils/fetch.js";
+import { LRUCache } from "@opennextjs/core/utils/lru.js";
 
-import { debug } from "../../adapters/logger";
+import { debug } from "@opennextjs/core/adapters/logger.js";
 
 import S3Cache, { getAwsClient } from "./s3-lite";
 

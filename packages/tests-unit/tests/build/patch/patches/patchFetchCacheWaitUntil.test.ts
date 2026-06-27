@@ -1,5 +1,5 @@
-import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
-import { rule } from "@opennextjs/aws/build/patch/patches/patchFetchCacheWaitUntil.js";
+import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
+import { rule } from "@opennextjs/core/build/patch/patches/patchFetchCacheWaitUntil.js";
 import { describe, expect, test } from "vitest";
 
 import { computePatchDiff } from "./util.js";

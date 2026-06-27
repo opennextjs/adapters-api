@@ -1,5 +1,5 @@
-import ComposableCache from "@opennextjs/aws/adapters/composable-cache";
-import { fromReadableStream, toReadableStream } from "@opennextjs/aws/utils/stream";
+import ComposableCache from "@opennextjs/core/adapters/composable-cache";
+import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream";
 import { vi } from "vitest";
 
 describe("Composable cache handler", () => {

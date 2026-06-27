@@ -10,7 +10,7 @@ import type {
 	Context,
 } from "aws-lambda";
 
-import type { WarmerEvent, WarmerResponse } from "../adapters/warmer-function";
+import type { WarmerEvent, WarmerResponse } from "@opennextjs/core/adapters/warmer-function.js";
 
 export interface ResponseStream extends Writable {
 	getBufferedData(): Buffer;

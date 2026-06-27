@@ -2,22 +2,22 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-import type { NextConfig } from "@/types/next-types";
+import type { NextConfig } from "@opennextjs/core/types/next-types.js";
 
-import { compileCache } from "./build/compileCache.js";
-import { compileOpenNextConfig } from "./build/compileConfig.js";
-import { compileTagCacheProvider } from "./build/compileTagCacheProvider.js";
-import { createCacheAssets, createStaticAssets } from "./build/createAssets.js";
-import { createImageOptimizationBundle } from "./build/createImageOptimizationBundle.js";
-import { createMiddleware } from "./build/createMiddleware.js";
-import { createRevalidationBundle } from "./build/createRevalidationBundle.js";
-import { createServerBundle } from "./build/createServerBundle.js";
-import { createWarmerBundle } from "./build/createWarmerBundle.js";
-import { generateOutput } from "./build/generateOutput.js";
-import * as buildHelper from "./build/helper.js";
-import { addDebugFile } from "./debug.js";
-import type { ContentUpdater } from "./plugins/content-updater.js";
-import { externalChunksPlugin, inlineRouteHandler } from "./plugins/inlineRouteHandlers.js";
+import { compileCache } from "@opennextjs/core/build/compileCache.js";
+import { compileOpenNextConfig } from "@opennextjs/core/build/compileConfig.js";
+import { compileTagCacheProvider } from "@opennextjs/core/build/compileTagCacheProvider.js";
+import { createCacheAssets, createStaticAssets } from "@opennextjs/core/build/createAssets.js";
+import { createImageOptimizationBundle } from "@opennextjs/core/build/createImageOptimizationBundle.js";
+import { createMiddleware } from "@opennextjs/core/build/createMiddleware.js";
+import { createRevalidationBundle } from "@opennextjs/core/build/createRevalidationBundle.js";
+import { createServerBundle } from "@opennextjs/core/build/createServerBundle.js";
+import { createWarmerBundle } from "@opennextjs/core/build/createWarmerBundle.js";
+import { generateOutput } from "@opennextjs/core/build/generateOutput.js";
+import * as buildHelper from "@opennextjs/core/build/helper.js";
+import { addDebugFile } from "@opennextjs/core/debug.js";
+import type { ContentUpdater } from "@opennextjs/core/plugins/content-updater.js";
+import { externalChunksPlugin, inlineRouteHandler } from "@opennextjs/core/plugins/inlineRouteHandlers.js";
 
 export type NextAdapterOutput = {
 	pathname: string;

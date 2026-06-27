@@ -1,5 +1,5 @@
-import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
-import { rule } from "@opennextjs/aws/build/patch/patches/patchBackgroundRevalidation.js";
+import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
+import { rule } from "@opennextjs/core/build/patch/patches/patchBackgroundRevalidation.js";
 import { describe, it } from "vitest";
 
 const codeToPatch = `if (cachedResponse && !isOnDemandRevalidate) {
