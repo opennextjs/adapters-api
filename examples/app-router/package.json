@@ -19,6 +19,7 @@
 	},
 	"devDependencies": {
 		"@opennextjs/aws": "workspace:*",
+		"@opennextjs/core": "workspace:*",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:aws",
 		"@types/react-dom": "catalog:aws",
