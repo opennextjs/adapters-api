@@ -1,10 +1,10 @@
 import { Writable } from "node:stream";
 
-import type { AwsLambdaEvent, AwsLambdaReturn } from "../../types/aws-lambda.js";
+import type { WarmerEvent, WarmerResponse } from "@opennextjs/core/adapters/warmer-function.js";
 import type { StreamCreator } from "@opennextjs/core/types/open-next.js";
 import type { WrapperHandler } from "@opennextjs/core/types/overrides.js";
 
-import type { WarmerEvent, WarmerResponse } from "@opennextjs/core/adapters/warmer-function.js";
+import type { AwsLambdaEvent, AwsLambdaReturn } from "../../types/aws-lambda.js";
 
 export function formatWarmerResponse(event: WarmerEvent) {
 	return new Promise<WarmerResponse>((resolve) => {

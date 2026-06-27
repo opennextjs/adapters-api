@@ -1,13 +1,12 @@
 import path from "node:path";
 
-import { AwsClient } from "aws4fetch";
-
+import { parseNumberFromEnv } from "@opennextjs/core/adapters/util.js";
 import type { Extension } from "@opennextjs/core/types/cache.js";
 import type { CacheEntryType, CacheValue, IncrementalCache } from "@opennextjs/core/types/overrides.js";
 import { IgnorableError, RecoverableError } from "@opennextjs/core/utils/error.js";
-import { customFetchClient } from "../../utils/fetch.js";
+import { AwsClient } from "aws4fetch";
 
-import { parseNumberFromEnv } from "@opennextjs/core/adapters/util.js";
+import { customFetchClient } from "../../utils/fetch.js";
 
 let awsClient: AwsClient | null = null;
 

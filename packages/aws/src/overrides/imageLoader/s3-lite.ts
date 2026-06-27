@@ -1,10 +1,9 @@
 import { Readable } from "node:stream";
 import type { ReadableStream } from "node:stream/web";
 
-import { AwsClient } from "aws4fetch";
-
 import type { ImageLoader } from "@opennextjs/core/types/overrides.js";
 import { FatalError } from "@opennextjs/core/utils/error.js";
+import { AwsClient } from "aws4fetch";
 
 let awsClient: AwsClient | null = null;
 

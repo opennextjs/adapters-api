@@ -1,5 +1,3 @@
-import * as config from "@/config/index.js";
-import { NextConfig } from "@/config/index.js";
 import {
 	addOpenNextHeader,
 	constructNextUrl,
@@ -22,6 +20,9 @@ import {
 } from "@opennextjs/core/core/routing/util.js";
 import { fromReadableStream } from "@opennextjs/core/utils/stream.js";
 import { vi } from "vitest";
+
+import * as config from "@/config/index.js";
+import { NextConfig } from "@/config/index.js";
 
 vi.mock("@/config/index.js", () => ({
 	NextConfig: {

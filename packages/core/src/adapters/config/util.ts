@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import type { PublicFiles } from "@/types/adapter";
 import type {
 	FunctionsConfigManifest,
 	MiddlewareManifest,
@@ -8,8 +9,6 @@ import type {
 	PrerenderManifest,
 	RoutesManifest,
 } from "@/types/next-types";
-
-import type { PublicFiles } from "@/types/adapter";
 
 export function loadConfig(nextDir: string) {
 	const filePath = path.join(nextDir, "required-server-files.json");

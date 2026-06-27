@@ -1,4 +1,3 @@
-import { NextConfig } from "@/config/index.js";
 import {
 	fixDataPage,
 	getNextConfigHeaders,
@@ -8,6 +7,8 @@ import {
 import { convertFromQueryString } from "@opennextjs/core/core/routing/util.js";
 import type { InternalEvent } from "@opennextjs/core/types/open-next.js";
 import { vi } from "vitest";
+
+import { NextConfig } from "@/config/index.js";
 
 vi.mock("@/config/index.js", () => ({
 	NextConfig: {},

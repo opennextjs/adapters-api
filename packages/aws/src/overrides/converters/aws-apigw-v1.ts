@@ -1,12 +1,12 @@
-import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-
+import { debug } from "@opennextjs/core/adapters/logger.js";
+import {
+	extractHostFromHeaders,
+	removeUndefinedFromQuery,
+} from "@opennextjs/core/overrides/converters/utils.js";
 import type { InternalEvent, InternalResult } from "@opennextjs/core/types/open-next.js";
 import type { Converter } from "@opennextjs/core/types/overrides.js";
 import { fromReadableStream } from "@opennextjs/core/utils/stream.js";
-
-import { debug } from "@opennextjs/core/adapters/logger.js";
-
-import { extractHostFromHeaders, removeUndefinedFromQuery } from "@opennextjs/core/overrides/converters/utils.js";
+import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 
 function normalizeAPIGatewayProxyEventHeaders(event: APIGatewayProxyEvent): Record<string, string> {
 	event.multiValueHeaders;

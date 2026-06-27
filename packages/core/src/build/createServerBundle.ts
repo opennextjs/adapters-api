@@ -4,9 +4,9 @@ import path from "node:path";
 import type { Plugin } from "esbuild";
 
 import { loadMiddlewareManifest } from "@/config/util.js";
+import type { NextAdapterOutputs } from "@/types/adapter.js";
 import type { FunctionOptions, SplittedFunctionOptions } from "@/types/open-next";
 
-import type { NextAdapterOutputs } from "@/types/adapter.js";
 import logger from "../logger.js";
 import { minifyAll } from "../minimize-js.js";
 import { ContentUpdater } from "../plugins/content-updater.js";

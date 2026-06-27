@@ -1,8 +1,6 @@
-import type { SQSEvent } from "aws-lambda";
-
-import type { Converter } from "@opennextjs/core/types/overrides.js";
-
 import type { RevalidateEvent } from "@opennextjs/core/adapters/revalidate.js";
+import type { Converter } from "@opennextjs/core/types/overrides.js";
+import type { SQSEvent } from "aws-lambda";
 
 const converter: Converter<RevalidateEvent, RevalidateEvent> = {
 	convertFrom(event: unknown) {

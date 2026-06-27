@@ -1,10 +1,9 @@
-import { AwsClient } from "aws4fetch";
-
+import { error } from "@opennextjs/core/adapters/logger.js";
 import type { Queue } from "@opennextjs/core/types/overrides.js";
 import { RecoverableError } from "@opennextjs/core/utils/error.js";
-import { customFetchClient } from "../../utils/fetch.js";
+import { AwsClient } from "aws4fetch";
 
-import { error } from "@opennextjs/core/adapters/logger.js";
+import { customFetchClient } from "../../utils/fetch.js";
 
 let awsClient: AwsClient | null = null;
 

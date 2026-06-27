@@ -1,6 +1,9 @@
 import path from "node:path";
 
-import { loadFunctionsConfigManifest, loadMiddlewareManifest } from "@opennextjs/core/adapters/config/util.js";
+import {
+	loadFunctionsConfigManifest,
+	loadMiddlewareManifest,
+} from "@opennextjs/core/adapters/config/util.js";
 import * as buildHelper from "@opennextjs/core/build/helper.js";
 
 /**

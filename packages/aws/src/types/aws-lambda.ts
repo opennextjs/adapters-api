@@ -1,5 +1,6 @@
 import type { Writable } from "node:stream";
 
+import type { WarmerEvent, WarmerResponse } from "@opennextjs/core/adapters/warmer-function.js";
 import type {
 	APIGatewayProxyEvent,
 	APIGatewayProxyEventV2,
@@ -9,8 +10,6 @@ import type {
 	CloudFrontRequestResult,
 	Context,
 } from "aws-lambda";
-
-import type { WarmerEvent, WarmerResponse } from "@opennextjs/core/adapters/warmer-function.js";
 
 export interface ResponseStream extends Writable {
 	getBufferedData(): Buffer;

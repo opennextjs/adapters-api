@@ -1,13 +1,11 @@
 import { Readable, type Writable } from "node:stream";
 import zlib from "node:zlib";
 
-import type { APIGatewayProxyEventV2 } from "aws-lambda";
-
-import type { StreamCreator } from "@opennextjs/core/types/open-next.js";
-import type { Wrapper, WrapperHandler } from "@opennextjs/core/types/overrides.js";
-
 import { debug, error } from "@opennextjs/core/adapters/logger.js";
 import type { WarmerEvent, WarmerResponse } from "@opennextjs/core/adapters/warmer-function.js";
+import type { StreamCreator } from "@opennextjs/core/types/open-next.js";
+import type { Wrapper, WrapperHandler } from "@opennextjs/core/types/overrides.js";
+import type { APIGatewayProxyEventV2 } from "aws-lambda";
 
 type AwsLambdaEvent = APIGatewayProxyEventV2 | WarmerEvent;
 

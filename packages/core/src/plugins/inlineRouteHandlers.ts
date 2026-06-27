@@ -1,6 +1,6 @@
+import type { NextAdapterOutputs } from "@/types/adapter.js";
 import { getCrossPlatformPathRegex } from "@/utils/regex.js";
 
-import type { NextAdapterOutputs } from "@/types/adapter.js";
 import { patchCode } from "../build/patch/astCodePatcher.js";
 
 import type { ContentUpdater, Plugin } from "./content-updater.js";

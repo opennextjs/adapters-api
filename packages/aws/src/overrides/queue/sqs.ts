@@ -1,8 +1,6 @@
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
-
-import type { Queue } from "@opennextjs/core/types/overrides.js";
-
 import { awsLogger } from "@opennextjs/core/adapters/logger.js";
+import type { Queue } from "@opennextjs/core/types/overrides.js";
 
 // Expected environment variables
 const { REVALIDATION_QUEUE_REGION, REVALIDATION_QUEUE_URL } = process.env;

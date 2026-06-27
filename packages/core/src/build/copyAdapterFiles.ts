@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type { NextAdapterOutput, NextAdapterOutputs } from "@/types/adapter";
+
 import { addDebugFile } from "../debug.js";
 
 import type * as buildHelper from "./helper.js";
