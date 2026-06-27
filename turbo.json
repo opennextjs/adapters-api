@@ -33,8 +33,7 @@
 			"outputs": [".open-next/**"]
 		},
 		"openbuild:local:start": {
-			"cache": false,
-			"dependsOn": ["openbuild:local"]
+			"cache": false
 		}
 	}
 }
