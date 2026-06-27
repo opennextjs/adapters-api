@@ -30,13 +30,13 @@ jobs:
 
       - name: Build examples apps with local configuration
         shell: bash
-        run: pnpm -r openbuild:local
+        run: pnpm openbuild:local
 
       # Remember to add more ports here if we add new examples app
       - name: Start the local OpenNext servers
         shell: bash
         run: |
-          pnpm -r openbuild:local:start &
+          pnpm openbuild:local:start &
 
           # Check all ports in parallel with generous timeout
           pids=()

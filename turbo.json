@@ -34,7 +34,8 @@
 		},
 		"openbuild:local:start": {
 			"cache": false,
-			"dependsOn": ["openbuild:local"]
+			"dependsOn": ["openbuild:local"],
+			"persistent": true
 		}
 	}
 }
