@@ -19,8 +19,7 @@ export async function resolveConverter<
 	if (typeof converter === "function") {
 		return converter();
 	}
-	// @ts-expect-error - This will be replaced by the bundler
-	const m_1 = await import("../overrides/converters/aws-apigw-v2.js");
+	const m_1 = (await import("../overrides/converters/node.js")) as unknown as { default: Converter<E, R> };
 	return m_1.default;
 }
 
@@ -31,8 +30,7 @@ export async function resolveWrapper<
 	if (typeof wrapper === "function") {
 		return wrapper();
 	}
-	// @ts-expect-error - This will be replaced by the bundler
-	const m_1 = await import("../overrides/wrappers/aws-lambda.js");
+	const m_1 = (await import("../overrides/wrappers/node.js")) as unknown as { default: Wrapper<E, R> };
 	return m_1.default;
 }
 
@@ -46,8 +44,7 @@ export async function resolveTagCache(tagCache: OverrideOptions["tagCache"]): Pr
 	if (typeof tagCache === "function") {
 		return tagCache();
 	}
-	// @ts-expect-error - This will be replaced by the bundler
-	const m_1 = await import("../overrides/tagCache/dynamodb.js");
+	const m_1 = await import("../overrides/tagCache/fs-dev-nextMode.js");
 	return m_1.default;
 }
 
@@ -61,8 +58,7 @@ export async function resolveQueue(queue: OverrideOptions["queue"]) {
 	if (typeof queue === "function") {
 		return queue();
 	}
-	// @ts-expect-error - This will be replaced by the bundler
-	const m_1 = await import("../overrides/queue/sqs.js");
+	const m_1 = await import("../overrides/queue/direct.js");
 	return m_1.default;
 }
 
@@ -76,8 +72,7 @@ export async function resolveIncrementalCache(incrementalCache: OverrideOptions[
 	if (typeof incrementalCache === "function") {
 		return incrementalCache();
 	}
-	// @ts-expect-error - This will be replaced by the bundler
-	const m_1 = await import("../overrides/incrementalCache/s3.js");
+	const m_1 = await import("../overrides/incrementalCache/fs-dev.js");
 	return m_1.default;
 }
 
@@ -92,8 +87,7 @@ export async function resolveImageLoader(
 	if (typeof imageLoader === "function") {
 		return imageLoader();
 	}
-	// @ts-expect-error - This will be replaced by the bundler
-	const m_1 = await import("../overrides/imageLoader/s3.js");
+	const m_1 = await import("../overrides/imageLoader/fs-dev.js");
 	return m_1.default;
 }
 
@@ -134,8 +128,7 @@ export async function resolveWarmerInvoke(
 	if (typeof warmer === "function") {
 		return warmer();
 	}
-	// @ts-expect-error - This will be replaced by the bundler
-	const m_1 = await import("../overrides/warmer/aws-lambda.js");
+	const m_1 = await import("../overrides/warmer/dummy.js");
 	return m_1.default;
 }
 

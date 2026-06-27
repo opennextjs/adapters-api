@@ -58,14 +58,14 @@ const nameToFolder = {
 };
 
 const defaultOverrides = {
-	wrapper: "aws-lambda",
-	converter: "aws-apigw-v2",
-	tagCache: "dynamodb",
-	queue: "sqs",
-	incrementalCache: "s3",
-	imageLoader: "s3",
+	wrapper: "node",
+	converter: "node",
+	tagCache: "fs-dev-nextMode",
+	queue: "direct",
+	incrementalCache: "fs-dev",
+	imageLoader: "fs-dev",
 	originResolver: "pattern-env",
-	warmer: "aws-lambda",
+	warmer: "dummy",
 	proxyExternalRequest: "node",
 	cdnInvalidation: "dummy",
 };

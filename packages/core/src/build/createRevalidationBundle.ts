@@ -29,7 +29,7 @@ export async function createRevalidationBundle(options: buildHelper.BuildOptions
 				openNextResolvePlugin({
 					fnName: "revalidate",
 					overrides: {
-						converter: config.revalidate?.override?.converter ?? "sqs-revalidate",
+						converter: config.revalidate?.override?.converter ?? "node",
 						wrapper: config.revalidate?.override?.wrapper,
 					},
 				}),

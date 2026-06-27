@@ -2,8 +2,6 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-import type { NextConfig } from "@opennextjs/core/types/next-types.js";
-
 import { compileCache } from "@opennextjs/core/build/compileCache.js";
 import { compileOpenNextConfig } from "@opennextjs/core/build/compileConfig.js";
 import { compileTagCacheProvider } from "@opennextjs/core/build/compileTagCacheProvider.js";
@@ -18,6 +16,7 @@ import * as buildHelper from "@opennextjs/core/build/helper.js";
 import { addDebugFile } from "@opennextjs/core/debug.js";
 import type { ContentUpdater } from "@opennextjs/core/plugins/content-updater.js";
 import { externalChunksPlugin, inlineRouteHandler } from "@opennextjs/core/plugins/inlineRouteHandlers.js";
+import type { NextConfig } from "@opennextjs/core/types/next-types.js";
 
 export type NextAdapterOutput = {
 	pathname: string;
@@ -58,7 +57,8 @@ export default {
 		});
 
 		const require = createRequire(import.meta.url);
-		const openNextDistDir = path.dirname(require.resolve("@opennextjs/aws/index.js"));
+		//TODO: change that
+		const openNextDistDir = path.dirname(require.resolve("@opennextjs/core/debug.js"));
 
 		buildOpts = buildHelper.normalizeOptions(config, openNextDistDir, buildDir);
 
