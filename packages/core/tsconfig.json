@@ -15,5 +15,6 @@
 			"@/utils/*": ["./src/utils/*"]
 		},
 		"ignoreDeprecations": "6.0"
-	}
+	},
+	"exclude": ["src/**/*.spec.ts"]
 }
