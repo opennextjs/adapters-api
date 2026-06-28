@@ -66,7 +66,7 @@ type DefaultOrigins = {
 	imageOptimizer: ImageOrigins;
 };
 
-interface OpenNextOutput {
+export interface OpenNextOutput {
 	edgeFunctions: {
 		[key: string]: BaseFunction;
 	} & {
@@ -163,7 +163,7 @@ function prefixPattern(basePath: string) {
 	};
 }
 
-export async function generateOutput(options: BuildOptions) {
+export async function buildOpenNextOutput(options: BuildOptions): Promise<OpenNextOutput> {
 	const { appBuildOutputPath, config } = options;
 	const edgeFunctions: OpenNextOutput["edgeFunctions"] = {};
 	const isExternalMiddleware = config.middleware?.external ?? false;
@@ -347,8 +347,13 @@ export async function generateOutput(options: BuildOptions) {
 					},
 		},
 	};
+	return output;
+}
+
+export async function generateOutput(options: BuildOptions) {
+	const output = await buildOpenNextOutput(options);
 	fs.writeFileSync(
-		path.join(appBuildOutputPath, ".open-next", "open-next.output.json"),
+		path.join(options.appBuildOutputPath, ".open-next", "open-next.output.json"),
 		JSON.stringify(output)
 	);
 }
