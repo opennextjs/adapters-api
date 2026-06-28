@@ -5,6 +5,7 @@ import path from "node:path";
 import type { Plugin } from "esbuild";
 
 import { addDebugFile } from "../debug.js";
+import logger from "../logger.js";
 import type { ContentUpdater } from "../plugins/content-updater.js";
 import type { BundleDefaults } from "../plugins/resolve.js";
 import type { NextAdapterOutputs } from "../types/adapter.js";
@@ -20,9 +21,11 @@ import { createMiddleware } from "./createMiddleware.js";
 import { createRevalidationBundle } from "./createRevalidationBundle.js";
 import { createServerBundle } from "./createServerBundle.js";
 import { createWarmerBundle } from "./createWarmerBundle.js";
-import { generateOutput } from "./generateOutput.js";
+import { buildOpenNextOutput } from "./generateOutput.js";
+import type { OpenNextOutput } from "./generateOutput.js";
 import * as buildHelper from "./helper.js";
 import type { CodePatcher } from "./patch/codePatcher.js";
+import type { ValidateConfigResult } from "./validateConfig.js";
 
 const require = createRequire(import.meta.url);
 
@@ -51,7 +54,7 @@ export type NextAdapter = {
 /**
  * The influence an adapter can exert on the build process, returned by the callback.
  */
-export type OpenNextAdapterOptions = {
+export type OpenNextAdapterOptions<T = OpenNextOutput> = {
 	skipRevalidation?: boolean;
 	skipImageOptimization?: boolean;
 	skipWarmer?: boolean;
@@ -75,6 +78,8 @@ export type OpenNextAdapterOptions = {
 	 * Precedence: config override > platform default > core node default.
 	 */
 	defaultOverrides?: BundleDefaults;
+	validateConfig?: (config: OpenNextConfig) => ValidateConfigResult | Promise<ValidateConfigResult>;
+	generateOutput?: (buildOpts: buildHelper.BuildOptions) => Promise<T>;
 };
 
 /**
@@ -87,13 +92,13 @@ export type OpenNextAdapterOptions = {
  *                   returning adapter-specific influence over the build process.
  * @returns A NextAdapter with modifyConfig and onBuildComplete hooks.
  */
-export function buildAdapter(
-	callback: (config: OpenNextConfig, buildOpts: buildHelper.BuildOptions) => OpenNextAdapterOptions
+export function buildAdapter<T = OpenNextOutput>(
+	callback: (config: OpenNextConfig, buildOpts: buildHelper.BuildOptions) => OpenNextAdapterOptions<T>
 ): NextAdapter {
 	// Closure-scoped state — no module-level mutable variables
 	let buildOpts: buildHelper.BuildOptions;
 	let config: OpenNextConfig;
-	let adapterOptions: OpenNextAdapterOptions;
+	let adapterOptions: OpenNextAdapterOptions<T>;
 
 	return {
 		name: "OpenNext",
@@ -128,6 +133,18 @@ export function buildAdapter(
 
 			// Step 6: Call the adapter callback to get influence
 			adapterOptions = callback(config, buildOpts);
+
+			// Run adapter-level validate override (additional check; default already ran in compileOpenNextConfig)
+			if (adapterOptions.validateConfig) {
+				const result = await adapterOptions.validateConfig(config);
+				if (!result.success) {
+					if (result.shouldThrow) {
+						throw new Error(result.message);
+					}
+					const level = result.level ?? "warn";
+					logger[level](result.message);
+				}
+			}
 
 			// Step 7: Build tempCachePath
 			const packagePath = buildHelper.getPackagePath(buildOpts);
@@ -231,7 +248,13 @@ export function buildAdapter(
 
 			// Step 12: Generate output
 			if (!adapterOptions.skipGenerateOutput) {
-				await generateOutput(buildOpts);
+				const output = adapterOptions.generateOutput
+					? await adapterOptions.generateOutput(buildOpts)
+					: await buildOpenNextOutput(buildOpts);
+				fs.writeFileSync(
+					path.join(buildOpts.appBuildOutputPath, ".open-next", "open-next.output.json"),
+					JSON.stringify(output)
+				);
 				console.log("Output generated");
 			}
 		},
