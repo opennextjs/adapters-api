@@ -214,7 +214,7 @@ describe("openNextResolvePlugin", () => {
 		await writeFile(
 			join(pkgDir, "package.json"),
 			JSON.stringify({ name: "@test-pkg/wrapper", main: "index.js" }),
-			"utf-8",
+			"utf-8"
 		);
 		await writeFile(join(pkgDir, "index.js"), "module.exports = {};", "utf-8");
 
