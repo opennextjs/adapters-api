@@ -1,4 +1,6 @@
 import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
+import { dirname, relative } from "node:path";
 
 import { type Edit, Lang, parse } from "@ast-grep/napi";
 import chalk from "chalk";
@@ -142,7 +144,12 @@ export function openNextResolvePlugin({
 					let targetPath: string;
 					if (typeof overrideValue === "string") {
 						if (isFullPath(overrideValue)) {
-							targetPath = overrideValue;
+							try {
+								const resolved = createRequire(args.path).resolve(overrideValue);
+								targetPath = "./" + relative(dirname(args.path), resolved);
+							} catch {
+								targetPath = overrideValue;
+							}
 						} else {
 							targetPath = `../overrides/${folder}/${overrideValue}.js`;
 						}
