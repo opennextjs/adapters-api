@@ -6,9 +6,11 @@ vi.mock("node:fs", () => ({
 	default: {
 		mkdirSync: vi.fn(),
 		copyFileSync: vi.fn(),
+		writeFileSync: vi.fn(),
 	},
 	mkdirSync: vi.fn(),
 	copyFileSync: vi.fn(),
+	writeFileSync: vi.fn(),
 }));
 
 // Mock node:module to control createRequire
@@ -16,6 +18,16 @@ vi.mock("node:module", () => ({
 	createRequire: vi.fn(() => ({
 		resolve: vi.fn(() => "/fake/opennext/dist/debug.js"),
 	})),
+}));
+
+// Mock logger to capture log calls
+vi.mock("../logger.js", () => ({
+	default: {
+		warn: vi.fn(),
+		error: vi.fn(),
+		info: vi.fn(),
+		debug: vi.fn(),
+	},
 }));
 
 // Mock all build functions
@@ -57,6 +69,7 @@ vi.mock("./createWarmerBundle.js", () => ({
 }));
 
 vi.mock("./generateOutput.js", () => ({
+	buildOpenNextOutput: vi.fn(),
 	generateOutput: vi.fn(),
 }));
 
@@ -71,6 +84,7 @@ vi.mock("./helper.js", () => ({
 }));
 
 import { addDebugFile } from "../debug.js";
+import logger from "../logger.js";
 import type { OpenNextConfig } from "../types/open-next.js";
 
 import { buildAdapter } from "./adapter.js";
@@ -85,7 +99,7 @@ import { createMiddleware } from "./createMiddleware.js";
 import { createRevalidationBundle } from "./createRevalidationBundle.js";
 import { createServerBundle } from "./createServerBundle.js";
 import { createWarmerBundle } from "./createWarmerBundle.js";
-import { generateOutput } from "./generateOutput.js";
+import { buildOpenNextOutput } from "./generateOutput.js";
 import * as buildHelper from "./helper.js";
 import type { BuildOptions } from "./helper.js";
 
@@ -362,7 +376,9 @@ describe("buildAdapter", () => {
 		const ctx = createMockContext();
 		await adapter.onBuildComplete(ctx);
 
-		expect(generateOutput).not.toHaveBeenCalled();
+		expect(buildOpenNextOutput).not.toHaveBeenCalled();
+		const fs = await import("node:fs");
+		expect(fs.default.writeFileSync).not.toHaveBeenCalled();
 	});
 
 	test("onBuildComplete calls addDebugFile with outputs.json", async () => {
@@ -442,5 +458,68 @@ describe("buildAdapter", () => {
 
 		expect(createCacheAssets).not.toHaveBeenCalled();
 		expect(compileTagCacheProvider).not.toHaveBeenCalled();
+	});
+
+	test("validateConfig override is called after callback in modifyConfig and halts build on shouldThrow:true", async () => {
+		const mockValidator = vi.fn(() => ({ success: false, shouldThrow: true, message: "nope" }));
+		const adapter = buildAdapter(() => ({ validateConfig: mockValidator }));
+
+		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
+		await expect(adapter.modifyConfig(nextConfig, { phase: "production" })).rejects.toThrow("nope");
+		expect(mockValidator).toHaveBeenCalledOnce();
+	});
+
+	test("validateConfig override with shouldThrow:false logs warn and continues", async () => {
+		const mockValidator = vi.fn(() => ({ success: false, message: "heads up" }));
+		const adapter = buildAdapter(() => ({ validateConfig: mockValidator }));
+
+		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
+		await adapter.modifyConfig(nextConfig, { phase: "production" });
+		expect(logger.warn).toHaveBeenCalledWith("heads up");
+	});
+
+	test("onBuildComplete calls generateOutput override and writes its return via buildAdapter", async () => {
+		const mockOutput = vi.fn(async () => ({ custom: "shape" }));
+		const adapter = buildAdapter(() => ({ generateOutput: mockOutput }));
+		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
+		await adapter.modifyConfig(nextConfig, { phase: "production" });
+		const ctx = createMockContext();
+		await adapter.onBuildComplete(ctx);
+		expect(mockOutput).toHaveBeenCalledWith(expect.any(Object));
+		const fs = await import("node:fs");
+		expect(fs.default.writeFileSync).toHaveBeenCalledWith(
+			expect.stringMatching(/\/\.open-next\/open-next\.output\.json$/),
+			JSON.stringify({ custom: "shape" })
+		);
+	});
+
+	test("onBuildComplete with default generateOutput calls buildOpenNextOutput and writes result", async () => {
+		vi.mocked(buildOpenNextOutput).mockResolvedValue({
+			origins: { default: {} },
+		} as any); // oxlint-disable-line @typescript-eslint/no-explicit-any
+		const adapter = buildAdapter(() => ({}));
+		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
+		await adapter.modifyConfig(nextConfig, { phase: "production" });
+		const ctx = createMockContext();
+		await adapter.onBuildComplete(ctx);
+		expect(buildOpenNextOutput).toHaveBeenCalledWith(expect.any(Object));
+		const fs = await import("node:fs");
+		expect(fs.default.writeFileSync).toHaveBeenCalledWith(
+			expect.stringMatching(/\/\.open-next\/open-next\.output\.json$/),
+			JSON.stringify({ origins: { default: {} } })
+		);
+	});
+
+	test("onBuildComplete skipGenerateOutput skips generateOutput override and buildOpenNextOutput", async () => {
+		const mockOutput = vi.fn();
+		const adapter = buildAdapter(() => ({ skipGenerateOutput: true, generateOutput: mockOutput }));
+		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
+		await adapter.modifyConfig(nextConfig, { phase: "production" });
+		const ctx = createMockContext();
+		await adapter.onBuildComplete(ctx);
+		expect(buildOpenNextOutput).not.toHaveBeenCalled();
+		expect(mockOutput).not.toHaveBeenCalled();
+		const fs = await import("node:fs");
+		expect(fs.default.writeFileSync).not.toHaveBeenCalled();
 	});
 });
