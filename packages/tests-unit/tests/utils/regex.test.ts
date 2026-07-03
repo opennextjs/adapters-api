@@ -1,4 +1,4 @@
-import { getCrossPlatformPathRegex } from "@opennextjs/aws/utils/regex.js";
+import { getCrossPlatformPathRegex } from "@opennextjs/core/utils/regex.js";
 
 const specialChars = "^([123]+|[123]{1,3})*\\?$";
 

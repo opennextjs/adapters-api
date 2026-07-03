@@ -24,9 +24,9 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import path from "node:path";
 
-import { loadConfig } from "@opennextjs/aws/adapters/config/util.js";
-import type { BuildOptions } from "@opennextjs/aws/build/helper.js";
-import logger from "@opennextjs/aws/logger.js";
+import { loadConfig } from "@opennextjs/core/adapters/config/util.js";
+import type { BuildOptions } from "@opennextjs/core/build/helper.js";
+import logger from "@opennextjs/core/logger.js";
 import { Cloudflare, NotFoundError } from "cloudflare";
 import type { VersionGetResponse } from "cloudflare/resources/workers/scripts/versions.js";
 

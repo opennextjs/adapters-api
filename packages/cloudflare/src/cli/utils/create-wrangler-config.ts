@@ -2,7 +2,7 @@ import assert from "node:assert";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { findPackagerAndRoot } from "@opennextjs/aws/build/helper.js";
+import { findPackagerAndRoot } from "@opennextjs/core/build/helper.js";
 import Cloudflare from "cloudflare";
 import { type CommentObject, parse, stringify } from "comment-json";
 

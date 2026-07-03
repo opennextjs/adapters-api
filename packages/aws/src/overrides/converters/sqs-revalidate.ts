@@ -1,0 +1,28 @@
+import type { RevalidateEvent } from "@opennextjs/core/adapters/revalidate.js";
+import type { Converter } from "@opennextjs/core/types/overrides.js";
+import type { SQSEvent } from "aws-lambda";
+
+const converter: Converter<RevalidateEvent, RevalidateEvent> = {
+	convertFrom(event: unknown) {
+		const sqsEvent = event as SQSEvent;
+		const records = sqsEvent.Records.map((record) => {
+			const { host, url } = JSON.parse(record.body);
+			return { host, url, id: record.messageId };
+		});
+		return Promise.resolve({
+			type: "revalidate",
+			records,
+		});
+	},
+	convertTo(revalidateEvent) {
+		return Promise.resolve({
+			type: "revalidate",
+			batchItemFailures: revalidateEvent.records.map((record) => ({
+				itemIdentifier: record.id,
+			})),
+		});
+	},
+	name: "sqs-revalidate",
+};
+
+export default converter;

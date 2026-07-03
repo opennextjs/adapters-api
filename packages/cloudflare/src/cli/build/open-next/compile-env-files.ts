@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { BuildOptions } from "@opennextjs/aws/build/helper.js";
+import { BuildOptions } from "@opennextjs/core/build/helper.js";
 
 import { extractProjectEnvVars } from "../../utils/extract-project-env-vars.js";
 

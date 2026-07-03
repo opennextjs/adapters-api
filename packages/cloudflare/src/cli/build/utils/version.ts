@@ -8,6 +8,6 @@ export function getVersion() {
 	const pkgJson = require(join(__dirname, "../../../../package.json"));
 	return {
 		cloudflare: pkgJson.version,
-		aws: pkgJson.dependencies["@opennextjs/aws"],
+		aws: pkgJson.dependencies["@opennextjs/core"],
 	};
 }

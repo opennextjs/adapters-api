@@ -21,7 +21,7 @@
 		],
 		"paths": {
 			"@/*": ["./*"],
-			"examples-cloudflare/e2e-shared": ["../shared"]
+			"@examples-cloudflare/e2e-shared": ["../shared"]
 		}
 	},
 	"include": [

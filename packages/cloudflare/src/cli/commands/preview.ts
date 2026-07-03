@@ -1,4 +1,4 @@
-import logger from "@opennextjs/aws/logger.js";
+import logger from "@opennextjs/core/logger.js";
 import type yargs from "yargs";
 
 import { populateCache, withPopulateCacheOptions } from "./populate-cache.js";

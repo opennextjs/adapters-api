@@ -1,4 +1,4 @@
-import type { InternalResult } from "@opennextjs/aws/types/open-next.js";
+import type { InternalResult } from "@opennextjs/core/types/open-next.js";
 
 //@ts-expect-error: Will be resolved by wrangler build
 import { handleCdnCgiImageRequest, handleImageRequest } from "./cloudflare/images.js";

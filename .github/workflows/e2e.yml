@@ -100,7 +100,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           cache: pnpm # cache pnpm store
-          node-version: 22.x
+          node-version: 24.x
 
       - name: Install packages
         run: pnpm install

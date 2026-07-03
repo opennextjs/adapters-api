@@ -1,4 +1,4 @@
-import type { OpenNextConfig, OverrideOptions } from "@opennextjs/aws/types/open-next.js";
+import type { OpenNextConfig, OverrideOptions } from "@opennextjs/core/types/open-next.js";
 
 const devOverride = {
 	wrapper: "express-dev",

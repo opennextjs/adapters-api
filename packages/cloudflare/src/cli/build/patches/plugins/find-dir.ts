@@ -5,10 +5,10 @@
 import { existsSync } from "node:fs";
 import { join, posix, sep } from "node:path";
 
-import { type BuildOptions, getPackagePath } from "@opennextjs/aws/build/helper.js";
-import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
-import type { ContentUpdater, Plugin } from "@opennextjs/aws/plugins/content-updater.js";
-import { getCrossPlatformPathRegex } from "@opennextjs/aws/utils/regex.js";
+import { type BuildOptions, getPackagePath } from "@opennextjs/core/build/helper.js";
+import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
+import type { ContentUpdater, Plugin } from "@opennextjs/core/plugins/content-updater.js";
+import { getCrossPlatformPathRegex } from "@opennextjs/core/utils/regex.js";
 
 export function inlineFindDir(updater: ContentUpdater, buildOpts: BuildOptions): Plugin {
 	return updater.updateContent("inline-find-dir", [

@@ -1,0 +1,69 @@
+{
+	"name": "@opennextjs/core",
+	"version": "0.1.0",
+	"description": "OpenNext core - platform-agnostic Next.js adapter infrastructure",
+	"keywords": [
+		"adapter",
+		"next.js",
+		"opennext",
+		"serverless"
+	],
+	"homepage": "https://opennext.js.org",
+	"bugs": {
+		"url": "https://github.com/opennextjs/opennextjs-aws/issues"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/opennextjs/opennextjs-aws",
+		"directory": "packages/core"
+	},
+	"files": [
+		"dist"
+	],
+	"type": "module",
+	"typesVersions": {
+		"*": {
+			"*": [
+				"dist/*"
+			]
+		}
+	},
+	"exports": {
+		"./*": {
+			"types": "./dist/*.d.ts",
+			"default": "./dist/*"
+		}
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "tsc && tsc-alias",
+		"dev": "concurrently \"tsc -w\" \"tsc-alias -w\"",
+		"ts:check": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@ast-grep/napi": "^0.40.5",
+		"@node-minify/core": "^8.0.6",
+		"@node-minify/terser": "^8.0.6",
+		"@tsconfig/node24": "^24.0.4",
+		"chalk": "^5.6.2",
+		"cookie": "^1.0.2",
+		"esbuild": "catalog:aws",
+		"express": "^5.2.1",
+		"path-to-regexp": "^6.3.0",
+		"urlpattern-polyfill": "^10.1.0",
+		"yaml": "^2.8.1"
+	},
+	"devDependencies": {
+		"@types/express": "5.0.6",
+		"@types/node": "catalog:",
+		"concurrently": "^9.2.1",
+		"tsc-alias": "^1.8.16",
+		"typescript": "catalog:"
+	},
+	"peerDependencies": {
+		"next": "^16.0.10"
+	}
+}

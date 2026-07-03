@@ -9,7 +9,7 @@
 		"build": "turbo run build",
 		"build:opennext": "turbo run build --filter @opennextjs/*",
 		"openbuild:local": "turbo run openbuild:local",
-		"openbuild:local:start": "turbo run openbuild:local:start",
+		"openbuild:local:start": "turbo run openbuild:local:start --concurrency 25",
 		"clean": "turbo run clean && rm -rf node_modules pnpm-lock.yaml",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix",
@@ -36,7 +36,7 @@
 		"turbo": "1.10.12"
 	},
 	"engines": {
-		"node": ">=22",
+		"node": ">=24",
 		"pnpm": ">=9"
 	}
 }

@@ -1,0 +1,14 @@
+{
+	"extends": "@tsconfig/node24/tsconfig.json",
+	"compilerOptions": {
+		"declaration": true,
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"types": ["node"],
+		"lib": ["DOM", "ESNext"],
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"allowSyntheticDefaultImports": true,
+		"paths": {}
+	}
+}

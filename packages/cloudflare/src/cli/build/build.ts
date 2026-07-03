@@ -1,7 +1,7 @@
-import { buildNextjsApp, setStandaloneBuildMode } from "@opennextjs/aws/build/buildNextApp.js";
-import * as buildHelper from "@opennextjs/aws/build/helper.js";
-import { printHeader } from "@opennextjs/aws/build/utils.js";
-import logger from "@opennextjs/aws/logger.js";
+import { buildNextjsApp, setStandaloneBuildMode } from "@opennextjs/core/build/buildNextApp.js";
+import * as buildHelper from "@opennextjs/core/build/helper.js";
+import { printHeader } from "@opennextjs/core/build/utils.js";
+import logger from "@opennextjs/core/logger.js";
 
 import type { ProjectOptions } from "../project-options.js";
 import { ensureNextjsVersionSupported } from "../utils/nextjs-support.js";
@@ -28,7 +28,7 @@ export async function build(options: buildHelper.BuildOptions, projectOpts: Proj
 	await ensureNextjsVersionSupported(options);
 	const { aws, cloudflare } = getVersion();
 	logger.info(`@opennextjs/cloudflare version: ${cloudflare}`);
-	logger.info(`@opennextjs/aws version: ${aws}`);
+	logger.info(`@opennextjs/core version: ${aws}`);
 
 	// Clean the output directory before building the Next app.
 	buildHelper.initOutputDir(options);

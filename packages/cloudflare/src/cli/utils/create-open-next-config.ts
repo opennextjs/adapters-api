@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
+import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
 
 import { getPackageTemplatesDirPath } from "../../utils/get-package-templates-dir-path.js";
 

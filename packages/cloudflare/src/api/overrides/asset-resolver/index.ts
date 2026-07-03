@@ -1,5 +1,5 @@
-import type { InternalEvent, InternalResult } from "@opennextjs/aws/types/open-next.js";
-import type { AssetResolver } from "@opennextjs/aws/types/overrides.js";
+import type { InternalEvent, InternalResult } from "@opennextjs/core/types/open-next.js";
+import type { AssetResolver } from "@opennextjs/core/types/overrides.js";
 
 import { getCloudflareContext } from "../../cloudflare-context.js";
 

@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-import { compareSemver, findNextConfig } from "@opennextjs/aws/build/helper.js";
+import { compareSemver, findNextConfig } from "@opennextjs/core/build/helper.js";
 import { vi } from "vitest";
 
 vi.mock("node:fs");

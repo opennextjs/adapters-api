@@ -1,5 +1,5 @@
-import * as logger from "@opennextjs/aws/adapters/logger.js";
-import { FatalError, IgnorableError, RecoverableError } from "@opennextjs/aws/utils/error.js";
+import * as logger from "@opennextjs/core/adapters/logger.js";
+import { FatalError, IgnorableError, RecoverableError } from "@opennextjs/core/utils/error.js";
 import { vi } from "vitest";
 
 describe("logger adapter", () => {

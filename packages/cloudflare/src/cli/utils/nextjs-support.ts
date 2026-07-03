@@ -1,5 +1,5 @@
-import { compareSemver } from "@opennextjs/aws/build/helper.js";
-import logger from "@opennextjs/aws/logger.js";
+import { compareSemver } from "@opennextjs/core/build/helper.js";
+import logger from "@opennextjs/core/logger.js";
 
 export async function ensureNextjsVersionSupported({ nextVersion }: { nextVersion: string }) {
 	if (compareSemver(nextVersion, "<", "14.2.0")) {

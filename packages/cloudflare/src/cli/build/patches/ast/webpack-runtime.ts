@@ -23,8 +23,8 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { type BuildOptions, getPackagePath } from "@opennextjs/aws/build/helper.js";
-import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
+import { type BuildOptions, getPackagePath } from "@opennextjs/core/build/helper.js";
+import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
 
 // Inline the code when there are multiple chunks
 export function buildMultipleChunksRule(chunks: number[]) {

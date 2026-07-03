@@ -1,5 +1,5 @@
-import { patchCode } from "@opennextjs/aws/build/patch/astCodePatcher.js";
-import type { ContentUpdater, Plugin } from "@opennextjs/aws/plugins/content-updater.js";
+import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
+import type { ContentUpdater, Plugin } from "@opennextjs/core/plugins/content-updater.js";
 
 /**
  * Some dependencies of Next.js use depd to deprecate some of their functions, depd uses `eval` to generate

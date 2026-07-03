@@ -22,7 +22,12 @@
 		"target": "ES2022",
 		"sourceMap": true,
 		"paths": {
-			"@opennextjs/aws/*": ["../open-next/src/*"]
+			"@opennextjs/aws/*": ["../aws/src/*"],
+			"@opennextjs/core/*": ["../core/src/*"],
+			"@/types/*": ["../core/src/types/*"],
+			"@/config/*": ["../core/src/adapters/config/*"],
+			"@/http/*": ["../core/src/http/*"],
+			"@/utils/*": ["../core/src/utils/*"]
 		}
 	},
 	"include": ["."],

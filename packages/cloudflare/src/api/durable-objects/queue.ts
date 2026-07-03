@@ -1,11 +1,11 @@
-import { debug, error, warn } from "@opennextjs/aws/adapters/logger.js";
-import type { QueueMessage } from "@opennextjs/aws/types/overrides.js";
+import { debug, error, warn } from "@opennextjs/core/adapters/logger.js";
+import type { QueueMessage } from "@opennextjs/core/types/overrides.js";
 import {
 	FatalError,
 	IgnorableError,
 	isOpenNextError,
 	RecoverableError,
-} from "@opennextjs/aws/utils/error.js";
+} from "@opennextjs/core/utils/error.js";
 import { DurableObject } from "cloudflare:workers";
 
 const DEFAULT_MAX_REVALIDATION = 5;

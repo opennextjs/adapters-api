@@ -1,9 +1,17 @@
+import path from "node:path";
+
 import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
 // https://vitejs.dev/config/
 export default defineConfig({
 	plugins: [tsconfigPaths()],
+	resolve: {
+		alias: {
+			"@opennextjs/core": path.resolve(__dirname, "../core/src"),
+			"@opennextjs/aws": path.resolve(__dirname, "../aws/src"),
+		},
+	},
 	test: {
 		globals: true,
 		environment: "node",

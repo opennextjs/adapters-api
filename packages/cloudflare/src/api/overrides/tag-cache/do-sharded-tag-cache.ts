@@ -1,7 +1,7 @@
-import { debug, error } from "@opennextjs/aws/adapters/logger.js";
-import { generateShardId } from "@opennextjs/aws/core/routing/queue.js";
-import type { NextModeTagCache } from "@opennextjs/aws/types/overrides.js";
-import { IgnorableError } from "@opennextjs/aws/utils/error.js";
+import { debug, error } from "@opennextjs/core/adapters/logger.js";
+import { generateShardId } from "@opennextjs/core/core/routing/queue.js";
+import type { NextModeTagCache } from "@opennextjs/core/types/overrides.js";
+import { IgnorableError } from "@opennextjs/core/utils/error.js";
 
 import { getCloudflareContext } from "../../cloudflare-context.js";
 import type { OpenNextConfig } from "../../config.js";

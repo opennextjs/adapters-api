@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
 
-import logger from "@opennextjs/aws/logger.js";
+import logger from "@opennextjs/core/logger.js";
 import type yargs from "yargs";
 
 import { build as buildImpl } from "../build/build.js";

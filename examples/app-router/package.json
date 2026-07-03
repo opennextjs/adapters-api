@@ -3,7 +3,7 @@
 	"version": "0.1.33",
 	"private": true,
 	"scripts": {
-		"openbuild:local": "node ../../packages/open-next/dist/index.js build",
+		"openbuild:local": "node ../../packages/aws/dist/index.js build",
 		"openbuild:local:start": "PORT=3001 OPEN_NEXT_REQUEST_ID_HEADER=true node .open-next/server-functions/default/index.mjs",
 		"dev": "next dev --turbopack --port 3001",
 		"build": "next build",
@@ -19,12 +19,13 @@
 	},
 	"devDependencies": {
 		"@opennextjs/aws": "workspace:*",
-		"@types/node": "catalog:aws",
+		"@opennextjs/core": "workspace:*",
+		"@types/node": "catalog:",
 		"@types/react": "catalog:aws",
 		"@types/react-dom": "catalog:aws",
 		"autoprefixer": "catalog:aws",
 		"postcss": "catalog:aws",
 		"tailwindcss": "catalog:aws",
-		"typescript": "catalog:aws"
+		"typescript": "catalog:"
 	}
 }

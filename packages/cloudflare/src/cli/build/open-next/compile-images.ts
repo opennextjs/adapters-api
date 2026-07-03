@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { BuildOptions } from "@opennextjs/aws/build/helper.js";
+import type { BuildOptions } from "@opennextjs/core/build/helper.js";
 import { build } from "esbuild";
 
 /**

@@ -3,7 +3,7 @@
 	"version": "0.1.50",
 	"private": true,
 	"scripts": {
-		"openbuild:local": "node ../../packages/open-next/dist/index.js build",
+		"openbuild:local": "node ../../packages/aws/dist/index.js build",
 		"openbuild:local:start": "PORT=3003 tsx on-proxy.ts",
 		"dev": "next dev --turbopack --port 3003",
 		"build": "next build",
@@ -21,15 +21,16 @@
 		"react-dom": "catalog:aws"
 	},
 	"devDependencies": {
+		"@opennextjs/core": "workspace:*",
 		"@types/express": "^5.0.6",
 		"@types/express-http-proxy": "1.6.7",
-		"@types/node": "catalog:aws",
+		"@types/node": "catalog:",
 		"@types/react": "catalog:aws",
 		"@types/react-dom": "catalog:aws",
 		"autoprefixer": "catalog:aws",
 		"postcss": "catalog:aws",
 		"tailwindcss": "catalog:aws",
 		"tsx": "4.20.5",
-		"typescript": "catalog:aws"
+		"typescript": "catalog:"
 	}
 }

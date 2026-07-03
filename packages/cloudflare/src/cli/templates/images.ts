@@ -1,4 +1,4 @@
-import { error, warn } from "@opennextjs/aws/adapters/logger.js";
+import { error, warn } from "@opennextjs/core/adapters/logger.js";
 
 export type RemotePattern = {
 	protocol?: "http" | "https";

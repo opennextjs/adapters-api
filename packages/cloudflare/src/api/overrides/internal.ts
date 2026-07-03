@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
-import { error } from "@opennextjs/aws/adapters/logger.js";
-import type { CacheEntryType, CacheValue } from "@opennextjs/aws/types/overrides.js";
+import { error } from "@opennextjs/core/adapters/logger.js";
+import type { CacheEntryType, CacheValue } from "@opennextjs/core/types/overrides.js";
 
 import { getCloudflareContext } from "../cloudflare-context.js";
 

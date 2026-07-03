@@ -17,7 +17,7 @@
 		"baseUrl": ".",
 		"paths": {
 			"@/*": ["./src/*"],
-			"examples-cloudflare/e2e-shared": ["../shared"]
+			"@examples-cloudflare/e2e-shared": ["../shared"]
 		}
 	},
 	"include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "../utils.ts"],

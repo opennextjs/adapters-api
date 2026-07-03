@@ -17,8 +17,8 @@
 		"e2e-turbopack": "playwright test -c e2e/playwright.turbopack.config.ts"
 	},
 	"dependencies": {
+		"@examples-cloudflare/e2e-shared": "workspace:*",
 		"@opennextjs/cloudflare": "workspace:*",
-		"examples-cloudflare/e2e-shared": "workspace:*",
 		"next": "catalog:e2e",
 		"react": "catalog:e2e",
 		"react-dom": "catalog:e2e"
@@ -31,7 +31,7 @@
 		"autoprefixer": "catalog:e2e",
 		"postcss": "catalog:e2e",
 		"tailwindcss": "catalog:e2e",
-		"typescript": "catalog:default",
+		"typescript": "catalog:",
 		"wrangler": "catalog:"
 	}
 }

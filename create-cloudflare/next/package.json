@@ -20,12 +20,12 @@
 	},
 	"devDependencies": {
 		"@tailwindcss/postcss": "^4",
-		"@types/node": "^22",
+		"@types/node": "^24",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
 		"oxlint": "^1.42.0",
 		"tailwindcss": "^4",
-		"typescript": "^5.7.4",
+		"typescript": "catalog:",
 		"wrangler": "^4.59.3"
 	}
 }

@@ -1,6 +1,6 @@
-import { error } from "@opennextjs/aws/adapters/logger.js";
-import type { Queue, QueueMessage } from "@opennextjs/aws/types/overrides.js";
-import { IgnorableError } from "@opennextjs/aws/utils/error.js";
+import { error } from "@opennextjs/core/adapters/logger.js";
+import type { Queue, QueueMessage } from "@opennextjs/core/types/overrides.js";
+import { IgnorableError } from "@opennextjs/core/utils/error.js";
 
 import { getCloudflareContext } from "../../cloudflare-context.js";
 import { debugCache } from "../internal.js";

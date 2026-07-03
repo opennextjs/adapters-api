@@ -4,7 +4,7 @@
  * We need to change the import path for the pages router context to use the one provided in `pages-runtime.prod.js`
  */
 
-import { BuildOptions, compareSemver } from "@opennextjs/aws/build/helper.js";
+import { BuildOptions, compareSemver } from "@opennextjs/core/build/helper.js";
 import type { OnResolveResult, PluginBuild } from "esbuild";
 
 export function patchPagesRouterContext(buildOpts: BuildOptions) {

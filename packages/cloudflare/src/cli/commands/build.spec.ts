@@ -1,4 +1,4 @@
-import logger from "@opennextjs/aws/logger.js";
+import logger from "@opennextjs/core/logger.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { askConfirmation } from "../utils/ask-confirmation.js";
@@ -7,7 +7,7 @@ import { createWranglerConfigFile } from "../utils/create-wrangler-config.js";
 import { buildCommand } from "./build.js";
 
 // Mock logger
-vi.mock("@opennextjs/aws/logger.js", () => ({
+vi.mock("@opennextjs/core/logger.js", () => ({
 	default: {
 		info: vi.fn(),
 		warn: vi.fn(),
