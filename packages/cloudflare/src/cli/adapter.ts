@@ -21,6 +21,7 @@ import { compileSkewProtection } from "./build/open-next/compile-skew-protection
 import { compileDurableObjects } from "./build/open-next/compileDurableObjects.js";
 import { patchWebpackMiddlewareRuntime } from "./build/patches/ast/webpack-runtime.js";
 import { inlineLoadManifest } from "./build/patches/plugins/load-manifest.js";
+import { patchOpenTelemetryGlobalUtils } from "./build/patches/plugins/opentelemetry.js";
 import { patchResRevalidate } from "./build/patches/plugins/res-revalidate.js";
 import { patchTurbopackRuntime } from "./build/patches/plugins/turbopack.js";
 import { patchUseCacheIO } from "./build/patches/plugins/use-cache.js";
@@ -69,7 +70,12 @@ export default buildAdapter((config: OpenNextConfig, buildOpts: BuildOptions) =>
 					isInCloudflare: true,
 				}),
 			],
-			additionalCodePatches: [patchResRevalidate, patchUseCacheIO, patchTurbopackRuntime],
+			additionalCodePatches: [
+				patchResRevalidate,
+				patchUseCacheIO,
+				patchOpenTelemetryGlobalUtils,
+				patchTurbopackRuntime,
+			],
 		},
 		middlewareBundle: {
 			useEdgeConfig: true,
@@ -101,6 +107,7 @@ globalThis.AsyncLocalStorage = AsyncLocalStorage;
 			additionalCodePatches: [
 				patchResRevalidate,
 				patchUseCacheIO,
+				patchOpenTelemetryGlobalUtils,
 				patchWebpackMiddlewareRuntime,
 				patchTurbopackRuntime,
 			],
