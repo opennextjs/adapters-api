@@ -39,6 +39,11 @@ vi.mock("../patch/codePatcher.js", () => ({
 	applyCodePatches: vi.fn(async () => {}),
 }));
 
+vi.mock("../patch/patches/index.js", () => ({
+	getEnvVarsPatch: vi.fn(() => ({ name: "env-vars", patches: [] })),
+	patchNodeEnvironment: { name: "node-environment", patches: [] },
+}));
+
 vi.mock("node:fs", () => ({
 	default: {
 		mkdirSync: vi.fn(),
@@ -111,20 +116,25 @@ describe("buildExternalNodeMiddleware", () => {
 			false
 		);
 
-		// esbuildAsync called with default external and default banner
+		// esbuildAsync called with default external, banner, and static middleware import
 		expect(buildHelper.esbuildAsync).toHaveBeenCalledTimes(1);
 		const esbuildCall = vi.mocked(buildHelper.esbuildAsync).mock.calls[0];
 		const esbuildOptions = esbuildCall[0];
-		expect(esbuildOptions.external).toEqual(["./.next/*"]);
+		expect(esbuildOptions.external).toEqual(["./.next/*", "./build/.next/server/*"]);
+		expect(esbuildOptions.define).toEqual({
+			__OPEN_NEXT_NODE_MIDDLEWARE_PATH__: '"./build/.next/server/middleware.js"',
+		});
 		expect(esbuildOptions.banner?.js).toContain("globalThis.monorepoPackagePath");
+		expect(esbuildOptions.banner?.js).not.toContain("globalThis.__middlewarePackagePath");
 		expect(esbuildOptions.banner?.js).toContain("topLevelCreateRequire");
 
-		// applyCodePatches called with [] (no additionalCodePatches)
+		// Core patches are applied once before the middleware is bundled.
+		expect(applyCodePatches).toHaveBeenCalledTimes(1);
 		expect(applyCodePatches).toHaveBeenCalledWith(
 			options,
 			["/app/.open-next/middleware/middleware.js"],
 			{},
-			[]
+			expect.arrayContaining([expect.any(Object), expect.any(Object)])
 		);
 
 		// installDependencies called once
@@ -156,7 +166,7 @@ describe("buildExternalNodeMiddleware", () => {
 		// esbuildAsync called with user-supplied external and banner
 		const esbuildCall = vi.mocked(buildHelper.esbuildAsync).mock.calls[0];
 		const esbuildOptions = esbuildCall[0];
-		expect(esbuildOptions.external).toEqual(["./something-else"]);
+		expect(esbuildOptions.external).toEqual(["./something-else", "./build/.next/server/*"]);
 		expect(esbuildOptions.banner?.js).toContain("// test banner");
 
 		// additionalPlugins was invoked with (updater, nextOutputs)
@@ -171,13 +181,11 @@ describe("buildExternalNodeMiddleware", () => {
 			setup: expect.any(Function),
 		});
 
-		// applyCodePatches received [additionalCodePatches]
-		expect(applyCodePatches).toHaveBeenCalledWith(
-			options,
-			["/app/.open-next/middleware/middleware.js"],
-			{},
-			additionalCodePatches
-		);
+		// Additional patches are added after the core pre-bundle patches.
+		expect(applyCodePatches).toHaveBeenCalledTimes(1);
+		const appliedPatches = vi.mocked(applyCodePatches).mock.calls[0][3];
+		expect(appliedPatches).toEqual(expect.arrayContaining(additionalCodePatches));
+		expect(appliedPatches).toHaveLength(3);
 	});
 
 	test("Case C: throws when nextOutputs has no middleware", async () => {

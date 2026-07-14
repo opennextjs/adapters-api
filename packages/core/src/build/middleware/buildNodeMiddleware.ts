@@ -4,18 +4,18 @@ import path from "node:path";
 import type { NextAdapterOutputs } from "@/types/adapter.js";
 import type { IncludedOriginResolver, LazyLoadedOverride, OverrideOptions } from "@/types/open-next.js";
 import type { OriginResolver } from "@/types/overrides.js";
-import { getCrossPlatformPathRegex } from "@/utils/regex.js";
 
 import { ContentUpdater } from "../../plugins/content-updater.js";
 import { openNextExternalMiddlewarePlugin } from "../../plugins/externalMiddleware.js";
-import { openNextReplacementPlugin } from "../../plugins/replacement.js";
 import type { DefaultOverrides } from "../../plugins/resolve.js";
 import { openNextResolvePlugin } from "../../plugins/resolve.js";
+import { normalizePath } from "../../utils/normalize-path.js";
 import type { OpenNextAdapterOptions } from "../adapter.js";
 import { copyAdapterFiles } from "../copyAdapterFiles.js";
 import * as buildHelper from "../helper.js";
 import { installDependencies } from "../installDeps.js";
-import { type CodePatcher, applyCodePatches } from "../patch/codePatcher.js";
+import { applyCodePatches } from "../patch/codePatcher.js";
+import * as patches from "../patch/patches/index.js";
 
 type Override = OverrideOptions & {
 	originResolver?: LazyLoadedOverride<OriginResolver> | IncludedOriginResolver;
@@ -29,7 +29,7 @@ export async function buildExternalNodeMiddleware(
 	nextOutputs?: NextAdapterOutputs,
 	middlewareBundle?: MiddlewareBundle
 ) {
-	const { appBuildOutputPath, config, outputDir } = options;
+	const { config, outputDir } = options;
 	if (!config.middleware?.external) {
 		throw new Error("This function should only be called for external middleware");
 	}
@@ -45,6 +45,8 @@ export async function buildExternalNodeMiddleware(
 		originResolver: config.middleware.originResolver,
 	};
 	const packagePath = buildHelper.getPackagePath(options);
+	const middlewareImportPath = `./${packagePath ? `${normalizePath(packagePath)}/` : ""}.next/server/middleware.js`;
+	const middlewareExternal = `${middlewareImportPath.slice(0, -"middleware.js".length)}*`;
 
 	if (!nextOutputs?.middleware) {
 		throw new Error(
@@ -70,16 +72,19 @@ export async function buildExternalNodeMiddleware(
 		options,
 		tracedFiles,
 		{} as ReturnType<typeof import("../copyTracedFiles.js").getManifests>,
-		[...(middlewareBundle?.additionalCodePatches ?? [])]
+		[
+			patches.getEnvVarsPatch(options),
+			patches.patchNodeEnvironment,
+			...(middlewareBundle?.additionalCodePatches ?? []),
+		]
 	);
 
 	const updater = new ContentUpdater(options);
 	const additionalPlugins = middlewareBundle?.additionalPlugins
 		? middlewareBundle.additionalPlugins(updater, nextOutputs)
 		: [];
-
 	const defaultBanner = [
-		`globalThis.monorepoPackagePath = '${packagePath}';`,
+		`globalThis.monorepoPackagePath = '${normalizePath(packagePath)}';`,
 		"import process from 'node:process';",
 		"import { Buffer } from 'node:buffer';",
 		"import { AsyncLocalStorage } from 'node:async_hooks';",
@@ -98,7 +103,10 @@ export async function buildExternalNodeMiddleware(
 		{
 			entryPoints: [path.join(options.openNextDistDir, "adapters", "middleware.js")],
 			outfile: path.join(outputPath, "handler.mjs"),
-			external: middlewareBundle?.externals ?? ["./.next/*"],
+			external: [...(middlewareBundle?.externals ?? ["./.next/*"]), middlewareExternal],
+			define: {
+				__OPEN_NEXT_NODE_MIDDLEWARE_PATH__: JSON.stringify(middlewareImportPath),
+			},
 			platform: "node",
 			plugins: [
 				openNextResolvePlugin({
@@ -150,6 +158,9 @@ export async function buildBundledNodeMiddleware(options: buildHelper.BuildOptio
 		{
 			entryPoints: [path.join(options.openNextDistDir, "core/nodeMiddlewareHandler.js")],
 			external: ["./.next/*"],
+			define: {
+				__OPEN_NEXT_NODE_MIDDLEWARE_PATH__: JSON.stringify("./.next/server/middleware.js"),
+			},
 			outfile: path.join(options.buildDir, "middleware.mjs"),
 			bundle: true,
 			platform: "node",
