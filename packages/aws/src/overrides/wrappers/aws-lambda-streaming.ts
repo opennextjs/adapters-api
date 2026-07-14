@@ -1,9 +1,8 @@
 import { Readable, type Writable } from "node:stream";
 import zlib from "node:zlib";
 
-import { debug, error } from "@opennextjs/core/adapters/logger.js";
+import { error } from "@opennextjs/core/adapters/logger.js";
 import type { WarmerEvent, WarmerResponse } from "@opennextjs/core/adapters/warmer-function.js";
-import type { StreamCreator } from "@opennextjs/core/types/open-next.js";
 import type { Wrapper, WrapperHandler } from "@opennextjs/core/types/overrides.js";
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
 
@@ -70,35 +69,25 @@ const handler: WrapperHandler = async (handler, converter) =>
 				compressedStream = responseStream;
 			}
 
-			const streamCreator: StreamCreator = {
-				writeHeaders: (_prelude) => {
-					responseStream.setContentType("application/vnd.awslambda.http-integration-response");
-					_prelude.headers["content-encoding"] = contentEncoding;
+			const output = await converter.convertTo(event, {
+				responseStream,
+				writable: compressedStream ?? responseStream,
+				contentEncoding,
+			});
+			if (output.type === "direct") {
+				await output.data(await handler(internalEvent));
+				return;
+			}
 
-					const prelude = JSON.stringify(_prelude);
-
-					responseStream.write(prelude);
-
-					responseStream.write(new Uint8Array(8));
-
-					return compressedStream ?? responseStream;
-				},
-			};
-
-			const response = await handler(internalEvent, { streamCreator });
-
-			const isUsingEdge = globalThis.isEdgeRuntime ?? false;
-			if (isUsingEdge) {
-				debug("Headers has not been set, we must be in the edge runtime");
-				const stream = streamCreator.writeHeaders({
+			const response = await handler(internalEvent, { streamCreator: output.streamCreator });
+			if (globalThis.isEdgeRuntime ?? false) {
+				const stream = output.streamCreator.writeHeaders({
 					statusCode: response.statusCode,
 					headers: response.headers as Record<string, string>,
 					cookies: [],
 				});
 				Readable.fromWeb(response.body).pipe(stream);
 			}
-
-			// return converter.convertTo(response);
 		}
 	) as (...args: unknown[]) => unknown;
 

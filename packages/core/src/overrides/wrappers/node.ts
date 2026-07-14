@@ -1,6 +1,5 @@
 import { createServer } from "node:http";
 
-import type { StreamCreator } from "@/types/open-next";
 import type { Wrapper, WrapperHandler } from "@/types/overrides";
 
 import { debug, error } from "../../adapters/logger";
@@ -8,22 +7,7 @@ import { debug, error } from "../../adapters/logger";
 const wrapper: WrapperHandler = async (handler, converter) => {
 	const server = createServer(async (req, res) => {
 		const internalEvent = await converter.convertFrom(req);
-
-		const abortController = new AbortController();
-
-		const streamCreator: StreamCreator = {
-			writeHeaders: (prelude) => {
-				res.setHeader("Set-Cookie", prelude.cookies);
-				res.writeHead(prelude.statusCode, prelude.headers);
-				res.flushHeaders();
-				return res;
-			},
-			abortSignal: abortController.signal,
-		};
-
-		res.on("close", () => {
-			abortController.abort();
-		});
+		const output = await converter.convertTo(req, res);
 
 		if (internalEvent.rawPath === "/__health") {
 			res.writeHead(200, {
@@ -31,9 +15,12 @@ const wrapper: WrapperHandler = async (handler, converter) => {
 			});
 			res.end("OK");
 		} else {
-			await handler(internalEvent, {
-				streamCreator,
-			});
+			if (output.type === "direct") {
+				await output.data(await handler(internalEvent));
+			} else {
+				await handler(internalEvent, { streamCreator: output.streamCreator });
+				await output.output;
+			}
 		}
 	});
 

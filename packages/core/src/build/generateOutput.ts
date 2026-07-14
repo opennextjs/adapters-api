@@ -124,7 +124,10 @@ async function extractOverrideFn(override?: DefaultOverrideOptions) {
 		};
 	}
 	const wrapper = await extractOverrideName("aws-lambda", override.wrapper);
-	const converter = await extractOverrideName("aws-apigw-v2", override.converter);
+	const converter = await extractOverrideName(
+		wrapper === "aws-lambda-streaming" ? "aws-streaming" : "aws-apigw-v2",
+		override.converter
+	);
 	return { wrapper, converter };
 }
 

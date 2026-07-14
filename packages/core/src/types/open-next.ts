@@ -146,6 +146,7 @@ export type IncludedConverter =
 	| "aws-apigw-v2"
 	| "aws-apigw-v1"
 	| "aws-cloudfront"
+	| "aws-streaming"
 	| "edge"
 	| "node"
 	| "sqs-revalidate"

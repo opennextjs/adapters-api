@@ -6,9 +6,31 @@ import { vi, describe, it, expect } from "vitest";
 
 vi.mock("@/config/index.js", () => ({}));
 
+async function convertResponse(result: {
+	body: ReadableStream;
+	headers: Record<string, string | string[]>;
+	statusCode: number;
+}) {
+	const output = await converter.convertTo({});
+	if (output.type !== "stream" || !output.output) {
+		throw new Error("Expected a streaming converter output");
+	}
+	const stream = output.streamCreator.writeHeaders({
+		statusCode: result.statusCode,
+		headers: result.headers as Record<string, string>,
+		cookies: [],
+	});
+	await new Promise<void>((resolve, reject) => {
+		stream.on("finish", resolve);
+		stream.on("error", reject);
+		Readable.fromWeb(result.body).pipe(stream);
+	});
+	return output.output;
+}
+
 describe("convertTo", () => {
 	it("Should parse the headers", async () => {
-		const response = (await converter.convertTo({
+		const response = (await convertResponse({
 			body: Readable.toWeb(Readable.from(Buffer.from(""))),
 			headers: {
 				"content-type": "application/json",
@@ -36,7 +58,7 @@ describe("convertTo", () => {
 	});
 
 	it("Should parse the headers with arrays", async () => {
-		const response = (await converter.convertTo({
+		const response = (await convertResponse({
 			body: Readable.toWeb(Readable.from(Buffer.from(""))),
 			headers: {
 				test: ["test1", "test2"],
@@ -61,7 +83,7 @@ describe("convertTo", () => {
 	});
 
 	it("Should parse the headers with cookies", async () => {
-		const response = (await converter.convertTo({
+		const response = (await convertResponse({
 			body: Readable.toWeb(Readable.from(Buffer.from(""))),
 			headers: {
 				"set-cookie":
@@ -87,7 +109,7 @@ describe("convertTo", () => {
 	});
 
 	it("Should parse the headers with cookies + expires", async () => {
-		const response = (await converter.convertTo({
+		const response = (await convertResponse({
 			body: Readable.toWeb(Readable.from(Buffer.from(""))),
 			headers: {
 				"set-cookie":
@@ -114,7 +136,7 @@ describe("convertTo", () => {
 
 	describe("blacklisted headers", () => {
 		it("should remove all blacklisted or read-only headers from the response", async () => {
-			const response = (await converter.convertTo({
+			const response = (await convertResponse({
 				body: Readable.toWeb(Readable.from(Buffer.from(""))),
 				headers: {
 					Connection: "keep-alive",

@@ -81,7 +81,11 @@ export function openNextResolvePlugin({ overrides, fnName }: IPluginSettings): P
 			logger.debug(chalk.blue("OpenNext Resolve plugin"), fnName ? `for ${fnName}` : "");
 			build.onLoad({ filter: getCrossPlatformPathRegex("core/resolve.js") }, async (args) => {
 				let contents = await readFile(args.path, "utf-8");
-				const overridesEntries = Object.entries(overrides ?? {});
+				const resolvedOverrides = { ...overrides };
+				if (resolvedOverrides.wrapper === "aws-lambda-streaming" && !resolvedOverrides.converter) {
+					resolvedOverrides.converter = "aws-streaming";
+				}
+				const overridesEntries = Object.entries(resolvedOverrides);
 				for (let [overrideName, overrideValue] of overridesEntries) {
 					if (!overrideValue) {
 						continue;

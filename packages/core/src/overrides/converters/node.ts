@@ -1,8 +1,8 @@
-import type { IncomingMessage } from "node:http";
+import type { IncomingMessage, ServerResponse } from "node:http";
 
 import cookieParser from "cookie";
 
-import type { InternalResult } from "@/types/open-next";
+import type { StreamCreator } from "@/types/open-next";
 import type { Converter } from "@/types/overrides";
 
 import { extractHostFromHeaders, getQueryFromSearchParams } from "./utils.js";
@@ -46,12 +46,28 @@ const converter: Converter = {
 			cookies,
 		};
 	},
-	// Nothing to do here, it's streaming
-	convertTo: async (internalResult: InternalResult) => ({
-		body: internalResult.body,
-		headers: internalResult.headers,
-		statusCode: internalResult.statusCode,
-	}),
+	convertTo: async (_event, context) => {
+		const res = context as ServerResponse;
+		const abortController = new AbortController();
+		const streamCreator: StreamCreator = {
+			writeHeaders: (prelude) => {
+				res.setHeader("Set-Cookie", prelude.cookies);
+				res.writeHead(prelude.statusCode, prelude.headers);
+				res.flushHeaders();
+				return res;
+			},
+			abortSignal: abortController.signal,
+		};
+
+		res.on("close", () => {
+			abortController.abort();
+		});
+
+		return {
+			type: "stream",
+			streamCreator,
+		};
+	},
 	name: "node",
 };
 

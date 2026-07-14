@@ -3,10 +3,11 @@ import {
 	extractHostFromHeaders,
 	removeUndefinedFromQuery,
 } from "@opennextjs/core/overrides/converters/utils.js";
-import type { InternalEvent, InternalResult } from "@opennextjs/core/types/open-next.js";
+import type { InternalEvent } from "@opennextjs/core/types/open-next.js";
 import type { Converter } from "@opennextjs/core/types/overrides.js";
-import { fromReadableStream } from "@opennextjs/core/utils/stream.js";
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+
+import { createBufferedStreamCreator } from "./response-stream.js";
 
 function normalizeAPIGatewayProxyEventHeaders(event: APIGatewayProxyEvent): Record<string, string> {
 	event.multiValueHeaders;
@@ -89,10 +90,14 @@ async function convertFromAPIGatewayProxyEvent(event: APIGatewayProxyEvent): Pro
 	};
 }
 
-async function convertToApiGatewayProxyResult(result: InternalResult): Promise<APIGatewayProxyResult> {
+function convertToApiGatewayProxyResult(
+	prelude: { statusCode: number; cookies: string[]; headers: Record<string, string> },
+	body: Buffer,
+	isBase64Encoded: boolean
+): APIGatewayProxyResult {
 	const headers: Record<string, string> = {};
 	const multiValueHeaders: Record<string, string[]> = {};
-	Object.entries(result.headers).forEach(([key, value]) => {
+	Object.entries(prelude.headers).forEach(([key, value]) => {
 		if (Array.isArray(value)) {
 			multiValueHeaders[key] = value;
 		} else {
@@ -103,14 +108,15 @@ async function convertToApiGatewayProxyResult(result: InternalResult): Promise<A
 			headers[key] = value;
 		}
 	});
-
-	const body = await fromReadableStream(result.body, result.isBase64Encoded);
+	if (prelude.cookies.length > 0) {
+		multiValueHeaders["set-cookie"] = prelude.cookies;
+	}
 
 	const response: APIGatewayProxyResult = {
-		statusCode: result.statusCode,
+		statusCode: prelude.statusCode,
 		headers,
-		body,
-		isBase64Encoded: result.isBase64Encoded,
+		body: body.toString(isBase64Encoded ? "base64" : "utf8"),
+		isBase64Encoded,
 		multiValueHeaders,
 	};
 	debug(response);
@@ -118,7 +124,10 @@ async function convertToApiGatewayProxyResult(result: InternalResult): Promise<A
 }
 
 export default {
-	convertFrom: convertFromAPIGatewayProxyEvent,
-	convertTo: convertToApiGatewayProxyResult,
+	convertFrom: (event) => convertFromAPIGatewayProxyEvent(event as APIGatewayProxyEvent),
+	convertTo: async () => {
+		const { streamCreator, output } = createBufferedStreamCreator(convertToApiGatewayProxyResult);
+		return { type: "stream" as const, streamCreator, output };
+	},
 	name: "aws-apigw-v1",
-} as Converter;
+} satisfies Converter;

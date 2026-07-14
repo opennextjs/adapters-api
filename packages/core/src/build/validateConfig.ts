@@ -11,7 +11,7 @@ import logger from "../logger.js";
 const compatibilityMatrix: Record<IncludedWrapper, IncludedConverter[]> = {
 	"aws-lambda": ["aws-apigw-v1", "aws-apigw-v2", "aws-cloudfront", "sqs-revalidate"],
 	"aws-lambda-compressed": ["aws-apigw-v2"],
-	"aws-lambda-streaming": ["aws-apigw-v2"],
+	"aws-lambda-streaming": ["aws-streaming"],
 	cloudflare: ["edge"],
 	"cloudflare-edge": ["edge"],
 	"cloudflare-node": ["edge"],
@@ -23,7 +23,11 @@ const compatibilityMatrix: Record<IncludedWrapper, IncludedConverter[]> = {
 function validateFunctionOptions(fnOptions: FunctionOptions) {
 	const wrapper = typeof fnOptions.override?.wrapper === "string" ? fnOptions.override.wrapper : "aws-lambda";
 	const converter =
-		typeof fnOptions.override?.converter === "string" ? fnOptions.override.converter : "aws-apigw-v2";
+		typeof fnOptions.override?.converter === "string"
+			? fnOptions.override.converter
+			: wrapper === "aws-lambda-streaming"
+				? "aws-streaming"
+				: "aws-apigw-v2";
 	if (fnOptions.override?.generateDockerfile && converter !== "node" && wrapper !== "node") {
 		logger.warn(
 			"You've specified generateDockerfile without node converter and wrapper. Without custom converter and wrapper the dockerfile will not work"
