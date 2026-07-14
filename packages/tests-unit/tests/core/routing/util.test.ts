@@ -49,9 +49,6 @@ function createResponse(res: Partial<Res>) {
 	return {
 		statusCode: res.statusCode,
 		getFixedHeaders: () => res.headers ?? {},
-		body: res.body ?? "",
-		getBody: () => Buffer.from(res.body ?? ""),
-		_chunks: res.body ? [Buffer.from(res.body)] : [],
 	};
 }
 
@@ -237,7 +234,7 @@ describe("convertRes", () => {
 				isBase64Encoded: false,
 			})
 		);
-		expect(await fromReadableStream(result.body)).toEqual(res.getBody().toString());
+		expect(result.body).toBeUndefined();
 	});
 
 	it("convert a response with default status code", async () => {
@@ -260,7 +257,7 @@ describe("convertRes", () => {
 				isBase64Encoded: false,
 			})
 		);
-		expect(await fromReadableStream(result.body)).toEqual(res.getBody().toString());
+		expect(result.body).toBeUndefined();
 	});
 
 	it("convert a response with base64 encoding", async () => {
@@ -283,7 +280,7 @@ describe("convertRes", () => {
 				isBase64Encoded: true,
 			})
 		);
-		expect(await fromReadableStream(result.body)).toEqual(res.getBody().toString());
+		expect(result.body).toBeUndefined();
 	});
 });
 

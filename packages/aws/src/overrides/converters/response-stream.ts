@@ -39,7 +39,6 @@ export function createBufferedStreamCreator<T>(
 				},
 			});
 		},
-		retainChunks: false,
 	};
 
 	return { streamCreator, output };

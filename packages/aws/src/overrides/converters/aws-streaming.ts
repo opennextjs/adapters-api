@@ -31,7 +31,6 @@ const converter: Converter = {
 				responseStream.write(new Uint8Array(8));
 				return writable;
 			},
-			retainChunks: false,
 		};
 
 		return { type: "stream" as const, streamCreator };

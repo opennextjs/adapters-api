@@ -112,7 +112,6 @@ const converter: Converter<InternalEvent, InternalResult | MiddlewareResult> = {
 				});
 			},
 			abortSignal,
-			retainChunks: false,
 		};
 
 		return {

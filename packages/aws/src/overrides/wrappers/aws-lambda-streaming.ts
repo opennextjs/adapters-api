@@ -80,7 +80,7 @@ const handler: WrapperHandler = async (handler, converter) =>
 			}
 
 			const response = await handler(internalEvent, { streamCreator: output.streamCreator });
-			if (globalThis.isEdgeRuntime ?? false) {
+			if ((globalThis.isEdgeRuntime ?? false) && response.body) {
 				const stream = output.streamCreator.writeHeaders({
 					statusCode: response.statusCode,
 					headers: response.headers as Record<string, string>,
