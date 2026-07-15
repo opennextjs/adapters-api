@@ -5,12 +5,18 @@ import type { BuildOptions } from "@opennextjs/core/build/helper.js";
 
 import { getOutputWorkerPath } from "../bundle-server.js";
 
+type WorkerTemplate = "container" | "worker";
+
 /**
  * Copies
  * - the template files present in the cloudflare adapter package to `.open-next/cloudflare-templates`
  * - `worker.js` to `.open-next/`
  */
-export function copyPackageCliFiles(packageDistDir: string, buildOpts: BuildOptions) {
+export function copyPackageCliFiles(
+	packageDistDir: string,
+	buildOpts: BuildOptions,
+	workerTemplate: WorkerTemplate = "worker"
+) {
 	console.log("# copyPackageTemplateFiles");
 	const sourceDir = path.join(packageDistDir, "cli/templates");
 
@@ -19,5 +25,9 @@ export function copyPackageCliFiles(packageDistDir: string, buildOpts: BuildOpti
 	fs.mkdirSync(destinationDir, { recursive: true });
 	fs.cpSync(sourceDir, destinationDir, { recursive: true });
 
-	fs.copyFileSync(path.join(packageDistDir, "cli/templates/worker.js"), getOutputWorkerPath(buildOpts));
+	const outputPath =
+		workerTemplate === "container"
+			? path.join(buildOpts.outputDir, "worker.container.js")
+			: getOutputWorkerPath(buildOpts);
+	fs.copyFileSync(path.join(packageDistDir, `cli/templates/${workerTemplate}.js`), outputPath);
 }

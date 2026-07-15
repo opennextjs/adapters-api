@@ -1,0 +1,53 @@
+// @ts-expect-error: This public package entrypoint is resolved by Wrangler from the application.
+import { getOpenNextContainer, OpenNextContainer } from "@opennextjs/cloudflare/container";
+
+//@ts-expect-error: Will be resolved by wrangler build
+import { handleCdnCgiImageRequest, handleImageRequest } from "./cloudflare/images.js";
+//@ts-expect-error: Will be resolved by wrangler build
+import { runWithCloudflareRequestContext } from "./cloudflare/init.js";
+//@ts-expect-error: Will be resolved by wrangler build
+import { maybeGetSkewProtectionResponse } from "./cloudflare/skew-protection.js";
+// @ts-expect-error: Will be resolved by wrangler build
+import { handler as middlewareHandler } from "./middleware/handler.mjs";
+
+export { OpenNextContainer };
+
+type ContainerEnv = CloudflareEnv & {
+	OPEN_NEXT_CONTAINER: DurableObjectNamespace<OpenNextContainer>;
+};
+
+export default {
+	async fetch(request, env, ctx) {
+		return runWithCloudflareRequestContext(request, env, ctx, async () => {
+			const response = maybeGetSkewProtectionResponse(request);
+			if (response) {
+				return response;
+			}
+
+			const url = new URL(request.url);
+			if (url.pathname.startsWith("/cdn-cgi/image/")) {
+				return handleCdnCgiImageRequest(url, env);
+			}
+
+			if (
+				url.pathname ===
+				`${globalThis.__NEXT_BASE_PATH__}/_next/image${globalThis.__TRAILING_SLASH__ ? "/" : ""}`
+			) {
+				return await handleImageRequest(url, request.headers, env);
+			}
+
+			const reqOrResp = await middlewareHandler(request, env, ctx);
+			if (reqOrResp instanceof Response) {
+				return reqOrResp;
+			}
+
+			if ("initialResponse" in reqOrResp) {
+				return new Response("Partial prerendering is not supported in Cloudflare container mode.", {
+					status: 501,
+				});
+			}
+
+			return getOpenNextContainer(env.OPEN_NEXT_CONTAINER).fetch(reqOrResp);
+		});
+	},
+} satisfies ExportedHandler<ContainerEnv>;

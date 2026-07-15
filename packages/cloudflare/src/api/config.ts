@@ -23,6 +23,17 @@ export type Override<T extends BaseOverride> = "dummy" | T | LazyLoadedOverride<
  */
 export type CloudflareOverrides = {
 	/**
+	 * Run the default Next.js server in a Cloudflare Container.
+	 *
+	 * The Cloudflare Worker continues to run the external middleware and forwards
+	 * requests that reach the default server to one container instance.
+	 *
+	 * Cloudflare binding-backed caches are not available from the Node.js
+	 * container in this mode.
+	 */
+	container?: true;
+
+	/**
 	 * Sets the incremental cache implementation.
 	 */
 	incrementalCache?: Override<IncrementalCache>;
@@ -57,25 +68,51 @@ export type CloudflareOverrides = {
  * @returns the OpenNext configuration object
  */
 export function defineCloudflareConfig(config: CloudflareOverrides = {}): OpenNextConfig {
-	const { incrementalCache, tagCache, queue, cachePurge, routePreloadingBehavior = "none" } = config;
-
-	return {
-		default: {
-			override: {
-				wrapper: "cloudflare-node",
-				converter: "edge",
-				proxyExternalRequest: "fetch",
+	const {
+		container = false,
+		incrementalCache,
+		tagCache,
+		queue,
+		cachePurge,
+		routePreloadingBehavior = "none",
+	} = config;
+	if (
+		container &&
+		[incrementalCache, tagCache, queue, cachePurge].some((value) => value !== undefined && value !== "dummy")
+	) {
+		throw new Error(
+			"Cloudflare Container mode only supports the default dummy cache, tag cache, queue, and cache purge overrides."
+		);
+	}
+	const defaultOverride = container
+		? {
+				wrapper: "node" as const,
+				converter: "node" as const,
+				generateDockerfile: true,
+				incrementalCache: "dummy" as const,
+				tagCache: "dummy" as const,
+				queue: "dummy" as const,
+			}
+		: {
+				wrapper: "cloudflare-node" as const,
+				converter: "edge" as const,
+				proxyExternalRequest: "fetch" as const,
 				incrementalCache: resolveIncrementalCache(incrementalCache),
 				tagCache: resolveTagCache(tagCache),
 				queue: resolveQueue(queue),
 				cdnInvalidation: resolveCdnInvalidation(cachePurge),
-			},
+			};
+
+	return {
+		default: {
+			override: defaultOverride,
 			routePreloadingBehavior,
 		},
 		// node:crypto is used to compute cache keys
 		edgeExternals: ["node:crypto"],
 		cloudflare: {
 			useWorkerdCondition: true,
+			container,
 		},
 		middleware: {
 			external: true,
@@ -126,6 +163,12 @@ function resolveCdnInvalidation(value: CloudflareOverrides["cachePurge"] = "dumm
 
 interface OpenNextConfig extends AwsOpenNextConfig {
 	cloudflare?: {
+		/**
+		 * Whether the default function runs in a Cloudflare Container.
+		 * @default false
+		 */
+		container?: boolean;
+
 		/**
 		 * Whether to use the "workerd" build conditions when bundling the server.
 		 * It is recommended to set it to `true` so that code specifically targeted to the

@@ -1,0 +1,48 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"main": ".open-next/worker.js",
+	"name": "app-router-container",
+	"compatibility_date": "2024-12-30",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS",
+	},
+	"containers": [
+		{
+			"class_name": "OpenNextContainer",
+			"image": ".open-next/server-functions/default/Dockerfile",
+			"max_instances": 1,
+			"instance_type": "lite",
+		},
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "OPEN_NEXT_CONTAINER",
+				"class_name": "OpenNextContainer",
+			},
+		],
+	},
+	"r2_buckets": [
+		{
+			"binding": "NEXT_INC_CACHE_R2_BUCKET",
+			"bucket_name": "cache",
+		},
+	],
+	"services": [
+		{
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "app-router",
+		},
+	],
+	"vars": {
+		"OPEN_NEXT_REQUEST_ID_HEADER": "true",
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": ["OpenNextContainer", "DOQueueHandler", "DOShardedTagCache", "BucketCachePurge"],
+		},
+	],
+}

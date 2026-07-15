@@ -286,7 +286,7 @@ async function generateBundle(
 			typeof shouldGenerateDocker === "string"
 				? shouldGenerateDocker
 				: `
-FROM node:18-alpine
+FROM node:24-alpine
 WORKDIR /app
 COPY . /app
 EXPOSE 3000

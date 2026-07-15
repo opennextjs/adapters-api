@@ -1,0 +1,8 @@
+import { configurePlaywright } from "../../../common/config-e2e";
+
+export default configurePlaywright("app-router", {
+	useTurbopack: false,
+	workerBuildScript: "build:worker:container",
+	workerPreviewScript: "preview:container",
+	testMatch: "container.test.ts",
+});
