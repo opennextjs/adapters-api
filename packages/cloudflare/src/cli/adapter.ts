@@ -61,6 +61,8 @@ export default buildAdapter((config: OpenNextConfig, buildOpts: BuildOptions) =>
 					cloudflareBanner.push(
 						"import process from 'node:process';",
 						"import { Buffer } from 'node:buffer';",
+						"import { AsyncLocalStorage as NodeAsyncLocalStorage } from 'node:async_hooks';",
+						"globalThis.AsyncLocalStorage = NodeAsyncLocalStorage;",
 						"import { createRequire as topLevelCreateRequire } from 'module';",
 						"const require = topLevelCreateRequire(import.meta.url);",
 						"import bannerUrl from 'url';",
