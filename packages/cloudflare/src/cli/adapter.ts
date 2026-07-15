@@ -54,10 +54,24 @@ export default buildAdapter((config: OpenNextConfig, buildOpts: BuildOptions) =>
 		serverBundle: {
 			useEdgeConfig: !isContainer,
 			externals: ["./middleware.mjs"],
-			banner: (name: string) => [
-				`globalThis.monorepoPackagePath = "${normalizePath(packagePath)}";`,
-				name === "default" ? "" : `globalThis.fnName = "${name}";`,
-			],
+			banner: (name: string) => {
+				const cloudflareBanner = [`globalThis.monorepoPackagePath = "${normalizePath(packagePath)}";`];
+
+				if (isContainer) {
+					cloudflareBanner.push(
+						"import process from 'node:process';",
+						"import { Buffer } from 'node:buffer';",
+						"import { createRequire as topLevelCreateRequire } from 'module';",
+						"const require = topLevelCreateRequire(import.meta.url);",
+						"import bannerUrl from 'url';",
+						"const __dirname = bannerUrl.fileURLToPath(new URL('.', import.meta.url));",
+						"const __filename = bannerUrl.fileURLToPath(import.meta.url);"
+					);
+				}
+
+				cloudflareBanner.push(name === "default" ? "" : `globalThis.fnName = "${name}";`);
+				return cloudflareBanner;
+			},
 			additionalPlugins: (updater: ContentUpdater, outputs: NextAdapterOutputs) => [
 				inlineRouteHandler(updater, outputs, packagePath),
 				inlineLoadManifest(updater, buildOpts),
