@@ -48,6 +48,7 @@
 	},
 	"dependencies": {
 		"@ast-grep/napi": "^0.40.5",
+		"@next/routing": "16.2.1",
 		"@node-minify/core": "^8.0.6",
 		"@node-minify/terser": "^8.0.6",
 		"@tsconfig/node24": "^24.0.4",
@@ -69,6 +70,6 @@
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"next": "^16.0.10"
+		"next": "16.2.1"
 	}
 }

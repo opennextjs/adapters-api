@@ -27,6 +27,11 @@ export async function buildExternalNodeMiddleware(
 	}
 	const outputPath = path.join(outputDir, "middleware");
 	fs.mkdirSync(outputPath, { recursive: true });
+	fs.mkdirSync(path.join(outputPath, ".next"), { recursive: true });
+	fs.copyFileSync(
+		path.join(appBuildOutputPath, ".next", "open-next-routing.json"),
+		path.join(outputPath, ".next", "open-next-routing.json")
+	);
 
 	// Copy open-next.config.mjs
 	buildHelper.copyOpenNextConfig(

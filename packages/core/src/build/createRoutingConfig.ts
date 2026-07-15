@@ -1,0 +1,41 @@
+import fs from "node:fs";
+import path from "node:path";
+
+import type { RuntimeRoutingConfig } from "../types/adapter.js";
+
+import type { BuildCompleteContext } from "./adapter.js";
+import type * as buildHelper from "./helper.js";
+
+const EXECUTABLE_OUTPUT_TYPES = ["pages", "pagesApi", "appPages", "appRoutes"] as const;
+const PATHNAME_OUTPUT_TYPES = [...EXECUTABLE_OUTPUT_TYPES, "staticFiles"] as const;
+
+export function createRoutingConfig(
+	options: buildHelper.BuildOptions,
+	context: BuildCompleteContext
+): RuntimeRoutingConfig {
+	const routeIndex: RuntimeRoutingConfig["routeIndex"] = {};
+
+	for (const outputType of EXECUTABLE_OUTPUT_TYPES) {
+		for (const output of context.outputs[outputType]) {
+			routeIndex[output.pathname] = {
+				type: outputType === "appPages" ? "app" : outputType === "appRoutes" ? "route" : "page",
+				isFallback: false,
+			};
+		}
+	}
+
+	const pathnames = PATHNAME_OUTPUT_TYPES.flatMap((outputType) =>
+		(context.outputs[outputType] ?? []).map((output) => output.pathname)
+	);
+	const routingConfig: RuntimeRoutingConfig = {
+		buildId: context.buildId,
+		routes: context.routing,
+		pathnames,
+		routeIndex,
+	};
+
+	const routingConfigPath = path.join(options.appBuildOutputPath, ".next", "open-next-routing.json");
+	fs.writeFileSync(routingConfigPath, JSON.stringify(routingConfig));
+
+	return routingConfig;
+}

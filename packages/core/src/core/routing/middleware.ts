@@ -34,6 +34,15 @@ function defaultMiddlewareLoader() {
 	return import("./middleware.mjs");
 }
 
+export function shouldInvokeMiddleware(internalEvent: InternalEvent): boolean {
+	const headers = internalEvent.headers;
+	if (headers["x-isr"] && headers["x-prerender-revalidate"] === PrerenderManifest?.preview?.previewModeId) {
+		return false;
+	}
+	const normalizedPath = localizePath(internalEvent);
+	return middleMatch.some((route) => route.test(normalizedPath));
+}
+
 /**
  *
  * @param internalEvent the internal event
@@ -47,17 +56,8 @@ export async function handleMiddleware(
 	middlewareLoader: MiddlewareLoader = defaultMiddlewareLoader
 ): Promise<MiddlewareEvent | InternalResult> {
 	const headers = internalEvent.headers;
-
-	// We bypass the middleware if the request is internal
-	// We should only do that if the request has the correct `x-prerender-revalidate` header
-	// The `x-prerender-revalidate` header is set at build time and should be safe to trust
-	if (headers["x-isr"] && headers["x-prerender-revalidate"] === PrerenderManifest?.preview?.previewModeId)
-		return internalEvent;
-
-	// We only need the normalizedPath to check if the middleware should run
+	if (!shouldInvokeMiddleware(internalEvent)) return internalEvent;
 	const normalizedPath = localizePath(internalEvent);
-	const hasMatch = middleMatch.some((r) => r.test(normalizedPath));
-	if (!hasMatch) return internalEvent;
 
 	const initialUrl = new URL(normalizedPath, internalEvent.url);
 	initialUrl.search = initialSearch;

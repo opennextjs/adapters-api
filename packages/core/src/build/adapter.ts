@@ -8,7 +8,7 @@ import { addDebugFile } from "../debug.js";
 import logger from "../logger.js";
 import type { ContentUpdater } from "../plugins/content-updater.js";
 import type { BundleDefaults } from "../plugins/resolve.js";
-import type { NextAdapterOutputs } from "../types/adapter.js";
+import type { NextAdapterOutputs, NextAdapterRouting } from "../types/adapter.js";
 import type { NextConfig } from "../types/next-types.js";
 import type { OpenNextConfig } from "../types/open-next.js";
 
@@ -19,6 +19,7 @@ import { createCacheAssets, createStaticAssets } from "./createAssets.js";
 import { createImageOptimizationBundle } from "./createImageOptimizationBundle.js";
 import { createMiddleware } from "./createMiddleware.js";
 import { createRevalidationBundle } from "./createRevalidationBundle.js";
+import { createRoutingConfig } from "./createRoutingConfig.js";
 import { createServerBundle } from "./createServerBundle.js";
 import { createWarmerBundle } from "./createWarmerBundle.js";
 import { buildOpenNextOutput } from "./generateOutput.js";
@@ -33,13 +34,14 @@ const require = createRequire(import.meta.url);
  * The parameter type for onBuildComplete.
  */
 export type BuildCompleteContext = {
-	routes: unknown;
+	routing: NextAdapterRouting;
 	outputs: NextAdapterOutputs;
 	projectDir: string;
 	repoRoot: string;
 	distDir: string;
 	config: NextConfig;
 	nextVersion: string;
+	buildId: string;
 };
 
 /**
@@ -47,7 +49,7 @@ export type BuildCompleteContext = {
  */
 export type NextAdapter = {
 	name: string;
-	modifyConfig: (config: NextConfig, { phase }: { phase: string }) => Promise<NextConfig>;
+	modifyConfig: (config: NextConfig, context: { phase: string; nextVersion?: string }) => Promise<NextConfig>;
 	onBuildComplete: (props: BuildCompleteContext) => Promise<void>;
 };
 
@@ -107,7 +109,12 @@ export function buildAdapter<T = OpenNextOutput>(
 	return {
 		name: "OpenNext",
 
-		async modifyConfig(nextConfig, { phase: _phase }) {
+		async modifyConfig(nextConfig, { phase: _phase, nextVersion }) {
+			if (nextVersion && nextVersion !== "16.2.1") {
+				throw new Error(
+					`OpenNext routing requires next@16.2.1 and @next/routing@16.2.1; received next@${nextVersion}.`
+				);
+			}
 			// Step 1: Compile OpenNext config with edge support, fallback on failure
 			let result: { config: OpenNextConfig; buildDir: string };
 			try {
@@ -182,6 +189,7 @@ export function buildAdapter<T = OpenNextOutput>(
 
 			// Step 1: Save debug output
 			addDebugFile(buildOpts, "outputs.json", ctx);
+			createRoutingConfig(buildOpts, ctx);
 
 			// Step 2: Call beforeServerBundle hook
 			await adapterOptions.beforeServerBundle?.(buildOpts, config);

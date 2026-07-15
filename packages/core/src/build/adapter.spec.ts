@@ -43,6 +43,10 @@ vi.mock("./createMiddleware.js", () => ({
 	createMiddleware: vi.fn(),
 }));
 
+vi.mock("./createRoutingConfig.js", () => ({
+	createRoutingConfig: vi.fn(),
+}));
+
 vi.mock("./createAssets.js", () => ({
 	createStaticAssets: vi.fn(),
 	createCacheAssets: vi.fn(),
@@ -185,6 +189,15 @@ describe("buildAdapter", () => {
 		expect(adapter.name).toBe("OpenNext");
 		expect(typeof adapter.modifyConfig).toBe("function");
 		expect(typeof adapter.onBuildComplete).toBe("function");
+	});
+
+	test("rejects a Next.js version that does not match the routing package", async () => {
+		const adapter = buildAdapter(() => ({}));
+		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
+
+		await expect(
+			adapter.modifyConfig(nextConfig, { phase: "production", nextVersion: "16.1.4" })
+		).rejects.toThrow("OpenNext routing requires next@16.2.1");
 	});
 
 	test("modifyConfig calls compileOpenNextConfig with compileEdge: true, then callback", async () => {
