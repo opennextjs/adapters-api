@@ -19,6 +19,7 @@ import { compileEnvFiles } from "./build/open-next/compile-env-files.js";
 import { compileImages } from "./build/open-next/compile-images.js";
 import { compileInit } from "./build/open-next/compile-init.js";
 import { compileSkewProtection } from "./build/open-next/compile-skew-protection.js";
+import { compileContainer } from "./build/open-next/compileContainer.js";
 import { compileDurableObjects } from "./build/open-next/compileDurableObjects.js";
 import { inlineLoadManifest } from "./build/patches/plugins/load-manifest.js";
 import { patchResRevalidate } from "./build/patches/plugins/res-revalidate.js";
@@ -83,6 +84,7 @@ export default buildAdapter((config: OpenNextConfig, buildOpts: BuildOptions) =>
 		afterServerBundle: async (buildOpts, _config) => {
 			if (isContainer) {
 				const packageDistDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+				compileContainer(buildOpts);
 				copyPackageCliFiles(packageDistDir, buildOpts, "container");
 				return;
 			}

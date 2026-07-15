@@ -24,25 +24,10 @@
 			},
 		],
 	},
-	"r2_buckets": [
-		{
-			"binding": "NEXT_INC_CACHE_R2_BUCKET",
-			"bucket_name": "cache",
-		},
-	],
-	"services": [
-		{
-			"binding": "WORKER_SELF_REFERENCE",
-			"service": "app-router",
-		},
-	],
-	"vars": {
-		"OPEN_NEXT_REQUEST_ID_HEADER": "true",
-	},
 	"migrations": [
 		{
 			"tag": "v1",
-			"new_sqlite_classes": ["OpenNextContainer", "DOQueueHandler", "DOShardedTagCache", "BucketCachePurge"],
+			"new_sqlite_classes": ["OpenNextContainer"],
 		},
 	],
 }

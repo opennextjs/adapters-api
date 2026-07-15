@@ -10,7 +10,7 @@ type WorkerTemplate = "container" | "worker";
 /**
  * Copies
  * - the template files present in the cloudflare adapter package to `.open-next/cloudflare-templates`
- * - `worker.js` to `.open-next/`
+ * - the selected Worker template as `.open-next/worker.js`
  */
 export function copyPackageCliFiles(
 	packageDistDir: string,
@@ -25,9 +25,8 @@ export function copyPackageCliFiles(
 	fs.mkdirSync(destinationDir, { recursive: true });
 	fs.cpSync(sourceDir, destinationDir, { recursive: true });
 
-	const outputPath =
-		workerTemplate === "container"
-			? path.join(buildOpts.outputDir, "worker.container.js")
-			: getOutputWorkerPath(buildOpts);
-	fs.copyFileSync(path.join(packageDistDir, `cli/templates/${workerTemplate}.js`), outputPath);
+	fs.copyFileSync(
+		path.join(packageDistDir, `cli/templates/${workerTemplate}.js`),
+		getOutputWorkerPath(buildOpts)
+	);
 }

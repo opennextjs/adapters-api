@@ -24,6 +24,6 @@ describe("copyPackageCliFiles", () => {
 
 		copyPackageCliFiles(root, { outputDir } as never, "container");
 
-		expect(await readFile(path.join(outputDir, "worker.container.js"), "utf8")).toBe("container worker");
+		expect(await readFile(path.join(outputDir, "worker.js"), "utf8")).toBe("container worker");
 	});
 });
