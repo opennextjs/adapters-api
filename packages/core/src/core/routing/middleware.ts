@@ -34,13 +34,42 @@ function defaultMiddlewareLoader() {
 	return import("./middleware.mjs");
 }
 
-export function shouldInvokeMiddleware(internalEvent: InternalEvent): boolean {
+/**
+ * Returns the pathname the middleware matchers should be tested against.
+ *
+ * Next normalizes `_next/data` requests - i.e. pages router client side navigations - back to the
+ * user visible pathname before checking the matchers (the `middleware_next_data` route in Next
+ * `resolve-routes`), so that `/_next/data/<buildId>/foo.json` runs the same middleware as `/foo`.
+ *
+ * @param pathname the pathname resolved by the router, `basePath` included
+ * @param buildId the build id
+ * @param basePath the configured `basePath`
+ * @returns the pathname to match the middleware matchers against
+ */
+export function getMiddlewareMatchPath(pathname: string, buildId: string, basePath = ""): string {
+	const dataPrefix = `${basePath}/_next/data/${buildId}`;
+	if (!pathname.startsWith(`${dataPrefix}/`) || !pathname.endsWith(".json")) {
+		return pathname;
+	}
+	const normalizedPath = pathname.slice(dataPrefix.length, -".json".length).replace(/^\/index$/, "/");
+	return `${basePath}${normalizedPath}`;
+}
+
+/**
+ * @param internalEvent the internal event
+ * @param pathname the pathname to match the middleware matchers against, defaults to the localized
+ * path of the event. Callers routing through the resolver should pass the pathname resolved by the
+ * router (see `getMiddlewareMatchPath`) as the raw path of the event has not been normalized yet.
+ */
+export function shouldInvokeMiddleware(
+	internalEvent: InternalEvent,
+	pathname: string = localizePath(internalEvent)
+): boolean {
 	const headers = internalEvent.headers;
 	if (headers["x-isr"] && headers["x-prerender-revalidate"] === PrerenderManifest?.preview?.previewModeId) {
 		return false;
 	}
-	const normalizedPath = localizePath(internalEvent);
-	return middleMatch.some((route) => route.test(normalizedPath));
+	return middleMatch.some((route) => route.test(pathname));
 }
 
 /**

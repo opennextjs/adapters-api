@@ -15,7 +15,7 @@ import { debug, error } from "../adapters/logger";
 
 import { cacheInterceptor } from "./routing/cacheInterceptor";
 import { detectLocale } from "./routing/i18n";
-import { shouldInvokeMiddleware } from "./routing/middleware";
+import { getMiddlewareMatchPath, shouldInvokeMiddleware } from "./routing/middleware";
 import { convertBodyToReadableStream, constructNextUrl, normalizeLocationHeader } from "./routing/util";
 
 export const MIDDLEWARE_HEADER_PREFIX = "x-middleware-response-";
@@ -188,10 +188,12 @@ export default async function routingHandler(
 
 		let directMiddlewareResult: InternalResult | undefined;
 		let middlewareHeaders = new Headers(event.headers);
+		const buildId = RoutingConfig.buildId || BuildId;
+		const basePath = NextConfig.basePath ?? "";
 		const routingResult = await resolveRoutes({
 			url: new URL(event.url),
-			buildId: RoutingConfig.buildId || BuildId,
-			basePath: NextConfig.basePath ?? "",
+			buildId,
+			basePath,
 			i18n: NextConfig.i18n
 				? {
 						...NextConfig.i18n,
@@ -208,7 +210,11 @@ export default async function routingHandler(
 			routes: RoutingConfig.routes,
 			invokeMiddleware: async (context) => {
 				middlewareHeaders = context.headers;
-				if (!shouldInvokeMiddleware(event)) {
+				// The matchers must be tested against the pathname resolved by the router - the locale has
+				// been applied and rewrites matching before the middleware have run - and not against the
+				// path of the incoming request.
+				const matchPath = getMiddlewareMatchPath(context.url.pathname, buildId, basePath);
+				if (!shouldInvokeMiddleware(event, matchPath)) {
 					return { requestHeaders: context.headers };
 				}
 

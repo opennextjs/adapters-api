@@ -1,4 +1,4 @@
-import { handleMiddleware } from "@opennextjs/core/core/routing/middleware.js";
+import { getMiddlewareMatchPath, handleMiddleware } from "@opennextjs/core/core/routing/middleware.js";
 import { convertFromQueryString } from "@opennextjs/core/core/routing/util.js";
 import type { InternalEvent } from "@opennextjs/core/types/open-next.js";
 import { toReadableStream } from "@opennextjs/core/utils/stream.js";
@@ -350,6 +350,37 @@ describe("handleMiddleware", () => {
 			expect.objectContaining({
 				url: "https://test.me/path?something=General%2520Banner",
 			})
+		);
+	});
+});
+
+describe("getMiddlewareMatchPath", () => {
+	it("should leave a regular pathname untouched", () => {
+		expect(getMiddlewareMatchPath("/foo", "build-id")).toBe("/foo");
+		expect(getMiddlewareMatchPath("/base/foo", "build-id", "/base")).toBe("/base/foo");
+	});
+
+	it("should normalize a `_next/data` pathname", () => {
+		expect(getMiddlewareMatchPath("/_next/data/build-id/foo.json", "build-id")).toBe("/foo");
+		expect(getMiddlewareMatchPath("/_next/data/build-id/en/foo/bar.json", "build-id")).toBe("/en/foo/bar");
+	});
+
+	it("should normalize the index `_next/data` pathname to the root", () => {
+		expect(getMiddlewareMatchPath("/_next/data/build-id/index.json", "build-id")).toBe("/");
+	});
+
+	it("should keep the basePath when normalizing a `_next/data` pathname", () => {
+		expect(getMiddlewareMatchPath("/base/_next/data/build-id/foo.json", "build-id", "/base")).toBe(
+			"/base/foo"
+		);
+		expect(getMiddlewareMatchPath("/base/_next/data/build-id/index.json", "build-id", "/base")).toBe(
+			"/base/"
+		);
+	});
+
+	it("should not normalize a `_next/data` pathname of another build", () => {
+		expect(getMiddlewareMatchPath("/_next/data/other-id/foo.json", "build-id")).toBe(
+			"/_next/data/other-id/foo.json"
 		);
 	});
 });
