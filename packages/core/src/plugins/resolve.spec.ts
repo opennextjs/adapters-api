@@ -1,9 +1,9 @@
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
-import type { PluginBuild } from "esbuild";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { build } from "esbuild";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { openNextResolvePlugin } from "./resolve.js";
 
@@ -62,73 +62,138 @@ export async function resolveCdnInvalidation(cdnInvalidation) {
 }
 `.trim();
 
-type OnLoadCallback = (args: { path: string }) => Promise<{ contents: string }>;
+// The default overrides imported by the fixture above, and the alternatives the
+// tests redirect to.
+const OVERRIDE_MODULES = [
+	"overrides/converters/node.js",
+	"overrides/converters/edge.js",
+	"overrides/wrappers/node.js",
+	"overrides/wrappers/cloudflare-edge.js",
+	"overrides/tagCache/fs-dev-nextMode.js",
+	"overrides/queue/direct.js",
+	"overrides/incrementalCache/fs-dev.js",
+	"overrides/imageLoader/fs-dev.js",
+	"overrides/originResolver/pattern-env.js",
+	"overrides/warmer/dummy.js",
+	"overrides/proxyExternalRequest/node.js",
+	"overrides/cdnInvalidation/dummy.js",
+];
 
-function createStubBuild() {
-	let capturedCb: OnLoadCallback | undefined;
-	const stub = {
-		onLoad: (_opts: { filter: RegExp }, cb: OnLoadCallback) => {
-			capturedCb = cb;
-		},
-	} as unknown as PluginBuild;
-	return { stub, getCallback: () => capturedCb! };
+// Packages resolved through node_modules for the full-path override cases.
+const CORE_PKG_MODULES = [
+	"overrides/converters/edge.js",
+	"overrides/converters/dummy.js",
+	"overrides/imageLoader/dummy.js",
+	"overrides/originResolver/dummy.js",
+	"overrides/proxyExternalRequest/fetch.js",
+];
+const AWS_PKG_MODULES = [
+	"overrides/wrappers/aws-lambda.js",
+	"overrides/wrappers/aws-lambda-streaming.js",
+	"overrides/converters/aws-apigw-v2.js",
+	"overrides/tagCache/dynamodb.js",
+	"overrides/queue/sqs.js",
+	"overrides/incrementalCache/s3.js",
+	"overrides/warmer/aws-lambda.js",
+	"overrides/cdnInvalidation/cloudfront.js",
+];
+
+let root: string;
+
+/** Writes a module exporting a marker identifying it by its path in the fixture. */
+async function writeModule(relPath: string) {
+	const fullPath = join(root, relPath);
+	await mkdir(dirname(fullPath), { recursive: true });
+	await writeFile(fullPath, `export default "MARKER:${relPath}";`, "utf-8");
+}
+
+/** Marker bundled for an override living next to the fixture `resolve.js`. */
+function local(relPath: string) {
+	return `MARKER:overrides/${relPath}`;
+}
+
+/** Marker bundled for an override coming from a package in `node_modules`. */
+function pkg(name: string, relPath: string) {
+	return `MARKER:node_modules/${name}/overrides/${relPath}`;
+}
+
+/** Bundles the fixture with the plugin and returns the generated code. */
+async function bundleWithPlugin(opts: Parameters<typeof openNextResolvePlugin>[0], entry = "entry.js") {
+	const result = await build({
+		entryPoints: [join(root, entry)],
+		absWorkingDir: root,
+		bundle: true,
+		write: false,
+		format: "esm",
+		platform: "node",
+		outfile: join(root, "out.js"),
+		plugins: [openNextResolvePlugin(opts)],
+	});
+	return result.outputFiles[0].text;
 }
 
 describe("openNextResolvePlugin", () => {
-	let fixturePath: string;
-	let fixtureDir: string;
+	beforeAll(async () => {
+		root = await mkdtemp(join(tmpdir(), "resolve-test-"));
 
-	beforeEach(async () => {
-		fixtureDir = join(tmpdir(), `resolve-test-${Date.now()}`, "core");
-		await mkdir(fixtureDir, { recursive: true });
-		fixturePath = join(fixtureDir, "resolve.js");
-		await writeFile(fixturePath, FIXTURE_CONTENT, "utf-8");
+		await mkdir(join(root, "core"), { recursive: true });
+		await writeFile(join(root, "core", "resolve.js"), FIXTURE_CONTENT, "utf-8");
+		await writeFile(join(root, "entry.js"), `export * from "./core/resolve.js";`, "utf-8");
+
+		for (const mod of OVERRIDE_MODULES) {
+			await writeModule(mod);
+		}
+		for (const [name, modules] of [
+			["@opennextjs/core", CORE_PKG_MODULES],
+			["@opennextjs/aws", AWS_PKG_MODULES],
+		] as const) {
+			await mkdir(join(root, "node_modules", name), { recursive: true });
+			await writeFile(
+				join(root, "node_modules", name, "package.json"),
+				JSON.stringify({ name, type: "module" }),
+				"utf-8"
+			);
+			for (const mod of modules) {
+				await writeModule(join("node_modules", name, mod));
+			}
+		}
 	});
 
-	afterEach(async () => {
-		// Clean up the temp directory (go up one level from "core")
-		await rm(join(fixtureDir, ".."), { recursive: true, force: true });
+	afterAll(async () => {
+		await rm(root, { recursive: true, force: true });
 	});
-
-	async function runPlugin(opts: Parameters<typeof openNextResolvePlugin>[0]) {
-		const plugin = openNextResolvePlugin(opts);
-		const { stub, getCallback } = createStubBuild();
-		plugin.setup(stub);
-		const cb = getCallback();
-		return cb({ path: fixturePath });
-	}
 
 	test("A - full-path default verbatim: core full path default replaces anchor", async () => {
-		const result = await runPlugin({
+		const contents = await bundleWithPlugin({
 			overrides: {},
 			defaultOverrides: { converter: "@opennextjs/core/overrides/converters/edge.js" },
 			fnName: "test",
 		});
-		expect(result.contents).toContain("overrides/converters/edge.js");
-		expect(result.contents).not.toContain('"../overrides/converters/node.js"');
+		expect(contents).toContain(pkg("@opennextjs/core", "converters/edge.js"));
+		expect(contents).not.toContain(local("converters/node.js"));
 	});
 
 	test("B - cross-package user full aws path wins over core default", async () => {
-		const result = await runPlugin({
+		const contents = await bundleWithPlugin({
 			overrides: { converter: "@opennextjs/aws/overrides/converters/aws-apigw-v2.js" },
 			defaultOverrides: { converter: "@opennextjs/core/overrides/converters/edge.js" },
 			fnName: "test",
 		});
-		expect(result.contents).toContain("overrides/converters/aws-apigw-v2.js");
-		expect(result.contents).not.toContain("overrides/converters/edge.js");
+		expect(contents).toContain(pkg("@opennextjs/aws", "converters/aws-apigw-v2.js"));
+		expect(contents).not.toContain(pkg("@opennextjs/core", "converters/edge.js"));
 	});
 
 	test("C - no-op anchor stays: no override no default keeps relative core path", async () => {
-		const result = await runPlugin({
+		const contents = await bundleWithPlugin({
 			overrides: {},
 			defaultOverrides: {},
 			fnName: "test",
 		});
-		expect(result.contents).toContain("../overrides/converters/node.js");
+		expect(contents).toContain(local("converters/node.js"));
 	});
 
 	test("D - 10-key mixed aws+core full paths all rewritten", async () => {
-		const result = await runPlugin({
+		const contents = await bundleWithPlugin({
 			overrides: {},
 			defaultOverrides: {
 				wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda.js",
@@ -144,42 +209,46 @@ describe("openNextResolvePlugin", () => {
 			},
 			fnName: "test",
 		});
-		expect(result.contents).toContain("overrides/wrappers/aws-lambda.js");
-		expect(result.contents).toContain("overrides/converters/edge.js");
-		expect(result.contents).toContain("overrides/tagCache/dynamodb.js");
-		expect(result.contents).toContain("overrides/queue/sqs.js");
-		expect(result.contents).toContain("overrides/incrementalCache/s3.js");
-		expect(result.contents).toContain("overrides/imageLoader/dummy.js");
-		expect(result.contents).toContain("overrides/originResolver/dummy.js");
-		expect(result.contents).toContain("overrides/warmer/aws-lambda.js");
-		expect(result.contents).toContain("overrides/proxyExternalRequest/fetch.js");
-		expect(result.contents).toContain("overrides/cdnInvalidation/cloudfront.js");
+		expect(contents).toContain(pkg("@opennextjs/aws", "wrappers/aws-lambda.js"));
+		expect(contents).toContain(pkg("@opennextjs/core", "converters/edge.js"));
+		expect(contents).toContain(pkg("@opennextjs/aws", "tagCache/dynamodb.js"));
+		expect(contents).toContain(pkg("@opennextjs/aws", "queue/sqs.js"));
+		expect(contents).toContain(pkg("@opennextjs/aws", "incrementalCache/s3.js"));
+		expect(contents).toContain(pkg("@opennextjs/core", "imageLoader/dummy.js"));
+		expect(contents).toContain(pkg("@opennextjs/core", "originResolver/dummy.js"));
+		expect(contents).toContain(pkg("@opennextjs/aws", "warmer/aws-lambda.js"));
+		expect(contents).toContain(pkg("@opennextjs/core", "proxyExternalRequest/fetch.js"));
+		expect(contents).toContain(pkg("@opennextjs/aws", "cdnInvalidation/cloudfront.js"));
+		// None of the defaults are bundled anymore
+		expect(contents).not.toContain(local("wrappers/node.js"));
+		expect(contents).not.toContain(local("tagCache/fs-dev-nextMode.js"));
+		expect(contents).not.toContain(local("incrementalCache/fs-dev.js"));
 	});
 
 	test("E - deprecated cloudflare bare name becomes legacy relative core path", async () => {
-		const result = await runPlugin({
+		const contents = await bundleWithPlugin({
 			overrides: { wrapper: "cloudflare" },
 			defaultOverrides: {},
 			fnName: "test",
 		});
-		expect(result.contents).toContain("../overrides/wrappers/cloudflare-edge.js");
-		expect(result.contents).not.toContain("cloudflare.js");
+		expect(contents).toContain(local("wrappers/cloudflare-edge.js"));
+		expect(contents).not.toContain(local("wrappers/node.js"));
 	});
 
 	test("F - function override becomes full dummy core path", async () => {
 		// oxlint-disable-next-line @typescript-eslint/no-explicit-any - testing function override
 		const fnOverride = (() => ({})) as any;
-		const result = await runPlugin({
+		const contents = await bundleWithPlugin({
 			overrides: { converter: fnOverride },
 			defaultOverrides: { converter: "@opennextjs/core/overrides/converters/edge.js" },
 			fnName: "test",
 		});
-		expect(result.contents).toContain("@opennextjs/core/overrides/converters/dummy.js");
-		expect(result.contents).not.toContain("@opennextjs/core/overrides/converters/edge.js");
+		expect(contents).toContain(pkg("@opennextjs/core", "converters/dummy.js"));
+		expect(contents).not.toContain(pkg("@opennextjs/core", "converters/edge.js"));
 	});
 
 	test("G - AWS server defaults produce aws full paths", async () => {
-		const result = await runPlugin({
+		const contents = await bundleWithPlugin({
 			overrides: {},
 			defaultOverrides: {
 				wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda-streaming.js",
@@ -190,42 +259,67 @@ describe("openNextResolvePlugin", () => {
 			},
 			fnName: "server",
 		});
-		expect(result.contents).toContain("overrides/wrappers/aws-lambda-streaming.js");
-		expect(result.contents).toContain("overrides/converters/aws-apigw-v2.js");
-		expect(result.contents).toContain("overrides/incrementalCache/s3.js");
-		expect(result.contents).toContain("overrides/tagCache/dynamodb.js");
-		expect(result.contents).toContain("overrides/queue/sqs.js");
+		expect(contents).toContain(pkg("@opennextjs/aws", "wrappers/aws-lambda-streaming.js"));
+		expect(contents).toContain(pkg("@opennextjs/aws", "converters/aws-apigw-v2.js"));
+		expect(contents).toContain(pkg("@opennextjs/aws", "incrementalCache/s3.js"));
+		expect(contents).toContain(pkg("@opennextjs/aws", "tagCache/dynamodb.js"));
+		expect(contents).toContain(pkg("@opennextjs/aws", "queue/sqs.js"));
+		// Keys without an override keep their default
+		expect(contents).toContain(local("imageLoader/fs-dev.js"));
 	});
 
 	test("H - bare-name user override becomes legacy relative core path", async () => {
-		const result = await runPlugin({
+		const contents = await bundleWithPlugin({
 			overrides: { converter: "edge" },
 			defaultOverrides: {},
 			fnName: "test",
 		});
-		expect(result.contents).toContain("../overrides/converters/edge.js");
-		expect(result.contents).not.toContain("@opennextjs/core/overrides/converters/node.js");
+		expect(contents).toContain(local("converters/edge.js"));
+		expect(contents).not.toContain(local("converters/node.js"));
 	});
 
-	test("I - resolvable package specifier is converted to relative filesystem path", async () => {
-		const rootDir = join(fixtureDir, "..");
-		const pkgDir = join(rootDir, "node_modules", "@test-pkg", "wrapper");
-		await mkdir(pkgDir, { recursive: true });
+	test("I - resolvable package specifier is resolved through node_modules", async () => {
+		await mkdir(join(root, "node_modules", "@test-pkg", "wrapper"), { recursive: true });
 		await writeFile(
-			join(pkgDir, "package.json"),
+			join(root, "node_modules", "@test-pkg", "wrapper", "package.json"),
 			JSON.stringify({ name: "@test-pkg/wrapper", main: "index.js" }),
 			"utf-8"
 		);
-		await writeFile(join(pkgDir, "index.js"), "module.exports = {};", "utf-8");
+		await writeModule(join("node_modules", "@test-pkg", "wrapper", "index.js"));
 
-		const result = await runPlugin({
+		const contents = await bundleWithPlugin({
 			overrides: { wrapper: "@test-pkg/wrapper" },
 			defaultOverrides: {},
 			fnName: "test",
 		});
 
-		expect(result.contents).not.toContain('"@test-pkg/wrapper"');
-		expect(result.contents).toContain("node_modules/@test-pkg/wrapper/index.js");
-		expect(result.contents).toMatch(/"\.\/.*node_modules\/@test-pkg\/wrapper\/index\.js"/);
+		expect(contents).toContain("MARKER:node_modules/@test-pkg/wrapper/index.js");
+		expect(contents).not.toContain(local("wrappers/node.js"));
+	});
+
+	test("J - overrides of other modules are left alone", async () => {
+		await writeFile(
+			join(root, "core", "other.js"),
+			`export const load = () => import("../overrides/converters/node.js");`,
+			"utf-8"
+		);
+		await writeFile(
+			join(root, "entry-other.js"),
+			`export * from "./core/resolve.js";\nexport * from "./core/other.js";`,
+			"utf-8"
+		);
+
+		const contents = await bundleWithPlugin(
+			{
+				overrides: { converter: "edge" },
+				defaultOverrides: {},
+				fnName: "test",
+			},
+			"entry-other.js"
+		);
+
+		// `resolve.js` gets the override, `other.js` keeps importing the default
+		expect(contents).toContain(local("converters/edge.js"));
+		expect(contents).toContain(local("converters/node.js"));
 	});
 });

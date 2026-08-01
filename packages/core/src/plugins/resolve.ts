@@ -1,8 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { dirname, relative } from "node:path";
+import { dirname, join, relative } from "node:path";
 
-import { type Edit, Lang, parse } from "@ast-grep/napi";
 import chalk from "chalk";
 import type { Plugin } from "esbuild";
 
@@ -55,33 +54,16 @@ const nameToFolder = {
 export type OverrideKey = keyof typeof nameToFolder;
 export type DefaultOverrides = Partial<Record<OverrideKey, string>>;
 
-// Maps override key to resolve function name (docs / future ast-grep use)
-const resolveFunctionName: Record<OverrideKey, string> = {
-	wrapper: "resolveWrapper",
-	converter: "resolveConverter",
-	tagCache: "resolveTagCache",
-	queue: "resolveQueue",
-	incrementalCache: "resolveIncrementalCache",
-	imageLoader: "resolveImageLoader",
-	originResolver: "resolveOriginResolver",
-	warmer: "resolveWarmerInvoke",
-	proxyExternalRequest: "resolveProxyRequest",
-	cdnInvalidation: "resolveCdnInvalidation",
-};
+// `core/resolve.js` lazily imports every default override with a relative specifier
+// of the form `../overrides/<folder>/<file>.js`, and each override key owns exactly
+// one folder (see `nameToFolder`). Rewriting the specifier of a folder is therefore
+// enough to swap in the configured override, whatever the default file is named.
+const resolveModuleFilter = getCrossPlatformPathRegex("core/resolve.js");
 
-// Relative-path fallback anchors matching the compiled resolve.js imports.
-const resolveAnchors: Record<OverrideKey, string> = {
-	wrapper: "../overrides/wrappers/node.js",
-	converter: "../overrides/converters/node.js",
-	tagCache: "../overrides/tagCache/fs-dev-nextMode.js",
-	queue: "../overrides/queue/direct.js",
-	incrementalCache: "../overrides/incrementalCache/fs-dev.js",
-	imageLoader: "../overrides/imageLoader/fs-dev.js",
-	originResolver: "../overrides/originResolver/pattern-env.js",
-	warmer: "../overrides/warmer/dummy.js",
-	proxyExternalRequest: "../overrides/proxyExternalRequest/node.js",
-	cdnInvalidation: "../overrides/cdnInvalidation/dummy.js",
-};
+/** Matches the specifier of the override lazily imported from the given folder. */
+function getOverrideImportRegex(folder: string): RegExp {
+	return new RegExp(String.raw`(["'])\.\./overrides/${folder}/[^"']+\1`);
+}
 
 export type BundleType =
 	| "server"
@@ -102,6 +84,28 @@ function isFullPath(s: string): boolean {
 }
 
 /**
+ * Turns a package specifier into a path relative to `core/resolve.js`, so that esbuild
+ * resolves the override itself - it is the only way for it to pick up the module type
+ * (`type: "module"`) of the package the override comes from.
+ *
+ * Overrides live in the adapter packages the app depends on, which are not necessarily
+ * reachable from `core` itself (they are not, with an isolated node_modules layout), so
+ * resolution is attempted from the app as well. The specifier is returned as-is when it
+ * cannot be resolved, leaving esbuild to report the failure.
+ */
+function toRelativePath(specifier: string, resolvePath: string, appDir: string): string {
+	for (const from of [resolvePath, join(appDir, "index.js")]) {
+		try {
+			const resolved = createRequire(from).resolve(specifier);
+			return `./${relative(dirname(resolvePath), resolved).replaceAll("\\", "/")}`;
+		} catch {
+			// Not resolvable from there, try the next one
+		}
+	}
+	return specifier;
+}
+
+/**
  * @param opts.overrides - The name of the overrides to use
  * @returns
  */
@@ -114,94 +118,59 @@ export function openNextResolvePlugin({
 		name: "opennext-resolve",
 		setup(build) {
 			logger.debug(chalk.blue("OpenNext Resolve plugin"), fnName ? `for ${fnName}` : "");
-			build.onLoad({ filter: getCrossPlatformPathRegex("core/resolve.js") }, async (args) => {
+
+			// Maps the overrides folder to the specifier that should be imported instead
+			// of the default one. Computed once, the config cannot change during a build.
+			const redirects = new Map<string, string>();
+			const allKeys = new Set([...Object.keys(overrides ?? {}), ...Object.keys(defaultValues ?? {})]);
+
+			for (const overrideName of allKeys) {
+				const configValue = overrides?.[overrideName as keyof typeof overrides];
+				const defaultValue = defaultValues?.[overrideName as keyof typeof defaultValues];
+				let overrideValue = configValue ?? defaultValue;
+				if (!overrideValue) {
+					continue;
+				}
+
+				const folder = nameToFolder[overrideName as OverrideKey];
+				if (!folder) {
+					continue;
+				}
+
+				if (overrideName === "wrapper" && overrideValue === "cloudflare") {
+					overrideValue = "cloudflare-edge";
+				}
+
+				if (typeof overrideValue !== "string") {
+					// Lazy loaded overrides are inlined in the config, only the default
+					// import has to be dropped - the dummy is never actually used.
+					redirects.set(folder, `@opennextjs/core/overrides/${folder}/dummy.js`);
+				} else if (isFullPath(overrideValue)) {
+					redirects.set(folder, overrideValue);
+				} else {
+					redirects.set(folder, `../overrides/${folder}/${overrideValue}.js`);
+				}
+			}
+
+			if (redirects.size === 0) {
+				return;
+			}
+
+			const appDir = build.initialOptions.absWorkingDir ?? process.cwd();
+
+			build.onLoad({ filter: resolveModuleFilter }, async (args) => {
 				let contents = await readFile(args.path, "utf-8");
-				const allKeys = new Set([...Object.keys(overrides ?? {}), ...Object.keys(defaultValues ?? {})]);
 
-				// Primary: ast-grep edits. Fallback: string-replace anchors (post-commit).
-				const edits: Edit[] = [];
-				const fallbackKeys: Array<{ key: OverrideKey; targetPath: string }> = [];
-				const astRoot = parse(Lang.JavaScript, contents).root();
-
-				for (const overrideName of allKeys) {
-					const configValue = overrides?.[overrideName as keyof typeof overrides];
-					const defaultValue = defaultValues?.[overrideName as keyof typeof defaultValues];
-					let overrideValue = configValue ?? defaultValue;
-					if (!overrideValue) {
-						continue;
-					}
-
-					const key = overrideName as OverrideKey;
-					const folder = nameToFolder[key];
-					if (!folder) {
-						continue;
-					}
-
-					if (overrideName === "wrapper" && overrideValue === "cloudflare") {
-						overrideValue = "cloudflare-edge";
-					}
-
-					let targetPath: string;
-					if (typeof overrideValue === "string") {
-						if (isFullPath(overrideValue)) {
-							try {
-								const resolved = createRequire(args.path).resolve(overrideValue);
-								targetPath = "./" + relative(dirname(args.path), resolved);
-							} catch {
-								targetPath = overrideValue;
-							}
-						} else {
-							targetPath = `../overrides/${folder}/${overrideValue}.js`;
-						}
-					} else {
-						targetPath = `@opennextjs/core/overrides/${folder}/dummy.js`;
-					}
-
-					// Primary: use ast-grep to find the resolve function by name
-					// and replace the string inside `await import($PATH)`.
-					const fnName_ = resolveFunctionName[key];
-					try {
-						const fnNode = astRoot.find({
-							rule: {
-								kind: "function_declaration",
-								has: { kind: "identifier", pattern: fnName_ },
-							},
-						});
-						if (fnNode) {
-							const importNode = fnNode.find({
-								rule: {
-									kind: "string",
-									inside: { kind: "await_expression", stopBy: "end" },
-								},
-							});
-							if (importNode) {
-								edits.push(importNode.replace('"' + targetPath + '"'));
-								continue;
-							}
-						}
-					} catch {
-						// ast-grep lookup failed — fall through to fallback
-					}
-					fallbackKeys.push({ key, targetPath });
+				for (const [folder, specifier] of redirects) {
+					const targetPath = specifier.startsWith(".")
+						? specifier
+						: toRelativePath(specifier, args.path, appDir);
+					logger.debug(chalk.blue(`Resolving the ${folder} override to "${targetPath}"`));
+					// JSON encoded: the path can contain characters to escape (Windows separators)
+					contents = contents.replace(getOverrideImportRegex(folder), () => JSON.stringify(targetPath));
 				}
 
-				// Commit all ast-grep edits at once (no interleaving).
-				if (edits.length > 0) {
-					contents = astRoot.commitEdits(edits);
-				}
-
-				// Fallback: string-replace on post-commitEdits contents for any
-				// keys ast-grep didn't handle.
-				for (const fb of fallbackKeys) {
-					const anchor = resolveAnchors[fb.key];
-					if (anchor) {
-						contents = contents.replace(anchor, fb.targetPath);
-					}
-				}
-
-				return {
-					contents,
-				};
+				return { contents };
 			});
 		},
 	};
