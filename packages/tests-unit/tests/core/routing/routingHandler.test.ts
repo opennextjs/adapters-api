@@ -7,11 +7,13 @@ vi.mock("@/config/index", () => ({
 	NextConfig: { experimental: {}, images: {} },
 	RoutingConfig: {
 		buildId: "build-id",
-		// `/about/` is the trailing slash variant emitted for `trailingSlash` enabled apps.
-		pathnames: ["/about", "/about/", "/blog/[slug]", "/ssr"],
+		// `/about/` is the trailing slash variant emitted for `trailingSlash` enabled apps and
+		// `/blog/prerendered` a prerendered pathname of the `/blog/[slug]` route.
+		pathnames: ["/about", "/about/", "/blog/[slug]", "/blog/prerendered", "/ssr"],
 		routeIndex: {
 			"/about": { type: "app", isFallback: false, isISR: false },
 			"/blog/[slug]": { type: "app", isFallback: false, isISR: true },
+			"/blog/prerendered": { type: "app", isFallback: false, isISR: true, route: "/blog/[slug]" },
 			"/ssr": { type: "app", isFallback: false, isISR: false },
 		},
 		routes: {
@@ -96,6 +98,19 @@ describe("routingHandler", () => {
 
 		expect(result).toMatchObject({
 			isISR: true,
+			resolvedRoutes: [{ route: "/blog/[slug]", type: "app", isFallback: false, isISR: true }],
+		});
+	});
+
+	it("serves a prerendered pathname from the route that generated it", async () => {
+		const result = await routingHandler(event("/blog/prerendered"));
+
+		expect(result).toMatchObject({
+			isISR: true,
+			internalEvent: {
+				rawPath: "/blog/prerendered",
+				url: "https://localhost/blog/prerendered?slug=prerendered",
+			},
 			resolvedRoutes: [{ route: "/blog/[slug]", type: "app", isFallback: false, isISR: true }],
 		});
 	});

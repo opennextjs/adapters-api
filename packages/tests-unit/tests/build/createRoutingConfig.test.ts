@@ -95,4 +95,127 @@ describe("createRoutingConfig", () => {
 			"/asset.js",
 		]);
 	});
+
+	it("serves prerendered pathnames from the route that generated them", () => {
+		const context = {
+			buildId: "build-id",
+			config: {},
+			routing: {
+				beforeMiddleware: [],
+				beforeFiles: [],
+				afterFiles: [],
+				dynamicRoutes: [
+					{
+						sourceRegex: String.raw`^/_next/data/build\-id/blog/(?<nxtPslug>[^/]+?)\.json$`,
+						destination: "/_next/data/build-id/blog/[slug].json?nxtPslug=$nxtPslug",
+						// Prerendered routes are only routed to their function in draft mode.
+						has: [{ type: "cookie", key: "__prerender_bypass" }],
+					},
+					{
+						sourceRegex: String.raw`^/blog/(?<nxtPslug>[^/]+?)$`,
+						destination: "/blog/[slug]?nxtPslug=$nxtPslug",
+						has: [{ type: "cookie", key: "__prerender_bypass" }],
+					},
+				],
+				onMatch: [],
+				fallback: [],
+			},
+			outputs: {
+				pages: [
+					{ pathname: "/blog/[slug]", filePath: "/blog.js", assets: {} },
+					{ pathname: "/isr", filePath: "/isr.js", assets: {} },
+				],
+				pagesApi: [],
+				appPages: [],
+				appRoutes: [],
+				prerenders: [
+					// A concrete prerendered pathname and its data variant, neither of which is executable.
+					{ pathname: "/blog/hello" },
+					{ pathname: "/_next/data/build-id/blog/hello.json" },
+					// The template of the dynamic route generating them, and its data variant.
+					{ pathname: "/blog/[slug]" },
+					{ pathname: "/_next/data/build-id/blog/[slug].json" },
+					// A non dynamic prerendered route and its data variant.
+					{ pathname: "/isr" },
+					{ pathname: "/_next/data/build-id/isr.json" },
+					// A PPR segment prefetch - no route can regenerate it.
+					{ pathname: "/isr.segments/_tree.segment.rsc" },
+				],
+			},
+		} as unknown as BuildCompleteContext;
+
+		const result = createRoutingConfig({ appBuildOutputPath: "/app" } as never, context);
+
+		expect(result.pathnames).toEqual([
+			"/blog/[slug]",
+			"/isr",
+			"/blog/hello",
+			"/_next/data/build-id/blog/hello.json",
+			"/_next/data/build-id/blog/[slug].json",
+			"/_next/data/build-id/isr.json",
+		]);
+		expect(result.routeIndex).toEqual({
+			"/blog/[slug]": { type: "page", isFallback: false, isISR: true },
+			"/isr": { type: "page", isFallback: false, isISR: true },
+			"/blog/hello": { type: "page", isFallback: false, isISR: true, route: "/blog/[slug]" },
+			"/_next/data/build-id/blog/hello.json": {
+				type: "page",
+				isFallback: false,
+				isISR: true,
+				route: "/blog/[slug]",
+			},
+			"/_next/data/build-id/blog/[slug].json": {
+				type: "page",
+				isFallback: false,
+				isISR: true,
+				route: "/blog/[slug]",
+			},
+			"/_next/data/build-id/isr.json": {
+				type: "page",
+				isFallback: false,
+				isISR: true,
+				route: "/isr",
+			},
+		});
+	});
+
+	it("keeps the highest priority dynamic route when it has no executable destination", () => {
+		const context = {
+			buildId: "build-id",
+			config: {},
+			routing: {
+				beforeMiddleware: [],
+				beforeFiles: [],
+				afterFiles: [],
+				dynamicRoutes: [
+					// `/blog/[slug]` takes precedence over the catch all, but only the catch all is
+					// executable - the prerendered pathname must not fall through to it.
+					{
+						sourceRegex: String.raw`^/blog/(?<nxtPslug>[^/]+?)$`,
+						destination: "/blog/[slug]?nxtPslug=$nxtPslug",
+					},
+					{
+						sourceRegex: String.raw`^/blog/(?<nxtPslugs>.+?)$`,
+						destination: "/blog/[...slugs]?nxtPslugs=$nxtPslugs",
+					},
+				],
+				onMatch: [],
+				fallback: [],
+			},
+			outputs: {
+				pages: [{ pathname: "/blog/[...slugs]", filePath: "/slugs.js", assets: {} }],
+				pagesApi: [],
+				appPages: [],
+				appRoutes: [],
+				prerenders: [{ pathname: "/blog/hello" }],
+			},
+		} as unknown as BuildCompleteContext;
+
+		const result = createRoutingConfig({ appBuildOutputPath: "/app" } as never, context);
+
+		expect(result.pathnames).toEqual(["/blog/[...slugs]"]);
+		expect(result.routeIndex).toEqual({
+			"/blog/[...slugs]": { type: "page", isFallback: false, isISR: false },
+		});
+	});
 });

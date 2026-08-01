@@ -26,6 +26,83 @@ function withTrailingSlashVariants(pathnames: string[]): string[] {
 	);
 }
 
+/**
+ * Applies the captures of a `sourceRegex` match to the destination of a route.
+ *
+ * Mirrors the substitution the resolver performs at runtime.
+ */
+function applyCaptures(destination: string, match: RegExpMatchArray): string {
+	let resolved = destination;
+	for (let index = 1; index < match.length; index++) {
+		if (match[index] !== undefined) {
+			resolved = resolved.replaceAll(`$${index}`, match[index]);
+		}
+	}
+	for (const [name, value] of Object.entries(match.groups ?? {})) {
+		if (value !== undefined) {
+			resolved = resolved.replaceAll(`$${name}`, value);
+		}
+	}
+	return resolved;
+}
+
+/**
+ * Creates the resolver of the executable route serving a prerendered pathname.
+ *
+ * Prerender outputs are emitted for the concrete pathname of every prerendered route
+ * (`/blog/hello`), for the template pathname of every dynamic route with `getStaticPaths`/
+ * `generateStaticParams` (`/blog/[slug]`) and for the data variants of both. Only the templates are
+ * executable, so a concrete pathname has to be routed back to the template regenerating it when its
+ * cache entry is missing or stale.
+ */
+function createPrerenderRouteResolver(context: BuildCompleteContext, executableRoutes: Set<string>) {
+	const basePath = context.config.basePath ?? "";
+	const dataPrefix = `${basePath}/_next/data/${context.buildId}/`;
+	const dynamicRoutes = context.routing.dynamicRoutes.map((route) => ({
+		regex: new RegExp(route.sourceRegex),
+		destination: route.destination,
+	}));
+
+	/**
+	 * The executable destination of the highest priority dynamic route matching the pathname.
+	 *
+	 * Only the first match is considered: a lower priority route is not the one Next would have used,
+	 * even when the higher priority one has no executable destination. The `has`/`missing` conditions
+	 * are ignored - they gate draft mode, not which route owns the pathname.
+	 */
+	function matchDynamicRoute(pathname: string): string | undefined {
+		for (const { regex, destination } of dynamicRoutes) {
+			const match = pathname.match(regex);
+			if (!match) {
+				continue;
+			}
+			if (!destination) {
+				return undefined;
+			}
+			const [target] = applyCaptures(destination, match).split("?");
+			return executableRoutes.has(target) ? target : undefined;
+		}
+		return undefined;
+	}
+
+	return function resolvePrerenderRoute(pathname: string): string | undefined {
+		if (executableRoutes.has(pathname)) {
+			return pathname;
+		}
+		const dynamicRoute = matchDynamicRoute(pathname);
+		if (dynamicRoute) {
+			return dynamicRoute;
+		}
+		// The data variant of a prerendered pages router route has no output of its own - it is served
+		// by the route itself, which Next reaches by normalizing the `/_next/data/` pathname.
+		if (!pathname.startsWith(dataPrefix) || !pathname.endsWith(".json")) {
+			return undefined;
+		}
+		const normalized = `${basePath}/${pathname.slice(dataPrefix.length, -".json".length)}`;
+		return executableRoutes.has(normalized) ? normalized : matchDynamicRoute(normalized);
+	};
+}
+
 export function createRoutingConfig(
 	options: buildHelper.BuildOptions,
 	context: BuildCompleteContext
@@ -42,25 +119,35 @@ export function createRoutingConfig(
 		}
 	}
 
-	// Prerender outputs are emitted both for the concrete pathname of every prerendered route and
-	// for the template pathname of every dynamic route with `getStaticPaths`/`generateStaticParams`.
-	// Only some of them match an executable route: the prerendered non dynamic routes and the
-	// dynamic templates - a request for a concrete path of a dynamic route resolves to its template.
-	// The remaining ones (concrete paths of dynamic routes, `.rsc` and `_next/data` variants) have
-	// no entry in the index and are simply ignored here.
+	// The set has to be snapshotted before the prerendered pathnames are indexed - they are servable
+	// but not executable, and may never be the resolution target of another prerendered pathname.
+	const executableRoutes = new Set(Object.keys(routeIndex));
+	const resolvePrerenderRoute = createPrerenderRouteResolver(context, executableRoutes);
+	const prerenderPathnames: string[] = [];
+
 	for (const prerender of context.outputs.prerenders ?? []) {
-		const route = routeIndex[prerender.pathname];
-		if (route) {
-			route.isISR = true;
+		const route = resolvePrerenderRoute(prerender.pathname);
+		if (!route) {
+			// Artifacts no route can regenerate - i.e. the PPR segment prefetches - are served from the
+			// cache only and are left out of the index.
+			continue;
+		}
+		routeIndex[route].isISR = true;
+		if (route !== prerender.pathname) {
+			routeIndex[prerender.pathname] = { ...routeIndex[route], route };
+			prerenderPathnames.push(prerender.pathname);
 		}
 	}
 
 	const outputPathnames = PATHNAME_OUTPUT_TYPES.flatMap((outputType) =>
 		(context.outputs[outputType] ?? []).map((output) => output.pathname)
 	);
-	const pathnames = context.config.trailingSlash
-		? withTrailingSlashVariants(outputPathnames)
-		: outputPathnames;
+	const servablePathnames = [...outputPathnames, ...prerenderPathnames];
+	const pathnames = [
+		...new Set(
+			context.config.trailingSlash ? withTrailingSlashVariants(servablePathnames) : servablePathnames
+		),
+	];
 	const routingConfig: RuntimeRoutingConfig = {
 		buildId: context.buildId,
 		routes: context.routing,

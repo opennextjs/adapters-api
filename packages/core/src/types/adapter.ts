@@ -35,6 +35,9 @@ export type RuntimeRoutingConfig = {
 	buildId: string;
 	routes: NextAdapterRouting;
 	pathnames: string[];
+	/**
+	 * The servable pathnames, mapped to the route serving them.
+	 */
 	routeIndex: Record<
 		string,
 		{
@@ -45,6 +48,11 @@ export type RuntimeRoutingConfig = {
 			 * dynamic route generating (and caching) its pages on demand.
 			 */
 			isISR: boolean;
+			/**
+			 * The executable route serving the pathname when it is not the pathname itself - i.e. the
+			 * template of the dynamic route that generated a prerendered pathname.
+			 */
+			route?: string;
 		}
 	>;
 };
