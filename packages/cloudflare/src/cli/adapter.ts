@@ -1,6 +1,7 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { buildAdapter } from "@opennextjs/core/build/adapter.js";
 import type { BuildOptions } from "@opennextjs/core/build/helper.js";
@@ -18,13 +19,17 @@ import { compileEnvFiles } from "./build/open-next/compile-env-files.js";
 import { compileImages } from "./build/open-next/compile-images.js";
 import { compileInit } from "./build/open-next/compile-init.js";
 import { compileSkewProtection } from "./build/open-next/compile-skew-protection.js";
+import { compileContainer } from "./build/open-next/compileContainer.js";
 import { compileDurableObjects } from "./build/open-next/compileDurableObjects.js";
 import { inlineLoadManifest } from "./build/patches/plugins/load-manifest.js";
 import { patchResRevalidate } from "./build/patches/plugins/res-revalidate.js";
 import { patchTurbopackRuntime } from "./build/patches/plugins/turbopack.js";
 import { patchUseCacheIO } from "./build/patches/plugins/use-cache.js";
+import { copyPackageCliFiles } from "./build/utils/copy-package-cli-files.js";
 
 export default buildAdapter((config: OpenNextConfig, buildOpts: BuildOptions) => {
+	const isContainer =
+		(config as OpenNextConfig & { cloudflare?: { container?: boolean } }).cloudflare?.container === true;
 	const packagePath = buildHelper.getPackagePath(buildOpts);
 	return {
 		skipRevalidation: true,
@@ -47,30 +52,58 @@ export default buildAdapter((config: OpenNextConfig, buildOpts: BuildOptions) =>
 			await compileSkewProtection(buildOpts, openNextConfig);
 		},
 		serverBundle: {
-			useEdgeConfig: true,
+			useEdgeConfig: !isContainer,
 			externals: ["./middleware.mjs"],
-			banner: (name: string) => [
-				`globalThis.monorepoPackagePath = "${normalizePath(packagePath)}";`,
-				name === "default" ? "" : `globalThis.fnName = "${name}";`,
-			],
+			banner: (name: string) => {
+				const cloudflareBanner = [`globalThis.monorepoPackagePath = "${normalizePath(packagePath)}";`];
+
+				if (isContainer) {
+					cloudflareBanner.push(
+						"import process from 'node:process';",
+						"import { Buffer } from 'node:buffer';",
+						"import { AsyncLocalStorage as NodeAsyncLocalStorage } from 'node:async_hooks';",
+						"globalThis.AsyncLocalStorage = NodeAsyncLocalStorage;",
+						"import { createRequire as topLevelCreateRequire } from 'module';",
+						"const require = topLevelCreateRequire(import.meta.url);",
+						"import bannerUrl from 'url';",
+						"const __dirname = bannerUrl.fileURLToPath(new URL('.', import.meta.url));",
+						"const __filename = bannerUrl.fileURLToPath(import.meta.url);"
+					);
+				}
+
+				cloudflareBanner.push(name === "default" ? "" : `globalThis.fnName = "${name}";`);
+				return cloudflareBanner;
+			},
 			additionalPlugins: (updater: ContentUpdater, outputs: NextAdapterOutputs) => [
 				inlineRouteHandler(updater, outputs, packagePath),
 				inlineLoadManifest(updater, buildOpts),
-				...(config.middleware?.external
-					? [
-							openNextExternalMiddlewarePlugin(
-								path.join(buildOpts.openNextDistDir, "core/edgeFunctionHandler.js")
-							),
-						]
-					: []),
-				openNextEdgePlugins({
-					nextDir: path.join(buildOpts.appBuildOutputPath, ".next"),
-					isInCloudflare: true,
-				}),
+				...(isContainer
+					? []
+					: [
+							...(config.middleware?.external
+								? [
+										openNextExternalMiddlewarePlugin(
+											path.join(buildOpts.openNextDistDir, "core/edgeFunctionHandler.js")
+										),
+									]
+								: []),
+							openNextEdgePlugins({
+								nextDir: path.join(buildOpts.appBuildOutputPath, ".next"),
+								isInCloudflare: true,
+							}),
+						]),
 			],
-			additionalCodePatches: [patchResRevalidate, patchUseCacheIO, patchTurbopackRuntime],
+			additionalCodePatches: isContainer
+				? [patchUseCacheIO, patchTurbopackRuntime]
+				: [patchResRevalidate, patchUseCacheIO, patchTurbopackRuntime],
 		},
 		afterServerBundle: async (buildOpts, _config) => {
+			if (isContainer) {
+				const packageDistDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+				compileContainer(buildOpts);
+				copyPackageCliFiles(packageDistDir, buildOpts, "container");
+				return;
+			}
 			compileDurableObjects(buildOpts);
 			await bundleServer(buildOpts, { minify: false } as any);
 		},

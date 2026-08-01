@@ -30,7 +30,7 @@ catalog:
   tsx: ^4.19.2
   typescript: ^6.0.3
   vitest: ^2.1.1
-  wrangler: ^4.59.2
+  wrangler: ^4.110.0
   yargs: ^18.0.0
 
 catalogs:

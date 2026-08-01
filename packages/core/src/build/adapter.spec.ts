@@ -196,6 +196,27 @@ describe("buildAdapter", () => {
 		expect(mockCallback).toHaveBeenCalledWith(expect.objectContaining({ default: {} }), expect.any(Object));
 	});
 
+	test("modifyConfig uses the config path selected by the build command", async () => {
+		const previousConfigPath = process.env.OPEN_NEXT_CONFIG_PATH;
+		process.env.OPEN_NEXT_CONFIG_PATH = "open-next.container.config.ts";
+
+		try {
+			const adapter = buildAdapter(() => ({}));
+			const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
+			await adapter.modifyConfig(nextConfig, { phase: "production" });
+
+			expect(compileOpenNextConfig).toHaveBeenCalledWith("open-next.container.config.ts", {
+				compileEdge: true,
+			});
+		} finally {
+			if (previousConfigPath === undefined) {
+				delete process.env.OPEN_NEXT_CONFIG_PATH;
+			} else {
+				process.env.OPEN_NEXT_CONFIG_PATH = previousConfigPath;
+			}
+		}
+	});
+
 	test("modifyConfig returns nextConfig with cacheHandler, cacheHandlers, cacheMaxMemorySize, and trustHostHeader", async () => {
 		const adapter = buildAdapter(() => ({}));
 

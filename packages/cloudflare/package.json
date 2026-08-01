@@ -51,6 +51,7 @@
 	},
 	"dependencies": {
 		"@ast-grep/napi": "0.40.5",
+		"@cloudflare/containers": "^0.3.7",
 		"@dotenvx/dotenvx": "catalog:",
 		"@opennextjs/core": "workspace:*",
 		"cloudflare": "^4.4.1",

@@ -11,6 +11,7 @@ import type { OpenNextConfig } from "../../../api/config.js";
 export function ensureCloudflareConfig(config: OpenNextConfig) {
 	const mwIsMiddlewareExternal = config.middleware?.external === true;
 	const mwConfig = mwIsMiddlewareExternal ? (config.middleware as ExternalMiddlewareConfig) : undefined;
+	const isContainer = config.cloudflare?.container === true;
 
 	const requirements = {
 		// Check for the default function
@@ -27,6 +28,12 @@ export function ensureCloudflareConfig(config: OpenNextConfig) {
 			config.default?.override?.queue === "dummy" ||
 			config.default?.override?.queue === "direct" ||
 			typeof config.default?.override?.queue === "function",
+		dftUseNodeWrapper: config.default?.override?.wrapper === "node",
+		dftUseNodeConverter: config.default?.override?.converter === "node",
+		dftGenerateDockerfile: config.default?.override?.generateDockerfile === true,
+		dftUseDummyCache: config.default?.override?.incrementalCache === "dummy",
+		dftUseDummyTagCache: config.default?.override?.tagCache === "dummy",
+		dftUseDummyQueue: config.default?.override?.queue === "dummy",
 		// Check for the middleware function
 		mwIsMiddlewareExternal,
 		mwUseCloudflareWrapper: mwConfig?.override?.wrapper === "cloudflare-edge",
@@ -39,8 +46,34 @@ export function ensureCloudflareConfig(config: OpenNextConfig) {
 		logger.warn("The direct mode queue is not recommended for use in production.");
 	}
 
-	if (Object.values(requirements).some((satisfied) => !satisfied)) {
-		const errorMessage =
+	const workerRequirements = [
+		requirements.dftUseCloudflareWrapper,
+		requirements.dftUseEdgeConverter,
+		requirements.dftUseFetchProxy,
+		requirements.dftMaybeUseCache,
+		requirements.dftMaybeUseTagCache,
+		requirements.dftMaybeUseQueue,
+	];
+	const containerRequirements = [
+		requirements.dftUseNodeWrapper,
+		requirements.dftUseNodeConverter,
+		requirements.dftGenerateDockerfile,
+		requirements.dftUseDummyCache,
+		requirements.dftUseDummyTagCache,
+		requirements.dftUseDummyQueue,
+	];
+	const commonRequirements = [
+		requirements.mwIsMiddlewareExternal,
+		requirements.mwUseCloudflareWrapper,
+		requirements.mwUseEdgeConverter,
+		requirements.mwUseFetchProxy,
+		requirements.hasCryptoExternal,
+	];
+
+	if (
+		![...(isContainer ? containerRequirements : workerRequirements), ...commonRequirements].every(Boolean)
+	) {
+		const workerErrorMessage =
 			"The `open-next.config.ts` should have a default export like this:\n\n" +
 			`{
           default: {
@@ -66,6 +99,31 @@ export function ensureCloudflareConfig(config: OpenNextConfig) {
             },
           },
         }\n\n`.replace(/^ {8}/gm, "");
+		const containerErrorMessage =
+			"The `open-next.config.ts` should use this configuration for Cloudflare Containers:\n\n" +
+			`{
+          default: {
+            override: {
+              wrapper: "node",
+              converter: "node",
+              generateDockerfile: true,
+              incrementalCache: "dummy",
+              tagCache: "dummy",
+              queue: "dummy",
+            },
+          },
+          edgeExternals: ["node:crypto"],
+          cloudflare: { container: true },
+          middleware: {
+            external: true,
+            override: {
+              wrapper: "cloudflare-edge",
+              converter: "edge",
+              proxyExternalRequest: "fetch",
+            },
+          },
+        }\n\n`.replace(/^ {8}/gm, "");
+		const errorMessage = isContainer ? containerErrorMessage : workerErrorMessage;
 		if (config.cloudflare?.dangerousDisableConfigValidation) {
 			logger.warn(errorMessage);
 			return;

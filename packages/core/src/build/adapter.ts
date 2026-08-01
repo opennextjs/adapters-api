@@ -104,16 +104,17 @@ export function buildAdapter<T = OpenNextOutput>(
 		name: "OpenNext",
 
 		async modifyConfig(nextConfig, { phase: _phase }) {
+			const openNextConfigPath = process.env.OPEN_NEXT_CONFIG_PATH ?? "open-next.config.ts";
 			// Step 1: Compile OpenNext config with edge support, fallback on failure
 			let result: { config: OpenNextConfig; buildDir: string };
 			try {
-				result = await compileOpenNextConfig("open-next.config.ts", { compileEdge: true });
+				result = await compileOpenNextConfig(openNextConfigPath, { compileEdge: true });
 			} catch (error) {
 				console.warn(
-					"Failed to compile open-next.config.ts for edge runtime, falling back to node-only compilation.",
+					`Failed to compile ${openNextConfigPath} for edge runtime, falling back to node-only compilation.`,
 					error instanceof Error ? error.message : error
 				);
-				result = await compileOpenNextConfig("open-next.config.ts", { compileEdge: false });
+				result = await compileOpenNextConfig(openNextConfigPath, { compileEdge: false });
 			}
 
 			config = result.config;

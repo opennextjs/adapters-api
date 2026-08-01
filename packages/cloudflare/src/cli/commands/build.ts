@@ -1,4 +1,5 @@
 import { createRequire } from "node:module";
+import path from "node:path";
 
 import logger from "@opennextjs/core/logger.js";
 import type yargs from "yargs";
@@ -39,6 +40,7 @@ export async function buildCommand(
 
 	const require = createRequire(import.meta.url);
 	process.env.NEXT_ADAPTER_PATH = require.resolve("../adapter.js");
+	process.env.OPEN_NEXT_CONFIG_PATH = path.resolve(args.openNextConfigPath ?? "open-next.config.ts");
 
 	// Ask whether a `wrangler.jsonc` should be created when no config file exists.
 	// Note: We don't ask when a custom config file is specified via `--config`
@@ -56,7 +58,11 @@ export async function buildCommand(
 		}
 	}
 
-	await buildImpl(options, projectOpts);
+	try {
+		await buildImpl(options, projectOpts);
+	} finally {
+		delete process.env.OPEN_NEXT_CONFIG_PATH;
+	}
 }
 
 /**

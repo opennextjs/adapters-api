@@ -4,9 +4,21 @@ import { getAppPort, getInspectorPort, type AppName } from "./apps";
 
 declare const process: typeof nodeProcess;
 
-export function configurePlaywright(
-	app: AppName,
-	{
+type ConfigurePlaywrightOptions = {
+	/** Whether the Playwright run is executing in CI. */
+	isCI?: boolean;
+	/** Whether the app runs in a Worker instead of through `next dev`. */
+	isWorker?: boolean;
+	multipleBrowsers?: boolean;
+	parallel?: boolean;
+	useTurbopack?: boolean;
+	workerBuildScript?: string;
+	workerPreviewScript?: string;
+	testMatch?: string | string[];
+};
+
+export function configurePlaywright(app: AppName, options: ConfigurePlaywrightOptions = {}) {
+	const {
 		// Do we run on CI?
 		isCI = Boolean(process.env.CI),
 		// Do we run on workers (`wrangler dev`) or on Node (`next dev`)
@@ -17,8 +29,13 @@ export function configurePlaywright(
 		parallel = true,
 		// Use the turbopack runtime
 		useTurbopack = false,
-	} = {}
-) {
+		// Script used to build the Worker before starting it
+		workerBuildScript = "build:worker",
+		// Script used to start the Worker
+		workerPreviewScript = "preview:worker",
+		// Test file or glob to run
+		testMatch,
+	} = options;
 	const port = getAppPort(app, { isWorker });
 	const inspectorPort = getInspectorPort(app);
 	const baseURL = `http://localhost:${port}`;
@@ -26,10 +43,11 @@ export function configurePlaywright(
 	let timeout: number;
 	if (isWorker) {
 		// Do not build on CI - there is a preceding build step
-		command = isCI ? "" : `pnpm ${useTurbopack ? "build:worker-turbopack" : "build:worker"} && `;
+		const buildScript = useTurbopack ? "build:worker-turbopack" : workerBuildScript;
+		command = isCI ? "" : `pnpm ${buildScript} && `;
 
 		const env = app === "r2-incremental-cache" ? "--env e2e" : "";
-		command += `pnpm preview:worker -- --port ${port} --inspector-port ${inspectorPort} ${env}`;
+		command += `pnpm ${workerPreviewScript} -- --port ${port} --inspector-port ${inspectorPort} ${env}`;
 		timeout = 800_000;
 	} else {
 		timeout = 100_000;
@@ -63,6 +81,7 @@ export function configurePlaywright(
 		testIgnore: isWorker ? "*next.spec.ts" : "*cloudflare.spec.ts",
 		/* Run tests in files in parallel */
 		fullyParallel: parallel,
+		...(testMatch ? { testMatch } : {}),
 		/* Fail the build on CI if you accidentally left test.only in the source code. */
 		forbidOnly: isCI,
 		/* Retry on CI only */
