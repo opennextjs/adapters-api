@@ -1,5 +1,5 @@
 import routingHandler from "@opennextjs/core/core/routingHandler.js";
-import type { InternalEvent } from "@opennextjs/core/types/open-next.js";
+import type { InternalEvent, InternalResult } from "@opennextjs/core/types/open-next.js";
 import { vi } from "vitest";
 
 vi.mock("@/config/index", () => ({
@@ -19,6 +19,12 @@ vi.mock("@/config/index", () => ({
 					sourceRegex: "^/old$",
 					destination: "/about",
 					headers: { location: "/about" },
+					status: 308,
+				},
+				{
+					sourceRegex: "^/moved$",
+					destination: "/about?q=a b",
+					headers: { Location: "https://localhost/about?q=a b", "x-custom": "1" },
 					status: 308,
 				},
 			],
@@ -102,8 +108,20 @@ describe("routingHandler", () => {
 
 		expect(result).toMatchObject({
 			statusCode: 308,
-			headers: { Location: "/about" },
+			headers: { location: "/about" },
 		});
+	});
+
+	it("returns a single redirect target when the matched route already set a location", async () => {
+		const result = await routingHandler(event("/moved"));
+
+		expect((result as InternalResult).headers).toMatchObject({
+			location: "/about?q=a%20b",
+			"x-custom": "1",
+		});
+		expect(
+			Object.keys((result as InternalResult).headers).filter((key) => key.toLowerCase() === "location")
+		).toEqual(["location"]);
 	});
 
 	it("uses the resolver invocation target for internal rewrites", async () => {

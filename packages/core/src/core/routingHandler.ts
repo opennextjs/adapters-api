@@ -260,13 +260,16 @@ export default async function routingHandler(
 
 		const responseHeaders = routingResult.resolvedHeaders ?? new Headers();
 		if (routingResult.redirect) {
+			// The resolver already set a `location` from the matched route headers. It must be replaced
+			// - and not merely added to the record - so that the response has a single redirect target.
+			responseHeaders.set(
+				"location",
+				normalizeLocationHeader(routingResult.redirect.url.toString(), event.url, true)
+			);
 			return {
 				type: event.type,
 				statusCode: routingResult.redirect.status,
-				headers: {
-					...headersToRecord(responseHeaders),
-					Location: normalizeLocationHeader(routingResult.redirect.url.toString(), event.url, true),
-				},
+				headers: headersToRecord(responseHeaders),
 				body: emptyReadableStream(),
 				isBase64Encoded: false,
 			};
