@@ -7,7 +7,8 @@ vi.mock("@/config/index", () => ({
 	NextConfig: { experimental: {}, images: {} },
 	RoutingConfig: {
 		buildId: "build-id",
-		pathnames: ["/about", "/blog/[slug]", "/ssr"],
+		// `/about/` is the trailing slash variant emitted for `trailingSlash` enabled apps.
+		pathnames: ["/about", "/about/", "/blog/[slug]", "/ssr"],
 		routeIndex: {
 			"/about": { type: "app", isFallback: false, isISR: false },
 			"/blog/[slug]": { type: "app", isFallback: false, isISR: true },
@@ -73,6 +74,18 @@ describe("routingHandler", () => {
 			internalEvent: {
 				rawPath: "/about",
 				url: "https://localhost/about",
+			},
+			resolvedRoutes: [{ route: "/about", type: "app", isFallback: false }],
+		});
+	});
+
+	it("selects the executable route of a pathname resolved with a trailing slash", async () => {
+		const result = await routingHandler(event("/about/"));
+
+		expect(result).toMatchObject({
+			internalEvent: {
+				rawPath: "/about/",
+				url: "https://localhost/about/",
 			},
 			resolvedRoutes: [{ route: "/about", type: "app", isFallback: false }],
 		});

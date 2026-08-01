@@ -138,8 +138,11 @@ function getResolvedRoute(pathname: string | undefined): ResolvedRoute[] {
 	if (!pathname) {
 		return [];
 	}
-	const route = RoutingConfig.routeIndex[pathname];
-	return route ? [{ route: pathname, ...route }] : [];
+	// When `trailingSlash` is enabled the resolver matches - and reports - the trailing slash variant
+	// of the pathname. The index is keyed by the route itself, which never has a trailing slash.
+	const route = pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+	const indexedRoute = RoutingConfig.routeIndex[route];
+	return indexedRoute ? [{ route, ...indexedRoute }] : [];
 }
 
 function createRoutingResult(

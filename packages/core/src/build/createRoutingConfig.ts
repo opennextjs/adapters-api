@@ -9,6 +9,23 @@ import type * as buildHelper from "./helper.js";
 const EXECUTABLE_OUTPUT_TYPES = ["pages", "pagesApi", "appPages", "appRoutes"] as const;
 const PATHNAME_OUTPUT_TYPES = [...EXECUTABLE_OUTPUT_TYPES, "staticFiles"] as const;
 
+// Matches the pathnames Next considers to be files - i.e. whose last segment has an extension.
+const FILE_PATHNAME_REGEX = /\.\w+$/;
+
+/**
+ * Adds the trailing slash variant of every pathname that Next canonicalizes with a trailing slash.
+ *
+ * The resolver matches pathnames by strict equality and has no notion of `trailingSlash`, so with
+ * the option enabled it would never match a request - they all carry a trailing slash. Both forms
+ * are needed: the slash free one is the one matching while the canonicalizing redirect is emitted.
+ */
+function withTrailingSlashVariants(pathnames: string[]): string[] {
+	return pathnames.flatMap((pathname) =>
+		// Files are canonicalized the other way around - their trailing slash is stripped.
+		pathname.endsWith("/") || FILE_PATHNAME_REGEX.test(pathname) ? [pathname] : [pathname, `${pathname}/`]
+	);
+}
+
 export function createRoutingConfig(
 	options: buildHelper.BuildOptions,
 	context: BuildCompleteContext
@@ -38,9 +55,12 @@ export function createRoutingConfig(
 		}
 	}
 
-	const pathnames = PATHNAME_OUTPUT_TYPES.flatMap((outputType) =>
+	const outputPathnames = PATHNAME_OUTPUT_TYPES.flatMap((outputType) =>
 		(context.outputs[outputType] ?? []).map((output) => output.pathname)
 	);
+	const pathnames = context.config.trailingSlash
+		? withTrailingSlashVariants(outputPathnames)
+		: outputPathnames;
 	const routingConfig: RuntimeRoutingConfig = {
 		buildId: context.buildId,
 		routes: context.routing,
