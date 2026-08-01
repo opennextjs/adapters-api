@@ -16,6 +16,7 @@ import { debug, error } from "../adapters/logger";
 import { cacheInterceptor } from "./routing/cacheInterceptor";
 import { detectLocale } from "./routing/i18n";
 import { getMiddlewareMatchPath, shouldInvokeMiddleware } from "./routing/middleware";
+import { resolvePriorityRedirect, splitPriorityRoutes } from "./routing/priorityRoutes";
 import { convertBodyToReadableStream, constructNextUrl, normalizeLocationHeader } from "./routing/util";
 
 export const MIDDLEWARE_HEADER_PREFIX = "x-middleware-response-";
@@ -26,6 +27,8 @@ export const INTERNAL_HEADER_LOCALE = `${INTERNAL_HEADER_PREFIX}locale`;
 export const INTERNAL_HEADER_RESOLVED_ROUTES = `${INTERNAL_HEADER_PREFIX}resolved-routes`;
 export const INTERNAL_HEADER_REWRITE_STATUS_CODE = `${INTERNAL_HEADER_PREFIX}rewrite-status-code`;
 export const INTERNAL_EVENT_REQUEST_ID = `${INTERNAL_HEADER_PREFIX}request-id`;
+
+const { priorityRoutes, resolverRoutes } = /* @__PURE__ */ splitPriorityRoutes(RoutingConfig.routes);
 
 const geoHeaderToNextHeader = {
 	"x-open-next-city": "x-vercel-ip-city",
@@ -196,12 +199,24 @@ export default async function routingHandler(
 			}
 		}
 
+		const requestUrl = new URL(event.url);
+		const priorityRedirect = resolvePriorityRedirect(priorityRoutes, requestUrl, new Headers(event.headers));
+		if (priorityRedirect) {
+			return {
+				type: event.type,
+				statusCode: priorityRedirect.status,
+				headers: headersToRecord(priorityRedirect.headers),
+				body: emptyReadableStream(),
+				isBase64Encoded: false,
+			};
+		}
+
 		let directMiddlewareResult: InternalResult | undefined;
 		let middlewareHeaders = new Headers(event.headers);
 		const buildId = RoutingConfig.buildId || BuildId;
 		const basePath = NextConfig.basePath ?? "";
 		const routingResult = await resolveRoutes({
-			url: new URL(event.url),
+			url: requestUrl,
 			buildId,
 			basePath,
 			i18n: NextConfig.i18n
@@ -217,7 +232,7 @@ export default async function routingHandler(
 			//@ts-expect-error
 			requestBody: convertBodyToReadableStream(event.method, event.body),
 			pathnames: RoutingConfig.pathnames,
-			routes: RoutingConfig.routes,
+			routes: resolverRoutes,
 			invokeMiddleware: async (context) => {
 				middlewareHeaders = context.headers;
 				// The matchers must be tested against the pathname resolved by the router - the locale has
