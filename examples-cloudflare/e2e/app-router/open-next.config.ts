@@ -24,10 +24,4 @@ const baseConfig = defineCloudflareConfig({
 	queue: queueCache(doQueue),
 });
 
-export default {
-	...baseConfig,
-	dangerous: {
-		...baseConfig.dangerous,
-		middlewareHeadersOverrideNextConfigHeaders: true,
-	},
-};
+export default baseConfig;

@@ -47,7 +47,7 @@ export default function proxy(request: NextRequest) {
 	// Response headers should show up in the client's response headers
 	responseHeaders.set("response-header", "response-header");
 
-	// For dangerous.middlewareHeadersOverrideNextConfigHeaders we need to verify that middleware headers override next.config.js headers.
+	// We need to verify that middleware headers override next.config.js headers.
 	if (path === "/headers/override-from-middleware") {
 		responseHeaders.set("e2e-headers", "middleware");
 		return NextResponse.json({}, { headers: responseHeaders });
