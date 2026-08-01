@@ -7,9 +7,11 @@ vi.mock("@/config/index", () => ({
 	NextConfig: { experimental: {}, images: {} },
 	RoutingConfig: {
 		buildId: "build-id",
-		pathnames: ["/about"],
+		pathnames: ["/about", "/blog/[slug]", "/ssr"],
 		routeIndex: {
-			"/about": { type: "app", isFallback: false },
+			"/about": { type: "app", isFallback: false, isISR: false },
+			"/blog/[slug]": { type: "app", isFallback: false, isISR: true },
+			"/ssr": { type: "app", isFallback: false, isISR: false },
 		},
 		routes: {
 			beforeMiddleware: [
@@ -25,7 +27,12 @@ vi.mock("@/config/index", () => ({
 				{ sourceRegex: "^/rewrite$", destination: "/about?from=rewrite" },
 				{ sourceRegex: "^/external$", destination: "https://example.com/target" },
 			],
-			dynamicRoutes: [],
+			dynamicRoutes: [
+				{
+					sourceRegex: "^/blog/(?<nxtPslug>[^/]+?)$",
+					destination: "/blog/[slug]?slug=$nxtPslug",
+				},
+			],
 			onMatch: [],
 			fallback: [],
 		},
@@ -62,6 +69,31 @@ describe("routingHandler", () => {
 				url: "https://localhost/about",
 			},
 			resolvedRoutes: [{ route: "/about", type: "app", isFallback: false }],
+		});
+	});
+
+	it("flags requests resolving to a prerendered route as ISR", async () => {
+		const result = await routingHandler(event("/blog/hello"));
+
+		expect(result).toMatchObject({
+			isISR: true,
+			resolvedRoutes: [{ route: "/blog/[slug]", type: "app", isFallback: false, isISR: true }],
+		});
+	});
+
+	it("does not flag requests resolving to a non prerendered route as ISR", async () => {
+		const result = await routingHandler(event("/ssr"));
+
+		expect(result).toMatchObject({ isISR: false });
+	});
+
+	it("does not flag unresolved routes as ISR", async () => {
+		const result = await routingHandler(event("/unknown"));
+
+		expect(result).toMatchObject({
+			isISR: false,
+			internalEvent: { rawPath: "/404" },
+			resolvedRoutes: [],
 		});
 	});
 

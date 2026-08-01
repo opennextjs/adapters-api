@@ -156,7 +156,9 @@ function createRoutingResult(
 		internalEvent: event,
 		isExternalRewrite: options.isExternalRewrite ?? false,
 		origin: false,
-		isISR: false,
+		// The route is only served from the cache when it is prerendered. Routes that could not be
+		// resolved - external rewrites, 404s - are never ISR.
+		isISR: resolvedRoutes.some((route) => route.isISR),
 		resolvedRoutes,
 		initialURL: options.initialURL ?? event.url,
 		locale: NextConfig.i18n ? detectLocale(event, NextConfig.i18n) : undefined,

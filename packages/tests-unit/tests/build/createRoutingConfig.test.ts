@@ -24,6 +24,14 @@ describe("createRoutingConfig", () => {
 				appPages: [{ pathname: "/app", filePath: "/app.js", assets: {} }],
 				appRoutes: [{ pathname: "/route", filePath: "/route.js", assets: {} }],
 				staticFiles: [{ pathname: "/asset.js", filePath: "/asset.js", assets: {} }],
+				prerenders: [
+					// The template of a dynamic route and a prerendered non dynamic route.
+					{ pathname: "/app" },
+					{ pathname: "/pages" },
+					// Concrete paths and data variants do not match an executable route.
+					{ pathname: "/pages/prerendered" },
+					{ pathname: "/app.rsc" },
+				],
 			},
 		} as BuildCompleteContext;
 
@@ -34,10 +42,10 @@ describe("createRoutingConfig", () => {
 			routes: context.routing,
 			pathnames: ["/pages", "/api/hello", "/app", "/route", "/asset.js"],
 			routeIndex: {
-				"/pages": { type: "page", isFallback: false },
-				"/api/hello": { type: "page", isFallback: false },
-				"/app": { type: "app", isFallback: false },
-				"/route": { type: "route", isFallback: false },
+				"/pages": { type: "page", isFallback: false, isISR: true },
+				"/api/hello": { type: "page", isFallback: false, isISR: false },
+				"/app": { type: "app", isFallback: false, isISR: true },
+				"/route": { type: "route", isFallback: false, isISR: false },
 			},
 		});
 		expect(fs.writeFileSync).toHaveBeenCalledWith(

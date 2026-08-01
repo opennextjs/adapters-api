@@ -20,7 +20,21 @@ export function createRoutingConfig(
 			routeIndex[output.pathname] = {
 				type: outputType === "appPages" ? "app" : outputType === "appRoutes" ? "route" : "page",
 				isFallback: false,
+				isISR: false,
 			};
+		}
+	}
+
+	// Prerender outputs are emitted both for the concrete pathname of every prerendered route and
+	// for the template pathname of every dynamic route with `getStaticPaths`/`generateStaticParams`.
+	// Only some of them match an executable route: the prerendered non dynamic routes and the
+	// dynamic templates - a request for a concrete path of a dynamic route resolves to its template.
+	// The remaining ones (concrete paths of dynamic routes, `.rsc` and `_next/data` variants) have
+	// no entry in the index and are simply ignored here.
+	for (const prerender of context.outputs.prerenders ?? []) {
+		const route = routeIndex[prerender.pathname];
+		if (route) {
+			route.isISR = true;
 		}
 	}
 

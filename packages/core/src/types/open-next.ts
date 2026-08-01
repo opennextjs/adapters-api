@@ -161,6 +161,11 @@ export interface ResolvedRoute {
 	 * They shouldn't be used to serve the request directly.
 	 */
 	isFallback: boolean;
+	/**
+	 * Indicates if the route is prerendered - it either has a build time cache entry or is a
+	 * dynamic route generating (and caching) its pages on demand.
+	 */
+	isISR?: boolean;
 }
 
 /**
