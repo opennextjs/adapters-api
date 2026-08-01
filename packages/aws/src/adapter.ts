@@ -37,6 +37,7 @@ export default buildAdapter((_config, buildOpts: BuildOptions) => ({
 		},
 	},
 	serverBundle: {
+		externals: ["./middleware.mjs"],
 		additionalPlugins: (updater: ContentUpdater, outputs: NextAdapterOutputs) => {
 			const packagePath = buildHelper.getPackagePath(buildOpts);
 			return [inlineRouteHandler(updater, outputs, packagePath), externalChunksPlugin(outputs, packagePath)];

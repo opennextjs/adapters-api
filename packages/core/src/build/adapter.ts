@@ -60,14 +60,18 @@ export type OpenNextAdapterOptions<T = OpenNextOutput> = {
 	skipWarmer?: boolean;
 	skipGenerateOutput?: boolean;
 	middlewareOptions?: { forceOnlyBuildOnce?: boolean };
-	serverBundle?: {
+	serverBundle: {
 		additionalPlugins?: (updater: ContentUpdater, outputs: NextAdapterOutputs) => Plugin[];
 		additionalCodePatches?: CodePatcher[];
 		useEdgeConfig?: boolean;
-		externals?: string[];
+		/**
+		 * The esbuild externals for the server bundle. Every adapter has to declare
+		 * them explicitly — there is no implicit default.
+		 */
+		externals: string[];
 		banner?: string[] | ((name: string) => string[]);
 	};
-	beforeMiddleware?: (buildOpts: buildHelper.BuildOptions, config: OpenNextConfig) => Promise<void>;
+	beforeServerBundle?: (buildOpts: buildHelper.BuildOptions, config: OpenNextConfig) => Promise<void>;
 	afterServerBundle?: (buildOpts: buildHelper.BuildOptions, config: OpenNextConfig) => Promise<void>;
 	tempCachePath?: (buildOpts: buildHelper.BuildOptions, packagePath: string) => string;
 	/**
@@ -174,13 +178,13 @@ export function buildAdapter<T = OpenNextOutput>(
 		},
 
 		async onBuildComplete(ctx) {
-			console.log("OpenNext build will start now");
+			logger.info("OpenNext build will start now");
 
 			// Step 1: Save debug output
 			addDebugFile(buildOpts, "outputs.json", ctx);
 
-			// Step 2: Call beforeMiddleware hook
-			await adapterOptions.beforeMiddleware?.(buildOpts, config);
+			// Step 2: Call beforeServerBundle hook
+			await adapterOptions.beforeServerBundle?.(buildOpts, config);
 
 			const bundleDefaults = adapterOptions.defaultOverrides;
 
@@ -197,17 +201,18 @@ export function buildAdapter<T = OpenNextOutput>(
 
 			// Step 5: Cache assets
 			if (buildOpts.config.dangerous?.disableIncrementalCache !== true) {
-				const { useTagCache } = createCacheAssets(buildOpts);
+				const { shouldUseTagCache } = createCacheAssets(buildOpts);
 				console.log("Cache assets created");
-				if (useTagCache) {
+				if (shouldUseTagCache) {
 					await compileTagCacheProvider(buildOpts, bundleDefaults?.tagCache);
 					console.log("Tag cache provider compiled");
 				}
 			}
 
 			// Step 6: Build wrapped additionalPlugins
-			const wrappedAdditionalPlugins = adapterOptions.serverBundle?.additionalPlugins
-				? (updater: ContentUpdater) => adapterOptions.serverBundle!.additionalPlugins!(updater, ctx.outputs)
+			const serverBundle = adapterOptions.serverBundle;
+			const wrappedAdditionalPlugins = serverBundle.additionalPlugins
+				? (updater: ContentUpdater) => serverBundle.additionalPlugins!(updater, ctx.outputs)
 				: undefined;
 
 			// Step 7: Create server bundle
@@ -215,10 +220,10 @@ export function buildAdapter<T = OpenNextOutput>(
 				buildOpts,
 				{
 					additionalPlugins: wrappedAdditionalPlugins,
-					additionalCodePatches: adapterOptions.serverBundle?.additionalCodePatches,
-					useEdgeConfig: adapterOptions.serverBundle?.useEdgeConfig,
-					externals: adapterOptions.serverBundle?.externals,
-					banner: adapterOptions.serverBundle?.banner,
+					additionalCodePatches: serverBundle.additionalCodePatches,
+					useEdgeConfig: serverBundle.useEdgeConfig,
+					externals: serverBundle.externals,
+					banner: serverBundle.banner,
 					bundleDefaults,
 				},
 				ctx.outputs

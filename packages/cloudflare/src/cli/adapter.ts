@@ -32,7 +32,7 @@ export default buildAdapter((config: OpenNextConfig, buildOpts: BuildOptions) =>
 		skipWarmer: true,
 		skipGenerateOutput: true,
 		middlewareOptions: { forceOnlyBuildOnce: true },
-		beforeMiddleware: async (buildOpts, _config) => {
+		beforeServerBundle: async (buildOpts, _config) => {
 			// Import edge-compiled config for skew protection
 			const configPath = path.join(
 				buildOpts.appBuildOutputPath,
