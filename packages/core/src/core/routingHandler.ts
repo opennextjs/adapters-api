@@ -40,7 +40,7 @@ type MiddlewareLoader = () => Promise<{ default: Middleware }>;
 
 function defaultMiddlewareLoader() {
 	// @ts-expect-error - This is bundled with the runtime handler.
-	return import("./routing/middleware.mjs");
+	return import("./middleware.mjs");
 }
 
 function headersToRecord(headers: Headers): Record<string, string | string[]> {
@@ -175,8 +175,8 @@ export default async function routingHandler(
 					}
 				: undefined,
 			headers: middlewareHeaders,
-			requestBody: (convertBodyToReadableStream(event.method, event.body) ??
-				emptyReadableStream()) as unknown as ReadableStream,
+			//@ts-expect-error
+			requestBody: convertBodyToReadableStream(event.method, event.body),
 			pathnames: RoutingConfig.pathnames,
 			routes: RoutingConfig.routes,
 			invokeMiddleware: async (context) => {
