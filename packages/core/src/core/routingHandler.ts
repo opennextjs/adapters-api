@@ -1,4 +1,4 @@
-import { resolveRoutes, responseToMiddlewareResult } from "@next/routing";
+import { type MiddlewareResult, resolveRoutes, responseToMiddlewareResult } from "@next/routing";
 
 import { BuildId, NextConfig, RoutingConfig } from "@/config/index";
 import type {
@@ -107,6 +107,33 @@ function toInternalEvent(
 	};
 }
 
+/**
+ * Middleware that builds a destination from a missing `host` header - i.e.
+ * `new URL(path, `${protocol}://${host}`)` - ends up with a literal `null` origin
+ * (`https://null/path`). Such a destination would be treated as external and fetched
+ * from the `null` hostname, so we restore the origin of the incoming request instead.
+ */
+function restoreNullOrigin(result: MiddlewareResult, requestUrl: URL): void {
+	const restore = (url: URL): boolean => {
+		if (url.hostname !== "null") {
+			return false;
+		}
+		url.protocol = requestUrl.protocol;
+		url.host = requestUrl.host;
+		return true;
+	};
+
+	if (result.rewrite) {
+		restore(result.rewrite);
+	}
+	if (result.redirect && restore(result.redirect.url)) {
+		// The `location` header has already been derived from the redirect url.
+		const location = result.redirect.url.toString();
+		result.responseHeaders?.set("location", location);
+		result.requestHeaders?.set("location", location);
+	}
+}
+
 function getResolvedRoute(pathname: string | undefined): ResolvedRoute[] {
 	if (!pathname) {
 		return [];
@@ -205,6 +232,7 @@ export default async function routingHandler(
 					body: context.requestBody,
 				} as unknown as Request);
 				const result = responseToMiddlewareResult(response, context.headers, context.url);
+				restoreNullOrigin(result, context.url);
 				if (result.bodySent) {
 					directMiddlewareResult = {
 						type: event.type,
