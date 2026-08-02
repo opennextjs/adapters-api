@@ -3,6 +3,7 @@ import { Writable } from "node:stream";
 
 import cookieParser from "cookie";
 
+import { parseSetCookieHeader } from "@/http/util";
 import type { InternalEvent, InternalResult, MiddlewareResult, StreamCreator } from "@/types/open-next";
 import type { Converter } from "@/types/overrides";
 
@@ -54,8 +55,12 @@ const converter: Converter<InternalEvent, InternalResult | MiddlewareResult> = {
 		const url = new URL(request.url);
 		const { promise: output, resolve: resolveOutput } = Promise.withResolvers<Response>();
 		const abortSignal = (context as { abortSignal?: AbortSignal } | undefined)?.abortSignal;
+		// Not every handler streams its response: the external middleware handler returns the
+		// result directly. We track whether the stream was used to know which one to return.
+		let isStreamed = false;
 		const streamCreator: StreamCreator = {
 			writeHeaders(prelude) {
+				isStreamed = true;
 				const responseHeaders = new Headers(prelude.headers);
 				for (const cookie of prelude.cookies) {
 					responseHeaders.append("Set-Cookie", cookie);
@@ -119,15 +124,47 @@ const converter: Converter<InternalEvent, InternalResult | MiddlewareResult> = {
 			streamCreator,
 			output,
 			data: async (result) => {
-				if (!("internalEvent" in result)) {
-					return undefined;
+				if ("internalEvent" in result) {
+					return convertMiddlewareResult(result);
 				}
-				return convertMiddlewareResult(result);
+				// When the handler streamed the response, `output` already holds it.
+				return isStreamed ? undefined : convertInternalResult(result);
 			},
 		};
 	},
 	name: "edge",
 };
+
+function convertInternalResult(result: InternalResult): Response {
+	const headers = new Headers();
+	for (const [key, value] of Object.entries(result.headers)) {
+		if (key === "set-cookie" && typeof value === "string") {
+			// If the value is a string, we need to parse it into an array
+			// This is the case for middleware direct result
+			for (const cookie of parseSetCookieHeader(value)) {
+				headers.append(key, cookie);
+			}
+			continue;
+		}
+		if (Array.isArray(value)) {
+			for (const v of value) {
+				headers.append(key, v);
+			}
+		} else {
+			headers.set(key, value);
+		}
+	}
+
+	// We should not return a body for statusCode's that doesn't allow bodies
+	const body = NULL_BODY_STATUSES.has(result.statusCode)
+		? null
+		: ((result.body ?? null) as ReadableStream | null);
+
+	return new Response(body, {
+		status: result.statusCode,
+		headers,
+	});
+}
 
 async function convertMiddlewareResult(
 	result: MiddlewareResult
