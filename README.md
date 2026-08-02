@@ -60,15 +60,19 @@ You can read more about the configuration in the [docs](https://opennext.js.org/
 
 Besides the standard npm releases we also automatically publish prerelease packages on branch pushes (using [`pkg.pr.new`](https://github.com/stackblitz-labs/pkg.pr.new)):
 
-- `https://pkg.pr.new/@opennextjs/aws@main`:
+- `https://pkg.pr.new/opennextjs/adapters-api/@opennextjs/aws@main`:
   Updated with every push to the `main` branch, this prerelease contains the most up to date yet (reasonably) stable version of the package.
-- `https://pkg.pr.new/@opennextjs/aws@experimental`
+- `https://pkg.pr.new/opennextjs/adapters-api/@opennextjs/aws@experimental`
   Updated with every push to the `experimental` branch, this prerelease contains the latest experimental version of the package (containing features that we want to test/experiment on before committing to).
+
+The URLs include the `opennextjs/adapters-api` owner/repo prefix: the compact form
+(`https://pkg.pr.new/@opennextjs/aws@main`) resolves through the npm `repository` field, which still
+points at the previous repositories, so it would serve packages from the wrong repo.
 
 Which you can simply install directly with your package manager of choice, for example:
 
 ```bash
-npm i https://pkg.pr.new/@opennextjs/aws@main
+npm i https://pkg.pr.new/opennextjs/adapters-api/@opennextjs/aws@main
 ```
 
 ## Contribute
