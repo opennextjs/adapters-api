@@ -68,6 +68,21 @@ function headersToRecord(headers: Headers): Record<string, string | string[]> {
 	return result;
 }
 
+/**
+ * Converts the headers of the routed request to the record the middleware expects.
+ *
+ * Next builds the middleware `Request` from `Object.entries(request.headers)`, which yields nothing
+ * for a `Headers` instance - the middleware would see a request without a single header, and the
+ * headers it forwards with `NextResponse.next({ request })` would drop every one of them.
+ */
+function headersToRequestRecord(headers: Headers): Record<string, string> {
+	const result: Record<string, string> = {};
+	headers.forEach((value, key) => {
+		result[key] = value;
+	});
+	return result;
+}
+
 function applyResponseHeaders(eventOrResult: InternalEvent | InternalResult, headers: Headers): void {
 	const isResult = isInternalResult(eventOrResult);
 	const keyPrefix = isResult ? "" : MIDDLEWARE_HEADER_PREFIX;
@@ -212,6 +227,7 @@ export default async function routingHandler(
 		}
 
 		let directMiddlewareResult: InternalResult | undefined;
+		let middlewareRewriteStatusCode: number | undefined;
 		let middlewareHeaders = new Headers(event.headers);
 		const buildId = RoutingConfig.buildId || BuildId;
 		const basePath = NextConfig.basePath ?? "";
@@ -243,6 +259,11 @@ export default async function routingHandler(
 					return { requestHeaders: context.headers };
 				}
 
+				// The middleware runs on the user visible pathname, so a `_next/data` request has to be
+				// invoked on the page it carries - the middleware has no route for the data pathname.
+				const middlewareUrl = new URL(context.url);
+				middlewareUrl.pathname = matchPath;
+
 				const middleware = await middlewareLoader();
 				const response = await middleware.default({
 					geo: {
@@ -252,18 +273,23 @@ export default async function routingHandler(
 						latitude: event.headers["x-open-next-latitude"],
 						longitude: event.headers["x-open-next-longitude"],
 					},
-					headers: context.headers,
+					headers: headersToRequestRecord(context.headers),
 					method: event.method || "GET",
 					nextConfig: {
 						basePath: NextConfig.basePath,
 						i18n: NextConfig.i18n,
 						trailingSlash: NextConfig.trailingSlash,
 					},
-					url: context.url.toString(),
+					url: middlewareUrl.toString(),
 					body: context.requestBody,
 				} as unknown as Request);
 				const result = responseToMiddlewareResult(response, context.headers, context.url);
 				restoreNullOrigin(result, context.url);
+				// The resolver has no notion of the status of a rewrite, but `NextResponse.rewrite(url,
+				// { status })` serves the destination with that status - it has to be carried over here.
+				if (result.rewrite && response.status !== 200) {
+					middlewareRewriteStatusCode = response.status;
+				}
 				if (result.bodySent) {
 					directMiddlewareResult = {
 						type: event.type,
@@ -282,6 +308,7 @@ export default async function routingHandler(
 		}
 
 		const responseHeaders = routingResult.resolvedHeaders ?? new Headers();
+		const rewriteStatusCode = routingResult.status ?? middlewareRewriteStatusCode;
 		if (routingResult.redirect) {
 			// The resolver already set a `location` from the matched route headers. It must be replaced
 			// - and not merely added to the record - so that the response has a single redirect target.
@@ -319,7 +346,7 @@ export default async function routingHandler(
 			applyResponseHeaders(externalEvent, responseHeaders);
 			return createRoutingResult(externalEvent, [], {
 				isExternalRewrite: true,
-				rewriteStatusCode: routingResult.status,
+				rewriteStatusCode,
 				initialURL: event.url,
 			});
 		}
@@ -336,7 +363,7 @@ export default async function routingHandler(
 			};
 			applyResponseHeaders(notFoundEvent, responseHeaders);
 			return createRoutingResult(notFoundEvent, [], {
-				rewriteStatusCode: routingResult.status,
+				rewriteStatusCode,
 				initialURL: event.url,
 			});
 		}
@@ -353,7 +380,7 @@ export default async function routingHandler(
 				middlewareHeaders,
 				routingResult.resolvedQuery ?? routingResult.invocationTarget.query
 			),
-			rewriteStatusCode: routingResult.status,
+			rewriteStatusCode,
 		};
 		const resolvedRoutes = getResolvedRoute(routingResult.resolvedPathname);
 
@@ -375,7 +402,7 @@ export default async function routingHandler(
 			};
 			applyResponseHeaders(notFoundEvent, responseHeaders);
 			return createRoutingResult(notFoundEvent, [], {
-				rewriteStatusCode: routingResult.status,
+				rewriteStatusCode,
 				initialURL: event.url,
 			});
 		}
@@ -390,7 +417,7 @@ export default async function routingHandler(
 			applyResponseHeaders(cacheInterceptionResult.result, responseHeaders);
 			applyResponseHeaders(cacheInterceptionResult.resumeRequest, responseHeaders);
 			return createRoutingResult(cacheInterceptionResult.resumeRequest, resolvedRoutes, {
-				rewriteStatusCode: routingResult.status,
+				rewriteStatusCode,
 				initialResponse: cacheInterceptionResult.result,
 				initialURL: event.url,
 			});
@@ -398,7 +425,7 @@ export default async function routingHandler(
 
 		applyResponseHeaders(cacheInterceptionResult, responseHeaders);
 		return createRoutingResult(cacheInterceptionResult, resolvedRoutes, {
-			rewriteStatusCode: routingResult.status,
+			rewriteStatusCode,
 			initialURL: event.url,
 		});
 	} catch (e) {

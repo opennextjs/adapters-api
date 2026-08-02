@@ -5,6 +5,7 @@ import type { RuntimeRoutingConfig } from "../types/adapter.js";
 
 import type { BuildCompleteContext } from "./adapter.js";
 import type * as buildHelper from "./helper.js";
+import { normalizeRouting } from "./normalizeRouting.js";
 
 const EXECUTABLE_OUTPUT_TYPES = ["pages", "pagesApi", "appPages", "appRoutes"] as const;
 const PATHNAME_OUTPUT_TYPES = [...EXECUTABLE_OUTPUT_TYPES, "staticFiles"] as const;
@@ -150,7 +151,10 @@ export function createRoutingConfig(
 	];
 	const routingConfig: RuntimeRoutingConfig = {
 		buildId: context.buildId,
-		routes: context.routing,
+		routes: normalizeRouting(context.routing, {
+			locales: context.config.i18n?.locales ?? [],
+			apiPathnames: new Set(context.outputs.pagesApi.map((output) => output.pathname)),
+		}),
 		pathnames,
 		routeIndex,
 	};
