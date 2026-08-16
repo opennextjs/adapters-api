@@ -4,7 +4,6 @@ import type { StoredComposableCacheEntry } from "@/types/cache";
 import type { InternalEvent, InternalResult } from "@/types/open-next";
 import type {
 	CacheEntryType,
-	CachedFile,
 	CachedFetchValue,
 	CacheValue,
 	OpenNextHandlerOptions,
@@ -13,6 +12,7 @@ import type {
 
 import { createGenericHandler } from "../core/createGenericHandler.js";
 import { resolveCdnInvalidation, resolveIncrementalCache, resolveTagCache } from "../core/resolve.js";
+import { computeEntryCacheControl } from "../utils/cache-control.js";
 import { getTagsFromValue, isStale, writeTags } from "../utils/cache.js";
 import { runWithOpenNextRequestContext } from "../utils/promise.js";
 import { toReadableStream } from "../utils/stream.js";
@@ -130,19 +130,23 @@ async function handleGet(
 			};
 		}
 
-		if (result.value && !result.shouldBypassTagCache) {
-			let tags: string[] = [...additionalTags];
+		// The tags are also used to make the response purgeable, so they are derived for every hit,
+		// including the ones bypassing the tag cache.
+		let tags: string[] = [...additionalTags];
 
-			if (cacheType === "cache") {
-				tags = [...tags, ...getTagsFromValue(result.value as CacheValue<"cache">)];
-			} else if (cacheType === "fetch") {
-				const fetchValue = result.value as CachedFetchValue;
-				tags = [...tags, ...(fetchValue.tags ?? []), ...(fetchValue.data?.tags ?? [])];
-			} else if (cacheType === "composable") {
-				const composableValue = result.value as StoredComposableCacheEntry;
-				tags = [...tags, ...(composableValue.tags ?? [])];
-			}
+		if (cacheType === "cache") {
+			tags = [...tags, ...getTagsFromValue(result.value as CacheValue<"cache">)];
+		} else if (cacheType === "fetch") {
+			const fetchValue = result.value as CachedFetchValue;
+			tags = [...tags, ...(fetchValue.tags ?? []), ...(fetchValue.data?.tags ?? [])];
+		} else if (cacheType === "composable") {
+			const composableValue = result.value as StoredComposableCacheEntry;
+			tags = [...tags, ...(composableValue.tags ?? [])];
+		}
 
+		let isEntryStale = false;
+
+		if (!result.shouldBypassTagCache) {
 			const lastModified = result.lastModified ?? Date.now();
 
 			if (tags.length > 0) {
@@ -163,13 +167,15 @@ async function handleGet(
 			}
 
 			// Check if the cache entry is stale (valid but needs background revalidation)
-			const _isStale = tags.length > 0 ? await isStale(key, tags, lastModified) : false;
-			if (_isStale) {
+			isEntryStale = tags.length > 0 ? await isStale(key, tags, lastModified) : false;
+			if (isEntryStale) {
 				result.lastModified = 1;
 			}
 		}
 
-		return buildCacheGetResponse(result);
+		// We default to the entry key when no tag is found, so that page router based entries can also
+		// be purged this way.
+		return buildCacheGetResponse(result, isEntryStale, tags.length > 0 ? tags : [key]);
 	} catch (e) {
 		error("Failed to get cache entry", e);
 		return buildErrorResponse("Failed to get cache entry", 500);
@@ -399,13 +405,23 @@ async function handleRevalidateTags(body?: Buffer): Promise<InternalResult> {
 // Cache GET response builder //
 /////////////////////////////
 
-function buildCacheGetResponse(result: WithLastModified<CacheValue<CacheEntryType>>): InternalResult {
+function buildCacheGetResponse(
+	result: WithLastModified<CacheValue<CacheEntryType>>,
+	isStaleFromTagCache: boolean,
+	tags: string[]
+): InternalResult {
 	const value = result.value!;
 
 	const headers: Record<string, string | string[]> = {
 		"x-opennext-cache-found": "true",
-		"Cache-Control": "no-store",
+		"Cache-Control": computeEntryCacheControl(value, result.lastModified, isStaleFromTagCache),
 	};
+
+	// The `Cache-Control` above lets an HTTP cache store this response, it can only be invalidated
+	// through a purge keyed on these tags. See `computeEntryCacheControl`.
+	if (tags.length > 0) {
+		headers["cache-tag"] = tags.join(",");
+	}
 
 	if (result.lastModified !== undefined) {
 		headers["x-opennext-cache-last-modified"] = String(result.lastModified);
@@ -415,23 +431,27 @@ function buildCacheGetResponse(result: WithLastModified<CacheValue<CacheEntryTyp
 	}
 
 	if ("kind" in value && value.kind === "FETCH") {
-		return buildFetchResponse(value as CachedFetchValue, headers);
+		return buildFetchResponse(value as CacheValue<"fetch">, headers);
 	}
 
 	if ("type" in value) {
-		return buildCachedFileResponse(value as CachedFile, headers);
+		return buildCachedFileResponse(value as CacheValue<"cache">, headers);
 	}
 
 	return buildComposableResponse(value as StoredComposableCacheEntry, headers);
 }
 
 function buildFetchResponse(
-	value: CachedFetchValue,
+	value: CacheValue<"fetch">,
 	headers: Record<string, string | string[]>
 ): InternalResult {
 	headers["x-opennext-cache-type"] = "fetch";
 	headers["x-opennext-cache-fetch-kind"] = "FETCH";
 	headers["x-opennext-cache-fetch-data-url"] = value.data.url;
+
+	if (value.revalidate !== undefined) {
+		headers["x-opennext-cache-revalidate"] = String(value.revalidate);
+	}
 
 	if (value.data.status !== undefined) {
 		headers["x-opennext-cache-fetch-data-status"] = String(value.data.status);
@@ -458,11 +478,15 @@ function buildFetchResponse(
 }
 
 function buildCachedFileResponse(
-	value: CachedFile,
+	value: CacheValue<"cache">,
 	headers: Record<string, string | string[]>
 ): InternalResult {
 	headers["x-opennext-cache-type"] = "cache";
 	headers["x-opennext-cache-sub-type"] = value.type;
+
+	if (value.revalidate !== undefined) {
+		headers["x-opennext-cache-revalidate"] = String(value.revalidate);
+	}
 
 	if (value.meta?.status !== undefined) {
 		headers["x-opennext-cache-meta-status"] = String(value.meta.status);

@@ -56,13 +56,14 @@ describe("serviceCache", () => {
 						"x-opennext-cache-type": "cache",
 						"x-opennext-cache-sub-type": "route",
 						"x-opennext-cache-last-modified": "1234",
+						"x-opennext-cache-revalidate": "60",
 					},
 				})
 			);
 
 			await expect(serviceCache.get("key")).resolves.toEqual({
 				lastModified: 1234,
-				value: expect.objectContaining({ type: "route", body: "body" }),
+				value: expect.objectContaining({ type: "route", body: "body", revalidate: 60 }),
 			});
 		});
 	});
