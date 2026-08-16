@@ -8,6 +8,13 @@
 		"directory": ".open-next/assets",
 		"binding": "ASSETS",
 	},
+	"exports": {
+		// The Next.js server must not be served from the Workers cache.
+		"default": { "type": "worker", "cache": { "enabled": false } },
+		// The OpenNext cache entrypoint returns cacheable responses, cache them.
+		// see https://opennext.js.org/cloudflare/caching
+		"OpenNextCache": { "type": "worker", "cache": { "enabled": true } },
+	},
 	"services": [
 		{
 			"binding": "NEXT_CACHE_SERVICE",

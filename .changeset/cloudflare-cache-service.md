@@ -24,6 +24,18 @@ This requires a new self referencing service binding in the wrangler configurati
 The cache runs in the same worker by default. Pointing the binding at another worker is enough to
 run the cache as a service of its own.
 
+Workers Caching should also be configured per entrypoint so that only the cache entrypoint is served
+from the Workers cache, never the Next.js server. This requires wrangler `4.107.0` or greater:
+
+```jsonc
+"exports": {
+  // The Next.js server must not be served from the Workers cache.
+  "default": { "type": "worker", "cache": { "enabled": false } },
+  // The OpenNext cache entrypoint returns cacheable responses, cache them.
+  "OpenNextCache": { "type": "worker", "cache": { "enabled": true } }
+}
+```
+
 `defineCloudflareConfig` is otherwise unchanged. Configurations that are not created by
 `defineCloudflareConfig` should move `incrementalCache` and `tagCache` from `default.override` to
 the new top level `cacheHandler` option, and set `default.override.cache`.

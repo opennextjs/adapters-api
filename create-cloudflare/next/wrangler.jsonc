@@ -17,6 +17,13 @@
 		// see https://opennext.js.org/cloudflare/howtos/image
 		"binding": "IMAGES"
 	},
+	"exports": {
+		// The Next.js server must not be served from the Workers cache.
+		"default": { "type": "worker", "cache": { "enabled": false } },
+		// The OpenNext cache entrypoint returns cacheable responses, cache them.
+		// see https://opennext.js.org/cloudflare/caching
+		"OpenNextCache": { "type": "worker", "cache": { "enabled": true } }
+	},
 	"services": [
 		{
 			// Self-reference service binding, the service name must match the worker name
