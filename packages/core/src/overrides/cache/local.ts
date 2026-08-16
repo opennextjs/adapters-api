@@ -41,17 +41,21 @@ const localCache: Cache = {
 		// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 		return parseCacheGetResponse(result.headers, bodyText) as any;
 	},
-	set: async (key, value, _cacheType) => {
+	set: async (key, value, cacheType) => {
 		const h = (await getHandler())!;
 		const encodedKey = encodeURIComponent(key);
 		const url = `https://on/cache/${encodedKey}`;
+		// The cache type has to be forwarded: incremental caches may key entries on it,
+		// writing without it would store the entry where `get` does not look for it.
+		const query: Record<string, string> = {};
+		if (cacheType) query.type = cacheType;
 		const event: InternalEvent = {
 			type: "core",
 			method: "PUT",
 			rawPath: `/cache/${encodedKey}`,
 			url,
 			headers: { "Content-Type": "application/json" },
-			query: {},
+			query,
 			cookies: {},
 			remoteAddress: "127.0.0.1",
 			body: Buffer.from(JSON.stringify({ value })),

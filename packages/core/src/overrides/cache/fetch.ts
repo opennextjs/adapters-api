@@ -20,8 +20,11 @@ const fetchCache: Cache = {
 		// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 		return parseCacheGetResponse(headers, bodyText) as any;
 	},
-	set: async (key, value, _cacheType) => {
-		const url = `${CACHE_URL}/cache/${encodeURIComponent(key)}`;
+	set: async (key, value, cacheType) => {
+		// The cache type has to be forwarded: incremental caches may key entries on it,
+		// writing without it would store the entry where `get` does not look for it.
+		const queryString = cacheType ? `?type=${cacheType}` : "";
+		const url = `${CACHE_URL}/cache/${encodeURIComponent(key)}${queryString}`;
 		await fetch(url, {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },

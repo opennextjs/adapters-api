@@ -100,9 +100,9 @@ export default {
 			return;
 		}
 		try {
-			await globalThis.cache.revalidateTags(tags, {
-				expire: durations?.expire ? Date.now() + durations.expire * 1000 : undefined,
-			});
+			// `durations.expire` is a delay in seconds, it is turned into a timestamp by the cache
+			// handler function - it should not be converted here as well.
+			await globalThis.cache.revalidateTags(tags, durations);
 		} catch (e) {
 			debug("Failed to update tags", e);
 		}

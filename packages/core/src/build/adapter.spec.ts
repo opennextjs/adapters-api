@@ -64,6 +64,10 @@ vi.mock("./createImageOptimizationBundle.js", () => ({
 	createImageOptimizationBundle: vi.fn(),
 }));
 
+vi.mock("./createCacheBundle.js", () => ({
+	createCacheBundle: vi.fn(),
+}));
+
 vi.mock("./createWarmerBundle.js", () => ({
 	createWarmerBundle: vi.fn(),
 }));
@@ -94,6 +98,7 @@ import { compileCache } from "./compileCache.js";
 import { compileOpenNextConfig } from "./compileConfig.js";
 import { compileTagCacheProvider } from "./compileTagCacheProvider.js";
 import { createStaticAssets, createCacheAssets } from "./createAssets.js";
+import { createCacheBundle } from "./createCacheBundle.js";
 import { createImageOptimizationBundle } from "./createImageOptimizationBundle.js";
 import { createMiddleware } from "./createMiddleware.js";
 import { createRevalidationBundle } from "./createRevalidationBundle.js";
@@ -252,6 +257,21 @@ describe("buildAdapter", () => {
 		await adapter.onBuildComplete(ctx);
 
 		expect(createRevalidationBundle).not.toHaveBeenCalled();
+	});
+
+	test("onBuildComplete skips createCacheBundle when skipCache is true", async () => {
+		const adapter = buildAdapter(() => ({
+			serverBundle,
+			skipCache: true,
+		}));
+
+		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
+		await adapter.modifyConfig(nextConfig, { phase: "production" });
+
+		const ctx = createMockContext();
+		await adapter.onBuildComplete(ctx);
+
+		expect(createCacheBundle).not.toHaveBeenCalled();
 	});
 
 	test("onBuildComplete calls influence.beforeServerBundle BEFORE createMiddleware", async () => {

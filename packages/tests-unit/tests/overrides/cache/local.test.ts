@@ -167,6 +167,17 @@ describe("local cache", () => {
 			const event = mockHandler.mock.calls[0][0];
 			expect(event.rawPath).toBe("/cache/special%2Fkey");
 		});
+
+		// Incremental caches may key entries on the cache type, writing without it would store
+		// the entry where `get` does not look for it.
+		it("should forward the cache type", async () => {
+			mockHandler.mockResolvedValue(createMockResult());
+
+			await localCache.set("key", {}, "composable");
+
+			const event = mockHandler.mock.calls[0][0];
+			expect(event.query).toEqual({ type: "composable" });
+		});
 	});
 
 	describe("delete", () => {

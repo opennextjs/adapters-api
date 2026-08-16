@@ -167,6 +167,14 @@ describe("fetch cache", () => {
 
 			expect(global.fetch).toHaveBeenCalledWith("/cache/special%2Fkey", expect.any(Object));
 		});
+
+		// Incremental caches may key entries on the cache type, writing without it would store
+		// the entry where `get` does not look for it.
+		it("should forward the cache type", async () => {
+			await fetchCache.set("key", {}, "composable");
+
+			expect(global.fetch).toHaveBeenCalledWith("/cache/key?type=composable", expect.any(Object));
+		});
 	});
 
 	describe("delete", () => {
