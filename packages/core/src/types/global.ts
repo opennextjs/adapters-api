@@ -4,6 +4,7 @@ import type { OutgoingHttpHeaders } from "node:http";
 import type {
 	AssetResolver,
 	CDNInvalidationHandler,
+	Cache,
 	IncrementalCache,
 	ProxyExternalRequest,
 	Queue,
@@ -194,6 +195,13 @@ declare global {
 	 * Defined in the esbuild banner.
 	 */
 	var openNextVersion: string;
+
+	/**
+	 * The cache client used to communicate with the cache handler function.
+	 * Only available in main functions.
+	 * Defined in `createMainHandler`.
+	 */
+	var cache: Cache;
 
 	/**
 	 * The function that is used when resolving external rewrite requests.
