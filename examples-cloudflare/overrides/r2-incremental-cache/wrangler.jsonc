@@ -8,6 +8,13 @@
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
 	},
+	"services": [
+		{
+			"binding": "NEXT_CACHE_SERVICE",
+			"service": "r2-incremental-cache",
+			"entrypoint": "OpenNextCache"
+		}
+	],
 	"env": {
 		"e2e": {
 			"d1_databases": [

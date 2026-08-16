@@ -1,7 +1,11 @@
 import { createHash } from "node:crypto";
 
 import { error } from "@opennextjs/core/adapters/logger.js";
-import type { CacheEntryType, CacheValue } from "@opennextjs/core/types/overrides.js";
+import type {
+	CacheEntryType,
+	CacheValue,
+	NextModeTagCacheWriteInput,
+} from "@opennextjs/core/types/overrides.js";
 
 import { getCloudflareContext } from "../cloudflare-context.js";
 
@@ -32,9 +36,20 @@ export function computeCacheKey(key: string, options: KeyOptions) {
 	return `${prefix}/${buildId}/${hash}.${cacheType}`.replace(/\/+/g, "/");
 }
 
+/**
+ * `writeTags` accepts either plain tag names or objects carrying the `stale`/`expire` durations.
+ * The Cloudflare tag caches do not support durations, they only need the names.
+ */
+export function toTagNames(tags: (string | NextModeTagCacheWriteInput)[]): string[] {
+	return tags.map((tag) => (typeof tag === "string" ? tag : tag.tag));
+}
+
 export function isPurgeCacheEnabled(): boolean {
 	// The `?` is required at `openNextConfig?` or the Open Next build fails because of a type error
-	const cdnInvalidation = globalThis.openNextConfig?.default?.override?.cdnInvalidation;
+	// The cache handler function only has `cacheHandler` populated, the other functions only have `default`.
+	const cdnInvalidation =
+		globalThis.openNextConfig?.cacheHandler?.cdnInvalidation ??
+		globalThis.openNextConfig?.default?.override?.cdnInvalidation;
 
 	return cdnInvalidation !== undefined && cdnInvalidation !== "dummy";
 }

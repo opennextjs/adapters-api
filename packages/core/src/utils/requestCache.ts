@@ -10,19 +10,19 @@
  * ```
  */
 export class RequestCache {
-  private _caches = new Map<string, Map<unknown, unknown>>();
+	private _caches = new Map<string, Map<unknown, unknown>>();
 
-  /**
-   * Returns the Map registered under `key`.
-   * If no Map exists yet for that key, a new empty Map is created, stored, and returned.
-   * Repeated calls with the same key always return the **same** Map instance.
-   */
-  getOrCreate<K = unknown, V = unknown>(key: string): Map<K, V> {
-    let cache = this._caches.get(key) as Map<K, V> | undefined;
-    if (!cache) {
-      cache = new Map<K, V>();
-      this._caches.set(key, cache);
-    }
-    return cache;
-  }
+	/**
+	 * Returns the Map registered under `key`.
+	 * If no Map exists yet for that key, a new empty Map is created, stored, and returned.
+	 * Repeated calls with the same key always return the **same** Map instance.
+	 */
+	getOrCreate<K = unknown, V = unknown>(key: string): Map<K, V> {
+		let cache = this._caches.get(key) as Map<K, V> | undefined;
+		if (!cache) {
+			cache = new Map<K, V>();
+			this._caches.set(key, cache);
+		}
+		return cache;
+	}
 }
