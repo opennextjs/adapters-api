@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { buildAdapter } from "@opennextjs/core/build/adapter.js";
+import { createCacheBundle } from "@opennextjs/core/build/createCacheBundle.js";
 import type { BuildOptions } from "@opennextjs/core/build/helper.js";
 import * as buildHelper from "@opennextjs/core/build/helper.js";
 import type { ContentUpdater } from "@opennextjs/core/plugins/content-updater.js";
@@ -14,6 +15,7 @@ import type { OpenNextConfig } from "@opennextjs/core/types/open-next.js";
 import { normalizePath } from "@opennextjs/core/utils/normalize-path.js";
 
 import { bundleServer } from "./build/bundle-server.js";
+import { compileCacheEntrypoint } from "./build/open-next/compile-cache-entrypoint.js";
 import { compileEnvFiles } from "./build/open-next/compile-env-files.js";
 import { compileImages } from "./build/open-next/compile-images.js";
 import { compileInit } from "./build/open-next/compile-init.js";
@@ -31,6 +33,9 @@ export default buildAdapter((config: OpenNextConfig, buildOpts: BuildOptions) =>
 		skipImageOptimization: true,
 		skipWarmer: true,
 		skipGenerateOutput: true,
+		// The cache function is bundled by `beforeServerBundle` instead: it has to be emitted
+		// before the worker is bundled, and unconditionally as the worker always imports it.
+		skipCache: true,
 		middlewareOptions: { forceOnlyBuildOnce: true },
 		beforeServerBundle: async (buildOpts, _config) => {
 			// Import edge-compiled config for skew protection
@@ -45,6 +50,7 @@ export default buildAdapter((config: OpenNextConfig, buildOpts: BuildOptions) =>
 			await compileInit(buildOpts, {} as any);
 			await compileImages(buildOpts);
 			await compileSkewProtection(buildOpts, openNextConfig);
+			await buildCacheFunction(buildOpts);
 		},
 		serverBundle: {
 			useEdgeConfig: true,
@@ -76,3 +82,30 @@ export default buildAdapter((config: OpenNextConfig, buildOpts: BuildOptions) =>
 		},
 	};
 });
+
+/**
+ * Bundles the cache handler function and the named entrypoint exposing it.
+ *
+ * The cache function runs in the workerd runtime, as part of the worker, so it uses the
+ * edge flavour of the config - as the server bundle does.
+ */
+async function buildCacheFunction(buildOpts: BuildOptions) {
+	// The cache handler is served by the `OpenNextCache` named entrypoint, it is bundled as a
+	// regular fetch handler.
+	await createCacheBundle(buildOpts, {
+		wrapper: "@opennextjs/core/overrides/wrappers/cloudflare-edge.js",
+		converter: "@opennextjs/core/overrides/converters/edge.js",
+	});
+
+	// `createCacheBundle` copies the node config, replace it with the edge one when available.
+	const useEdgeConfig = fs.existsSync(path.join(buildOpts.buildDir, "open-next.config.edge.mjs"));
+	if (useEdgeConfig) {
+		buildHelper.copyOpenNextConfig(
+			buildOpts.buildDir,
+			path.join(buildOpts.outputDir, "cache-function"),
+			true
+		);
+	}
+
+	await compileCacheEntrypoint(buildOpts);
+}

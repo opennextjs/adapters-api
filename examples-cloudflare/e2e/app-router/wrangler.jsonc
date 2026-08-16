@@ -40,6 +40,11 @@
 		{
 			"binding": "WORKER_SELF_REFERENCE",
 			"service": "app-router"
+		},
+		{
+			"binding": "NEXT_CACHE_SERVICE",
+			"service": "app-router",
+			"entrypoint": "OpenNextCache"
 		}
 	],
 	"vars": {
