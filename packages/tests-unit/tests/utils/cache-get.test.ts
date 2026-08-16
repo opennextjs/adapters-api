@@ -186,6 +186,22 @@ describe("parseCacheGetResponse", () => {
 			});
 		});
 
+		it("should reconstruct a `false` revalidate", () => {
+			const headers = {
+				"x-opennext-cache-found": "true",
+				"x-opennext-cache-type": "cache",
+				"x-opennext-cache-sub-type": "route",
+				"x-opennext-cache-revalidate": "false",
+			};
+			const result = parseCacheGetResponse(headers, "route body");
+
+			expect(result!.value).toEqual({
+				type: "route",
+				body: "route body",
+				revalidate: false,
+			});
+		});
+
 		it("should reconstruct a page cache entry", () => {
 			const headers = {
 				"x-opennext-cache-found": "true",

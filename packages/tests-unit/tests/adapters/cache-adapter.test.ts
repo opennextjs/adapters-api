@@ -2,8 +2,9 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 import { handler } from "@opennextjs/core/adapters/cache-adapter";
 import type { InternalEvent, InternalResult, OpenNextConfig } from "@opennextjs/core/types/open-next";
+import { CACHE_ONE_YEAR } from "@opennextjs/core/utils/cache-control";
 import { fromReadableStream } from "@opennextjs/core/utils/stream";
-import { type Mock, vi, describe, expect, it, beforeEach } from "vitest";
+import { type Mock, vi, describe, expect, it, afterEach, beforeEach } from "vitest";
 
 const mockResolveIncrementalCache = vi.hoisted(() => vi.fn());
 const mockResolveTagCache = vi.hoisted(() => vi.fn());
@@ -266,6 +267,149 @@ describe("cache-adapter", () => {
 		});
 	});
 
+	describe("Cache-Control and cache-tag in GET", () => {
+		// The computed ttls are relative to `Date.now()`, freeze it so that they are deterministic.
+		beforeEach(() => {
+			vi.useFakeTimers({ toFake: ["Date"] });
+			vi.setSystemTime(1_700_000_000_000);
+		});
+
+		afterEach(() => {
+			vi.useRealTimers();
+		});
+
+		it("should not store a miss", async () => {
+			mockIncrementalCache.get.mockResolvedValue(null);
+
+			const result = await runHandler(createEvent());
+
+			expect(result.headers["Cache-Control"]).toBe("no-store");
+		});
+
+		it("should not store a tag revalidated entry", async () => {
+			mockTagCache.mode = "original";
+			mockTagCache.getLastModified.mockResolvedValue(-1);
+			mockIncrementalCache.get.mockResolvedValue({
+				value: {
+					type: "route",
+					body: "data",
+					meta: { headers: { "x-next-cache-tags": "tag1" } },
+				},
+				lastModified: 1000,
+			});
+
+			const result = await runHandler(createEvent());
+
+			expect(result.statusCode).toBe(404);
+			expect(result.headers["Cache-Control"]).toBe("no-store");
+		});
+
+		it("should compute the remaining ttl of a cached file entry", async () => {
+			mockIncrementalCache.get.mockResolvedValue({
+				value: { type: "route", body: "route-body", revalidate: 120 },
+				lastModified: Date.now(),
+			});
+
+			const result = await runHandler(createEvent());
+
+			expect(result.headers["Cache-Control"]).toBe("s-maxage=120, stale-while-revalidate=0");
+			expect(result.headers["x-opennext-cache-revalidate"]).toBe("120");
+		});
+
+		it("should forward a `false` revalidate and cache the entry for a year", async () => {
+			mockIncrementalCache.get.mockResolvedValue({
+				value: { type: "app", html: "<html>", rsc: "rsc-data", revalidate: false },
+				lastModified: Date.now(),
+			});
+
+			const result = await runHandler(createEvent());
+
+			expect(result.headers["Cache-Control"]).toBe(`s-maxage=${CACHE_ONE_YEAR}, stale-while-revalidate=0`);
+			expect(result.headers["x-opennext-cache-revalidate"]).toBe("false");
+		});
+
+		it("should not store a cached file entry past its revalidate window", async () => {
+			mockIncrementalCache.get.mockResolvedValue({
+				value: { type: "route", body: "route-body", revalidate: 60 },
+				lastModified: Date.now() - 120_000,
+			});
+
+			const result = await runHandler(createEvent());
+
+			expect(result.headers["Cache-Control"]).toBe("no-store");
+		});
+
+		it("should compute the remaining ttl of a fetch entry", async () => {
+			mockTagCache.getLastModified.mockResolvedValue(1000);
+			mockTagCache.isStale.mockResolvedValue(false);
+			mockIncrementalCache.get.mockResolvedValue({
+				value: {
+					kind: "FETCH",
+					data: { headers: {}, body: "fetch-body", url: "https://example.com" },
+					revalidate: 300,
+					tags: ["fetch-tag"],
+				},
+				lastModified: Date.now(),
+			});
+
+			const result = await runHandler(createEvent({ query: { type: "fetch" } }));
+
+			expect(result.headers["Cache-Control"]).toBe("s-maxage=300, stale-while-revalidate=0");
+			expect(result.headers["x-opennext-cache-revalidate"]).toBe("300");
+			expect(result.headers["cache-tag"]).toBe("fetch-tag");
+		});
+
+		it("should derive the stale window of a composable entry", async () => {
+			mockTagCache.getLastModified.mockResolvedValue(1000);
+			mockTagCache.isStale.mockResolvedValue(false);
+			mockIncrementalCache.get.mockResolvedValue({
+				value: {
+					value: "composable-body",
+					tags: ["composable-tag"],
+					timestamp: Date.now(),
+					revalidate: 60,
+					expire: 300,
+					stale: 5,
+				},
+				lastModified: Date.now(),
+			});
+
+			const result = await runHandler(createEvent({ query: { type: "composable" } }));
+
+			expect(result.headers["Cache-Control"]).toBe("s-maxage=60, stale-while-revalidate=240");
+			expect(result.headers["cache-tag"]).toBe("composable-tag");
+		});
+
+		it("should not store an expired composable entry", async () => {
+			mockIncrementalCache.get.mockResolvedValue({
+				value: {
+					value: "composable-body",
+					tags: [],
+					timestamp: Date.now() - 400_000,
+					revalidate: 600,
+					expire: 300,
+					stale: 5,
+				},
+				lastModified: Date.now() - 400_000,
+			});
+
+			const result = await runHandler(createEvent({ query: { type: "composable" } }));
+
+			expect(result.headers["Cache-Control"]).toBe("no-store");
+		});
+
+		it("should fall back to the cache key when the entry has no tag", async () => {
+			mockIncrementalCache.get.mockResolvedValue({
+				value: { type: "route", body: "route-body", revalidate: 60 },
+				lastModified: Date.now(),
+			});
+
+			const result = await runHandler(createEvent());
+
+			expect(result.headers["cache-tag"]).toBe("test-key");
+		});
+	});
+
 	describe("tag revalidation in GET", () => {
 		it("should return cached value when there are no tags", async () => {
 			mockTagCache.mode = "original";
@@ -400,6 +544,7 @@ describe("cache-adapter", () => {
 
 			expect(result.statusCode).toBe(200);
 			expect(result.headers["x-opennext-cache-last-modified"]).toBe("1");
+			expect(result.headers["Cache-Control"]).toBe("no-store");
 		});
 
 		it("should keep original lastModified when tags are not stale", async () => {
@@ -419,6 +564,7 @@ describe("cache-adapter", () => {
 
 			expect(result.statusCode).toBe(200);
 			expect(result.headers["x-opennext-cache-last-modified"]).toBe("1000");
+			expect(result.headers["cache-tag"]).toBe("tag1");
 		});
 
 		it("should skip isStale when shouldBypassTagCache is true", async () => {
@@ -432,6 +578,24 @@ describe("cache-adapter", () => {
 
 			expect(result.statusCode).toBe(200);
 			expect(mockTagCache.isStale).not.toHaveBeenCalled();
+		});
+
+		it("should still emit the tags when shouldBypassTagCache is true", async () => {
+			mockIncrementalCache.get.mockResolvedValue({
+				value: {
+					type: "route",
+					body: "data",
+					meta: { headers: { "x-next-cache-tags": "tag1,tag2" } },
+				},
+				lastModified: 1000,
+				shouldBypassTagCache: true,
+			});
+
+			const result = await runHandler(createEvent());
+
+			expect(result.statusCode).toBe(200);
+			expect(mockTagCache.isStale).not.toHaveBeenCalled();
+			expect(result.headers["cache-tag"]).toBe("tag1,tag2");
 		});
 	});
 
