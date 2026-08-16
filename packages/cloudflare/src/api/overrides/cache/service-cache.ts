@@ -82,11 +82,11 @@ const serviceCache = {
 		await getCacheService().fetch(getCacheUrl(key), { method: "DELETE" });
 	},
 
-	revalidateTags: async (tags) => {
+	revalidateTags: async (tags, durations) => {
 		await getCacheService().fetch(new URL("/cache/revalidate-tags", CACHE_ORIGIN).href, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ tags }),
+			body: JSON.stringify({ tags, durations }),
 		});
 	},
 } satisfies Cache;

@@ -22,6 +22,7 @@ const mockTagCache = vi.hoisted(() => ({
 	getByTag: vi.fn(),
 	getByPath: vi.fn(),
 	getLastModified: vi.fn(),
+	isStale: vi.fn(),
 	writeTags: vi.fn(),
 	hasBeenRevalidated: vi.fn(),
 	getPathsByTags: undefined as Mock | undefined,
@@ -381,6 +382,57 @@ describe("cache-adapter", () => {
 			expect(mockTagCache.getLastModified).not.toHaveBeenCalled();
 			expect(mockTagCache.hasBeenRevalidated).not.toHaveBeenCalled();
 		});
+
+		it("should set lastModified to 1 when tags are stale", async () => {
+			mockTagCache.mode = "original";
+			mockTagCache.getLastModified.mockResolvedValue(1000);
+			mockTagCache.isStale.mockResolvedValue(true);
+			mockIncrementalCache.get.mockResolvedValue({
+				value: {
+					type: "route",
+					body: "data",
+					meta: { headers: { "x-next-cache-tags": "tag1" } },
+				},
+				lastModified: 1000,
+			});
+
+			const result = await runHandler(createEvent());
+
+			expect(result.statusCode).toBe(200);
+			expect(result.headers["x-opennext-cache-last-modified"]).toBe("1");
+		});
+
+		it("should keep original lastModified when tags are not stale", async () => {
+			mockTagCache.mode = "original";
+			mockTagCache.getLastModified.mockResolvedValue(1000);
+			mockTagCache.isStale.mockResolvedValue(false);
+			mockIncrementalCache.get.mockResolvedValue({
+				value: {
+					type: "route",
+					body: "data",
+					meta: { headers: { "x-next-cache-tags": "tag1" } },
+				},
+				lastModified: 1000,
+			});
+
+			const result = await runHandler(createEvent());
+
+			expect(result.statusCode).toBe(200);
+			expect(result.headers["x-opennext-cache-last-modified"]).toBe("1000");
+		});
+
+		it("should skip isStale when shouldBypassTagCache is true", async () => {
+			mockIncrementalCache.get.mockResolvedValue({
+				value: { type: "route", body: "data" },
+				lastModified: 1000,
+				shouldBypassTagCache: true,
+			});
+
+			const result = await runHandler(createEvent());
+
+			expect(result.statusCode).toBe(200);
+			expect(mockTagCache.isStale).not.toHaveBeenCalled();
+		});
 	});
 
 	describe("PUT /cache/:key", () => {
@@ -675,6 +727,68 @@ describe("cache-adapter", () => {
 			const result = await runHandler(event);
 
 			expect(result.statusCode).toBe(500);
+		});
+
+		it("should accept durations and pass stale/expire - nextMode", async () => {
+			mockTagCache.mode = "nextMode";
+			vi.useFakeTimers().setSystemTime(100000);
+			const event = createEvent({
+				rawPath: "/cache/revalidate-tags",
+				method: "POST",
+				body: Buffer.from(JSON.stringify({ tags: ["tag1"], durations: { expire: 30 } })),
+			});
+
+			await runHandler(event);
+
+			expect(mockTagCache.writeTags).toHaveBeenCalledWith([
+				{ tag: "tag1", stale: 100000, expire: 100000 + 30 * 1000 },
+			]);
+		});
+
+		it("should accept durations and pass stale/expire - original mode", async () => {
+			mockTagCache.mode = "original";
+			mockTagCache.getByTag.mockResolvedValue(["/path1"]);
+			vi.useFakeTimers().setSystemTime(100000);
+			const event = createEvent({
+				rawPath: "/cache/revalidate-tags",
+				method: "POST",
+				body: Buffer.from(JSON.stringify({ tags: ["tag1"], durations: { expire: 30 } })),
+			});
+
+			await runHandler(event);
+
+			expect(mockTagCache.writeTags).toHaveBeenCalledWith([
+				{ path: "/path1", tag: "tag1", stale: 100000, expire: 100000 + 30 * 1000 },
+			]);
+		});
+
+		it("should use immediate expiration when no durations provided - nextMode", async () => {
+			mockTagCache.mode = "nextMode";
+			vi.useFakeTimers().setSystemTime(100000);
+			const event = createEvent({
+				rawPath: "/cache/revalidate-tags",
+				method: "POST",
+				body: Buffer.from(JSON.stringify({ tags: ["tag1"] })),
+			});
+
+			await runHandler(event);
+
+			expect(mockTagCache.writeTags).toHaveBeenCalledWith([{ tag: "tag1", expire: 100000 }]);
+		});
+
+		it("should use immediate expiration when no durations provided - original mode", async () => {
+			mockTagCache.mode = "original";
+			mockTagCache.getByTag.mockResolvedValue(["/path1"]);
+			vi.useFakeTimers().setSystemTime(100000);
+			const event = createEvent({
+				rawPath: "/cache/revalidate-tags",
+				method: "POST",
+				body: Buffer.from(JSON.stringify({ tags: ["tag1"] })),
+			});
+
+			await runHandler(event);
+
+			expect(mockTagCache.writeTags).toHaveBeenCalledWith([{ path: "/path1", tag: "tag1", expire: 100000 }]);
 		});
 	});
 });

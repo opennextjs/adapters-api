@@ -12,6 +12,7 @@ import type {
 } from "@/types/overrides";
 
 import type { DetachedPromiseRunner } from "../utils/promise";
+import type { RequestCache } from "../utils/requestCache";
 
 import type { i18nConfig } from "./next-types.js";
 import type { OpenNextConfig, WaitUntil } from "./open-next";
@@ -69,6 +70,8 @@ interface OpenNextRequestContext {
 	waitUntil?: WaitUntil;
 	/** We use this to deduplicate write of the tags*/
 	writtenTags: Set<string>;
+	/** Per-request in-memory cache. Overrides can use this to store data scoped to the current request. */
+	requestCache: RequestCache;
 }
 
 declare global {
@@ -195,6 +198,12 @@ declare global {
 	 * Defined in the esbuild banner.
 	 */
 	var openNextVersion: string;
+
+	/**
+	 * The version of Next.js used in this build.
+	 * Available in the cache function (defined in the esbuild banner of the cache bundle).
+	 */
+	var nextVersion: string;
 
 	/**
 	 * The cache client used to communicate with the cache handler function.

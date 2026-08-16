@@ -35,11 +35,11 @@ const fetchCache: Cache = {
 		const url = `${CACHE_URL}/cache/${encodeURIComponent(key)}`;
 		await fetch(url, { method: "DELETE" });
 	},
-	revalidateTags: async (tags) => {
+	revalidateTags: async (tags, durations) => {
 		await fetch(`${CACHE_URL}/cache/revalidate-tags`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ tags }),
+			body: JSON.stringify({ tags, durations }),
 		});
 	},
 };

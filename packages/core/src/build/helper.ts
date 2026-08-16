@@ -117,6 +117,7 @@ export function esbuildSync(esbuildOptions: ESBuildOptions, options: BuildOption
 				esbuildOptions.banner?.js || "",
 				`globalThis.openNextDebug = ${debug};`,
 				`globalThis.openNextVersion = "${openNextVersion}";`,
+				`globalThis.nextVersion = "${options.nextVersion}";`,
 			].join(""),
 		},
 	});
@@ -150,6 +151,7 @@ export async function esbuildAsync(esbuildOptions: ESBuildOptions, options: Buil
 				esbuildOptions.banner?.js || "",
 				`globalThis.openNextDebug = ${debug};`,
 				`globalThis.openNextVersion = "${openNextVersion}";`,
+				`globalThis.nextVersion = "${options.nextVersion}";`,
 			].join(""),
 		},
 	});

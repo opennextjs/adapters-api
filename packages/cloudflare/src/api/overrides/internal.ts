@@ -1,7 +1,11 @@
 import { createHash } from "node:crypto";
 
 import { error } from "@opennextjs/core/adapters/logger.js";
-import type { CacheEntryType, CacheValue } from "@opennextjs/core/types/overrides.js";
+import type {
+	CacheEntryType,
+	CacheValue,
+	NextModeTagCacheWriteInput,
+} from "@opennextjs/core/types/overrides.js";
 
 import { getCloudflareContext } from "../cloudflare-context.js";
 
@@ -30,6 +34,14 @@ export function computeCacheKey(key: string, options: KeyOptions) {
 	const { cacheType = "cache", prefix = DEFAULT_PREFIX, buildId = FALLBACK_BUILD_ID } = options;
 	const hash = createHash("sha256").update(key).digest("hex");
 	return `${prefix}/${buildId}/${hash}.${cacheType}`.replace(/\/+/g, "/");
+}
+
+/**
+ * `writeTags` accepts either plain tag names or objects carrying the `stale`/`expire` durations.
+ * The Cloudflare tag caches do not support durations, they only need the names.
+ */
+export function toTagNames(tags: (string | NextModeTagCacheWriteInput)[]): string[] {
+	return tags.map((tag) => (typeof tag === "string" ? tag : tag.tag));
 }
 
 export function isPurgeCacheEnabled(): boolean {
