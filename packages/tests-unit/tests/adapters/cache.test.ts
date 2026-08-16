@@ -535,13 +535,13 @@ describe("CacheHandler", () => {
 		it("Should call cache.revalidateTags with single tag", async () => {
 			await instance.revalidateTag("tag");
 
-			expect(cache.revalidateTags).toHaveBeenCalledWith(["tag"]);
+			expect(cache.revalidateTags).toHaveBeenCalledWith(["tag"], undefined);
 		});
 
 		it("Should call cache.revalidateTags with array of tags", async () => {
 			await instance.revalidateTag(["tag1", "tag2"]);
 
-			expect(cache.revalidateTags).toHaveBeenCalledWith(["tag1", "tag2"]);
+			expect(cache.revalidateTags).toHaveBeenCalledWith(["tag1", "tag2"], undefined);
 		});
 
 		it("Should not call cache.revalidateTags when tags array is empty", async () => {

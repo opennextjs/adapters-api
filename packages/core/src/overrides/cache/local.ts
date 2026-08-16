@@ -78,7 +78,7 @@ const localCache: Cache = {
 		};
 		await h(event);
 	},
-	revalidateTags: async (tags) => {
+	revalidateTags: async (tags, durations) => {
 		const h = (await getHandler())!;
 		const url = `https://on/cache/revalidate-tags`;
 		const event: InternalEvent = {
@@ -90,7 +90,7 @@ const localCache: Cache = {
 			query: {},
 			cookies: {},
 			remoteAddress: "127.0.0.1",
-			body: Buffer.from(JSON.stringify({ tags })),
+			body: Buffer.from(JSON.stringify({ tags, durations })),
 		};
 		await h(event);
 	},

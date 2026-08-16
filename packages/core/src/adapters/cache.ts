@@ -250,7 +250,7 @@ export default class Cache {
 		}
 	}
 
-	public async revalidateTag(tags: string | string[]) {
+	public async revalidateTag(tags: string | string[], durations?: { expire?: number }) {
 		const config = globalThis.openNextConfig.dangerous;
 		if (config?.disableTagCache || config?.disableIncrementalCache) {
 			return;
@@ -261,7 +261,7 @@ export default class Cache {
 		}
 
 		try {
-			await globalThis.cache.revalidateTags(_tags);
+			await globalThis.cache.revalidateTags(_tags, durations);
 		} catch (e) {
 			error("Failed to revalidate tag", e);
 		}

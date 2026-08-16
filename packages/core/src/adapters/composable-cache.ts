@@ -27,8 +27,15 @@ export default {
 
 			debug("composable cache result", result);
 
+			let revalidate = result.value.revalidate;
+			// If the cache adapter signaled staleness via lastModified=1, trigger SWR
+			if (result.lastModified === 1) {
+				revalidate = -1;
+			}
+
 			return {
 				...result.value,
+				revalidate,
 				value: toReadableStream(result.value.value),
 			};
 		} catch (e) {
@@ -80,6 +87,24 @@ export default {
 		const flatTags = tags.flat();
 		if (flatTags.length > 0) {
 			await globalThis.cache.revalidateTags(flatTags);
+		}
+	},
+
+	/**
+	 * Added in Next.js 16. Updates tags with optional stale/expire durations.
+	 * Mirrors the revalidateTag logic but without CDN invalidation
+	 * since composable cache keys are not URL paths.
+	 */
+	async updateTags(tags: string[], durations?: { expire?: number }) {
+		if (tags.length === 0) {
+			return;
+		}
+		try {
+			// `durations.expire` is a delay in seconds, it is turned into a timestamp by the cache
+			// handler function - it should not be converted here as well.
+			await globalThis.cache.revalidateTags(tags, durations);
+		} catch (e) {
+			debug("Failed to update tags", e);
 		}
 	},
 

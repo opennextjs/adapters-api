@@ -1,8 +1,14 @@
 import { error } from "@opennextjs/core/adapters/logger.js";
-import type { NextModeTagCache } from "@opennextjs/core/types/overrides.js";
+import type { NextModeTagCache, NextModeTagCacheWriteInput } from "@opennextjs/core/types/overrides.js";
 
 import { getCloudflareContext } from "../../cloudflare-context.js";
-import { debugCache, FALLBACK_BUILD_ID, isPurgeCacheEnabled, purgeCacheByTags } from "../internal.js";
+import {
+	debugCache,
+	FALLBACK_BUILD_ID,
+	isPurgeCacheEnabled,
+	purgeCacheByTags,
+	toTagNames,
+} from "../internal.js";
 
 export const NAME = "kv-next-mode-tag-cache";
 
@@ -65,7 +71,8 @@ export class KVNextModeTagCache implements NextModeTagCache {
 		return revalidated;
 	}
 
-	async writeTags(tags: string[]): Promise<void> {
+	async writeTags(tagsToWrite: (string | NextModeTagCacheWriteInput)[]): Promise<void> {
+		const tags = toTagNames(tagsToWrite);
 		const kv = this.getKv();
 		if (!kv || tags.length === 0) {
 			return Promise.resolve();

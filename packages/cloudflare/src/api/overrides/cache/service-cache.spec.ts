@@ -92,11 +92,11 @@ describe("serviceCache", () => {
 	});
 
 	it("revalidates tags", async () => {
-		await serviceCache.revalidateTags(["tag1", "tag2"]);
+		await serviceCache.revalidateTags(["tag1", "tag2"], { expire: 10 });
 
 		const { url, method, body } = lastRequest();
 		expect(method).toBe("POST");
 		expect(url.pathname).toBe("/cache/revalidate-tags");
-		expect(JSON.parse(body as string)).toEqual({ tags: ["tag1", "tag2"] });
+		expect(JSON.parse(body as string)).toEqual({ tags: ["tag1", "tag2"], durations: { expire: 10 } });
 	});
 });
