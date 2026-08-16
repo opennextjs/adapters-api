@@ -256,7 +256,8 @@ export type ProxyExternalRequest = BaseOverride & {
 export type Cache = BaseOverride & {
 	get<CacheType extends CacheEntryType = "cache">(
 		key: string,
-		cacheType?: CacheType
+		cacheType?: CacheType,
+		additionalTags?: string[]
 	): Promise<WithLastModified<CacheValue<CacheType>> | null>;
 	set<CacheType extends CacheEntryType = "cache">(
 		key: string,

@@ -75,15 +75,15 @@ declare global {
 	// Needed in the cache adapter
 	/**
 	 * The cache adapter for incremental static regeneration.
-	 * Only available in main functions and in the external middleware when `enableCacheInterception` is `true`.
-	 * Defined in `createMainHandler` and in `adapters/middleware.ts`.
+	 * Only set in the cache handler function (cache-adapter.ts) from `cacheHandler` config.
+	 * Not available in main functions or middleware anymore — use `globalThis.cache` instead.
 	 */
 	var incrementalCache: IncrementalCache;
 
 	/**
 	 * The cache adapter for the tag cache.
-	 * Only available in main functions and in the external middleware when `enableCacheInterception` is `true`.
-	 * Defined in `createMainHandler` and in `adapters/middleware.ts`.
+	 * Only set in the cache handler function (cache-adapter.ts) from `cacheHandler` config.
+	 * Not available in main functions or middleware anymore — use `globalThis.cache` instead.
 	 */
 	var tagCache: TagCache;
 

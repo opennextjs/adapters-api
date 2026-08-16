@@ -5,9 +5,10 @@ const CACHE_URL = process.env.OPEN_NEXT_CACHE_URL ?? "";
 
 const fetchCache: Cache = {
 	name: "fetch-cache",
-	get: async (key, cacheType) => {
+	get: async (key, cacheType, additionalTags) => {
 		const query: Record<string, string> = {};
 		if (cacheType) query.type = cacheType;
+		if (additionalTags && additionalTags.length > 0) query.tags = additionalTags.join(",");
 		const queryString = Object.keys(query).length > 0 ? `?${new URLSearchParams(query).toString()}` : "";
 		const url = `${CACHE_URL}/cache/${encodeURIComponent(key)}${queryString}`;
 		const response = await fetch(url, { method: "GET" });

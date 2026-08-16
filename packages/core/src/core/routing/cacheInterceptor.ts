@@ -4,7 +4,6 @@ import { NextConfig, PrerenderManifest } from "@/config/index";
 import type { InternalEvent, InternalResult, MiddlewareEvent, PartialResult } from "@/types/open-next";
 import type { CacheValue } from "@/types/overrides";
 import { isBinaryContentType } from "@/utils/binary";
-import { getTagsFromValue, hasBeenRevalidated } from "@/utils/cache";
 import { emptyReadableStream, toReadableStream } from "@/utils/stream";
 
 import { debug, error } from "../../adapters/logger";
@@ -340,23 +339,11 @@ export async function cacheInterceptor(
 			} else if (localizedPath === "") {
 				pathToUse = "/index";
 			}
-			const cachedData = await globalThis.incrementalCache.get(pathToUse);
+			const cachedData = await globalThis.cache.get(pathToUse);
 			debug("cached data in interceptor", cachedData);
 
 			if (!cachedData?.value) {
 				return event;
-			}
-			// We need to check the tag cache now
-			if (cachedData.value?.type === "app" || cachedData.value?.type === "route") {
-				const tags = getTagsFromValue(cachedData.value);
-
-				const _hasBeenRevalidated = cachedData.shouldBypassTagCache
-					? false
-					: await hasBeenRevalidated(localizedPath, tags, cachedData);
-
-				if (_hasBeenRevalidated) {
-					return event;
-				}
 			}
 			const host = event.headers.host;
 			switch (cachedData?.value?.type) {

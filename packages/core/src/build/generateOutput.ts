@@ -143,18 +143,20 @@ async function extractOverrideFn(override?: DefaultOverrideOptions) {
 	return { wrapper, converter };
 }
 
+//TODO: fix this, this is stupid
 async function extractCommonOverride(override?: OverrideOptions) {
 	if (!override) {
 		return {
 			queue: "sqs",
-			incrementalCache: "s3",
-			tagCache: "dynamodb",
+			incrementalCache: "s3" as const,
+			tagCache: "dynamodb" as const,
 		};
 	}
 	const queue = await extractOverrideName("sqs", override.queue);
-	const incrementalCache = await extractOverrideName("s3", override.incrementalCache);
-	const tagCache = await extractOverrideName("dynamodb", override.tagCache);
-	return { queue, incrementalCache, tagCache };
+	// incrementalCache and tagCache are no longer in OverrideOptions — they use defaults.
+	// When using a composite cache (default), composite.ts wraps s3 + dynamodb internally.
+	// Custom implementations should be provided via the cacheHandler config or a custom cache override.
+	return { queue, incrementalCache: "s3" as const, tagCache: "dynamodb" as const };
 }
 
 function prefixPattern(basePath: string) {

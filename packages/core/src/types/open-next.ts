@@ -255,18 +255,6 @@ export interface DefaultOverrideOptions<
 
 export interface OverrideOptions extends DefaultOverrideOptions {
 	/**
-	 * Add possibility to override the default s3 cache. Used for fetch cache and html/rsc/json cache.
-	 * @default "s3"
-	 */
-	incrementalCache?: IncludedIncrementalCache | LazyLoadedOverride<IncrementalCache>;
-
-	/**
-	 * Add possibility to override the default tag cache. Used for revalidateTags and revalidatePath.
-	 * @default "dynamodb"
-	 */
-	tagCache?: IncludedTagCache | LazyLoadedOverride<TagCache>;
-
-	/**
 	 * Add possibility to override the default queue. Used for isr.
 	 * @default "sqs"
 	 */
