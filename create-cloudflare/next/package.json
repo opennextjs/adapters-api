@@ -26,6 +26,6 @@
 		"oxlint": "^1.42.0",
 		"tailwindcss": "^4",
 		"typescript": "catalog:",
-		"wrangler": "^4.59.3"
+		"wrangler": "^4.107.0"
 	}
 }
