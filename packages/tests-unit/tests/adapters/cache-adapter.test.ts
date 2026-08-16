@@ -4,7 +4,7 @@ import { handler } from "@opennextjs/core/adapters/cache-adapter";
 import type { InternalEvent, InternalResult, OpenNextConfig } from "@opennextjs/core/types/open-next";
 import { CACHE_ONE_YEAR } from "@opennextjs/core/utils/cache-control";
 import { fromReadableStream } from "@opennextjs/core/utils/stream";
-import { type Mock, vi, describe, expect, it, beforeEach } from "vitest";
+import { type Mock, vi, describe, expect, it, afterEach, beforeEach } from "vitest";
 
 const mockResolveIncrementalCache = vi.hoisted(() => vi.fn());
 const mockResolveTagCache = vi.hoisted(() => vi.fn());
@@ -268,6 +268,16 @@ describe("cache-adapter", () => {
 	});
 
 	describe("Cache-Control and cache-tag in GET", () => {
+		// The computed ttls are relative to `Date.now()`, freeze it so that they are deterministic.
+		beforeEach(() => {
+			vi.useFakeTimers({ toFake: ["Date"] });
+			vi.setSystemTime(1_700_000_000_000);
+		});
+
+		afterEach(() => {
+			vi.useRealTimers();
+		});
+
 		it("should not store a miss", async () => {
 			mockIncrementalCache.get.mockResolvedValue(null);
 
