@@ -22,6 +22,17 @@ function getHeaderNumber(headers: HeadersMap, name: string): number | undefined 
 	return Number.isNaN(n) ? undefined : n;
 }
 
+/**
+ * `revalidate` is either a number of seconds or `false` for entries that never revalidate (SSG).
+ */
+function getHeaderRevalidate(headers: HeadersMap): number | false | undefined {
+	const v = getHeaderValue(headers, "x-opennext-cache-revalidate");
+	if (v === undefined) return undefined;
+	if (v === "false") return false;
+	const n = Number(v);
+	return Number.isNaN(n) ? undefined : n;
+}
+
 function collectPrefixedHeaders(headers: HeadersMap, prefix: string): Record<string, string | string[]> {
 	const result: Record<string, string | string[]> = {};
 	for (const [key, value] of Object.entries(headers)) {
@@ -99,7 +110,7 @@ function reconstructFetch(headers: HeadersMap, bodyText: string, base: Base) {
 	const dataTags = dataTagsStr ? JSON.parse(dataTagsStr) : undefined;
 	const fetchTagsStr = getHeaderValue(headers, "x-opennext-cache-fetch-tags");
 	const fetchTags = fetchTagsStr ? JSON.parse(fetchTagsStr) : undefined;
-	const revalidate = getHeaderNumber(headers, "x-opennext-cache-revalidate");
+	const revalidate = getHeaderRevalidate(headers);
 
 	const dataHeaders = collectPrefixedHeaders(headers, "x-opennext-cache-header-") as Record<string, string>;
 
@@ -123,7 +134,7 @@ function reconstructCachedFile(headers: HeadersMap, bodyText: string, base: Base
 	const subType = getHeaderValue(headers, "x-opennext-cache-sub-type");
 	const metaStatus = getHeaderNumber(headers, "x-opennext-cache-meta-status");
 	const metaPostponed = getHeaderValue(headers, "x-opennext-cache-meta-postponed");
-	const revalidate = getHeaderNumber(headers, "x-opennext-cache-revalidate");
+	const revalidate = getHeaderRevalidate(headers);
 
 	const metaHeaders = collectPrefixedHeaders(headers, "x-opennext-cache-header-");
 	const hasMetaHeaders = Object.keys(metaHeaders).length > 0;

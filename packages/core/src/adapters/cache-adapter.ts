@@ -4,7 +4,6 @@ import type { StoredComposableCacheEntry } from "@/types/cache";
 import type { InternalEvent, InternalResult } from "@/types/open-next";
 import type {
 	CacheEntryType,
-	CachedFile,
 	CachedFetchValue,
 	CacheValue,
 	OpenNextHandlerOptions,
@@ -13,6 +12,7 @@ import type {
 
 import { createGenericHandler } from "../core/createGenericHandler.js";
 import { resolveCdnInvalidation, resolveIncrementalCache, resolveTagCache } from "../core/resolve.js";
+import { computeEntryCacheControl } from "../utils/cache-control.js";
 import { getTagsFromValue, isStale, writeTags } from "../utils/cache.js";
 import { runWithOpenNextRequestContext } from "../utils/promise.js";
 import { toReadableStream } from "../utils/stream.js";
@@ -130,9 +130,9 @@ async function handleGet(
 			};
 		}
 
-		// `getTagsFromValue` also strips the internal `x-next-cache-tags` header from the entry, so
-		// the tags are derived for every hit - including the ones bypassing the tag cache - or that
-		// header would be handed back to Next.js and echoed to the client.
+		// The tags are also used to make the response purgeable, so they are derived for every hit,
+		// including the ones bypassing the tag cache. `getTagsFromValue` additionally strips the
+		// internal `x-next-cache-tags` header, which would otherwise be echoed to the client.
 		let tags: string[] = [...additionalTags];
 
 		if (cacheType === "cache") {
@@ -144,6 +144,8 @@ async function handleGet(
 			const composableValue = result.value as StoredComposableCacheEntry;
 			tags = [...tags, ...(composableValue.tags ?? [])];
 		}
+
+		let isEntryStale = false;
 
 		if (!result.shouldBypassTagCache) {
 			const lastModified = result.lastModified ?? Date.now();
@@ -166,13 +168,15 @@ async function handleGet(
 			}
 
 			// Check if the cache entry is stale (valid but needs background revalidation)
-			const _isStale = tags.length > 0 ? await isStale(key, tags, lastModified) : false;
-			if (_isStale) {
+			isEntryStale = tags.length > 0 ? await isStale(key, tags, lastModified) : false;
+			if (isEntryStale) {
 				result.lastModified = 1;
 			}
 		}
 
-		return buildCacheGetResponse(result);
+		// We default to the entry key when no tag is found, so that page router based entries can also
+		// be purged this way.
+		return buildCacheGetResponse(result, isEntryStale, tags.length > 0 ? tags : [key]);
 	} catch (e) {
 		error("Failed to get cache entry", e);
 		return buildErrorResponse("Failed to get cache entry", 500);
@@ -409,13 +413,23 @@ async function handleRevalidateTags(body?: Buffer): Promise<InternalResult> {
 // Cache GET response builder //
 /////////////////////////////
 
-function buildCacheGetResponse(result: WithLastModified<CacheValue<CacheEntryType>>): InternalResult {
+function buildCacheGetResponse(
+	result: WithLastModified<CacheValue<CacheEntryType>>,
+	isStaleFromTagCache: boolean,
+	tags: string[]
+): InternalResult {
 	const value = result.value!;
 
 	const headers: Record<string, string | string[]> = {
 		"x-opennext-cache-found": "true",
-		"Cache-Control": "no-store",
+		"Cache-Control": computeEntryCacheControl(value, result.lastModified, isStaleFromTagCache),
 	};
+
+	// The `Cache-Control` above lets an HTTP cache store this response, it can only be invalidated
+	// through a purge keyed on these tags. See `computeEntryCacheControl`.
+	if (tags.length > 0) {
+		headers["cache-tag"] = tags.join(",");
+	}
 
 	if (result.lastModified !== undefined) {
 		headers["x-opennext-cache-last-modified"] = String(result.lastModified);
@@ -425,11 +439,11 @@ function buildCacheGetResponse(result: WithLastModified<CacheValue<CacheEntryTyp
 	}
 
 	if ("kind" in value && value.kind === "FETCH") {
-		return buildFetchResponse(value as CachedFetchValue, headers);
+		return buildFetchResponse(value as CacheValue<"fetch">, headers);
 	}
 
 	if ("type" in value) {
-		return buildCachedFileResponse(value as CachedFile, headers);
+		return buildCachedFileResponse(value as CacheValue<"cache">, headers);
 	}
 
 	return buildComposableResponse(value as StoredComposableCacheEntry, headers);
