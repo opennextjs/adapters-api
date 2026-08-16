@@ -23,33 +23,56 @@ Object.defineProperty(globalThis, Symbol.for("__cloudflare-context__"), {
 /**
  * Executes the handler with the Cloudflare context.
  */
-export async function runWithCloudflareRequestContext(
+export async function runWithCloudflareRequestContext<T = Response>(
 	request: Request,
 	env: CloudflareEnv,
 	ctx: ExecutionContext,
-	handler: () => Promise<Response>
-): Promise<Response> {
-	init(request, env);
+	handler: () => Promise<T>
+): Promise<T> {
+	init(env, new URL(request.url));
 
 	return cloudflareContextALS.run({ env, ctx, cf: request.cf }, handler);
 }
 
+/**
+ * Executes the handler with the Cloudflare context, outside of a request.
+ *
+ * Used by the named entrypoints (i.e. the cache handler) which are invoked via RPC
+ * and therefore have no incoming `Request` to derive the origin from.
+ */
+export async function runWithCloudflareContext<T>(
+	env: CloudflareEnv,
+	ctx: ExecutionContext,
+	handler: () => Promise<T>
+): Promise<T> {
+	init(env);
+
+	return cloudflareContextALS.run({ env, ctx, cf: undefined }, handler);
+}
+
 let initialized = false;
+let originInitialized = false;
 
 /**
  * Initializes the runtime on the first call,
  * no-op on subsequent invocations.
+ *
+ * The origin is only known when a `Request` is available, so it is populated on the first
+ * call made from the fetch handler - which might not be the first call overall.
  */
-function init(request: Request, env: CloudflareEnv) {
-	if (initialized) {
-		return;
+function init(env: CloudflareEnv, url?: URL) {
+	if (!initialized) {
+		initialized = true;
+
+		initRuntime();
+		populateProcessEnv(env);
 	}
-	initialized = true;
 
-	const url = new URL(request.url);
+	if (url && !originInitialized) {
+		originInitialized = true;
 
-	initRuntime();
-	populateProcessEnv(url, env);
+		populateOriginEnv(url);
+	}
 }
 
 function initRuntime() {
@@ -109,9 +132,8 @@ function initRuntime() {
  * Populate process.env with:
  * - the environment variables and secrets from the cloudflare platform
  * - the variables from Next .env* files
- * - the origin resolver information
  */
-function populateProcessEnv(url: URL, env: CloudflareEnv) {
+function populateProcessEnv(env: CloudflareEnv) {
 	for (const [key, value] of Object.entries(env)) {
 		if (typeof value === "string") {
 			process.env[key] = value;
@@ -125,6 +147,16 @@ function populateProcessEnv(url: URL, env: CloudflareEnv) {
 		}
 	}
 
+	// `__DEPLOYMENT_ID__` is a string (passed via ESBuild).
+	if (__DEPLOYMENT_ID__) {
+		process.env.DEPLOYMENT_ID = __DEPLOYMENT_ID__;
+	}
+}
+
+/**
+ * Populate process.env with the origin resolver information.
+ */
+function populateOriginEnv(url: URL) {
 	// Set the default Origin for the origin resolver.
 	// This is only needed for an external middleware bundle
 	process.env.OPEN_NEXT_ORIGIN = JSON.stringify({
@@ -140,11 +172,6 @@ function populateProcessEnv(url: URL, env: CloudflareEnv) {
 	 * https://github.com/vercel/next.js/blob/6b1e48080e896e0d44a05fe009cb79d2d3f91774/packages/next/src/server/app-render/action-handler.ts#L307-L316
 	 */
 	process.env.__NEXT_PRIVATE_ORIGIN = url.origin;
-
-	// `__DEPLOYMENT_ID__` is a string (passed via ESBuild).
-	if (__DEPLOYMENT_ID__) {
-		process.env.DEPLOYMENT_ID = __DEPLOYMENT_ID__;
-	}
 }
 
 declare global {

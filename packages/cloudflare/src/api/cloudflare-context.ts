@@ -24,6 +24,12 @@ declare global {
 		// Service binding for the worker itself to be able to call itself from within the worker
 		WORKER_SELF_REFERENCE?: Service;
 
+		// Optional service binding to a worker where the OpenNext cache is deployed on its own,
+		// exposed by its `OpenNextCache` named entrypoint. When unset, the cache runs in this worker.
+		// Note: it can not reference the worker itself, wrangler can not resolve a named entrypoint
+		// of the worker being configured.
+		NEXT_CACHE_SERVICE?: Service;
+
 		// KV used for the incremental cache
 		NEXT_INC_CACHE_KV?: KVNamespace;
 		// Prefix used for the KV incremental cache key
@@ -337,24 +343,41 @@ async function getCloudflareContextFromWrangler<
 	Context = ExecutionContext,
 >(options?: GetPlatformProxyOptions): Promise<CloudflareContext<CfProperties, Context>> {
 	// Note: we never want wrangler to be bundled in the Next.js app, that's why the import below looks like it does
-	const { getPlatformProxy } = await import(/* webpackIgnore: true */ `${"__wrangler".replaceAll("_", "")}`);
+	const { getPlatformProxy, unstable_readConfig } = await import(
+		/* webpackIgnore: true */ `${"__wrangler".replaceAll("_", "")}`
+	);
+
+	// Same as above: this helper uses node builtins and is only ever needed when running `next dev`.
+	const { withoutSelfEntrypointServices } = await import(
+		/* webpackIgnore: true */ `${"../utils/wrangler__config.js".replaceAll("__", "-")}`
+	);
 
 	// This allows the selection of a wrangler environment while running in next dev mode
 	const environment = options?.environment ?? process.env.NEXT_DEV_WRANGLER_ENV;
 
-	const { env, cf, ctx } = await getPlatformProxy({
-		...options,
-		// The `env` passed to the fetch handler does not contain variables from `.env*` files.
-		// because we invoke wrangler with `CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV`=`"false"`.
-		// Initializing `envFiles` with an empty list is the equivalent for this API call.
-		envFiles: [],
-		environment,
-	});
-	return {
-		env,
-		cf: cf as unknown as CfProperties,
-		ctx: ctx as Context,
-	};
+	const { configPath, isFlattened, cleanup } = withoutSelfEntrypointServices(
+		unstable_readConfig({ env: environment, config: options?.configPath })
+	);
+
+	try {
+		const { env, cf, ctx } = await getPlatformProxy({
+			...options,
+			configPath,
+			// The `env` passed to the fetch handler does not contain variables from `.env*` files.
+			// because we invoke wrangler with `CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV`=`"false"`.
+			// Initializing `envFiles` with an empty list is the equivalent for this API call.
+			envFiles: [],
+			// The rewritten configuration is already flattened to `environment`.
+			environment: isFlattened ? undefined : environment,
+		});
+		return {
+			env,
+			cf: cf as unknown as CfProperties,
+			ctx: ctx as Context,
+		};
+	} finally {
+		cleanup();
+	}
 }
 
 // In production the cloudflare context is initialized by the worker so it is always available.

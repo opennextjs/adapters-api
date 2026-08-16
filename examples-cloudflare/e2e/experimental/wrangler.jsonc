@@ -39,6 +39,11 @@
 		{
 			"binding": "WORKER_SELF_REFERENCE",
 			"service": "experimental"
+		},
+		{
+			"binding": "NEXT_CACHE_SERVICE",
+			"service": "experimental",
+			"entrypoint": "OpenNextCache"
 		}
 	]
 }

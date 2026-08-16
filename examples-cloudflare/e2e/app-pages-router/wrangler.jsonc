@@ -18,6 +18,11 @@
 		{
 			"binding": "WORKER_SELF_REFERENCE",
 			"service": "app-pages-router"
+		},
+		{
+			"binding": "NEXT_CACHE_SERVICE",
+			"service": "app-pages-router",
+			"entrypoint": "OpenNextCache"
 		}
 	],
 	"vars": {
