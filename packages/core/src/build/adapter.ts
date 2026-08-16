@@ -16,6 +16,7 @@ import { compileCache } from "./compileCache.js";
 import { compileOpenNextConfig } from "./compileConfig.js";
 import { compileTagCacheProvider } from "./compileTagCacheProvider.js";
 import { createCacheAssets, createStaticAssets } from "./createAssets.js";
+import { createCacheBundle } from "./createCacheBundle.js";
 import { createImageOptimizationBundle } from "./createImageOptimizationBundle.js";
 import { createMiddleware } from "./createMiddleware.js";
 import { createRevalidationBundle } from "./createRevalidationBundle.js";
@@ -58,6 +59,7 @@ export type OpenNextAdapterOptions<T = OpenNextOutput> = {
 	skipRevalidation?: boolean;
 	skipImageOptimization?: boolean;
 	skipWarmer?: boolean;
+	skipCache?: boolean;
 	skipGenerateOutput?: boolean;
 	middlewareOptions?: { forceOnlyBuildOnce?: boolean };
 	serverBundle: {
@@ -245,17 +247,23 @@ export function buildAdapter<T = OpenNextOutput>(
 				console.log("Image optimization bundle created");
 			}
 
-			// Step 11: Warmer bundle
+			// Step 11: Cache bundle
+			if (!adapterOptions.skipCache && config.dangerous?.disableIncrementalCache !== true) {
+				await createCacheBundle(buildOpts, bundleDefaults?.cache);
+				console.log("Cache bundle created");
+			}
+
+			// Step 12: Warmer bundle
 			if (!adapterOptions.skipWarmer) {
 				await createWarmerBundle(buildOpts, bundleDefaults?.warmer);
 				console.log("Warmer bundle created");
 			}
 
-			// Step 12: Generate output
+			// Step 13: Generate output
 			if (!adapterOptions.skipGenerateOutput) {
 				const output = adapterOptions.generateOutput
 					? await adapterOptions.generateOutput(buildOpts)
-					: await buildOpenNextOutput(buildOpts);
+					: await buildOpenNextOutput(buildOpts, { skipCache: adapterOptions.skipCache });
 				fs.writeFileSync(
 					path.join(buildOpts.appBuildOutputPath, ".open-next", "open-next.output.json"),
 					JSON.stringify(output)

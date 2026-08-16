@@ -7,7 +7,7 @@ import type {
 	OpenNextConfig,
 	OverrideOptions,
 } from "@/types/open-next";
-import type { Converter, TagCache, Wrapper } from "@/types/overrides";
+import type { Cache, Converter, TagCache, Wrapper } from "@/types/overrides";
 
 // Just a little utility type to remove undefined from a type
 type RemoveUndefined<T> = T extends undefined ? never : T;
@@ -155,5 +155,16 @@ export async function resolveCdnInvalidation(cdnInvalidation: OverrideOptions["c
 		return cdnInvalidation();
 	}
 	const m_1 = await import("../overrides/cdnInvalidation/dummy.js");
+	return m_1.default;
+}
+
+/**
+ * @__PURE__
+ */
+export async function resolveCache(cache: OverrideOptions["cache"]): Promise<Cache> {
+	if (typeof cache === "function") {
+		return cache();
+	}
+	const m_1 = await import("../overrides/cache/dummy.js");
 	return m_1.default;
 }

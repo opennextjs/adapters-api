@@ -86,6 +86,7 @@ export interface OpenNextOutput {
 		initializationFunction?: BaseFunction;
 		warmer?: BaseFunction;
 		revalidationFunction?: BaseFunction;
+		cacheFunction?: BaseFunction;
 	};
 }
 
@@ -163,7 +164,10 @@ function prefixPattern(basePath: string) {
 	};
 }
 
-export async function buildOpenNextOutput(options: BuildOptions): Promise<OpenNextOutput> {
+export async function buildOpenNextOutput(
+	options: BuildOptions,
+	{ skipCache = false }: { skipCache?: boolean } = {}
+): Promise<OpenNextOutput> {
 	const { appBuildOutputPath, config } = options;
 	const edgeFunctions: OpenNextOutput["edgeFunctions"] = {};
 	const isExternalMiddleware = config.middleware?.external ?? false;
@@ -345,6 +349,13 @@ export async function buildOpenNextOutput(options: BuildOptions): Promise<OpenNe
 						handler: indexHandler,
 						bundle: ".open-next/revalidation-function",
 					},
+			cacheFunction:
+				skipCache || config.dangerous?.disableIncrementalCache
+					? undefined
+					: {
+							handler: indexHandler,
+							bundle: ".open-next/cache-function",
+						},
 		},
 	};
 	return output;

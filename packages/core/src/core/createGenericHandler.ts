@@ -11,7 +11,22 @@ import { debug } from "../adapters/logger";
 
 import { resolveConverter, resolveWrapper } from "./resolve";
 
-type HandlerType = "imageOptimization" | "revalidate" | "warmer" | "middleware" | "initializationFunction";
+type HandlerType =
+	| "imageOptimization"
+	| "revalidate"
+	| "warmer"
+	| "middleware"
+	| "initializationFunction"
+	| "cache";
+
+const handlerTypeToConfigKey: Record<HandlerType, keyof OpenNextConfig> = {
+	imageOptimization: "imageOptimization",
+	revalidate: "revalidate",
+	warmer: "warmer",
+	middleware: "middleware",
+	initializationFunction: "initializationFunction",
+	cache: "cacheHandler",
+};
 
 type GenericHandler<
 	Type extends HandlerType,
@@ -31,7 +46,8 @@ export async function createGenericHandler<
 	const config: OpenNextConfig = await import("./open-next.config.mjs").then((m) => m.default);
 
 	globalThis.openNextConfig = config;
-	const handlerConfig = config[handler.type];
+	const configKey = handlerTypeToConfigKey[handler.type];
+	const handlerConfig = config[configKey];
 	const override =
 		handlerConfig && "override" in handlerConfig
 			? (handlerConfig.override as DefaultOverrideOptions<E, R>)

@@ -6,6 +6,7 @@ import { generateUniqueId } from "../adapters/util";
 import { openNextHandler } from "./requestHandler";
 import {
 	resolveAssetResolver,
+	resolveCache,
 	resolveCdnInvalidation,
 	resolveConverter,
 	resolveIncrementalCache,
@@ -40,6 +41,8 @@ export async function createMainHandler() {
 			globalThis.openNextConfig.middleware?.assetResolver
 		);
 	}
+
+	globalThis.cache = await resolveCache(thisFunction.override?.cache);
 
 	globalThis.proxyExternalRequest = await resolveProxyRequest(thisFunction.override?.proxyExternalRequest);
 
