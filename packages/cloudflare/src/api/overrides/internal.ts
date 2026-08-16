@@ -34,7 +34,10 @@ export function computeCacheKey(key: string, options: KeyOptions) {
 
 export function isPurgeCacheEnabled(): boolean {
 	// The `?` is required at `openNextConfig?` or the Open Next build fails because of a type error
-	const cdnInvalidation = globalThis.openNextConfig?.default?.override?.cdnInvalidation;
+	// The cache handler function only has `cacheHandler` populated, the other functions only have `default`.
+	const cdnInvalidation =
+		globalThis.openNextConfig?.cacheHandler?.cdnInvalidation ??
+		globalThis.openNextConfig?.default?.override?.cdnInvalidation;
 
 	return cdnInvalidation !== undefined && cdnInvalidation !== "dummy";
 }

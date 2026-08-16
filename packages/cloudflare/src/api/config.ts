@@ -13,6 +13,7 @@ import type {
 } from "@opennextjs/core/types/overrides.js";
 
 import assetResolver from "./overrides/asset-resolver/index.js";
+import serviceCache from "./overrides/cache/service-cache.js";
 
 export type Override<T extends BaseOverride> = "dummy" | T | LazyLoadedOverride<T>;
 
@@ -65,12 +66,17 @@ export function defineCloudflareConfig(config: CloudflareOverrides = {}): OpenNe
 				wrapper: "cloudflare-node",
 				converter: "edge",
 				proxyExternalRequest: "fetch",
-				incrementalCache: resolveIncrementalCache(incrementalCache),
-				tagCache: resolveTagCache(tagCache),
+				cache: () => serviceCache,
 				queue: resolveQueue(queue),
 				cdnInvalidation: resolveCdnInvalidation(cachePurge),
 			},
 			routePreloadingBehavior,
+		},
+		// The cache runs in the same worker, behind the `OpenNextCache` named entrypoint.
+		cacheHandler: {
+			incrementalCache: resolveIncrementalCache(incrementalCache),
+			tagCache: resolveTagCache(tagCache),
+			cdnInvalidation: resolveCdnInvalidation(cachePurge),
 		},
 		// node:crypto is used to compute cache keys
 		edgeExternals: ["node:crypto"],
@@ -83,8 +89,7 @@ export function defineCloudflareConfig(config: CloudflareOverrides = {}): OpenNe
 				wrapper: "cloudflare-edge",
 				converter: "edge",
 				proxyExternalRequest: "fetch",
-				incrementalCache: resolveIncrementalCache(incrementalCache),
-				tagCache: resolveTagCache(tagCache),
+				cache: () => serviceCache,
 				queue: resolveQueue(queue),
 			},
 			assetResolver: () => assetResolver,

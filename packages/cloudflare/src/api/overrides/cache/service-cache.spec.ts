@@ -28,13 +28,20 @@ describe("serviceCache", () => {
 	});
 
 	describe("get", () => {
-		it("requests the key and the cache type", async () => {
-			await serviceCache.get("key/with/slashes", "fetch");
+		it("requests the key, the cache type and the additional tags", async () => {
+			await serviceCache.get("key/with/slashes", "fetch", ["tag1", "tag2"]);
 
 			const { url, method } = lastRequest();
 			expect(method).toBe("GET");
 			expect(url.pathname).toBe(`/cache/${encodeURIComponent("key/with/slashes")}`);
 			expect(url.searchParams.get("type")).toBe("fetch");
+			expect(url.searchParams.get("tags")).toBe("tag1,tag2");
+		});
+
+		it("omits the tags when there is none", async () => {
+			await serviceCache.get("key", "cache", []);
+
+			expect(lastRequest().url.searchParams.has("tags")).toBe(false);
 		});
 
 		it("returns null on a cache miss", async () => {

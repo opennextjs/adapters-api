@@ -3,9 +3,8 @@ import type { OpenNextConfig, OverrideOptions } from "@opennextjs/core/types/ope
 const devOverride = {
 	wrapper: "express-dev",
 	converter: "node",
-	incrementalCache: "fs-dev",
+	cache: "local",
 	queue: "direct",
-	tagCache: "fs-dev-nextMode",
 } satisfies OverrideOptions;
 
 export default {
@@ -25,6 +24,14 @@ export default {
 			converter: "dummy",
 		},
 		loader: "fs-dev",
+	},
+	cacheHandler: {
+		override: {
+			wrapper: "dummy",
+			converter: "dummy",
+		},
+		incrementalCache: "fs-dev",
+		tagCache: "fs-dev-nextMode",
 	},
 	// You can override the build command here so that you don't have to rebuild next every time you make a change
 	// buildCommand: "echo 'No build command'",

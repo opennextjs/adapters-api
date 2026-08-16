@@ -2,58 +2,40 @@ import ComposableCache from "@opennextjs/core/adapters/composable-cache";
 import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream";
 import { vi } from "vitest";
 
+const cache = {
+	name: "mock",
+	get: vi.fn().mockResolvedValue({
+		value: {
+			type: "route",
+			body: "{}",
+			tags: ["tag1", "tag2"],
+			stale: 0,
+			timestamp: Date.now(),
+			expire: Date.now() + 1000,
+			revalidate: 3600,
+			value: "test-value",
+		},
+		lastModified: Date.now(),
+	}),
+	set: vi.fn(),
+	delete: vi.fn(),
+	revalidateTags: vi.fn(),
+};
+globalThis.cache = cache;
+
+globalThis.__openNextAls = {
+	getStore: () => ({
+		pendingPromiseRunner: {
+			withResolvers: vi.fn().mockReturnValue({
+				resolve: vi.fn(),
+			}),
+		},
+		writtenTags: new Set(),
+	}),
+};
+
 describe("Composable cache handler", () => {
 	vi.useFakeTimers().setSystemTime("2024-01-02T00:00:00Z");
-
-	const incrementalCache = {
-		name: "mock",
-		get: vi.fn().mockResolvedValue({
-			value: {
-				type: "route",
-				body: "{}",
-				tags: ["tag1", "tag2"],
-				stale: 0,
-				timestamp: Date.now(),
-				expire: Date.now() + 1000,
-				revalidate: 3600,
-				value: "test-value",
-			},
-			lastModified: Date.now(),
-		}),
-		set: vi.fn(),
-		delete: vi.fn(),
-	};
-	globalThis.incrementalCache = incrementalCache;
-
-	const tagCache = {
-		name: "mock",
-		mode: "original" as string | undefined,
-		hasBeenRevalidated: vi.fn(),
-		getByTag: vi.fn().mockResolvedValue(["path1", "path2"]),
-		getByPath: vi.fn().mockResolvedValue(["tag1"]),
-		getLastModified: vi.fn().mockResolvedValue(new Date("2024-01-02T00:00:00Z").getTime()),
-		getLastRevalidated: vi.fn().mockResolvedValue(0),
-		writeTags: vi.fn(),
-	};
-	globalThis.tagCache = tagCache;
-
-	const invalidateCdnHandler = {
-		name: "mock",
-		invalidatePaths: vi.fn(),
-	};
-	globalThis.cdnInvalidationHandler = invalidateCdnHandler;
-	const writtenTags = new Set();
-
-	globalThis.__openNextAls = {
-		getStore: () => ({
-			pendingPromiseRunner: {
-				withResolvers: vi.fn().mockReturnValue({
-					resolve: vi.fn(),
-				}),
-			},
-			writtenTags,
-		}),
-	};
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -67,17 +49,17 @@ describe("Composable cache handler", () => {
 	});
 
 	describe("get", () => {
-		it("should return cached entry when available and not revalidated", async () => {
+		it("should return cached entry when available", async () => {
 			const result = await ComposableCache.get("test-key");
 
-			expect(incrementalCache.get).toHaveBeenCalledWith("test-key", "composable");
+			expect(cache.get).toHaveBeenCalledWith("test-key", "composable");
 			expect(result).toBeDefined();
 			expect(result?.tags).toEqual(["tag1", "tag2"]);
 			expect(result?.value).toBeInstanceOf(ReadableStream);
 		});
 
 		it("should return undefined when cache entry does not exist", async () => {
-			incrementalCache.get.mockResolvedValueOnce(null);
+			cache.get.mockResolvedValueOnce(null);
 
 			const result = await ComposableCache.get("non-existent-key");
 
@@ -85,7 +67,7 @@ describe("Composable cache handler", () => {
 		});
 
 		it("should return undefined when cache entry has no value", async () => {
-			incrementalCache.get.mockResolvedValueOnce({
+			cache.get.mockResolvedValueOnce({
 				value: null,
 				lastModified: Date.now(),
 			});
@@ -95,74 +77,8 @@ describe("Composable cache handler", () => {
 			expect(result).toBeUndefined();
 		});
 
-		it("should check tag revalidation in nextMode", async () => {
-			tagCache.mode = "nextMode";
-			tagCache.hasBeenRevalidated.mockResolvedValueOnce(false);
-
-			const result = await ComposableCache.get("test-key");
-
-			expect(tagCache.hasBeenRevalidated).toHaveBeenCalledWith(["tag1", "tag2"], expect.any(Number));
-			expect(result).toBeDefined();
-		});
-
-		it("should return undefined when tags have been revalidated in nextMode", async () => {
-			tagCache.mode = "nextMode";
-			tagCache.hasBeenRevalidated.mockResolvedValueOnce(true);
-
-			const result = await ComposableCache.get("test-key");
-
-			expect(result).toBeUndefined();
-		});
-
-		it("should skip tag check when tags array is empty in nextMode", async () => {
-			tagCache.mode = "nextMode";
-			incrementalCache.get.mockResolvedValueOnce({
-				value: {
-					type: "route",
-					body: "{}",
-					tags: [],
-					value: "test-value",
-				},
-				lastModified: Date.now(),
-			});
-
-			const result = await ComposableCache.get("test-key");
-
-			expect(tagCache.hasBeenRevalidated).not.toHaveBeenCalled();
-			expect(result).toBeDefined();
-		});
-
-		it("should check last modified in original mode", async () => {
-			tagCache.mode = "original";
-			tagCache.getLastModified.mockResolvedValueOnce(Date.now());
-
-			const result = await ComposableCache.get("test-key");
-
-			expect(tagCache.getLastModified).toHaveBeenCalledWith("test-key", expect.any(Number));
-			expect(result).toBeDefined();
-		});
-
-		it("should return undefined when entry has been revalidated in original mode", async () => {
-			tagCache.mode = "original";
-			tagCache.getLastModified.mockResolvedValueOnce(-1);
-
-			const result = await ComposableCache.get("test-key");
-
-			expect(result).toBeUndefined();
-		});
-
-		it("should handle undefined tag cache mode", async () => {
-			tagCache.mode = undefined;
-			tagCache.getLastModified.mockResolvedValueOnce(Date.now());
-
-			const result = await ComposableCache.get("test-key");
-
-			expect(tagCache.getLastModified).toHaveBeenCalled();
-			expect(result).toBeDefined();
-		});
-
 		it("should return undefined on cache read error", async () => {
-			incrementalCache.get.mockRejectedValueOnce(new Error("Cache error"));
+			cache.get.mockRejectedValueOnce(new Error("Cache error"));
 
 			const result = await ComposableCache.get("test-key");
 
@@ -194,12 +110,7 @@ describe("Composable cache handler", () => {
 	});
 
 	describe("set", () => {
-		beforeEach(() => {
-			writtenTags.clear();
-		});
-
-		it("should set cache entry and handle tags in original mode", async () => {
-			tagCache.mode = "original";
+		it("should set cache entry", async () => {
 			const entry = {
 				value: toReadableStream("test-value"),
 				tags: ["tag1", "tag2"],
@@ -211,7 +122,7 @@ describe("Composable cache handler", () => {
 
 			await ComposableCache.set("test-key", Promise.resolve(entry));
 
-			expect(incrementalCache.set).toHaveBeenCalledWith(
+			expect(cache.set).toHaveBeenCalledWith(
 				"test-key",
 				expect.objectContaining({
 					tags: ["tag1", "tag2"],
@@ -219,64 +130,6 @@ describe("Composable cache handler", () => {
 				}),
 				"composable"
 			);
-			expect(tagCache.getByPath).toHaveBeenCalledWith("test-key");
-		});
-
-		it("should write new tags not already stored", async () => {
-			tagCache.mode = "original";
-			tagCache.getByPath.mockResolvedValueOnce(["tag1"]);
-
-			const entry = {
-				value: toReadableStream("test-value"),
-				tags: ["tag1", "tag2", "tag3"],
-				stale: 0,
-				timestamp: Date.now(),
-				expire: Date.now() + 1000,
-				revalidate: 3600,
-			};
-
-			await ComposableCache.set("test-key", Promise.resolve(entry));
-
-			expect(tagCache.writeTags).toHaveBeenCalledWith([
-				{ tag: "tag2", path: "test-key" },
-				{ tag: "tag3", path: "test-key" },
-			]);
-		});
-
-		it("should not write tags if all are already stored", async () => {
-			tagCache.mode = "original";
-			tagCache.getByPath.mockResolvedValueOnce(["tag1", "tag2"]);
-
-			const entry = {
-				value: toReadableStream("test-value"),
-				tags: ["tag1", "tag2"],
-				stale: 0,
-				timestamp: Date.now(),
-				expire: Date.now() + 1000,
-				revalidate: 3600,
-			};
-
-			await ComposableCache.set("test-key", Promise.resolve(entry));
-
-			expect(tagCache.writeTags).not.toHaveBeenCalled();
-		});
-
-		it("should skip tag handling in nextMode", async () => {
-			tagCache.mode = "nextMode";
-
-			const entry = {
-				value: toReadableStream("test-value"),
-				tags: ["tag1", "tag2"],
-				stale: 0,
-				timestamp: Date.now(),
-				expire: Date.now() + 1000,
-				revalidate: 3600,
-			};
-
-			await ComposableCache.set("test-key", Promise.resolve(entry));
-
-			expect(tagCache.getByPath).not.toHaveBeenCalled();
-			expect(tagCache.writeTags).not.toHaveBeenCalled();
 		});
 
 		it("should convert ReadableStream to string", async () => {
@@ -291,7 +144,7 @@ describe("Composable cache handler", () => {
 
 			await ComposableCache.set("test-key", Promise.resolve(entry));
 
-			expect(incrementalCache.set).toHaveBeenCalledWith(
+			expect(cache.set).toHaveBeenCalledWith(
 				"test-key",
 				expect.objectContaining({
 					value: "test-content",
@@ -306,131 +159,43 @@ describe("Composable cache handler", () => {
 			await ComposableCache.refreshTags();
 
 			// Should not call any methods
-			expect(incrementalCache.get).not.toHaveBeenCalled();
-			expect(incrementalCache.set).not.toHaveBeenCalled();
-			expect(tagCache.writeTags).not.toHaveBeenCalled();
+			expect(cache.get).not.toHaveBeenCalled();
+			expect(cache.set).not.toHaveBeenCalled();
+			expect(cache.revalidateTags).not.toHaveBeenCalled();
 		});
 	});
 
-	describe("getExpiration (Next 15)", () => {
-		it("should return last revalidated time in nextMode", async () => {
-			tagCache.mode = "nextMode";
-			tagCache.getLastRevalidated.mockResolvedValueOnce(123456);
-
-			const result = await ComposableCache.getExpiration("tag1", "tag2");
-
-			expect(tagCache.getLastRevalidated).toHaveBeenCalledWith(["tag1", "tag2"]);
-			expect(result).toBe(123456);
-		});
-
-		it("should return 0 in original mode", async () => {
-			tagCache.mode = "original";
-
+	describe("getExpiration", () => {
+		it("should return 0 regardless of arguments", async () => {
 			const result = await ComposableCache.getExpiration("tag1", "tag2");
 
 			expect(result).toBe(0);
 		});
 
-		it("should return 0 when mode is undefined", async () => {
-			tagCache.mode = undefined;
-
-			const result = await ComposableCache.getExpiration("tag1", "tag2");
-
-			expect(result).toBe(0);
-		});
-	});
-
-	describe("getExpiration (Next 16)", () => {
-		it("should return last revalidated time in nextMode", async () => {
-			tagCache.mode = "nextMode";
-			tagCache.getLastRevalidated.mockResolvedValueOnce(123456);
-
-			const result = await ComposableCache.getExpiration(["tag1", "tag2"]);
-
-			expect(tagCache.getLastRevalidated).toHaveBeenCalledWith(["tag1", "tag2"]);
-			expect(result).toBe(123456);
-		});
-
-		it("should return 0 in original mode", async () => {
-			tagCache.mode = "original";
-
+		it("should return 0 for array argument (Next 16 signature)", async () => {
 			const result = await ComposableCache.getExpiration(["tag1", "tag2"]);
 
 			expect(result).toBe(0);
 		});
 
-		it("should return 0 when mode is undefined", async () => {
-			tagCache.mode = undefined;
-
-			const result = await ComposableCache.getExpiration(["tag1", "tag2"]);
+		it("should return 0 for empty args", async () => {
+			const result = await ComposableCache.getExpiration();
 
 			expect(result).toBe(0);
 		});
 	});
 
 	describe("expireTags", () => {
-		beforeEach(() => {
-			writtenTags.clear();
-		});
-		it("should write tags directly in nextMode", async () => {
-			tagCache.mode = "nextMode";
-
+		it("should call cache.revalidateTags with flat tags array", async () => {
 			await ComposableCache.expireTags("tag1", "tag2");
 
-			expect(tagCache.writeTags).toHaveBeenCalledWith(["tag1", "tag2"]);
+			expect(cache.revalidateTags).toHaveBeenCalledWith(["tag1", "tag2"]);
 		});
 
-		it("should find paths and write tag mappings in original mode", async () => {
-			tagCache.mode = "original";
-			tagCache.getByTag.mockImplementation(async (tag) => {
-				if (tag === "tag1") return ["path1", "path2"];
-				if (tag === "tag2") return ["path2", "path3"];
-				return [];
-			});
+		it("should not call revalidateTags when no tags provided", async () => {
+			await ComposableCache.expireTags();
 
-			await ComposableCache.expireTags("tag1", "tag2");
-
-			expect(tagCache.getByTag).toHaveBeenCalledWith("tag1");
-			expect(tagCache.getByTag).toHaveBeenCalledWith("tag2");
-			expect(tagCache.writeTags).toHaveBeenCalledWith(
-				expect.arrayContaining([
-					{ path: "path1", tag: "tag1", revalidatedAt: expect.any(Number) },
-					{ path: "path2", tag: "tag1", revalidatedAt: expect.any(Number) },
-					{ path: "path2", tag: "tag2", revalidatedAt: expect.any(Number) },
-					{ path: "path3", tag: "tag2", revalidatedAt: expect.any(Number) },
-				])
-			);
-		});
-
-		it("should deduplicate paths in original mode", async () => {
-			tagCache.mode = "original";
-			tagCache.getByTag.mockImplementation(async (tag) => {
-				if (tag === "tag1") return ["path1", "path2"];
-				if (tag === "tag2") return ["path1", "path2"];
-				return [];
-			});
-
-			await ComposableCache.expireTags("tag1", "tag2");
-
-			const writtenTags = tagCache.writeTags.mock.calls[0][0];
-			expect(writtenTags).toHaveLength(4); // 2 paths × 2 tags = 4 unique combinations
-			expect(writtenTags).toEqual(
-				expect.arrayContaining([
-					{ path: "path1", tag: "tag1", revalidatedAt: expect.any(Number) },
-					{ path: "path2", tag: "tag1", revalidatedAt: expect.any(Number) },
-					{ path: "path1", tag: "tag2", revalidatedAt: expect.any(Number) },
-					{ path: "path2", tag: "tag2", revalidatedAt: expect.any(Number) },
-				])
-			);
-		});
-
-		it("should handle empty paths in original mode", async () => {
-			tagCache.mode = "original";
-			tagCache.getByTag.mockResolvedValue([]);
-
-			await ComposableCache.expireTags("tag1");
-
-			expect(tagCache.writeTags).not.toHaveBeenCalled();
+			expect(cache.revalidateTags).not.toHaveBeenCalled();
 		});
 	});
 
@@ -439,9 +204,9 @@ describe("Composable cache handler", () => {
 			await ComposableCache.receiveExpiredTags("tag1", "tag2");
 
 			// Should not call any methods
-			expect(incrementalCache.get).not.toHaveBeenCalled();
-			expect(incrementalCache.set).not.toHaveBeenCalled();
-			expect(tagCache.writeTags).not.toHaveBeenCalled();
+			expect(cache.get).not.toHaveBeenCalled();
+			expect(cache.set).not.toHaveBeenCalled();
+			expect(cache.revalidateTags).not.toHaveBeenCalled();
 		});
 	});
 
@@ -460,7 +225,7 @@ describe("Composable cache handler", () => {
 			await ComposableCache.set("integration-key", Promise.resolve(entry));
 
 			// Verify it was stored
-			expect(incrementalCache.set).toHaveBeenCalledWith(
+			expect(cache.set).toHaveBeenCalledWith(
 				"integration-key",
 				expect.objectContaining({
 					value: "integration-test",
@@ -470,7 +235,7 @@ describe("Composable cache handler", () => {
 			);
 
 			// Mock the get response
-			incrementalCache.get.mockResolvedValueOnce({
+			cache.get.mockResolvedValueOnce({
 				value: {
 					...entry,
 					value: "integration-test",
@@ -518,8 +283,8 @@ describe("Composable cache handler", () => {
 
 			const results = await Promise.all(promises);
 
-			expect(incrementalCache.set).toHaveBeenCalledTimes(2);
-			expect(incrementalCache.get).not.toHaveBeenCalled();
+			expect(cache.set).toHaveBeenCalledTimes(2);
+			expect(cache.get).not.toHaveBeenCalled();
 
 			expect(results[2]).toBeDefined();
 			expect(results[3]).toBeDefined();
