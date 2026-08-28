@@ -1,6 +1,7 @@
 import { Readable } from "node:stream";
 
 import converter from "@opennextjs/aws/overrides/converters/aws-apigw-v1.js";
+import { fromReadableStream } from "@opennextjs/core/utils/stream.js";
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { describe, it, expect } from "vitest";
 
@@ -89,7 +90,7 @@ describe("convertFrom", () => {
 			method: "POST",
 			rawPath: "/",
 			url: "https://on/",
-			body: Buffer.from('{"message":"Hello, world!"}'),
+			body: expect.any(ReadableStream),
 			headers: {
 				"content-type": "application/json",
 			},
@@ -128,7 +129,7 @@ describe("convertFrom", () => {
 			method: "POST",
 			rawPath: "/",
 			url: "https://on/",
-			body: Buffer.from('{"message":"Hello, world!"}'),
+			body: expect.any(ReadableStream),
 			headers: {
 				test: "test1,test2",
 			},
@@ -169,7 +170,7 @@ describe("convertFrom", () => {
 			method: "POST",
 			rawPath: "/",
 			url: "https://on/?test=test",
-			body: Buffer.from('{"message":"Hello, world!"}'),
+			body: expect.any(ReadableStream),
 			headers: {},
 			remoteAddress: "::1",
 			query: {
@@ -210,7 +211,7 @@ describe("convertFrom", () => {
 			method: "POST",
 			rawPath: "/",
 			url: "https://on/?test=testA&test=testB",
-			body: Buffer.from('{"message":"Hello, world!"}'),
+			body: expect.any(ReadableStream),
 			headers: {},
 			remoteAddress: "::1",
 			query: {
@@ -251,7 +252,7 @@ describe("convertFrom", () => {
 			method: "POST",
 			rawPath: "/",
 			url: "https://on/",
-			body: Buffer.from('{"message":"Hello, world!"}'),
+			body: expect.any(ReadableStream),
 			headers: {
 				"content-type": "application/json",
 				cookie: "test1=1,test2=2",
@@ -294,7 +295,7 @@ describe("convertFrom", () => {
 			method: "GET",
 			rawPath: "/",
 			url: "https://on/",
-			body: Buffer.from("Hello, world!"),
+			body: expect.any(ReadableStream),
 			headers: {
 				"content-type": "application/json",
 			},
@@ -302,5 +303,6 @@ describe("convertFrom", () => {
 			query: {},
 			cookies: {},
 		});
+		expect(await fromReadableStream(response.body!)).toEqual("Hello, world!");
 	});
 });
