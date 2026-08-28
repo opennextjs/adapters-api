@@ -144,7 +144,7 @@ function createPprPartialResult(
 				"next-resume": "1",
 			},
 			rawPath: localizedPath,
-			body: Buffer.from(cachedValue.meta?.postponed || "", "utf-8"),
+			body: toReadableStream(cachedValue.meta?.postponed || ""),
 		},
 		result: {
 			type: "core",

@@ -452,7 +452,13 @@ describe("convertBodyToReadableStream", () => {
 	});
 
 	it("returns readable stream for when body is provided", async () => {
-		const result = convertBodyToReadableStream("PUT", Buffer.from("body"));
+		const body = new ReadableStream({
+			start(controller) {
+				controller.enqueue(new TextEncoder().encode("body"));
+				controller.close();
+			},
+		});
+		const result = convertBodyToReadableStream("PUT", body);
 		expect(await fromReadableStream(result as any)).toEqual("body");
 	});
 });

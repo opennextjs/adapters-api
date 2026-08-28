@@ -1,3 +1,5 @@
+import type { ReadableStream } from "node:stream/web";
+
 import { debug } from "@opennextjs/core/adapters/logger.js";
 import { convertToQuery } from "@opennextjs/core/core/routing/util.js";
 import { parseSetCookieHeader } from "@opennextjs/core/http/util.js";
@@ -7,7 +9,7 @@ import {
 } from "@opennextjs/core/overrides/converters/utils.js";
 import type { InternalEvent, InternalResult } from "@opennextjs/core/types/open-next.js";
 import type { Converter } from "@opennextjs/core/types/overrides.js";
-import { fromReadableStream } from "@opennextjs/core/utils/stream.js";
+import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream.js";
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 
 // Not sure which one is really needed as this is not documented anywhere but server actions redirect are not working without this,
@@ -36,18 +38,18 @@ const CloudFrontBlacklistedHeaders = [
 	"via",
 ];
 
-function normalizeAPIGatewayProxyEventV2Body(event: APIGatewayProxyEventV2): Buffer {
+function normalizeAPIGatewayProxyEventV2Body(event: APIGatewayProxyEventV2): ReadableStream | undefined {
 	const { body, isBase64Encoded } = event;
 	if (Buffer.isBuffer(body)) {
-		return body;
+		return toReadableStream(body);
 	}
 	if (typeof body === "string") {
-		return Buffer.from(body, isBase64Encoded ? "base64" : "utf8");
+		return toReadableStream(body, isBase64Encoded);
 	}
 	if (typeof body === "object") {
-		return Buffer.from(JSON.stringify(body));
+		return toReadableStream(JSON.stringify(body));
 	}
-	return Buffer.from("", "utf8");
+	return undefined;
 }
 
 function normalizeAPIGatewayProxyEventV2Headers(event: APIGatewayProxyEventV2): Record<string, string> {
