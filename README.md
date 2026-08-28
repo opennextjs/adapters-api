@@ -104,24 +104,61 @@ There is also a way to run OpenNext locally. You can read a guide about it [here
 
 ## Testing
 
-You can run unit tests with
+Install Node.js 24 and pnpm 10, then install the workspace dependencies:
+
+```bash
+pnpm install --frozen-lockfile
+```
+
+### Unit tests
+
+Run all unit tests, including the AWS and Cloudflare adapter tests, with:
 
 ```bash
 pnpm test
 ```
 
-You can tun e2e locally with:
+To run only the Cloudflare adapter unit tests, use:
 
 ```bash
-pnpm -r openbuild:local
-pnpm -r openbuild:local:start
+pnpm --filter @opennextjs/cloudflare test
 ```
 
-And in a different shell:
+### End-to-end tests
+
+Before running the e2e tests for the first time, install Chromium:
+
+```bash
+pnpm exec playwright install chromium
+```
+
+#### AWS adapter
+
+Build the AWS adapter and example applications, then start the local servers:
+
+```bash
+pnpm --filter @opennextjs/aws... run build
+pnpm openbuild:local
+pnpm openbuild:local:start
+```
+
+Keep the servers running and, in a different shell, run:
 
 ```bash
 pnpm e2e:test
 ```
+
+#### Cloudflare adapter
+
+Build the Cloudflare adapter and example Workers, then run the Playwright tests in the Cloudflare Workers environment:
+
+```bash
+pnpm --filter @opennextjs/cloudflare run build
+pnpm turbo build:worker:cf
+CI=1 pnpm turbo e2e:cf
+```
+
+The final command starts and stops the required local Wrangler preview servers. Setting `CI=1` matches the CI workflow, where the Workers have already been built by the preceding command.
 
 ## Coldstart
 
