@@ -247,6 +247,79 @@ describe("handleMiddleware", () => {
 		});
 	});
 
+	it("should cancel the middleware body branch after forwarding", async () => {
+		const cancel = vi.fn();
+		const event = {
+			...createEvent({ method: "POST" }),
+			body: new ReadableStream({
+				start(controller) {
+					controller.enqueue(new TextEncoder().encode("request"));
+				},
+				cancel,
+			}),
+		};
+		middleware.mockResolvedValue({
+			headers: new Headers({
+				"x-middleware-next": "1",
+			}),
+		});
+
+		const result = await handleMiddleware(event, "", middlewareLoader);
+		const reader = result.body!.getReader();
+		const { value } = await reader.read();
+		expect(new TextDecoder().decode(value)).toBe("request");
+		await reader.cancel();
+
+		expect(cancel).toHaveBeenCalledOnce();
+	});
+
+	it("should cancel both request body branches when processing the middleware result throws", async () => {
+		const cancel = vi.fn();
+		const event = {
+			...createEvent({ method: "POST" }),
+			body: new ReadableStream({ cancel }),
+		};
+		middleware.mockResolvedValue({
+			headers: new Headers({
+				"x-middleware-rewrite": "invalid-url",
+			}),
+		});
+
+		await expect(handleMiddleware(event, "", middlewareLoader)).rejects.toThrow();
+
+		await vi.waitFor(() => expect(cancel).toHaveBeenCalledOnce());
+	});
+
+	it("should cancel both request body branches for a direct response", async () => {
+		const cancel = vi.fn();
+		const event = {
+			...createEvent({ method: "POST" }),
+			body: new ReadableStream({ cancel }),
+		};
+		middleware.mockResolvedValue({
+			status: 200,
+			headers: new Headers(),
+			body: toReadableStream("response"),
+		});
+
+		await handleMiddleware(event, "", middlewareLoader);
+
+		await vi.waitFor(() => expect(cancel).toHaveBeenCalledOnce());
+	});
+
+	it("should cancel both request body branches when middleware throws", async () => {
+		const cancel = vi.fn();
+		const event = {
+			...createEvent({ method: "POST" }),
+			body: new ReadableStream({ cancel }),
+		};
+		middleware.mockRejectedValue(new Error("middleware failed"));
+
+		await expect(handleMiddleware(event, "", middlewareLoader)).rejects.toThrow("middleware failed");
+
+		await vi.waitFor(() => expect(cancel).toHaveBeenCalledOnce());
+	});
+
 	it("should return a response from middleware", async () => {
 		const event = createEvent({});
 		const body = toReadableStream("Hello, world!");
