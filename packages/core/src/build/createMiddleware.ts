@@ -4,6 +4,7 @@ import path from "node:path";
 import { loadFunctionsConfigManifest, loadMiddlewareManifest } from "@/config/util.js";
 
 import logger from "../logger.js";
+import type { DefaultOverrides } from "../plugins/resolve.js";
 import type { MiddlewareInfo } from "../types/next-types.js";
 
 import { buildEdgeBundle, copyMiddlewareResources } from "./edge/createEdgeBundle.js";
@@ -19,7 +20,10 @@ import { buildBundledNodeMiddleware, buildExternalNodeMiddleware } from "./middl
  */
 export async function createMiddleware(
 	options: buildHelper.BuildOptions,
-	{ forceOnlyBuildOnce = false } = {}
+	{
+		forceOnlyBuildOnce = false,
+		defaultOverrides,
+	}: { forceOnlyBuildOnce?: boolean; defaultOverrides?: DefaultOverrides } = {}
 ) {
 	logger.info("Bundling middleware function...");
 
@@ -37,7 +41,7 @@ export async function createMiddleware(
 
 		if (functionsConfigManifest?.functions["/_middleware"]) {
 			await (config.middleware?.external
-				? buildExternalNodeMiddleware(options)
+				? buildExternalNodeMiddleware(options, defaultOverrides)
 				: buildBundledNodeMiddleware(options));
 			return;
 		}
@@ -66,10 +70,11 @@ export async function createMiddleware(
 				...config.middleware.override,
 				originResolver: config.middleware.originResolver,
 			},
-			defaultConverter: "aws-cloudfront",
+			defaultConverter: "@opennextjs/core/overrides/converters/edge.js",
 			additionalExternals: config.edgeExternals,
 			onlyBuildOnce: forceOnlyBuildOnce === true,
 			name: "middleware",
+			defaultOverrides,
 		});
 
 		installDependencies(outputPath, config.middleware?.install);
@@ -82,6 +87,7 @@ export async function createMiddleware(
 			overrides: config.default.override,
 			onlyBuildOnce: true,
 			name: "middleware",
+			defaultOverrides,
 		});
 	}
 }

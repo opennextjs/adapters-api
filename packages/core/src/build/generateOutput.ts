@@ -66,7 +66,7 @@ type DefaultOrigins = {
 	imageOptimizer: ImageOrigins;
 };
 
-interface OpenNextOutput {
+export interface OpenNextOutput {
 	edgeFunctions: {
 		[key: string]: BaseFunction;
 	} & {
@@ -102,6 +102,20 @@ async function canStream(opts: FunctionOptions) {
 	return wrapper.supportStreaming;
 }
 
+/**
+ * Extracts the bare name from a full-path override string.
+ * Full paths like "@opennextjs/aws/overrides/wrappers/aws-lambda.js" → "aws-lambda".
+ * Bare names like "edge" pass through unchanged.
+ */
+function bare(s: string): string {
+	if (s.startsWith("@") || s.includes("/")) {
+		const lastSlash = s.lastIndexOf("/");
+		const filename = lastSlash >= 0 ? s.slice(lastSlash + 1) : s;
+		return filename.replace(/\.js$/, "");
+	}
+	return s;
+}
+
 async function extractOverrideName(
 	defaultName: string,
 	override?: LazyLoadedOverride<BaseOverride> | string
@@ -110,7 +124,7 @@ async function extractOverrideName(
 		return defaultName;
 	}
 	if (typeof override === "string") {
-		return override;
+		return bare(override);
 	}
 	const overrideModule = await override();
 	return overrideModule.name;
@@ -149,7 +163,7 @@ function prefixPattern(basePath: string) {
 	};
 }
 
-export async function generateOutput(options: BuildOptions) {
+export async function buildOpenNextOutput(options: BuildOptions): Promise<OpenNextOutput> {
 	const { appBuildOutputPath, config } = options;
 	const edgeFunctions: OpenNextOutput["edgeFunctions"] = {};
 	const isExternalMiddleware = config.middleware?.external ?? false;
@@ -333,8 +347,13 @@ export async function generateOutput(options: BuildOptions) {
 					},
 		},
 	};
+	return output;
+}
+
+export async function generateOutput(options: BuildOptions) {
+	const output = await buildOpenNextOutput(options);
 	fs.writeFileSync(
-		path.join(appBuildOutputPath, ".open-next", "open-next.output.json"),
+		path.join(options.appBuildOutputPath, ".open-next", "open-next.output.json"),
 		JSON.stringify(output)
 	);
 }

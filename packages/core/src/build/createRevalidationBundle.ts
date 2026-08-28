@@ -2,12 +2,16 @@ import fs from "node:fs";
 import path from "node:path";
 
 import logger from "../logger.js";
+import type { DefaultOverrides } from "../plugins/resolve.js";
 import { openNextResolvePlugin } from "../plugins/resolve.js";
 
 import * as buildHelper from "./helper.js";
 import { installDependencies } from "./installDeps.js";
 
-export async function createRevalidationBundle(options: buildHelper.BuildOptions) {
+export async function createRevalidationBundle(
+	options: buildHelper.BuildOptions,
+	defaultOverrides?: DefaultOverrides
+) {
 	logger.info("Bundling revalidation function...");
 
 	const { appBuildOutputPath, config, outputDir } = options;
@@ -29,8 +33,12 @@ export async function createRevalidationBundle(options: buildHelper.BuildOptions
 				openNextResolvePlugin({
 					fnName: "revalidate",
 					overrides: {
-						converter: config.revalidate?.override?.converter ?? "node",
+						converter: config.revalidate?.override?.converter,
 						wrapper: config.revalidate?.override?.wrapper,
+					},
+					defaultOverrides: {
+						converter: defaultOverrides?.converter ?? "node",
+						wrapper: defaultOverrides?.wrapper,
 					},
 				}),
 			],
