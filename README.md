@@ -129,7 +129,7 @@ pnpm --filter @opennextjs/cloudflare test
 Before running the e2e tests for the first time, install Chromium:
 
 ```bash
-pnpm exec playwright install chromium
+pnpm exec playwright install chromium --with-deps
 ```
 
 #### AWS adapter
