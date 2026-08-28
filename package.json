@@ -32,7 +32,7 @@
 		"@playwright/test": "catalog:",
 		"oxfmt": "^0.27.0",
 		"oxlint": "^1.42.0",
-		"pkg-pr-new": "^0.0.60",
+		"pkg-pr-new": "^0.0.86",
 		"turbo": "1.10.12"
 	},
 	"engines": {

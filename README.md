@@ -60,15 +60,19 @@ You can read more about the configuration in the [docs](https://opennext.js.org/
 
 Besides the standard npm releases we also automatically publish prerelease packages on branch pushes (using [`pkg.pr.new`](https://github.com/stackblitz-labs/pkg.pr.new)):
 
-- `https://pkg.pr.new/@opennextjs/aws@main`:
+- `https://pkg.pr.new/opennextjs/adapters-api/@opennextjs/aws@main`:
   Updated with every push to the `main` branch, this prerelease contains the most up to date yet (reasonably) stable version of the package.
-- `https://pkg.pr.new/@opennextjs/aws@experimental`
+- `https://pkg.pr.new/opennextjs/adapters-api/@opennextjs/aws@experimental`
   Updated with every push to the `experimental` branch, this prerelease contains the latest experimental version of the package (containing features that we want to test/experiment on before committing to).
+
+The URLs include the `opennextjs/adapters-api` owner/repo prefix: the compact form
+(`https://pkg.pr.new/@opennextjs/aws@main`) resolves through the npm `repository` field, which still
+points at the previous repositories, so it would serve packages from the wrong repo.
 
 Which you can simply install directly with your package manager of choice, for example:
 
 ```bash
-npm i https://pkg.pr.new/@opennextjs/aws@main
+npm i https://pkg.pr.new/opennextjs/adapters-api/@opennextjs/aws@main
 ```
 
 ## Contribute
@@ -100,24 +104,61 @@ There is also a way to run OpenNext locally. You can read a guide about it [here
 
 ## Testing
 
-You can run unit tests with
+Install Node.js 24 and pnpm 10, then install the workspace dependencies:
+
+```bash
+pnpm install --frozen-lockfile
+```
+
+### Unit tests
+
+Run all unit tests, including the AWS and Cloudflare adapter tests, with:
 
 ```bash
 pnpm test
 ```
 
-You can tun e2e locally with:
+To run only the Cloudflare adapter unit tests, use:
 
 ```bash
-pnpm -r openbuild:local
-pnpm -r openbuild:local:start
+pnpm --filter @opennextjs/cloudflare test
 ```
 
-And in a different shell:
+### End-to-end tests
+
+Before running the e2e tests for the first time, install Chromium:
+
+```bash
+pnpm exec playwright install chromium --with-deps
+```
+
+#### AWS adapter
+
+Build the AWS adapter and example applications, then start the local servers:
+
+```bash
+pnpm --filter @opennextjs/aws... run build
+pnpm openbuild:local
+pnpm openbuild:local:start
+```
+
+Keep the servers running and, in a different shell, run:
 
 ```bash
 pnpm e2e:test
 ```
+
+#### Cloudflare adapter
+
+Build the Cloudflare adapter and example Workers, then run the Playwright tests in the Cloudflare Workers environment:
+
+```bash
+pnpm --filter @opennextjs/cloudflare run build
+pnpm turbo build:worker:cf
+CI=1 pnpm turbo e2e:cf
+```
+
+The final command starts and stops the required local Wrangler preview servers. Setting `CI=1` matches the CI workflow, where the Workers have already been built by the preceding command.
 
 ## Coldstart
 

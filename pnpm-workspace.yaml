@@ -5,7 +5,6 @@ packages:
   - "examples-cloudflare/bugs/*"
   - "examples-cloudflare/overrides/*"
   - "!examples-cloudflare/common"
-  - "create-cloudflare/*"
   - "packages/*"
 
 catalog:
