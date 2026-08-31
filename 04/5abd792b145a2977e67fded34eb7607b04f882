@@ -1,0 +1,25 @@
+examples-cloudflare/e2e/app-router/e2e/middleware.rewrite.test.ts
+  s_d7dead64e799e9::t_2787d74fcf47e1 26-32
+packages/cloudflare/src/cli/build/patches/ast/webpack-runtime.ts
+  s_d7dead64e799e9::t_4e65019848c72d 12-13,55
+packages/cloudflare/src/cli/build/patches/plugins/turbopack.spec.ts
+  s_d7dead64e799e9::t_73daf51ea5821e 26-42
+packages/cloudflare/src/cli/build/patches/plugins/turbopack.ts
+  s_d7dead64e799e9::t_c3b89c27885c6b 3,33-38,42-43,46-47,53-59,66-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "045abd792b145a2977e67fded34eb7607b04f882",
+  "prompts": {},
+  "sessions": {
+    "s_d7dead64e799e9": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fb836a33fffeVwYgDrA5aJCci7",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
