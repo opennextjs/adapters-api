@@ -9,8 +9,8 @@
  *
  *  For multiple chunks:
  *     switch (chunkId) {
- *       case ID1: installChunk(require("./chunks/ID1"); break;
- *       case ID2: installChunk(require("./chunks/ID2"); break;
+ *       case ID1: installChunk(require("./chunks/ID1")); break;
+ *       case ID2: installChunk(require("./chunks/ID2")); break;
  *       // ...
  *       case SELF_ID: installedChunks[chunkId] = 1; break;
  *       default: throw new Error(`Unknown chunk ${chunkId}`);
@@ -52,7 +52,7 @@ ${chunks.map((chunk) => `         case ${chunk}: $INSTALL(require("./chunks/${ch
 
 // Inline the code when there is a single chunk.
 // For example when there is a single Pages API route.
-// Note: The chunk does not always exist which explain the need for the try...catch.
+// Note: The chunk does not always exist, which explains the need for the try...catch.
 export const singleChunkRule = `
 rule:
   pattern: ($CHUNK_ID, $_PROMISES) => { $$$ }

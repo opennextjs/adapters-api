@@ -23,6 +23,23 @@ function loadRuntimeChunkPath(chunkPath) {
 		);
 	});
 
+	test("normalizes Windows paths and excludes the runtime", async () => {
+		const patch = patchTurbopackRuntime.patches[0]!;
+		const result = await patch.patchCode({
+			code: runtimeCode,
+			tracedFiles: [
+				String.raw`C:\app\.open-next\middleware\app\.next\server\chunks\ssr\chunk.js`,
+				String.raw`C:\app\.open-next\middleware\app\.next\server\chunks\[turbopack]_runtime.js`,
+			],
+		} as never);
+
+		expect(result).toContain('case "server/chunks/ssr/chunk.js"');
+		expect(result).toContain(
+			'return require("C:/app/.open-next/middleware/app/.next/server/chunks/ssr/chunk.js")'
+		);
+		expect(result).not.toContain('case "server/chunks/[turbopack]_runtime.js"');
+	});
+
 	test("supports middleware with no chunks", async () => {
 		const patch = patchTurbopackRuntime.patches[0]!;
 		const result = await patch.patchCode({ code: runtimeCode, tracedFiles: [] } as never);

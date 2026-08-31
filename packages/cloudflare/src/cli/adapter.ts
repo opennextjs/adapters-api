@@ -92,13 +92,6 @@ globalThis.AsyncLocalStorage = AsyncLocalStorage;
 			additionalPlugins: (updater: ContentUpdater, outputs: NextAdapterOutputs) => [
 				inlineRouteHandler(updater, outputs, packagePath),
 				inlineLoadManifest(updater, buildOpts),
-				...(config.middleware?.external
-					? [
-							openNextExternalMiddlewarePlugin(
-								path.join(buildOpts.openNextDistDir, "core/edgeFunctionHandler.js")
-							),
-						]
-					: []),
 				openNextEdgePlugins({
 					nextDir: path.join(buildOpts.appBuildOutputPath, ".next"),
 					isInCloudflare: true,
