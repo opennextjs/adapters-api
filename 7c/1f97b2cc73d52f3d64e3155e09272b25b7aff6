@@ -1,0 +1,91 @@
+README.md
+  s_211ade1719b5d6::t_c8db76a89c1a61 107-115,121,124,127-145,151-162
+packages/cloudflare/src/cli/adapter.ts
+  s_211ade1719b5d6::t_d866860555baf6 5-6,9-10,12-14,23-25,27,29-78
+packages/core/package.json
+  s_211ade1719b5d6::t_7933f6620d2af8 42-43,45-47,66,68-69
+packages/core/src/adapters/cache.ts
+  s_211ade1719b5d6::t_f508e258d764a6 48,62
+packages/core/src/build/adapter.spec.ts
+  s_211ade1719b5d6::t_20d50e94eb0443 1-541
+packages/core/src/build/adapter.ts
+  s_211ade1719b5d6::t_2225b70fac1538 2,7-120,122-149,153-177,180-181,183-184,186-210,212-252,254-266
+packages/core/src/build/compileConfig.ts
+  s_211ade1719b5d6::t_c37dbfe93e8ad7 41-48
+packages/core/src/build/compileTagCacheProvider.ts
+  s_211ade1719b5d6::t_9ae093fcd62e7d 3,9-12,27,31-35
+packages/core/src/build/createAssets.ts
+  s_211ade1719b5d6::t_efe46e47829243 89,261,273
+packages/core/src/build/createImageOptimizationBundle.ts
+  s_211ade1719b5d6::t_01d44a56482283 6,12-15,35-39
+packages/core/src/build/createMiddleware.ts
+  s_211ade1719b5d6::t_3f970a4d9b4bae 7,23-26,44,73,77,90
+packages/core/src/build/createRevalidationBundle.ts
+  s_211ade1719b5d6::t_dfe9893cfbed04 5,11-14,36,39-42
+packages/core/src/build/createServerBundle.ts
+  s_211ade1719b5d6::t_c40e3cc5fe8836 14,33-38,43,61,133,178,196,216,222,236,244-259,263,266
+packages/core/src/build/createWarmerBundle.ts
+  s_211ade1719b5d6::t_85765bdd07fe48 5,11-14,38,41-44
+packages/core/src/build/edge/createEdgeBundle.ts
+  s_211ade1719b5d6::t_0dd0de18e205dd 22,36,42,57,78-97,185-186,223
+packages/core/src/build/generateOutput.spec.ts
+  s_211ade1719b5d6::t_ecb6a1efb3d384 1-84
+packages/core/src/build/generateOutput.ts
+  s_211ade1719b5d6::t_97b558aa1339ac 69,105-118,127,169,353-357,359
+packages/core/src/build/middleware/buildNodeMiddleware.ts
+  s_211ade1719b5d6::t_e8fce46a15f569 10,20-23,66-85
+packages/core/src/build/validateConfig.spec.ts
+  s_211ade1719b5d6::t_6dcc5a0b9b03fb 1-124
+packages/core/src/core/resolve.ts
+  s_211ade1719b5d6::t_f53bc3554b8105 22-24,35-37
+packages/core/src/core/routing/cacheInterceptor.ts
+  s_211ade1719b5d6::t_c8844668f4d630 147
+packages/core/src/core/routing/middleware.ts
+  s_211ade1719b5d6::t_717093c1132203 43,69-96,108-125,127-134,136-158,162-175,177-180,182-198
+packages/core/src/core/routing/util.ts
+  s_211ade1719b5d6::t_9ff3c91f08c4ea 195,198
+packages/core/src/http/request.ts
+  s_211ade1719b5d6::t_da49528a355270 7,20,44-91
+packages/core/src/overrides/proxyExternalRequest/node.ts
+  s_211ade1719b5d6::t_9dc1e7546c25f3 3,39-47,80,84-87,90-94
+packages/core/src/types/open-next.ts
+  s_211ade1719b5d6::t_7b885d5dc1ea96 29
+packages/core/tsconfig.json
+  s_211ade1719b5d6::t_253b3ec877625a 18-19
+packages/tests-unit/tests/converters/aws-apigw-v1.test.ts
+  s_211ade1719b5d6::t_695d0931dfea66 4,115,154,195,236,277,320,328
+packages/tests-unit/tests/converters/aws-apigw-v2.test.ts
+  s_211ade1719b5d6::t_b7ccf5a19c1108 4,154,191,232,272,280
+packages/tests-unit/tests/converters/aws-cloudfront.test.ts
+  s_211ade1719b5d6::t_3fcd6ff876070c 4,252,292,335,343
+packages/tests-unit/tests/converters/node.test.ts
+  s_211ade1719b5d6::t_e57adeded16ede 3,27,56,82,111,140,159,174,180,194,209,216
+packages/tests-unit/tests/core/routing/cacheInterceptor.test.ts
+  s_211ade1719b5d6::t_2b07c6238c2a98 5,40
+packages/tests-unit/tests/core/routing/i18n.test.ts
+  s_211ade1719b5d6::t_f32d1061344c89 4,32
+packages/tests-unit/tests/core/routing/matcher.test.ts
+  s_211ade1719b5d6::t_257875a2f7a303 9,102
+packages/tests-unit/tests/core/routing/middleware.test.ts
+  s_211ade1719b5d6::t_ff8bfb1b0a9559 57,250-322
+packages/tests-unit/tests/core/routing/util.test.ts
+  s_211ade1719b5d6::t_9b65d1914c2f8a 452-458
+pnpm-lock.yaml
+  s_211ade1719b5d6::t_98b305c7eddc82 990-992,999-1001
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "7c1f97b2cc73d52f3d64e3155e09272b25b7aff6",
+  "prompts": {},
+  "sessions": {
+    "s_211ade1719b5d6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fb836ff49ffeE3O3jqvrHedOnL",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
