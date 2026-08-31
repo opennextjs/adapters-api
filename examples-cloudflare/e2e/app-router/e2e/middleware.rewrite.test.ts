@@ -23,6 +23,13 @@ test("Middleware Rewrite", async ({ page }) => {
 	await expect(el).toBeVisible();
 });
 
+test("Middleware Rewrite handles HEAD requests", async ({ request }) => {
+	const response = await request.head("/rewrite");
+
+	expect(response.status()).toBe(200);
+	expect(await response.body()).toHaveLength(0);
+});
+
 test("Middleware Rewrite External Image", async ({ page }) => {
 	let responsePromise = new Promise<PwResponse>((resolve) => {
 		page.on("response", async (resp) => {
