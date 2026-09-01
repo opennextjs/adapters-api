@@ -235,7 +235,14 @@ describe("buildAdapter", () => {
 
 		expect(createMiddleware).toHaveBeenCalledWith(
 			expect.any(Object),
-			expect.objectContaining({ forceOnlyBuildOnce: true })
+			expect.objectContaining({ forceOnlyBuildOnce: true }),
+			expect.objectContaining({
+				pages: expect.any(Array),
+				appPages: expect.any(Array),
+				appRoutes: expect.any(Array),
+				pagesApi: expect.any(Array),
+			}),
+			undefined
 		);
 	});
 
@@ -436,6 +443,43 @@ describe("buildAdapter", () => {
 			}),
 			ctx.outputs
 		);
+	});
+
+	test("onBuildComplete forwards middlewareBundle to createMiddleware intact", async () => {
+		const mockPlugin = { name: "mock-plugin", setup: vi.fn() };
+		const additionalPlugins = vi.fn(() => [mockPlugin]);
+		const additionalCodePatches = [{ name: "test-middleware-patch", patches: [] }];
+		const middlewareBundle = {
+			additionalPlugins,
+			additionalCodePatches,
+			useEdgeConfig: true,
+			externals: ["./externals-test"],
+			banner: ["// test banner"],
+		};
+
+		const adapter = buildAdapter(() => ({
+			serverBundle,
+			middlewareBundle,
+		}));
+
+		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
+		await adapter.modifyConfig(nextConfig, { phase: "production" });
+
+		const ctx = createMockContext();
+		await adapter.onBuildComplete(ctx);
+
+		expect(createMiddleware).toHaveBeenCalledWith(
+			expect.any(Object),
+			expect.any(Object),
+			ctx.outputs,
+			middlewareBundle
+		);
+
+		const calls = vi.mocked(createMiddleware).mock.calls;
+		expect(calls).toHaveLength(1);
+		expect(calls[0]).toHaveLength(4);
+		expect(calls[0][3]).toEqual(middlewareBundle);
+		expect(calls[0][3]).toBe(middlewareBundle);
 	});
 
 	test("onBuildComplete compiles tag cache provider when shouldUseTagCache is true", async () => {

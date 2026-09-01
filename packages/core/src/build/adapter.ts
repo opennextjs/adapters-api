@@ -60,6 +60,13 @@ export type OpenNextAdapterOptions<T = OpenNextOutput> = {
 	skipWarmer?: boolean;
 	skipGenerateOutput?: boolean;
 	middlewareOptions?: { forceOnlyBuildOnce?: boolean };
+	middlewareBundle?: {
+		additionalPlugins?: (updater: ContentUpdater, outputs: NextAdapterOutputs) => Plugin[];
+		additionalCodePatches?: CodePatcher[];
+		useEdgeConfig?: boolean;
+		externals?: string[];
+		banner?: string[] | ((name: string) => string[]);
+	};
 	serverBundle: {
 		additionalPlugins?: (updater: ContentUpdater, outputs: NextAdapterOutputs) => Plugin[];
 		additionalCodePatches?: CodePatcher[];
@@ -189,10 +196,15 @@ export function buildAdapter<T = OpenNextOutput>(
 			const bundleDefaults = adapterOptions.defaultOverrides;
 
 			// Step 3: Create middleware
-			await createMiddleware(buildOpts, {
-				...adapterOptions.middlewareOptions,
-				defaultOverrides: bundleDefaults?.middleware,
-			});
+			await createMiddleware(
+				buildOpts,
+				{
+					...adapterOptions.middlewareOptions,
+					defaultOverrides: bundleDefaults?.middleware,
+				},
+				ctx.outputs,
+				adapterOptions.middlewareBundle
+			);
 			logger.info("Middleware created");
 
 			// Step 4: Create static assets

@@ -25,6 +25,8 @@ import { join } from "node:path";
 
 import { type BuildOptions, getPackagePath } from "@opennextjs/core/build/helper.js";
 import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
+import type { CodePatcher } from "@opennextjs/core/build/patch/codePatcher.js";
+import { getCrossPlatformPathRegex } from "@opennextjs/core/utils/regex.js";
 
 // Inline the code when there are multiple chunks
 export function buildMultipleChunksRule(chunks: number[]) {
@@ -69,6 +71,44 @@ fix: |
   }
 `;
 
+export function patchWebpackRuntimeCode(code: string, chunks: number[]): string {
+	let patched = patchCode(code, buildMultipleChunksRule(chunks));
+	patched = patchCode(patched, singleChunkRule);
+	return patched;
+}
+
+function getWebpackChunks(tracedFiles: string[]): number[] {
+	const chunks = new Set<number>();
+	for (const file of tracedFiles) {
+		const match = file.match(/[\\/]chunks[\\/](\d+)\.js$/);
+		if (match) {
+			chunks.add(Number(match[1]));
+		}
+	}
+	return Array.from(chunks);
+}
+
+/**
+ * Rewrites webpack runtime chunk loading in an external middleware bundle.
+ *
+ * The middleware trace already contains every required chunk. Using the traced
+ * paths keeps the generated requires visible to the Worker bundler and also
+ * supports middleware bundles with no chunks.
+ */
+export const patchWebpackMiddlewareRuntime: CodePatcher = {
+	name: "inline-webpack-chunks",
+	patches: [
+		{
+			pathFilter: getCrossPlatformPathRegex(String.raw`webpack(?:-api)?-runtime\.js$`, {
+				escape: false,
+			}),
+			contentFilter: /require\("\.\/chunks\/"\s*\+/,
+			patchCode: async ({ code, tracedFiles }) =>
+				patchWebpackRuntimeCode(code, getWebpackChunks(tracedFiles)),
+		},
+	],
+};
+
 /**
  * Fixes the webpack-runtime.js and webpack-api-runtime.js files by inlining
  * the webpack dynamic requires.
@@ -84,11 +124,12 @@ export async function patchWebpackRuntime(buildOpts: BuildOptions) {
 	);
 
 	// Look for all the chunks.
-	const chunks = readdirSync(join(dotNextServerDir, "chunks"))
-		.filter((chunk) => /^\d+\.js$/.test(chunk))
-		.map((chunk) => {
-			return Number(chunk.replace(/\.js$/, ""));
-		});
+	const chunksDir = join(dotNextServerDir, "chunks");
+	const chunks = existsSync(chunksDir)
+		? readdirSync(chunksDir)
+				.filter((chunk) => /^\d+\.js$/.test(chunk))
+				.map((chunk) => Number(chunk.replace(/\.js$/, "")))
+		: [];
 
 	patchFile(join(dotNextServerDir, "webpack-runtime.js"), chunks);
 	patchFile(join(dotNextServerDir, "webpack-api-runtime.js"), chunks);
@@ -103,8 +144,7 @@ export async function patchWebpackRuntime(buildOpts: BuildOptions) {
 function patchFile(filename: string, chunks: number[]) {
 	if (existsSync(filename)) {
 		let code = readFileSync(filename, "utf-8");
-		code = patchCode(code, buildMultipleChunksRule(chunks));
-		code = patchCode(code, singleChunkRule);
+		code = patchWebpackRuntimeCode(code, chunks);
 		writeFileSync(filename, code);
 	}
 }

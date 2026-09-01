@@ -19,7 +19,9 @@ import { compileImages } from "./build/open-next/compile-images.js";
 import { compileInit } from "./build/open-next/compile-init.js";
 import { compileSkewProtection } from "./build/open-next/compile-skew-protection.js";
 import { compileDurableObjects } from "./build/open-next/compileDurableObjects.js";
+import { patchWebpackMiddlewareRuntime } from "./build/patches/ast/webpack-runtime.js";
 import { inlineLoadManifest } from "./build/patches/plugins/load-manifest.js";
+import { patchOpenTelemetryGlobalUtils } from "./build/patches/plugins/opentelemetry.js";
 import { patchResRevalidate } from "./build/patches/plugins/res-revalidate.js";
 import { patchTurbopackRuntime } from "./build/patches/plugins/turbopack.js";
 import { patchUseCacheIO } from "./build/patches/plugins/use-cache.js";
@@ -68,7 +70,47 @@ export default buildAdapter((config: OpenNextConfig, buildOpts: BuildOptions) =>
 					isInCloudflare: true,
 				}),
 			],
-			additionalCodePatches: [patchResRevalidate, patchUseCacheIO, patchTurbopackRuntime],
+			additionalCodePatches: [
+				patchResRevalidate,
+				patchUseCacheIO,
+				patchOpenTelemetryGlobalUtils,
+				patchTurbopackRuntime,
+			],
+		},
+		middlewareBundle: {
+			useEdgeConfig: true,
+			banner: (_name: string) => [
+				`globalThis.monorepoPackagePath = "${normalizePath(packagePath)}";`,
+				`import { Buffer } from "node:buffer";
+globalThis.Buffer = Buffer;
+
+import { AsyncLocalStorage } from "node:async_hooks";
+globalThis.AsyncLocalStorage = AsyncLocalStorage;
+
+`,
+			],
+			additionalPlugins: (updater: ContentUpdater, outputs: NextAdapterOutputs) => [
+				inlineRouteHandler(updater, outputs, packagePath),
+				inlineLoadManifest(updater, buildOpts),
+				...(config.middleware?.external
+					? [
+							openNextExternalMiddlewarePlugin(
+								path.join(buildOpts.openNextDistDir, "core/edgeFunctionHandler.js")
+							),
+						]
+					: []),
+				openNextEdgePlugins({
+					nextDir: path.join(buildOpts.appBuildOutputPath, ".next"),
+					isInCloudflare: true,
+				}),
+			],
+			additionalCodePatches: [
+				patchResRevalidate,
+				patchUseCacheIO,
+				patchOpenTelemetryGlobalUtils,
+				patchWebpackMiddlewareRuntime,
+				patchTurbopackRuntime,
+			],
 		},
 		afterServerBundle: async (buildOpts, _config) => {
 			compileDurableObjects(buildOpts);
