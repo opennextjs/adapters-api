@@ -26,7 +26,7 @@ export type InternalEvent = {
 	readonly rawPath: string;
 	// Full URL - starts with "https://on/" when the host is not available
 	readonly url: string;
-	readonly body?: Buffer;
+	readonly body?: ReadableStream;
 	//TODO: change the type of headers to Record<string, string | string[]>
 	readonly headers: Record<string, string>;
 	readonly query: Record<string, string | string[]>;

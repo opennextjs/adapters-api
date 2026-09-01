@@ -1,6 +1,7 @@
 import { Readable } from "node:stream";
 
 import converter from "@opennextjs/aws/overrides/converters/aws-apigw-v2.js";
+import { fromReadableStream } from "@opennextjs/core/utils/stream.js";
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
 import { vi, describe, it, expect } from "vitest";
 
@@ -150,7 +151,7 @@ describe("convertFrom", () => {
 			method: "POST",
 			rawPath: "/",
 			url: "https://on/",
-			body: Buffer.from('{"message":"Hello, world!"}'),
+			body: expect.any(ReadableStream),
 			headers: {
 				"content-type": "application/json",
 			},
@@ -187,7 +188,7 @@ describe("convertFrom", () => {
 			method: "POST",
 			rawPath: "/",
 			url: "https://on/",
-			body: Buffer.from('{"message":"Hello, world!"}'),
+			body: expect.any(ReadableStream),
 			headers: {
 				"content-type": "application/json",
 				cookie: "foo=bar; hello=world",
@@ -228,7 +229,7 @@ describe("convertFrom", () => {
 			method: "POST",
 			rawPath: "/",
 			url: "https://on/?hello=world&foo=1&foo=2",
-			body: Buffer.from('{"message":"Hello, world!"}'),
+			body: expect.any(ReadableStream),
 			headers: {
 				"content-type": "application/json",
 			},
@@ -268,7 +269,7 @@ describe("convertFrom", () => {
 			method: "POST",
 			rawPath: "/",
 			url: "https://on/",
-			body: Buffer.from('{"message":"Hello, world!"}'),
+			body: expect.any(ReadableStream),
 			headers: {
 				"content-type": "application/json",
 			},
@@ -276,5 +277,6 @@ describe("convertFrom", () => {
 			query: {},
 			remoteAddress: "::1",
 		});
+		expect(await fromReadableStream(response.body!)).toEqual('{"message":"Hello, world!"}');
 	});
 });

@@ -1,5 +1,5 @@
-import { Buffer } from "node:buffer";
 import { Writable } from "node:stream";
+import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 
 import cookieParser from "cookie";
 
@@ -33,7 +33,9 @@ const converter: Converter<InternalEvent, InternalResult | MiddlewareResult> = {
 		const shouldHaveBody = method !== "GET" && method !== "HEAD";
 
 		// Only read body for methods that should have one
-		const body = shouldHaveBody ? Buffer.from(await request.arrayBuffer()) : undefined;
+		const body = shouldHaveBody
+			? ((request.body as unknown as NodeReadableStream | undefined) ?? undefined)
+			: undefined;
 
 		const cookieHeader = request.headers.get("cookie");
 		const cookies = cookieHeader ? (cookieParser.parse(cookieHeader) as Record<string, string>) : {};
@@ -158,7 +160,7 @@ function convertInternalResult(result: InternalResult): Response {
 	// We should not return a body for statusCode's that doesn't allow bodies
 	const body = NULL_BODY_STATUSES.has(result.statusCode)
 		? null
-		: ((result.body ?? null) as ReadableStream | null);
+		: ((result.body ?? null) as globalThis.ReadableStream | null);
 
 	return new Response(body, {
 		status: result.statusCode,

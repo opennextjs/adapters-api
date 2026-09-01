@@ -39,9 +39,12 @@
 		"access": "public"
 	},
 	"scripts": {
-		"build": "tsc && tsc-alias",
+		"clean": "rimraf dist",
+		"build": "pnpm clean && tsc && tsc-alias",
 		"dev": "concurrently \"tsc -w\" \"tsc-alias -w\"",
-		"ts:check": "tsc --noEmit"
+		"ts:check": "tsc --noEmit",
+		"test": "vitest --run",
+		"test:watch": "vitest"
 	},
 	"dependencies": {
 		"@ast-grep/napi": "^0.40.5",
@@ -60,8 +63,10 @@
 		"@types/express": "5.0.6",
 		"@types/node": "catalog:",
 		"concurrently": "^9.2.1",
+		"rimraf": "catalog:",
 		"tsc-alias": "^1.8.16",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"vitest": "catalog:"
 	},
 	"peerDependencies": {
 		"next": "^16.0.10"

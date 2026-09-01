@@ -6,6 +6,7 @@ import {
 } from "@opennextjs/core/core/routing/matcher.js";
 import { convertFromQueryString } from "@opennextjs/core/core/routing/util.js";
 import type { InternalEvent } from "@opennextjs/core/types/open-next.js";
+import { toReadableStream } from "@opennextjs/core/utils/stream.js";
 import { vi } from "vitest";
 
 import { NextConfig } from "@/config/index.js";
@@ -98,7 +99,7 @@ function createEvent(event: PartialEvent): InternalEvent {
 		method: event.method ?? "GET",
 		rawPath: pathname,
 		url: event.url ?? "/",
-		body: Buffer.from(event.body ?? ""),
+		body: event.body !== undefined ? toReadableStream(event.body) : undefined,
 		headers: event.headers ?? {},
 		query: convertFromQueryString(search.slice(1)),
 		cookies: event.cookies ?? {},

@@ -11,6 +11,7 @@ import logger from "../logger.js";
 import { minifyAll } from "../minimize-js.js";
 import { ContentUpdater } from "../plugins/content-updater.js";
 import { openNextReplacementPlugin } from "../plugins/replacement.js";
+import type { BundleDefaults } from "../plugins/resolve.js";
 import { openNextResolvePlugin } from "../plugins/resolve.js";
 import { getCrossPlatformPathRegex } from "../utils/regex.js";
 
@@ -29,11 +30,17 @@ interface CodeCustomization {
 	// These plugins are meant to apply during the esbuild bundling process.
 	// This will only apply to OpenNext code.
 	additionalPlugins?: (contentUpdater: ContentUpdater) => Plugin[];
+	useEdgeConfig?: boolean;
+	// The esbuild externals for the server bundle. Mandatory: every adapter has to
+	// declare what it keeps external instead of relying on an implicit default.
+	externals: string[];
+	banner?: string[] | ((name: string) => string[]);
+	bundleDefaults?: BundleDefaults;
 }
 
 export async function createServerBundle(
 	options: buildHelper.BuildOptions,
-	codeCustomization?: CodeCustomization,
+	codeCustomization: CodeCustomization,
 	nextOutputs?: NextAdapterOutputs
 ) {
 	const { config } = options;
@@ -51,7 +58,7 @@ export async function createServerBundle(
 		const routes = fnOptions.routes;
 		routes.forEach((route) => foundRoutes.add(route));
 		if (fnOptions.runtime === "edge") {
-			await generateEdgeBundle(name, options, fnOptions);
+			await generateEdgeBundle(name, options, fnOptions, undefined, codeCustomization.bundleDefaults?.edge);
 		} else {
 			await generateBundle(name, options, fnOptions, codeCustomization, nextOutputs);
 		}
@@ -123,7 +130,7 @@ async function generateBundle(
 	name: string,
 	options: buildHelper.BuildOptions,
 	fnOptions: SplittedFunctionOptions,
-	codeCustomization?: CodeCustomization,
+	codeCustomization: CodeCustomization,
 	nextOutputs?: NextAdapterOutputs
 ) {
 	const { appPath, appBuildOutputPath, config, outputDir, monorepoRoot } = options;
@@ -168,7 +175,7 @@ async function generateBundle(
 	}
 
 	// Copy open-next.config.mjs
-	buildHelper.copyOpenNextConfig(options.buildDir, outPackagePath);
+	buildHelper.copyOpenNextConfig(options.buildDir, outPackagePath, codeCustomization.useEdgeConfig ?? false);
 
 	// Copy env files
 	buildHelper.copyEnvFile(appBuildOutputPath, packagePath, outputPath);
@@ -186,7 +193,7 @@ async function generateBundle(
 	tracedFiles = await copyAdapterFiles(options, name, packagePath, nextOutputs);
 	//TODO: we should load manifests here
 
-	const additionalCodePatches = codeCustomization?.additionalCodePatches ?? [];
+	const additionalCodePatches = codeCustomization.additionalCodePatches ?? [];
 
 	await applyCodePatches(options, tracedFiles, manifests as ReturnType<typeof getManifests>, [
 		patches.patchFetchCacheSetMissingWaitUntil,
@@ -206,12 +213,13 @@ async function generateBundle(
 	//       Next.js app.
 
 	const overrides = fnOptions.override ?? {};
+	const defaultOverrides = codeCustomization.bundleDefaults?.server;
 
 	const disableRouting = config.middleware?.external;
 
 	const updater = new ContentUpdater(options);
 
-	const additionalPlugins = codeCustomization?.additionalPlugins
+	const additionalPlugins = codeCustomization.additionalPlugins
 		? codeCustomization.additionalPlugins(updater)
 		: [];
 
@@ -225,6 +233,7 @@ async function generateBundle(
 		openNextResolvePlugin({
 			fnName: name,
 			overrides,
+			defaultOverrides,
 		}),
 		...additionalPlugins,
 		// The content updater plugin must be the last plugin
@@ -232,23 +241,29 @@ async function generateBundle(
 	];
 
 	const outfileExt = fnOptions.runtime === "deno" ? "ts" : "mjs";
+	const defaultBanner = [
+		`globalThis.monorepoPackagePath = "${packagePath}";`,
+		"import process from 'node:process';",
+		"import { Buffer } from 'node:buffer';",
+		"import { createRequire as topLevelCreateRequire } from 'module';",
+		"const require = topLevelCreateRequire(import.meta.url);",
+		"import bannerUrl from 'url';",
+		"const __dirname = bannerUrl.fileURLToPath(new URL('.', import.meta.url));",
+		"const __filename = bannerUrl.fileURLToPath(import.meta.url);",
+		name === "default" ? "" : `globalThis.fnName = "${name}";`,
+	];
+	const bannerLines =
+		typeof codeCustomization.banner === "function"
+			? codeCustomization.banner(name)
+			: (codeCustomization.banner ?? defaultBanner);
+
 	await buildHelper.esbuildAsync(
 		{
 			entryPoints: [path.join(options.openNextDistDir, "adapters", "server-adapter.js")],
-			external: ["next", "./middleware.mjs", "./next-server.runtime.prod.js"],
+			external: codeCustomization.externals,
 			outfile: path.join(outputPath, packagePath, `index.${outfileExt}`),
 			banner: {
-				js: [
-					`globalThis.monorepoPackagePath = "${packagePath}";`,
-					"import process from 'node:process';",
-					"import { Buffer } from 'node:buffer';",
-					"import { createRequire as topLevelCreateRequire } from 'module';",
-					"const require = topLevelCreateRequire(import.meta.url);",
-					"import bannerUrl from 'url';",
-					"const __dirname = bannerUrl.fileURLToPath(new URL('.', import.meta.url));",
-					"const __filename = bannerUrl.fileURLToPath(import.meta.url);",
-					name === "default" ? "" : `globalThis.fnName = "${name}";`,
-				].join(""),
+				js: bannerLines.join(""),
 			},
 			plugins,
 		},
