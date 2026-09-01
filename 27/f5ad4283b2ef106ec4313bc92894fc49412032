@@ -1,0 +1,119 @@
+README.md
+  s_211ade1719b5d6::t_5658c4e2da2180 107-115,121,124,127-145,151-162
+examples-cloudflare/e2e/app-router/e2e/middleware.rewrite.test.ts
+  s_211ade1719b5d6::t_24530f47dee9af 26-32
+examples-cloudflare/e2e/app-router/proxy.ts
+  s_211ade1719b5d6::t_17d5e96e4608f3 4
+packages/aws/src/adapter.ts
+  s_211ade1719b5d6::t_d298143b0a42e8 1-2,6-37,39-44,46
+packages/cloudflare/src/cli/adapter.ts
+  s_211ade1719b5d6::t_7c4fe45af97999 5-6,9-10,12-14,22,24-27,29,31-113
+packages/cloudflare/src/cli/build/patches/ast/webpack-runtime.spec.ts
+  s_211ade1719b5d6::t_5aa077c3bc4bd9 4-8,117-145
+packages/cloudflare/src/cli/build/patches/ast/webpack-runtime.ts
+  s_211ade1719b5d6::t_f864f671a78f0e 12-13,28-29,55,74-111,127-132,147
+packages/cloudflare/src/cli/build/patches/plugins/opentelemetry.spec.ts
+  s_211ade1719b5d6::t_138b88ce7ab4e8 1-42
+packages/cloudflare/src/cli/build/patches/plugins/opentelemetry.ts
+  s_211ade1719b5d6::t_2db5ffc5b4b844 1,5-26,29-31,33-38,40-41
+packages/cloudflare/src/cli/build/patches/plugins/turbopack.spec.ts
+  s_211ade1719b5d6::t_b240dfa25f7342 1-50
+packages/cloudflare/src/cli/build/patches/plugins/turbopack.ts
+  s_211ade1719b5d6::t_c230d256e63a34 3,33-38,42-43,46-47,53-59,66-70
+packages/core/package.json
+  s_211ade1719b5d6::t_e4886d33797917 42-43,45-47,66,68-69
+packages/core/src/adapters/cache.ts
+  s_211ade1719b5d6::t_8fcab33f2cbad2 48,62
+packages/core/src/build/adapter.spec.ts
+  s_211ade1719b5d6::t_753273285a66f0 1-585
+packages/core/src/build/adapter.ts
+  s_211ade1719b5d6::t_052233da0266bf 1-279
+packages/core/src/build/compileConfig.ts
+  s_211ade1719b5d6::t_92027e4e932ace 41-48
+packages/core/src/build/compileTagCacheProvider.ts
+  s_211ade1719b5d6::t_7bfde67c7277a9 3,9-12,27,31-35
+packages/core/src/build/copyAdapterFiles.ts
+  s_211ade1719b5d6::t_a542805b98cddb 14-15,17,27,31
+packages/core/src/build/createAssets.ts
+  s_211ade1719b5d6::t_17f56823677ae1 89,261,273
+packages/core/src/build/createImageOptimizationBundle.ts
+  s_211ade1719b5d6::t_890838a270849c 6,12-15,35-39
+packages/core/src/build/createMiddleware.ts
+  s_211ade1719b5d6::t_70c27c7322cf55 5,8,11,17-18,27-32,50,79,83,96
+packages/core/src/build/createRevalidationBundle.ts
+  s_211ade1719b5d6::t_f375895d197157 5,11-14,36,39-42
+packages/core/src/build/createServerBundle.ts
+  s_211ade1719b5d6::t_623e36b5b95e74 14,33-38,43,61,133,178,196,216,222,236,244-259,263,266
+packages/core/src/build/createWarmerBundle.ts
+  s_211ade1719b5d6::t_c533dddc07c785 5,11-14,38,41-44
+packages/core/src/build/edge/createEdgeBundle.ts
+  s_211ade1719b5d6::t_3f16255aed295b 22,36,42,57,78-97,185-186,223
+packages/core/src/build/generateOutput.spec.ts
+  s_211ade1719b5d6::t_074afa3ba5ac20 1-84
+packages/core/src/build/generateOutput.ts
+  s_211ade1719b5d6::t_36f4e8782d7fed 69,105-118,127,169,353-357,359
+packages/core/src/build/middleware/buildNodeMiddleware.spec.ts
+  s_211ade1719b5d6::t_4951f4fd35e9f3 1-214
+packages/core/src/build/middleware/buildNodeMiddleware.ts
+  s_211ade1719b5d6::t_330a7d5780e136 4,8,10,12-14,17-18,24-32,40-42,48-56,58-61,63-65,71-100,106-109,114-133,140-142,145,161-163
+packages/core/src/build/validateConfig.spec.ts
+  s_211ade1719b5d6::t_35e3888ecfffe4 1-124
+packages/core/src/core/nodeMiddlewareHandler.ts
+  s_211ade1719b5d6::t_539904d034873f 5-6,31-32
+packages/core/src/core/resolve.ts
+  s_211ade1719b5d6::t_7bd307a1b1ebe6 22-24,35-37
+packages/core/src/core/routing/cacheInterceptor.ts
+  s_211ade1719b5d6::t_9c63c7f969e650 147
+packages/core/src/core/routing/middleware.ts
+  s_211ade1719b5d6::t_933d495d7f1fa2 43,69-96,108-125,127-134,136-158,162-175,177-180,182-198
+packages/core/src/core/routing/util.ts
+  s_211ade1719b5d6::t_184541a18189b4 195,198
+packages/core/src/http/request.ts
+  s_211ade1719b5d6::t_2cef4f183d3b2b 7,20,44-91
+packages/core/src/overrides/proxyExternalRequest/node.ts
+  s_211ade1719b5d6::t_312b24ff76f7a7 3,39-47,80,84-87,90-94
+packages/core/src/plugins/resolve.spec.ts
+  s_211ade1719b5d6::t_8f40d3e89648bd 1-325
+packages/core/src/types/open-next.ts
+  s_211ade1719b5d6::t_dd14bd3c55157c 29
+packages/core/tsconfig.json
+  s_211ade1719b5d6::t_6622fca801f675 18-19
+packages/tests-unit/tests/build/copyAdapterFiles.test.ts
+  s_211ade1719b5d6::t_a4caae1080d5a9 1-138
+packages/tests-unit/tests/converters/aws-apigw-v1.test.ts
+  s_211ade1719b5d6::t_efa98366c3157f 4,115,154,195,236,277,320,328
+packages/tests-unit/tests/converters/aws-apigw-v2.test.ts
+  s_211ade1719b5d6::t_dc02505ded9292 4,154,191,232,272,280
+packages/tests-unit/tests/converters/aws-cloudfront.test.ts
+  s_211ade1719b5d6::t_91a2eac9aa641e 4,252,292,335,343
+packages/tests-unit/tests/converters/node.test.ts
+  s_211ade1719b5d6::t_e55e5eb9b94590 3,27,56,82,111,140,159,174,180,194,209,216
+packages/tests-unit/tests/core/routing/cacheInterceptor.test.ts
+  s_211ade1719b5d6::t_9bf49f844edefa 5,40
+packages/tests-unit/tests/core/routing/i18n.test.ts
+  s_211ade1719b5d6::t_560462871a498b 4,32
+packages/tests-unit/tests/core/routing/matcher.test.ts
+  s_211ade1719b5d6::t_c781507c6969b9 9,102
+packages/tests-unit/tests/core/routing/middleware.test.ts
+  s_211ade1719b5d6::t_0320c590573d61 57,250-322
+packages/tests-unit/tests/core/routing/util.test.ts
+  s_211ade1719b5d6::t_82bb2aec4f45c9 452-458
+pnpm-lock.yaml
+  s_211ade1719b5d6::t_c00cbcdeadcb5a 990-992,999-1001
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "27f5ad4283b2ef106ec4313bc92894fc49412032",
+  "prompts": {},
+  "sessions": {
+    "s_211ade1719b5d6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fb836ff49ffeE3O3jqvrHedOnL",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
