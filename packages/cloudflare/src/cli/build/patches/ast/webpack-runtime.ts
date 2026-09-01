@@ -85,7 +85,7 @@ function getWebpackChunks(tracedFiles: string[]): number[] {
 			chunks.add(Number(match[1]));
 		}
 	}
-	return Array.from(chunks);
+	return Array.from(chunks).sort((a, b) => a - b);
 }
 
 /**
