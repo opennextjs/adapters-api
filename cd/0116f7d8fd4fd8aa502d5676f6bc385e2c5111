@@ -1,0 +1,55 @@
+packages/aws/src/overrides/converters/aws-cloudfront.ts
+  s_211ade1719b5d6::t_a135d6563f0cfe 17
+packages/aws/src/overrides/converters/aws-streaming.ts
+  s_211ade1719b5d6::t_71f35cebae47cf 1-3,9-10,13-14,23-24,27-39,43-45,49-57,62,67-89
+packages/aws/src/overrides/converters/response-stream.ts
+  s_211ade1719b5d6::t_f0104a9dca5c33 8-13,19,31,40-41,49-54
+packages/aws/src/overrides/wrappers/aws-lambda-compressed.ts
+  s_211ade1719b5d6::t_cf8753643bb4d6 2,10-13,32,38-40,49-55,61,64,67-68,93
+packages/aws/src/overrides/wrappers/compression.ts
+  s_211ade1719b5d6::t_b9151d89d24344 1-43
+packages/core/src/build/adapter.spec.ts
+  s_211ade1719b5d6::t_d9dcf205e8e896 561
+packages/core/src/build/adapter.ts
+  s_211ade1719b5d6::t_4c95a505cceb77 270
+packages/core/src/build/createServerBundle.ts
+  s_211ade1719b5d6::t_ed1e83511d358e 61-69,224-227
+packages/core/src/build/validateConfig.spec.ts
+  s_211ade1719b5d6::t_1e3da2a6e31abc 50-83,108-131,159-178
+packages/core/src/core/requestHandler.ts
+  s_211ade1719b5d6::t_93b340d8d870a1 124,135-142,147-150,152,248-279
+packages/core/src/http/openNextResponse.ts
+  s_211ade1719b5d6::t_778c904709f90f 7,182-183
+packages/core/src/overrides/compatibility.ts
+  s_211ade1719b5d6::t_0481c5f4d1ecba 1-48
+packages/core/src/overrides/wrappers/dummy.ts
+  s_211ade1719b5d6::t_9c152e57d647cb 12-14
+packages/core/src/overrides/wrappers/express-dev.ts
+  s_211ade1719b5d6::t_d993e6c22b0e8b 29-31
+packages/tests-unit/tests/converters/aws-streaming.test.ts
+  s_211ade1719b5d6::t_c28c1e65d85102 21,35,46,50-126
+packages/tests-unit/tests/converters/response-stream.test.ts
+  s_211ade1719b5d6::t_912fedf23a88e9 1-43
+packages/tests-unit/tests/wrappers/cloudflare.test.ts
+  s_211ade1719b5d6::t_4b6e7dbf45ae3c 1-81
+packages/tests-unit/tests/wrappers/compression.test.ts
+  s_211ade1719b5d6::t_6f21c810b67466 1-20
+packages/tests-unit/tests/wrappers/dummy.test.ts
+  s_211ade1719b5d6::t_f96ab5f7f9a0fc 1-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "cd0116f7d8fd4fd8aa502d5676f6bc385e2c5111",
+  "prompts": {},
+  "sessions": {
+    "s_211ade1719b5d6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fb836ff49ffeE3O3jqvrHedOnL",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
