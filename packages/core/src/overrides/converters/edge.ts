@@ -60,6 +60,7 @@ const converter: Converter<InternalEvent, InternalResult | MiddlewareResult> = {
 		// Not every handler streams its response: the external middleware handler returns the
 		// result directly. We track whether the stream was used to know which one to return.
 		let isStreamed = false;
+		let abortResponseBody: ((reason: unknown) => Promise<void>) | undefined;
 		const streamCreator: StreamCreator = {
 			writeHeaders(prelude) {
 				isStreamed = true;
@@ -82,43 +83,47 @@ const converter: Converter<InternalEvent, InternalResult | MiddlewareResult> = {
 						},
 					});
 				}
-
-				let controller: ReadableStreamDefaultController<Uint8Array>;
-				const readable = new ReadableStream({
-					start(value) {
-						controller = value;
-					},
-				});
+				const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
+				const writer = writable.getWriter();
+				let writerClosed = false;
+				abortResponseBody = async (reason) => {
+					if (writerClosed) return;
+					writerClosed = true;
+					await writer.abort(reason);
+				};
 				resolveOutput(new Response(readable, { status: prelude.statusCode, headers: responseHeaders }));
 
 				return new Writable({
 					write(chunk, _encoding, callback) {
-						try {
-							controller.enqueue(chunk);
-							callback();
-						} catch (error: unknown) {
-							callback(error instanceof Error ? error : new Error(String(error)));
-						}
+						writer.write(chunk).then(
+							() => callback(),
+							(error: unknown) => callback(error instanceof Error ? error : new Error(String(error)))
+						);
 					},
 					final(callback) {
-						controller.close();
-						callback();
+						writerClosed = true;
+						writer.close().then(
+							() => callback(),
+							(error: unknown) => callback(error instanceof Error ? error : new Error(String(error)))
+						);
 					},
 					destroy(error, callback) {
-						if (error) {
-							controller.error(error);
-						} else {
-							try {
-								controller.close();
-							} catch {
-								// Ignore an already closed stream.
-							}
+						if (writerClosed) {
+							callback(error);
+							return;
 						}
-						callback(error);
+						writerClosed = true;
+						const close = error ? writer.abort(error) : writer.close();
+						close.then(
+							() => callback(error),
+							(closeError: unknown) =>
+								callback(closeError instanceof Error ? closeError : new Error(String(closeError)))
+						);
 					},
 				});
 			},
 			abortSignal,
+			abort: async (reason) => abortResponseBody?.(reason),
 		};
 
 		return {
@@ -160,7 +165,7 @@ function convertInternalResult(result: InternalResult): Response {
 	// We should not return a body for statusCode's that doesn't allow bodies
 	const body = NULL_BODY_STATUSES.has(result.statusCode)
 		? null
-		: ((result.body ?? null) as globalThis.ReadableStream | null);
+		: ((result.body ?? null) as unknown as globalThis.ReadableStream | null);
 
 	return new Response(body, {
 		status: result.statusCode,
@@ -172,7 +177,7 @@ async function convertMiddlewareResult(
 	result: MiddlewareResult
 ): Promise<Response | Request | { initialResponse: InternalResult; request: Request }> {
 	const request = new Request(result.internalEvent.url, {
-		body: result.internalEvent.body as BodyInit | undefined,
+		body: result.internalEvent.body as unknown as BodyInit | undefined,
 		method: result.internalEvent.method,
 		headers: {
 			...result.internalEvent.headers,

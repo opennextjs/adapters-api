@@ -58,7 +58,15 @@ export async function createServerBundle(
 		const routes = fnOptions.routes;
 		routes.forEach((route) => foundRoutes.add(route));
 		if (fnOptions.runtime === "edge") {
-			await generateEdgeBundle(name, options, fnOptions, undefined, codeCustomization.bundleDefaults?.edge);
+			await generateEdgeBundle(
+				name,
+				options,
+				fnOptions,
+				undefined,
+				fnOptions.placement === "global"
+					? (codeCustomization.bundleDefaults?.global ?? codeCustomization.bundleDefaults?.edge)
+					: codeCustomization.bundleDefaults?.edge
+			);
 		} else {
 			await generateBundle(name, options, fnOptions, codeCustomization, nextOutputs);
 		}
@@ -213,7 +221,10 @@ async function generateBundle(
 	//       Next.js app.
 
 	const overrides = fnOptions.override ?? {};
-	const defaultOverrides = codeCustomization.bundleDefaults?.server;
+	const defaultOverrides =
+		fnOptions.placement === "global"
+			? (codeCustomization.bundleDefaults?.global ?? codeCustomization.bundleDefaults?.server)
+			: codeCustomization.bundleDefaults?.server;
 
 	const disableRouting = config.middleware?.external;
 

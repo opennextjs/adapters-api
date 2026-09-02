@@ -4,6 +4,7 @@ import { Transform } from "node:stream";
 import type { TransformCallback, Writable } from "node:stream";
 
 import type { StreamCreator } from "@/types/open-next";
+import { isBinaryContentType } from "@/utils/binary";
 
 import { debug } from "../adapters/logger";
 
@@ -178,6 +179,8 @@ export class OpenNextNodeResponse extends Transform implements ServerResponse {
 				statusCode: this.statusCode ?? 200,
 				cookies: this._cookies,
 				headers: parsedHeaders,
+				isBase64Encoded:
+					isBinaryContentType(parsedHeaders["content-type"]) || !!parsedHeaders["content-encoding"],
 			});
 			this.pipe(this.responseStream);
 		}

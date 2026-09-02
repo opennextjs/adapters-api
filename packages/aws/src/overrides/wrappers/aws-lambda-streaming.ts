@@ -1,10 +1,11 @@
-import { Readable, type Writable } from "node:stream";
-import zlib from "node:zlib";
+import { finished } from "node:stream/promises";
 
-import { error } from "@opennextjs/core/adapters/logger.js";
 import type { WarmerEvent, WarmerResponse } from "@opennextjs/core/adapters/warmer-function.js";
 import type { Wrapper, WrapperHandler } from "@opennextjs/core/types/overrides.js";
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
+
+import { streamResponse } from "./aws-lambda.js";
+import { selectCompressionEncoding } from "./compression.js";
 
 type AwsLambdaEvent = APIGatewayProxyEventV2 | WarmerEvent;
 
@@ -26,6 +27,7 @@ const handler: WrapperHandler = async (handler, converter) =>
 			if ("type" in event) {
 				const result = await formatWarmerResponse(event);
 				responseStream.end(Buffer.from(JSON.stringify(result)), "utf-8");
+				await finished(responseStream);
 				// disabled for now, we'll need to revisit this later if needed.
 				//TODO: revisit that later
 				// await globalThis.__next_route_preloader("warmerEvent");
@@ -37,41 +39,10 @@ const handler: WrapperHandler = async (handler, converter) =>
 			//Handle compression
 			const acceptEncoding =
 				internalEvent.headers["Accept-Encoding"] ?? internalEvent.headers["accept-encoding"] ?? "";
-			let contentEncoding: string;
-			let compressedStream: Writable | undefined;
-
-			responseStream.on("error", (err) => {
-				error(err);
-				responseStream.end();
-			});
-
-			if (acceptEncoding.includes("br")) {
-				contentEncoding = "br";
-				compressedStream = zlib.createBrotliCompress({
-					flush: zlib.constants.BROTLI_OPERATION_FLUSH,
-					finishFlush: zlib.constants.BROTLI_OPERATION_FINISH,
-				});
-				compressedStream.pipe(responseStream);
-			} else if (acceptEncoding.includes("gzip")) {
-				contentEncoding = "gzip";
-				compressedStream = zlib.createGzip({
-					flush: zlib.constants.Z_SYNC_FLUSH,
-				});
-				compressedStream.pipe(responseStream);
-			} else if (acceptEncoding.includes("deflate")) {
-				contentEncoding = "deflate";
-				compressedStream = zlib.createDeflate({
-					flush: zlib.constants.Z_SYNC_FLUSH,
-				});
-				compressedStream.pipe(responseStream);
-			} else {
-				contentEncoding = "identity";
-				compressedStream = responseStream;
-			}
+			const contentEncoding = selectCompressionEncoding(acceptEncoding) ?? "identity";
 
 			const output = await converter.convertTo(event, {
 				responseStream,
-				writable: compressedStream ?? responseStream,
 				contentEncoding,
 			});
 			if (output.type === "direct") {
@@ -80,14 +51,10 @@ const handler: WrapperHandler = async (handler, converter) =>
 			}
 
 			const response = await handler(internalEvent, { streamCreator: output.streamCreator });
-			if ((globalThis.isEdgeRuntime ?? false) && response.body) {
-				const stream = output.streamCreator.writeHeaders({
-					statusCode: response.statusCode,
-					headers: response.headers as Record<string, string>,
-					cookies: [],
-				});
-				Readable.fromWeb(response.body).pipe(stream);
+			if (globalThis.isEdgeRuntime ?? false) {
+				await streamResponse(response, output.streamCreator);
 			}
+			await output.output;
 		}
 	) as (...args: unknown[]) => unknown;
 

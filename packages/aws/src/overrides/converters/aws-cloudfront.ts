@@ -14,6 +14,7 @@ import type {
 	CloudFrontRequestEvent,
 	CloudFrontRequestResult,
 } from "aws-lambda";
+
 import { createBufferedStreamCreator } from "./response-stream.js";
 
 const cloudfrontBlacklistedHeaders = [

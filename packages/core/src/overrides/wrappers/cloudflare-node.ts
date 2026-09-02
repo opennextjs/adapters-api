@@ -20,19 +20,35 @@ const handler: WrapperHandler<InternalEvent, InternalResult> =
 		}
 
 		const internalEvent = await converter.convertFrom(request);
-		const output = await converter.convertTo(request, { abortSignal });
+		const output = await converter.convertTo(request, { abortSignal: abortSignal ?? request.signal });
 		if (output.type === "direct") {
-			return output.data(await handler(internalEvent));
+			return output.data(await handler(internalEvent, { waitUntil: ctx.waitUntil.bind(ctx) }));
 		}
 
-		ctx.waitUntil(
-			handler(internalEvent, {
-				streamCreator: output.streamCreator,
-				waitUntil: ctx.waitUntil.bind(ctx),
-			})
-		);
+		const handlerPromise = handler(internalEvent, {
+			streamCreator: output.streamCreator,
+			waitUntil: ctx.waitUntil.bind(ctx),
+		}).catch(async (error: unknown) => {
+			await output.streamCreator.abort?.(error);
+			throw error;
+		});
+		if (!output.output) {
+			const response = await handlerPromise;
+			return output.data?.(response);
+		}
 
-		return output.output;
+		const result = await Promise.race([
+			output.output.then((value) => ({ type: "output" as const, value })),
+			handlerPromise.then(async (response) => ({
+				type: "handler" as const,
+				value: await output.data?.(response),
+			})),
+		]);
+		if (result.type === "output") {
+			ctx.waitUntil(handlerPromise.then(() => undefined));
+			return result.value;
+		}
+		return result.value !== undefined ? result.value : output.output;
 	};
 
 export default {

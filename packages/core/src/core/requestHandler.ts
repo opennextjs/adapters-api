@@ -121,6 +121,7 @@ export async function openNextHandler(
 			if ("type" in routingResult) {
 				// response is used only in the streaming case
 				if (options?.streamCreator) {
+					const streamCreator = options.streamCreator;
 					const response = createServerResponse(
 						{
 							internalEvent,
@@ -131,16 +132,24 @@ export async function openNextHandler(
 							initialURL: internalEvent.url,
 						},
 						routingResult.headers,
-						options.streamCreator
+						{
+							...streamCreator,
+							writeHeaders: (prelude) =>
+								streamCreator.writeHeaders({
+									...prelude,
+									isBase64Encoded: routingResult.isBase64Encoded,
+								}),
+						}
 					);
 					response.statusCode = routingResult.statusCode;
 					response.flushHeaders();
 					if (routingResult.body) {
-						const [bodyToConsume, bodyToReturn] = routingResult.body.tee();
-						for await (const chunk of bodyToConsume) {
-							response.write(chunk);
+						for await (const chunk of routingResult.body) {
+							if (!response.write(chunk)) {
+								await waitForDrain(response);
+							}
 						}
-						routingResult.body = bodyToReturn;
+						routingResult.body = undefined;
 					}
 					response.end();
 				}
@@ -234,6 +243,38 @@ export async function openNextHandler(
 			return internalResult;
 		}
 	);
+}
+
+/**
+ * Waits for response backpressure while detecting a closed destination.
+ *
+ * @param response - The response currently forwarding a streamed body.
+ * @returns A promise that resolves when writing can resume.
+ * @throws When the destination closes or errors before draining.
+ */
+function waitForDrain(response: Writable): Promise<void> {
+	return new Promise((resolve, reject) => {
+		const cleanup = () => {
+			response.off("drain", onDrain);
+			response.off("close", onClose);
+			response.off("error", onError);
+		};
+		const onDrain = () => {
+			cleanup();
+			resolve();
+		};
+		const onClose = () => {
+			cleanup();
+			reject(new Error("Response closed while waiting for backpressure"));
+		};
+		const onError = (error: Error) => {
+			cleanup();
+			reject(error);
+		};
+		response.once("drain", onDrain);
+		response.once("close", onClose);
+		response.once("error", onError);
+	});
 }
 
 function getHeaders(routingResult: RoutingResult | InternalResult) {

@@ -267,7 +267,7 @@ export function buildAdapter<T = OpenNextOutput>(
 			if (!adapterOptions.skipGenerateOutput) {
 				const output = adapterOptions.generateOutput
 					? await adapterOptions.generateOutput(buildOpts)
-					: await buildOpenNextOutput(buildOpts);
+					: await buildOpenNextOutput(buildOpts, bundleDefaults);
 				fs.writeFileSync(
 					path.join(buildOpts.appBuildOutputPath, ".open-next", "open-next.output.json"),
 					JSON.stringify(output)

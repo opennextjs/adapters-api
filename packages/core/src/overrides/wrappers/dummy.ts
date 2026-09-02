@@ -9,7 +9,9 @@ const dummyWrapper: WrapperHandler =
 		if (output.type === "direct") {
 			return output.data(await handler(event, options));
 		}
-		return handler(event, { ...options, streamCreator: output.streamCreator });
+		const response = await handler(event, { ...options, streamCreator: output.streamCreator });
+		const directResult = await output.data?.(response);
+		return directResult !== undefined ? directResult : output.output;
 	};
 
 export default {

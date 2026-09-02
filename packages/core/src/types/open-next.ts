@@ -67,11 +67,18 @@ export type PartialResult = {
 };
 
 export interface StreamCreator {
-	writeHeaders(prelude: { statusCode: number; cookies: string[]; headers: Record<string, string> }): Writable;
+	writeHeaders(prelude: {
+		statusCode: number;
+		cookies: string[];
+		headers: Record<string, string>;
+		isBase64Encoded?: boolean;
+	}): Writable;
 	// Just to fix an issue with aws lambda streaming with empty body
 	onWrite?: () => void;
 	onFinish?: (length: number) => void;
 	abortSignal?: AbortSignal;
+	/** Aborts an active platform response body after handler failure. */
+	abort?: (reason: unknown) => void | Promise<void>;
 }
 
 export type WaitUntil = (promise: Promise<void>) => void;

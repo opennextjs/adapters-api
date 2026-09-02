@@ -30,7 +30,7 @@ const handler: WrapperHandler<InternalEvent, InternalResult | MiddlewareResult> 
 		}
 
 		const internalEvent = await converter.convertFrom(request);
-		const output = await converter.convertTo(request);
+		const output = await converter.convertTo(request, { abortSignal: request.signal });
 
 		// Retrieve geo information from the cloudflare request
 		// See https://developers.cloudflare.com/workers/runtime-apis/request
@@ -48,12 +48,30 @@ const handler: WrapperHandler<InternalEvent, InternalResult | MiddlewareResult> 
 			return output.data(await handler(internalEvent, { waitUntil: ctx.waitUntil.bind(ctx) }));
 		}
 
-		const response = await handler(internalEvent, {
+		const handlerPromise = handler(internalEvent, {
 			streamCreator: output.streamCreator,
 			waitUntil: ctx.waitUntil.bind(ctx),
+		}).catch(async (error: unknown) => {
+			await output.streamCreator.abort?.(error);
+			throw error;
 		});
-		const directResult = await output.data?.(response);
-		return directResult ?? output.output;
+		if (!output.output) {
+			const response = await handlerPromise;
+			return output.data?.(response);
+		}
+
+		const result = await Promise.race([
+			output.output.then((value) => ({ type: "output" as const, value })),
+			handlerPromise.then(async (response) => ({
+				type: "handler" as const,
+				value: await output.data?.(response),
+			})),
+		]);
+		if (result.type === "output") {
+			ctx.waitUntil(handlerPromise.then(() => undefined));
+			return result.value;
+		}
+		return result.value !== undefined ? result.value : output.output;
 	};
 
 export default {

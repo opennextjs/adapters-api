@@ -83,6 +83,7 @@ const OVERRIDE_MODULES = [
 const CORE_PKG_MODULES = [
 	"overrides/converters/edge.js",
 	"overrides/converters/dummy.js",
+	"overrides/wrappers/cloudflare-node.js",
 	"overrides/imageLoader/dummy.js",
 	"overrides/originResolver/dummy.js",
 	"overrides/proxyExternalRequest/fetch.js",
@@ -91,6 +92,7 @@ const AWS_PKG_MODULES = [
 	"overrides/wrappers/aws-lambda.js",
 	"overrides/wrappers/aws-lambda-streaming.js",
 	"overrides/converters/aws-apigw-v2.js",
+	"overrides/converters/aws-streaming.js",
 	"overrides/tagCache/dynamodb.js",
 	"overrides/queue/sqs.js",
 	"overrides/incrementalCache/s3.js",
@@ -252,7 +254,7 @@ describe("openNextResolvePlugin", () => {
 			overrides: {},
 			defaultOverrides: {
 				wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda-streaming.js",
-				converter: "@opennextjs/aws/overrides/converters/aws-apigw-v2.js",
+				converter: "@opennextjs/aws/overrides/converters/aws-streaming.js",
 				incrementalCache: "@opennextjs/aws/overrides/incrementalCache/s3.js",
 				tagCache: "@opennextjs/aws/overrides/tagCache/dynamodb.js",
 				queue: "@opennextjs/aws/overrides/queue/sqs.js",
@@ -260,12 +262,38 @@ describe("openNextResolvePlugin", () => {
 			fnName: "server",
 		});
 		expect(contents).toContain(pkg("@opennextjs/aws", "wrappers/aws-lambda-streaming.js"));
-		expect(contents).toContain(pkg("@opennextjs/aws", "converters/aws-apigw-v2.js"));
+		expect(contents).toContain(pkg("@opennextjs/aws", "converters/aws-streaming.js"));
 		expect(contents).toContain(pkg("@opennextjs/aws", "incrementalCache/s3.js"));
 		expect(contents).toContain(pkg("@opennextjs/aws", "tagCache/dynamodb.js"));
 		expect(contents).toContain(pkg("@opennextjs/aws", "queue/sqs.js"));
 		// Keys without an override keep their default
 		expect(contents).toContain(local("imageLoader/fs-dev.js"));
+	});
+
+	test("G2 - a partial AWS wrapper override selects its compatible converter", async () => {
+		const contents = await bundleWithPlugin({
+			overrides: { wrapper: "aws-lambda" },
+			defaultOverrides: {
+				wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda-streaming.js",
+				converter: "@opennextjs/aws/overrides/converters/aws-streaming.js",
+			},
+			fnName: "server",
+		});
+		expect(contents).toContain(pkg("@opennextjs/aws", "wrappers/aws-lambda.js"));
+		expect(contents).toContain(pkg("@opennextjs/aws", "converters/aws-apigw-v2.js"));
+	});
+
+	test("G3 - a partial AWS converter override selects its compatible wrapper", async () => {
+		const contents = await bundleWithPlugin({
+			overrides: { converter: "aws-apigw-v2" },
+			defaultOverrides: {
+				wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda-streaming.js",
+				converter: "@opennextjs/aws/overrides/converters/aws-streaming.js",
+			},
+			fnName: "server",
+		});
+		expect(contents).toContain(pkg("@opennextjs/aws", "wrappers/aws-lambda.js"));
+		expect(contents).toContain(pkg("@opennextjs/aws", "converters/aws-apigw-v2.js"));
 	});
 
 	test("H - bare-name user override becomes legacy relative core path", async () => {
@@ -276,6 +304,19 @@ describe("openNextResolvePlugin", () => {
 		});
 		expect(contents).toContain(local("converters/edge.js"));
 		expect(contents).not.toContain(local("converters/node.js"));
+	});
+
+	test("H2 - an ambiguous converter preserves a compatible adapter wrapper", async () => {
+		const contents = await bundleWithPlugin({
+			overrides: { converter: "edge" },
+			defaultOverrides: {
+				wrapper: "@opennextjs/core/overrides/wrappers/cloudflare-node.js",
+				converter: "@opennextjs/core/overrides/converters/edge.js",
+			},
+			fnName: "middleware",
+		});
+		expect(contents).toContain(pkg("@opennextjs/core", "wrappers/cloudflare-node.js"));
+		expect(contents).not.toContain(local("wrappers/cloudflare-edge.js"));
 	});
 
 	test("I - resolvable package specifier is resolved through node_modules", async () => {

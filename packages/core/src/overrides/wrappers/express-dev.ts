@@ -26,7 +26,9 @@ const wrapper: WrapperHandler = async (handler, converter) => {
 			await output.data(await imageHandler(internalEvent));
 			return;
 		}
-		await imageHandler(internalEvent, { streamCreator: output.streamCreator });
+		const response = await imageHandler(internalEvent, { streamCreator: output.streamCreator });
+		const directResult = await output.data?.(response);
+		if (directResult === undefined) await output.output;
 	});
 
 	app.all(/.*/, async (req, res) => {
