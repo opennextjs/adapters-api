@@ -84,11 +84,21 @@ function headersToRequestRecord(headers: Headers): Record<string, string> {
 	return result;
 }
 
+/**
+ * Applies routed response headers to a response or forwarded request.
+ *
+ * @param eventOrResult The response or request that receives the headers.
+ * @param headers The routed response headers.
+ * @returns Nothing.
+ */
 function applyResponseHeaders(eventOrResult: InternalEvent | InternalResult, headers: Headers): void {
-	const isResult = isInternalResult(eventOrResult);
-	const keyPrefix = isResult ? "" : MIDDLEWARE_HEADER_PREFIX;
-	for (const [key, value] of Object.entries(headersToRecord(headers))) {
-		eventOrResult.headers[keyPrefix + key] = value;
+	const responseHeaders = headersToRecord(headers);
+	if (isInternalResult(eventOrResult)) {
+		Object.assign(eventOrResult.headers, responseHeaders);
+		return;
+	}
+	for (const [key, value] of Object.entries(responseHeaders)) {
+		eventOrResult.headers[MIDDLEWARE_HEADER_PREFIX + key] = Array.isArray(value) ? value.join(",") : value;
 	}
 }
 

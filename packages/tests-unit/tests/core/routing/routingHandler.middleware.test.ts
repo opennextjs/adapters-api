@@ -87,6 +87,17 @@ describe("routingHandler middleware matching", () => {
 		);
 	});
 
+	it("serializes response header arrays on forwarded requests", async () => {
+		const headers = new Headers({ "x-middleware-next": "1" });
+		headers.append("set-cookie", "first=1");
+		headers.append("set-cookie", "second=2");
+		middleware.mockResolvedValueOnce(new Response(null, { headers }));
+
+		const result = (await routingHandler(event("/en/foo"), { middlewareLoader })) as RoutingResult;
+
+		expect(result.internalEvent.headers["x-middleware-response-set-cookie"]).toBe("first=1,second=2");
+	});
+
 	it("invokes the middleware for the `_next/data` request of a matching page", async () => {
 		await routingHandler(event("/_next/data/build-id/en/foo.json"), { middlewareLoader });
 
