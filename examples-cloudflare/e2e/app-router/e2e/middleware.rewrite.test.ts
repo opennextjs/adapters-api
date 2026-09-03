@@ -63,5 +63,5 @@ test("Middleware Rewrite Status Code", async ({ page }) => {
 	await page.goto("/rewrite-status-code");
 	const el = page.getByText("Rewritten Destination", { exact: true });
 	await expect(el).toBeVisible();
-	expect(statusPromise).resolves.toEqual(403);
+	await expect(statusPromise).resolves.toEqual(403);
 });
