@@ -7,6 +7,18 @@ packages:
   - "!examples-cloudflare/common"
   - "packages/*"
 
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  aws-crt: true
+  aws-sdk: true
+  better-sqlite3: true
+  esbuild: true
+  prisma: true
+  sharp: true
+  turbo: true
+  workerd: true
+
 catalog:
   "@cloudflare/workers-types": ^4.20260114.0
   "@dotenvx/dotenvx": 1.31.0
