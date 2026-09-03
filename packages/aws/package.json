@@ -15,10 +15,11 @@
 		"directory": "packages/open-next"
 	},
 	"bin": {
-		"open-next": "./dist/index.js"
+		"open-next": "./bin/open-next.js"
 	},
 	"files": [
 		"dist",
+		"bin",
 		"assets",
 		"README.md"
 	],
