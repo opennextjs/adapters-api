@@ -1,0 +1,91 @@
+README.md
+  s_5d492b87a702ff::t_28e396b4dc1bf1 107-115,121,124,127-145,151-162
+examples-cloudflare/e2e/app-router/e2e/middleware.rewrite.test.ts
+  s_5d492b87a702ff::t_303becb33783d2 26-32
+examples-cloudflare/e2e/app-router/proxy.ts
+  s_5d492b87a702ff::t_fa7c467fd6d8e5 4
+packages/aws/src/overrides/converters/aws-apigw-v1.ts
+  s_5d492b87a702ff::t_644d04f2aacfa3 8,75
+packages/aws/src/overrides/converters/aws-apigw-v2.ts
+  s_5d492b87a702ff::t_930be59e1ae359 1-2,12,41,44,47,50,52
+packages/aws/src/overrides/converters/aws-cloudfront.ts
+  s_5d492b87a702ff::t_e3dcc8988f4461 9,84
+packages/cloudflare/src/cli/adapter.ts
+  s_5d492b87a702ff::t_0793200356a7b9 22,24,73-106
+packages/cloudflare/src/cli/build/patches/ast/webpack-runtime.spec.ts
+  s_5d492b87a702ff::t_12fe0fba1e9dca 4-8,117-145
+packages/cloudflare/src/cli/build/patches/ast/webpack-runtime.ts
+  s_5d492b87a702ff::t_640e74ef22f84d 12-13,28-29,55,74-111,127-132,147
+packages/cloudflare/src/cli/build/patches/plugins/opentelemetry.spec.ts
+  s_5d492b87a702ff::t_be1db9405ca589 1-42
+packages/cloudflare/src/cli/build/patches/plugins/opentelemetry.ts
+  s_5d492b87a702ff::t_d94fe518d09d93 1-41
+packages/cloudflare/src/cli/build/patches/plugins/turbopack.spec.ts
+  s_5d492b87a702ff::t_788bb8ea91ee8f 1-50
+packages/cloudflare/src/cli/build/patches/plugins/turbopack.ts
+  s_5d492b87a702ff::t_821cbe7a820260 3,33-38,42-43,46-47,53-59,66-70
+packages/core/src/build/copyAdapterFiles.ts
+  s_5d492b87a702ff::t_d555bb6ef1a718 14-15,17,27,31
+packages/core/src/build/createMiddleware.ts
+  s_5d492b87a702ff::t_66943c6d654233 5,11,17-18,30-32,50
+packages/core/src/build/middleware/buildNodeMiddleware.spec.ts
+  s_5d492b87a702ff::t_16214e78948a09 1-214
+packages/core/src/build/validateConfig.spec.ts
+  s_5d492b87a702ff::t_7ff377d009b282 23,37-100
+packages/core/src/build/validateConfig.ts
+  s_5d492b87a702ff::t_c325e6e11fca5d 1-2,11-19,33-49,51-54,56-58,81-95,100,106-112,121,124,130,141,144-151,153,155,158,163,166,173,175,177,180,182-187
+packages/core/src/core/nodeMiddlewareHandler.ts
+  s_5d492b87a702ff::t_8423d92b4c9c10 5-6,31-32
+packages/core/src/core/routing/cacheInterceptor.ts
+  s_5d492b87a702ff::t_25383c958d79ef 147
+packages/core/src/core/routing/middleware.ts
+  s_5d492b87a702ff::t_f73e36ef455e5e 81,98-125,137-154,156-163,165-187,191-204,206-209,211-227
+packages/core/src/core/routing/util.ts
+  s_5d492b87a702ff::t_b46e0883b65e5a 206,209
+packages/core/src/http/request.ts
+  s_5d492b87a702ff::t_16872854129f11 7,20,44-91
+packages/core/src/overrides/converters/edge.ts
+  s_5d492b87a702ff::t_1a28f744a808bd 1,35,109-111
+packages/core/src/overrides/converters/node.ts
+  s_5d492b87a702ff::t_8b6a62b53212ec 2-3,15-16
+packages/core/src/overrides/proxyExternalRequest/node.ts
+  s_5d492b87a702ff::t_9b4e192819273e 3,39-47,80,84-87,90-94
+packages/core/src/types/open-next.ts
+  s_5d492b87a702ff::t_5db58f64d4bbf1 29
+packages/tests-unit/tests/build/copyAdapterFiles.test.ts
+  s_5d492b87a702ff::t_0ae67b9d4cb586 1-138
+packages/tests-unit/tests/converters/aws-apigw-v1.test.ts
+  s_5d492b87a702ff::t_d9fb56d66b1403 4,93,132,173,214,255,298,306
+packages/tests-unit/tests/converters/aws-apigw-v2.test.ts
+  s_5d492b87a702ff::t_1fe03a9c304f95 4,132,169,210,250,258
+packages/tests-unit/tests/converters/aws-cloudfront.test.ts
+  s_5d492b87a702ff::t_cae704af1f41a2 4,230,270,313,321
+packages/tests-unit/tests/converters/node.test.ts
+  s_5d492b87a702ff::t_8e8c4472eb3b78 3,27,56,82,111,140,159,174,180,194,209,216
+packages/tests-unit/tests/core/routing/cacheInterceptor.test.ts
+  s_5d492b87a702ff::t_b0dd7d3d86ee04 5,40
+packages/tests-unit/tests/core/routing/i18n.test.ts
+  s_5d492b87a702ff::t_abafc4e4ce92e8 4,32
+packages/tests-unit/tests/core/routing/middleware.test.ts
+  s_5d492b87a702ff::t_da48c333ec540f 57,250-322
+packages/tests-unit/tests/core/routing/util.test.ts
+  s_5d492b87a702ff::t_ac498af23acbe9 455-461
+pnpm-lock.yaml
+  s_5d492b87a702ff::t_014982d6e3dca1 5194,5208,5213
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "9aad41d989b6067d59abd8b50250e894c6fc3f36",
+  "prompts": {},
+  "sessions": {
+    "s_5d492b87a702ff": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f9a1dec42ffeQV9JYx7wX1tPbk",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
