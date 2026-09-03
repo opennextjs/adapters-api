@@ -60,6 +60,10 @@ vi.mock("./createRevalidationBundle.js", () => ({
 	createRevalidationBundle: vi.fn(),
 }));
 
+vi.mock("./createRoutingConfig.js", () => ({
+	createRoutingConfig: vi.fn(),
+}));
+
 vi.mock("./createImageOptimizationBundle.js", () => ({
 	createImageOptimizationBundle: vi.fn(),
 }));
@@ -97,6 +101,7 @@ import { createStaticAssets, createCacheAssets } from "./createAssets.js";
 import { createImageOptimizationBundle } from "./createImageOptimizationBundle.js";
 import { createMiddleware } from "./createMiddleware.js";
 import { createRevalidationBundle } from "./createRevalidationBundle.js";
+import { createRoutingConfig } from "./createRoutingConfig.js";
 import { createServerBundle } from "./createServerBundle.js";
 import { createWarmerBundle } from "./createWarmerBundle.js";
 import { buildOpenNextOutput } from "./generateOutput.js";
@@ -130,7 +135,14 @@ function createMockBuildOpts(): BuildOptions {
 // Helper to create mock BuildCompleteContext
 function createMockContext(): BuildCompleteContext {
 	return {
-		routes: [],
+		routing: {
+			beforeMiddleware: [],
+			beforeFiles: [],
+			afterFiles: [],
+			fallback: [],
+			dynamicRoutes: [],
+			onMatch: [],
+		},
 		outputs: {
 			pages: [],
 			pagesApi: [],
@@ -145,6 +157,7 @@ function createMockContext(): BuildCompleteContext {
 			images: {},
 		} as BuildCompleteContext["config"],
 		nextVersion: "16.0.0",
+		buildId: "build-id",
 	};
 }
 
@@ -410,6 +423,18 @@ describe("buildAdapter", () => {
 		await adapter.onBuildComplete(ctx);
 
 		expect(addDebugFile).toHaveBeenCalledWith(expect.any(Object), "outputs.json", ctx);
+	});
+
+	test("onBuildComplete creates the runtime routing configuration", async () => {
+		const adapter = buildAdapter(() => ({ serverBundle }));
+		await adapter.modifyConfig({ experimental: {}, images: {} } as BuildCompleteContext["config"], {
+			phase: "production",
+		});
+		const ctx = createMockContext();
+
+		await adapter.onBuildComplete(ctx);
+
+		expect(createRoutingConfig).toHaveBeenCalledWith(expect.any(Object), ctx);
 	});
 
 	test("onBuildComplete passes serverBundle customization to createServerBundle", async () => {

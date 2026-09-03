@@ -8,7 +8,7 @@ import { addDebugFile } from "../debug.js";
 import logger from "../logger.js";
 import type { ContentUpdater } from "../plugins/content-updater.js";
 import type { BundleDefaults } from "../plugins/resolve.js";
-import type { NextAdapterOutputs } from "../types/adapter.js";
+import type { NextAdapterOutputs, NextAdapterRouting } from "../types/adapter.js";
 import type { NextConfig } from "../types/next-types.js";
 import type { OpenNextConfig } from "../types/open-next.js";
 
@@ -19,6 +19,7 @@ import { createCacheAssets, createStaticAssets } from "./createAssets.js";
 import { createImageOptimizationBundle } from "./createImageOptimizationBundle.js";
 import { createMiddleware } from "./createMiddleware.js";
 import { createRevalidationBundle } from "./createRevalidationBundle.js";
+import { createRoutingConfig } from "./createRoutingConfig.js";
 import { createServerBundle } from "./createServerBundle.js";
 import { createWarmerBundle } from "./createWarmerBundle.js";
 import { buildOpenNextOutput } from "./generateOutput.js";
@@ -33,13 +34,14 @@ const require = createRequire(import.meta.url);
  * The parameter type for onBuildComplete.
  */
 export type BuildCompleteContext = {
-	routes: unknown;
+	routing: NextAdapterRouting;
 	outputs: NextAdapterOutputs;
 	projectDir: string;
 	repoRoot: string;
 	distDir: string;
 	config: NextConfig;
 	nextVersion: string;
+	buildId: string;
 };
 
 /**
@@ -189,6 +191,7 @@ export function buildAdapter<T = OpenNextOutput>(
 
 			// Step 1: Save debug output
 			addDebugFile(buildOpts, "outputs.json", ctx);
+			createRoutingConfig(buildOpts, ctx);
 
 			// Step 2: Call beforeServerBundle hook
 			await adapterOptions.beforeServerBundle?.(buildOpts, config);

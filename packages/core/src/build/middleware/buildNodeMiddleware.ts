@@ -23,6 +23,16 @@ type Override = OverrideOptions & {
 
 type MiddlewareBundle = NonNullable<OpenNextAdapterOptions["middlewareBundle"]>;
 
+/**
+ * Builds a standalone Node.js middleware function.
+ *
+ * @param options Normalized OpenNext build options.
+ * @param defaultOverrides Provider-specific override defaults.
+ * @param nextOutputs Outputs emitted by the Next.js adapter build.
+ * @param middlewareBundle Provider-specific middleware bundle customization.
+ * @returns A promise that resolves when the bundle is written.
+ * @throws When external middleware is disabled or its adapter output is missing.
+ */
 export async function buildExternalNodeMiddleware(
 	options: buildHelper.BuildOptions,
 	defaultOverrides?: DefaultOverrides,
@@ -35,6 +45,11 @@ export async function buildExternalNodeMiddleware(
 	}
 	const outputPath = path.join(outputDir, "middleware");
 	fs.mkdirSync(outputPath, { recursive: true });
+	fs.mkdirSync(path.join(outputPath, ".next"), { recursive: true });
+	fs.copyFileSync(
+		path.join(options.appBuildOutputPath, ".next", "open-next-routing.json"),
+		path.join(outputPath, ".next", "open-next-routing.json")
+	);
 
 	// Copy open-next.config.mjs
 	const useEdgeConfig =

@@ -11,10 +11,6 @@ export default {
 		},
 	},
 
-	dangerous: {
-		middlewareHeadersOverrideNextConfigHeaders: true,
-	},
-
 	imageOptimization: {
 		override: {
 			wrapper: "dummy",
