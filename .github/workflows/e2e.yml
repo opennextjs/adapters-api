@@ -44,7 +44,7 @@ jobs:
 
       - name: Restore Cache Previous Version
         id: cache-previous
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v6
         with:
           path: previous_version.txt
           key: ${{ runner.os }}-previous-${{ steps.get_latest_version.outputs.LATEST_VERSION }}
@@ -80,24 +80,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
-          version: 9
+          version: 10
 
       - name: Set up NodeJS
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           cache: pnpm # cache pnpm store
           node-version: 24.x
@@ -125,7 +125,7 @@ jobs:
 
       # Cache turbo runs
       - name: Cache Turbo
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .turbo
           key: ${{ runner.os }}-turbo-${{ github.sha }}
@@ -159,19 +159,20 @@ jobs:
 
       - name: Archive
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sst
+          include-hidden-files: true
           path: |
-            .sst/
-            .next/
+            examples/sst/.sst/
+            examples/*/.next/
 
       - name: Store Latest Version
         run: |
           echo "${{ needs.check_next_version.outputs.previousNextVersion }}" > previous_version.txt
 
       - name: Cache Previous Version
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v6
         with:
           path: previous_version.txt
           key: ${{ needs.check_next_version.outputs.cacheKey }}
