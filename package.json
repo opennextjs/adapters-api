@@ -28,7 +28,7 @@
 	},
 	"devDependencies": {
 		"@changesets/changelog-github": "^0.5.1",
-		"@changesets/cli": "^2.29.7",
+		"@changesets/cli": "^3.0.1",
 		"@playwright/test": "catalog:",
 		"oxfmt": "^0.27.0",
 		"oxlint": "^1.42.0",
@@ -37,6 +37,6 @@
 	},
 	"engines": {
 		"node": ">=24",
-		"pnpm": ">=9"
+		"pnpm": ">=10"
 	}
 }
