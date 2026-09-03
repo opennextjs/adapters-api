@@ -215,6 +215,24 @@ describe("normalizeRouting", () => {
 			expect(result.afterFiles[0]?.destination).toBe("/$d/");
 		});
 
+		it("does not rename a longer capture reference with the same prefix", () => {
+			const result = normalizeRouting(
+				routing({
+					afterFiles: [
+						{
+							source: "/rewrite",
+							sourceRegex: "^/rewrite$",
+							destination: "/$id/$identifier",
+							has: [{ type: "query", key: "value", value: "(?<id>\\w+)" }],
+						} as never,
+					],
+				}),
+				NO_I18N
+			);
+
+			expect(result.afterFiles[0]?.destination).toBe("/$value/$identifier");
+		});
+
 		it("leaves a capture that only spans a part of the condition value", () => {
 			const result = normalizeRouting(
 				routing({

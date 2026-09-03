@@ -170,7 +170,11 @@ function alignHasCaptures(route: AdapterRoute): AdapterRoute {
 		return route;
 	}
 	const rename = (value: string) =>
-		renames.reduce((current, [name, boundName]) => current.replaceAll(`$${name}`, `$${boundName}`), value);
+		renames.reduce(
+			(current, [name, boundName]) =>
+				current.replace(new RegExp(`\\$${name}(?![a-zA-Z0-9_])`, "g"), `$${boundName}`),
+			value
+		);
 	return {
 		...route,
 		destination: route.destination === undefined ? undefined : rename(route.destination),
