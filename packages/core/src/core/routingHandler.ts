@@ -194,6 +194,13 @@ function createRoutingResult(
 	};
 }
 
+/**
+ * Resolves an incoming request to an OpenNext route or direct response.
+ *
+ * @param event The normalized provider request.
+ * @param options Optional asset and middleware loaders.
+ * @returns The direct response or routing metadata for the selected handler.
+ */
 export default async function routingHandler(
 	event: InternalEvent,
 	{
@@ -230,6 +237,12 @@ export default async function routingHandler(
 		let directMiddlewareResult: InternalResult | undefined;
 		let middlewareRewriteStatusCode: number | undefined;
 		let middlewareHeaders = new Headers(event.headers);
+		let forwardedBody = event.body;
+		const cancelForwardedBody = (): void => {
+			if (forwardedBody !== event.body) {
+				void forwardedBody?.cancel().catch(() => {});
+			}
+		};
 		const buildId = RoutingConfig.buildId || BuildId;
 		const basePath = NextConfig.basePath ?? "";
 		const dataPrefix = `${basePath}/_next/data/`;
@@ -277,6 +290,8 @@ export default async function routingHandler(
 				// invoked on the page it carries - the middleware has no route for the data pathname.
 				const middlewareUrl = new URL(context.url);
 				middlewareUrl.pathname = matchPath;
+				const [bodyForMiddleware, bodyForForward] = context.requestBody?.tee() ?? [undefined, undefined];
+				forwardedBody = bodyForForward as InternalEvent["body"];
 
 				const middleware = await middlewareLoader();
 				const response = await middleware.default({
@@ -295,7 +310,7 @@ export default async function routingHandler(
 						trailingSlash: NextConfig.trailingSlash,
 					},
 					url: middlewareUrl.toString(),
-					body: context.requestBody,
+					body: bodyForMiddleware,
 				} as unknown as Request);
 				const result = responseToMiddlewareResult(response, context.headers, context.url);
 				restoreNullOrigin(result, context.url);
@@ -318,6 +333,7 @@ export default async function routingHandler(
 		});
 
 		if (routingResult.middlewareResponded && directMiddlewareResult) {
+			cancelForwardedBody();
 			return directMiddlewareResult;
 		}
 
@@ -330,6 +346,7 @@ export default async function routingHandler(
 				"location",
 				normalizeLocationHeader(routingResult.redirect.url.toString(), event.url, true)
 			);
+			cancelForwardedBody();
 			return {
 				type: event.type,
 				statusCode: routingResult.redirect.status,
@@ -341,6 +358,7 @@ export default async function routingHandler(
 
 		const location = responseHeaders.get("location");
 		if (location && routingResult.status && routingResult.status >= 300 && routingResult.status < 400) {
+			cancelForwardedBody();
 			return {
 				type: event.type,
 				statusCode: routingResult.status,
@@ -361,7 +379,10 @@ export default async function routingHandler(
 				routingResult.externalRewrite.pathname,
 				externalQuery
 			);
-			const externalEvent = toInternalEvent(event, externalUrl, middlewareHeaders, externalQuery);
+			const externalEvent = {
+				...toInternalEvent(event, externalUrl, middlewareHeaders, externalQuery),
+				body: forwardedBody,
+			};
 			applyResponseHeaders(externalEvent, responseHeaders);
 			return createRoutingResult(externalEvent, [], {
 				isExternalRewrite: true,
@@ -373,6 +394,7 @@ export default async function routingHandler(
 		if (!routingResult.invocationTarget || !routingResult.resolvedPathname) {
 			const notFoundEvent = {
 				...event,
+				body: forwardedBody,
 				rawPath: "/404",
 				url: constructNextUrl(event.url, "/404"),
 				headers: {
@@ -399,12 +421,14 @@ export default async function routingHandler(
 				middlewareHeaders,
 				routingResult.resolvedQuery ?? routingResult.invocationTarget.query
 			),
+			body: forwardedBody,
 			rewriteStatusCode,
 		};
 		const resolvedRoutes = getResolvedRoute(routingResult.resolvedPathname);
 
 		const assetResult = await assetResolver?.maybeGetAssetResult?.(resolvedEvent);
 		if (assetResult) {
+			cancelForwardedBody();
 			applyResponseHeaders(assetResult, responseHeaders);
 			return assetResult;
 		}
@@ -429,6 +453,7 @@ export default async function routingHandler(
 		debug("Attempting cache interception");
 		const cacheInterceptionResult = await cacheInterceptor(resolvedEvent);
 		if (isInternalResult(cacheInterceptionResult)) {
+			cancelForwardedBody();
 			applyResponseHeaders(cacheInterceptionResult, responseHeaders);
 			return cacheInterceptionResult;
 		}

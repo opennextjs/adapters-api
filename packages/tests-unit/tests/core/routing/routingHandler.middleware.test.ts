@@ -1,5 +1,6 @@
 import routingHandler from "@opennextjs/core/core/routingHandler.js";
-import type { InternalEvent } from "@opennextjs/core/types/open-next.js";
+import type { InternalEvent, RoutingResult } from "@opennextjs/core/types/open-next.js";
+import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream.js";
 import { vi } from "vitest";
 
 vi.mock("@/config/index", () => ({
@@ -83,6 +84,37 @@ describe("routingHandler middleware matching", () => {
 
 		expect(middlewareLoader).toHaveBeenCalled();
 		expect(middleware).toHaveBeenCalledWith(expect.objectContaining({ url: "https://localhost/en/foo" }));
+	});
+
+	it("forwards the request body after middleware reads it", async () => {
+		middleware.mockImplementationOnce(async (request: { body?: InternalEvent["body"] }) => {
+			expect(await fromReadableStream(request.body!)).toBe("request body");
+			return new Response(null, { headers: { "x-middleware-next": "1" } });
+		});
+		const request = event("/en/foo");
+		request.method = "POST";
+		request.body = toReadableStream("request body");
+
+		const result = (await routingHandler(request, { middlewareLoader })) as RoutingResult;
+
+		expect(await fromReadableStream(result.internalEvent.body!)).toBe("request body");
+	});
+
+	it("forwards the request body when middleware runs before a 404", async () => {
+		middleware.mockImplementationOnce(async (request: { body?: InternalEvent["body"] }) => {
+			expect(await fromReadableStream(request.body!)).toBe("request body");
+			return new Response(null, {
+				headers: { "x-middleware-rewrite": "https://localhost/en/missing" },
+			});
+		});
+		const request = event("/en/foo");
+		request.method = "POST";
+		request.body = toReadableStream("request body");
+
+		const result = (await routingHandler(request, { middlewareLoader })) as RoutingResult;
+
+		expect(result.internalEvent.rawPath).toBe("/404");
+		expect(await fromReadableStream(result.internalEvent.body!)).toBe("request body");
 	});
 
 	it("does not invoke the middleware for a page the matchers exclude", async () => {
