@@ -8,8 +8,8 @@ packages:
   - "packages/*"
 
 allowBuilds:
-  '@prisma/client': true
-  '@prisma/engines': true
+  "@prisma/client": true
+  "@prisma/engines": true
   aws-crt: true
   aws-sdk: true
   better-sqlite3: true

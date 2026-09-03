@@ -2,7 +2,6 @@
 	"name": "monorepo",
 	"version": "0.0.0",
 	"private": true,
-	"packageManager": "pnpm@11.25.0",
 	"license": "MIT",
 	"type": "module",
 	"scripts": {
@@ -39,5 +38,6 @@
 	"engines": {
 		"node": ">=24",
 		"pnpm": ">=10"
-	}
+	},
+	"packageManager": "pnpm@11.25.0"
 }
