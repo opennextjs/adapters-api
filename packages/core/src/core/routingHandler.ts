@@ -294,9 +294,10 @@ export default async function routingHandler(
 				forwardedBody = bodyForForward as InternalEvent["body"];
 
 				const middleware = await middlewareLoader();
+				const encodedCity = event.headers["x-open-next-city"];
 				const response = await middleware.default({
 					geo: {
-						city: decodeURIComponent(event.headers["x-open-next-city"]),
+						city: encodedCity === undefined ? undefined : decodeURIComponent(encodedCity),
 						country: event.headers["x-open-next-country"],
 						region: event.headers["x-open-next-region"],
 						latitude: event.headers["x-open-next-latitude"],

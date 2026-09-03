@@ -79,6 +79,14 @@ describe("routingHandler middleware matching", () => {
 		expect(middlewareLoader).toHaveBeenCalled();
 	});
 
+	it("leaves an absent geo city undefined", async () => {
+		await routingHandler(event("/en/foo"), { middlewareLoader });
+
+		expect(middleware).toHaveBeenCalledWith(
+			expect.objectContaining({ geo: expect.objectContaining({ city: undefined }) })
+		);
+	});
+
 	it("invokes the middleware for the `_next/data` request of a matching page", async () => {
 		await routingHandler(event("/_next/data/build-id/en/foo.json"), { middlewareLoader });
 
