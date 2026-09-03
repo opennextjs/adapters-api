@@ -136,11 +136,12 @@ function createMockBuildOpts(): BuildOptions {
 function createMockContext(): BuildCompleteContext {
 	return {
 		routing: {
+			beforeMiddleware: [],
 			beforeFiles: [],
 			afterFiles: [],
 			fallback: [],
-			redirects: [],
 			dynamicRoutes: [],
+			onMatch: [],
 		},
 		outputs: {
 			pages: [],
