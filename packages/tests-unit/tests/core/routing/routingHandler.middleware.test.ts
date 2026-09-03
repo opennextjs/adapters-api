@@ -82,6 +82,7 @@ describe("routingHandler middleware matching", () => {
 		await routingHandler(event("/_next/data/build-id/en/foo.json"), { middlewareLoader });
 
 		expect(middlewareLoader).toHaveBeenCalled();
+		expect(middleware).toHaveBeenCalledWith(expect.objectContaining({ url: "https://localhost/en/foo" }));
 	});
 
 	it("does not invoke the middleware for a page the matchers exclude", async () => {
