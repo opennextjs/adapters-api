@@ -176,4 +176,13 @@ describe("routingHandler", () => {
 			},
 		});
 	});
+
+	it("returns a JSON 404 for a data request from another build", async () => {
+		const result = (await routingHandler(event("/_next/data/old-build/about.json"))) as InternalResult;
+
+		expect(result).toMatchObject({
+			statusCode: 404,
+			headers: { "content-type": "application/json" },
+		});
+	});
 });

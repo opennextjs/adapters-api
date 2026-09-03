@@ -9,7 +9,7 @@ import type {
 	RoutingResult,
 } from "@/types/open-next";
 import type { AssetResolver } from "@/types/overrides";
-import { emptyReadableStream } from "@/utils/stream";
+import { emptyReadableStream, toReadableStream } from "@/utils/stream";
 
 import { debug, error } from "../adapters/logger";
 
@@ -231,6 +231,19 @@ export default async function routingHandler(
 		let middlewareHeaders = new Headers(event.headers);
 		const buildId = RoutingConfig.buildId || BuildId;
 		const basePath = NextConfig.basePath ?? "";
+		const dataPrefix = `${basePath}/_next/data/`;
+		if (
+			requestUrl.pathname.startsWith(dataPrefix) &&
+			!requestUrl.pathname.startsWith(`${dataPrefix}${buildId}/`)
+		) {
+			return {
+				type: event.type,
+				statusCode: 404,
+				body: toReadableStream("{}"),
+				headers: { "content-type": "application/json" },
+				isBase64Encoded: false,
+			};
+		}
 		const routingResult = await resolveRoutes({
 			url: requestUrl,
 			buildId,
