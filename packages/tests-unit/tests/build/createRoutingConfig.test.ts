@@ -20,18 +20,18 @@ describe("createRoutingConfig", () => {
 				fallback: [],
 			},
 			outputs: {
-				pages: [{ pathname: "/pages", filePath: "/pages.js", assets: {} }],
-				pagesApi: [{ pathname: "/api/hello", filePath: "/api.js", assets: {} }],
-				appPages: [{ pathname: "/app", filePath: "/app.js", assets: {} }],
-				appRoutes: [{ pathname: "/route", filePath: "/route.js", assets: {} }],
-				staticFiles: [{ pathname: "/asset.js", filePath: "/asset.js", assets: {} }],
+				pages: [{ id: "pages", pathname: "/pages", filePath: "/pages.js", assets: {} }],
+				pagesApi: [{ id: "api", pathname: "/api/hello", filePath: "/api.js", assets: {} }],
+				appPages: [{ id: "app", pathname: "/app", filePath: "/app.js", assets: {} }],
+				appRoutes: [{ id: "route", pathname: "/route", filePath: "/route.js", assets: {} }],
+				staticFiles: [{ id: "asset", pathname: "/asset.js", filePath: "/asset.js", assets: {} }],
 				prerenders: [
 					// The template of a dynamic route and a prerendered non dynamic route.
-					{ pathname: "/app" },
-					{ pathname: "/pages" },
+					{ pathname: "/app", parentOutputId: "app" },
+					{ pathname: "/pages", parentOutputId: "pages" },
 					// Concrete paths and data variants do not match an executable route.
-					{ pathname: "/pages/prerendered" },
-					{ pathname: "/app.rsc" },
+					{ pathname: "/pages/prerendered", parentOutputId: "pages" },
+					{ pathname: "/app.rsc", parentOutputId: "app" },
 				],
 			},
 		} as BuildCompleteContext;
@@ -41,12 +41,19 @@ describe("createRoutingConfig", () => {
 		expect(result).toEqual({
 			buildId: "build-id",
 			routes: context.routing,
-			pathnames: ["/pages", "/api/hello", "/app", "/route", "/asset.js"],
+			pathnames: ["/pages", "/api/hello", "/app", "/route", "/asset.js", "/pages/prerendered", "/app.rsc"],
 			routeIndex: {
 				"/pages": { type: "page", isFallback: false, isISR: true },
 				"/api/hello": { type: "page", isFallback: false, isISR: false },
 				"/app": { type: "app", isFallback: false, isISR: true },
 				"/route": { type: "route", isFallback: false, isISR: false },
+				"/pages/prerendered": {
+					type: "page",
+					isFallback: false,
+					isISR: true,
+					route: "/pages",
+				},
+				"/app.rsc": { type: "app", isFallback: false, isISR: true, route: "/app" },
 			},
 		});
 		expect(fs.writeFileSync).toHaveBeenCalledWith(
@@ -122,24 +129,24 @@ describe("createRoutingConfig", () => {
 			},
 			outputs: {
 				pages: [
-					{ pathname: "/blog/[slug]", filePath: "/blog.js", assets: {} },
-					{ pathname: "/isr", filePath: "/isr.js", assets: {} },
+					{ id: "blog-output", pathname: "/blog/[slug]", filePath: "/blog.js", assets: {} },
+					{ id: "isr-output", pathname: "/isr", filePath: "/isr.js", assets: {} },
 				],
 				pagesApi: [],
 				appPages: [],
 				appRoutes: [],
 				prerenders: [
 					// A concrete prerendered pathname and its data variant, neither of which is executable.
-					{ pathname: "/blog/hello" },
-					{ pathname: "/_next/data/build-id/blog/hello.json" },
+					{ pathname: "/blog/hello", parentOutputId: "blog-output" },
+					{ pathname: "/_next/data/build-id/blog/hello.json", parentOutputId: "blog-output" },
 					// The template of the dynamic route generating them, and its data variant.
-					{ pathname: "/blog/[slug]" },
-					{ pathname: "/_next/data/build-id/blog/[slug].json" },
+					{ pathname: "/blog/[slug]", parentOutputId: "blog-output" },
+					{ pathname: "/_next/data/build-id/blog/[slug].json", parentOutputId: "blog-output" },
 					// A non dynamic prerendered route and its data variant.
-					{ pathname: "/isr" },
-					{ pathname: "/_next/data/build-id/isr.json" },
+					{ pathname: "/isr", parentOutputId: "isr-output" },
+					{ pathname: "/_next/data/build-id/isr.json", parentOutputId: "isr-output" },
 					// A PPR segment prefetch - no route can regenerate it.
-					{ pathname: "/isr.segments/_tree.segment.rsc" },
+					{ pathname: "/isr.segments/_tree.segment.rsc", parentOutputId: "isr-output" },
 				],
 			},
 		} as unknown as BuildCompleteContext;
@@ -153,6 +160,7 @@ describe("createRoutingConfig", () => {
 			"/_next/data/build-id/blog/hello.json",
 			"/_next/data/build-id/blog/[slug].json",
 			"/_next/data/build-id/isr.json",
+			"/isr.segments/_tree.segment.rsc",
 		]);
 		expect(result.routeIndex).toEqual({
 			"/blog/[slug]": { type: "page", isFallback: false, isISR: true },
@@ -171,6 +179,12 @@ describe("createRoutingConfig", () => {
 				route: "/blog/[slug]",
 			},
 			"/_next/data/build-id/isr.json": {
+				type: "page",
+				isFallback: false,
+				isISR: true,
+				route: "/isr",
+			},
+			"/isr.segments/_tree.segment.rsc": {
 				type: "page",
 				isFallback: false,
 				isISR: true,
@@ -203,11 +217,11 @@ describe("createRoutingConfig", () => {
 				fallback: [],
 			},
 			outputs: {
-				pages: [{ pathname: "/blog/[...slugs]", filePath: "/slugs.js", assets: {} }],
+				pages: [{ id: "catch-all", pathname: "/blog/[...slugs]", filePath: "/slugs.js", assets: {} }],
 				pagesApi: [],
 				appPages: [],
 				appRoutes: [],
-				prerenders: [{ pathname: "/blog/hello" }],
+				prerenders: [{ pathname: "/blog/hello", parentOutputId: "missing-specific-route" }],
 			},
 		} as unknown as BuildCompleteContext;
 

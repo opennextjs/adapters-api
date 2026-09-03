@@ -1,6 +1,8 @@
 import type { ResolveRoutesParams } from "@next/routing";
 
 export type NextAdapterOutput = {
+	/** Next's unique identifier for this executable output. */
+	id: string;
 	pathname: string;
 	filePath: string;
 	assets: Record<string, unknown>;
@@ -17,6 +19,8 @@ export type NextAdapterOutput = {
  */
 export type NextAdapterPrerenderOutput = {
 	pathname: string;
+	/** The identifier of the executable output that generated this prerender. */
+	parentOutputId: string;
 };
 
 export type NextAdapterOutputs = {

@@ -59,6 +59,11 @@ function applyCaptures(destination: string, match: RegExpMatchArray): string {
 function createPrerenderRouteResolver(context: BuildCompleteContext, executableRoutes: Set<string>) {
 	const basePath = context.config.basePath ?? "";
 	const dataPrefix = `${basePath}/_next/data/${context.buildId}/`;
+	const executableRouteById = new Map(
+		EXECUTABLE_OUTPUT_TYPES.flatMap((outputType) =>
+			context.outputs[outputType].map((output) => [output.id, output.pathname] as const)
+		)
+	);
 	const dynamicRoutes = context.routing.dynamicRoutes.map((route) => ({
 		regex: new RegExp(route.sourceRegex),
 		destination: route.destination,
@@ -86,7 +91,14 @@ function createPrerenderRouteResolver(context: BuildCompleteContext, executableR
 		return undefined;
 	}
 
-	return function resolvePrerenderRoute(pathname: string): string | undefined {
+	return function resolvePrerenderRoute({
+		pathname,
+		parentOutputId,
+	}: NonNullable<BuildCompleteContext["outputs"]["prerenders"]>[number]): string | undefined {
+		const parentRoute = executableRouteById.get(parentOutputId);
+		if (parentRoute) {
+			return parentRoute;
+		}
 		if (executableRoutes.has(pathname)) {
 			return pathname;
 		}
@@ -104,6 +116,13 @@ function createPrerenderRouteResolver(context: BuildCompleteContext, executableR
 	};
 }
 
+/**
+ * Generates the runtime route index consumed by every provider bundle.
+ *
+ * @param options Normalized OpenNext build options.
+ * @param context Routing and output metadata emitted by Next.js.
+ * @returns The serialized runtime routing configuration.
+ */
 export function createRoutingConfig(
 	options: buildHelper.BuildOptions,
 	context: BuildCompleteContext
@@ -127,7 +146,7 @@ export function createRoutingConfig(
 	const prerenderPathnames: string[] = [];
 
 	for (const prerender of context.outputs.prerenders ?? []) {
-		const route = resolvePrerenderRoute(prerender.pathname);
+		const route = resolvePrerenderRoute(prerender);
 		if (!route) {
 			// Artifacts no route can regenerate - i.e. the PPR segment prefetches - are served from the
 			// cache only and are left out of the index.
