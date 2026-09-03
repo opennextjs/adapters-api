@@ -34,7 +34,10 @@ vi.mock("@/config/index", () => ({
 			beforeFiles: [],
 			afterFiles: [
 				{ sourceRegex: "^/rewrite$", destination: "/about?from=rewrite" },
-				{ sourceRegex: "^/external$", destination: "https://example.com/target" },
+				{
+					sourceRegex: "^/external$",
+					destination: "https://example.com/target?destination=1",
+				},
 			],
 			dynamicRoutes: [
 				{
@@ -51,14 +54,15 @@ vi.mock("@/config/index", () => ({
 	FunctionsConfigManifest: { functions: {}, version: 1 },
 }));
 
-function event(pathname: string): InternalEvent {
+function event(target: string): InternalEvent {
+	const url = new URL(target, "https://localhost");
 	return {
 		type: "core",
 		method: "GET",
-		rawPath: pathname,
-		url: `https://localhost${pathname}`,
+		rawPath: url.pathname,
+		url: url.toString(),
 		headers: { host: "localhost" },
-		query: {},
+		query: Object.fromEntries(url.searchParams),
 		cookies: {},
 		remoteAddress: "127.0.0.1",
 	};
@@ -166,13 +170,14 @@ describe("routingHandler", () => {
 	});
 
 	it("preserves external rewrites for the proxy layer", async () => {
-		const result = await routingHandler(event("/external"));
+		const result = await routingHandler(event("/external?source=1&destination=source"));
 
 		expect(result).toMatchObject({
 			isExternalRewrite: true,
 			internalEvent: {
 				rawPath: "/target",
-				url: "https://example.com/target",
+				url: "https://example.com/target?source=1&destination=1",
+				query: { destination: "1", source: "1" },
 			},
 		});
 	});

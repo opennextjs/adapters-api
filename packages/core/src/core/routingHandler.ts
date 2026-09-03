@@ -12,6 +12,7 @@ import type { AssetResolver } from "@/types/overrides";
 import { emptyReadableStream, toReadableStream } from "@/utils/stream";
 
 import { debug, error } from "../adapters/logger";
+import { getQueryFromSearchParams } from "../overrides/converters/utils.js";
 
 import { cacheInterceptor } from "./routing/cacheInterceptor";
 import { detectLocale } from "./routing/i18n";
@@ -350,12 +351,17 @@ export default async function routingHandler(
 		}
 
 		if (routingResult.externalRewrite) {
-			const externalEvent = toInternalEvent(
-				event,
+			const externalQuery = {
+				...event.query,
+				...(routingResult.resolvedQuery ??
+					getQueryFromSearchParams(routingResult.externalRewrite.searchParams)),
+			};
+			const externalUrl = toInvocationUrl(
 				routingResult.externalRewrite.toString(),
-				middlewareHeaders,
-				routingResult.resolvedQuery ?? {}
+				routingResult.externalRewrite.pathname,
+				externalQuery
 			);
+			const externalEvent = toInternalEvent(event, externalUrl, middlewareHeaders, externalQuery);
 			applyResponseHeaders(externalEvent, responseHeaders);
 			return createRoutingResult(externalEvent, [], {
 				isExternalRewrite: true,
