@@ -1,0 +1,19 @@
+packages/tests-unit/tests/build/createRoutingConfig.test.ts
+  s_5d492b87a702ff::t_03ab2d71089917 23-27,30-31,33-34,44,50-56,132-133,140-141,143-144,146-147,149,163,187-192,220,224
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "250a003b1e21b4ace2ed0823a7bf4ed97a048147",
+  "prompts": {},
+  "sessions": {
+    "s_5d492b87a702ff": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f9a1dec42ffeQV9JYx7wX1tPbk",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
