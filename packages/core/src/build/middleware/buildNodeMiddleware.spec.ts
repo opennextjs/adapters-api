@@ -47,9 +47,13 @@ vi.mock("../patch/patches/index.js", () => ({
 vi.mock("node:fs", () => ({
 	default: {
 		mkdirSync: vi.fn(),
+		copyFileSync: vi.fn(),
 	},
 	mkdirSync: vi.fn(),
+	copyFileSync: vi.fn(),
 }));
+
+import fs from "node:fs";
 
 import type { NextAdapterOutputs } from "../../types/adapter.js";
 import type { BuildOptions } from "../helper.js";
@@ -91,6 +95,7 @@ function createMockNextOutputs(): NextAdapterOutputs {
 		appPages: [],
 		appRoutes: [],
 		middleware: {
+			id: "middleware",
 			pathname: "/",
 			filePath: "/app/.next/server/middleware.js",
 			assets: { "asset.txt": "/app/.next/server/asset.txt" },
@@ -108,6 +113,11 @@ describe("buildExternalNodeMiddleware", () => {
 		const nextOutputs = createMockNextOutputs();
 
 		await buildExternalNodeMiddleware(options, undefined, nextOutputs);
+
+		expect(fs.copyFileSync).toHaveBeenCalledWith(
+			"/app/build/.next/open-next-routing.json",
+			"/app/.open-next/middleware/.next/open-next-routing.json"
+		);
 
 		// copyOpenNextConfig called with isEdge false (default isEdgeRuntime)
 		expect(buildHelper.copyOpenNextConfig).toHaveBeenCalledWith(
