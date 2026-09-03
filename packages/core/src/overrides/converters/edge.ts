@@ -1,9 +1,10 @@
-import type { ReadableStream } from "node:stream/web";
+import { Writable } from "node:stream";
+import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 
 import cookieParser from "cookie";
 
 import { parseSetCookieHeader } from "@/http/util";
-import type { InternalEvent, InternalResult, MiddlewareResult } from "@/types/open-next";
+import type { InternalEvent, InternalResult, MiddlewareResult, StreamCreator } from "@/types/open-next";
 import type { Converter } from "@/types/overrides";
 
 import { getQueryFromSearchParams } from "./utils.js";
@@ -32,7 +33,9 @@ const converter: Converter<InternalEvent, InternalResult | MiddlewareResult> = {
 		const shouldHaveBody = method !== "GET" && method !== "HEAD";
 
 		// Only read body for methods that should have one
-		const body = shouldHaveBody ? ((request.body as ReadableStream | undefined) ?? undefined) : undefined;
+		const body = shouldHaveBody
+			? ((request.body as unknown as NodeReadableStream | undefined) ?? undefined)
+			: undefined;
 
 		const cookieHeader = request.headers.get("cookie");
 		const cookies = cookieHeader ? (cookieParser.parse(cookieHeader) as Record<string, string>) : {};
@@ -49,73 +52,163 @@ const converter: Converter<InternalEvent, InternalResult | MiddlewareResult> = {
 			cookies,
 		};
 	},
-	convertTo: async (result) => {
-		if ("internalEvent" in result) {
-			const request = new Request(result.internalEvent.url, {
-				body: result.internalEvent.body as BodyInit | undefined,
-				method: result.internalEvent.method,
-				headers: {
-					...result.internalEvent.headers,
-					"x-forwarded-host": result.internalEvent.headers.host,
-				},
-			});
-
-			if (globalThis.__dangerous_ON_edge_converter_returns_request === true) {
-				if (result.initialResponse) {
-					return {
-						initialResponse: result.initialResponse,
-						request,
-					};
+	convertTo: async (event, context) => {
+		const request = event as Request;
+		const url = new URL(request.url);
+		const { promise: output, resolve: resolveOutput } = Promise.withResolvers<Response>();
+		const abortSignal = (context as { abortSignal?: AbortSignal } | undefined)?.abortSignal;
+		// Not every handler streams its response: the external middleware handler returns the
+		// result directly. We track whether the stream was used to know which one to return.
+		let isStreamed = false;
+		let abortResponseBody: ((reason: unknown) => Promise<void>) | undefined;
+		const streamCreator: StreamCreator = {
+			writeHeaders(prelude) {
+				isStreamed = true;
+				const responseHeaders = new Headers(prelude.headers);
+				for (const cookie of prelude.cookies) {
+					responseHeaders.append("Set-Cookie", cookie);
 				}
-				return request;
-			}
 
-			const cfCache =
-				(result.isISR || result.internalEvent.rawPath.startsWith("/_next/image")) &&
-				process.env.DISABLE_CACHE !== "true"
-					? { cacheEverything: true }
-					: {};
-
-			//TODO: we need to handle the PPR case here as well.
-			// We'll revisit this when we'll look at making StreamCreator mandatory.
-			return fetch(request, {
-				// This is a hack to make sure that the response is cached by Cloudflare
-				// See https://developers.cloudflare.com/workers/examples/cache-using-fetch/#caching-html-resources
-				// @ts-expect-error - This is a Cloudflare specific option
-				cf: cfCache,
-			});
-		}
-		const headers = new Headers();
-		for (const [key, value] of Object.entries(result.headers)) {
-			if (key === "set-cookie" && typeof value === "string") {
-				// If the value is a string, we need to parse it into an array
-				// This is the case for middleware direct result
-				const cookies = parseSetCookieHeader(value);
-				for (const cookie of cookies) {
-					headers.append(key, cookie);
+				// TODO(vicb): this is a workaround to make PPR work with `wrangler dev`
+				// See https://github.com/cloudflare/workers-sdk/issues/8004
+				if (url.hostname === "localhost") {
+					responseHeaders.set("Content-Encoding", "identity");
 				}
-				continue;
-			}
-			if (Array.isArray(value)) {
-				for (const v of value) {
-					headers.append(key, v);
+
+				if (NULL_BODY_STATUSES.has(prelude.statusCode)) {
+					resolveOutput(new Response(null, { status: prelude.statusCode, headers: responseHeaders }));
+					return new Writable({
+						write(_chunk, _encoding, callback) {
+							callback();
+						},
+					});
 				}
-			} else {
-				headers.set(key, value);
-			}
-		}
+				const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
+				const writer = writable.getWriter();
+				let writerClosed = false;
+				abortResponseBody = async (reason) => {
+					if (writerClosed) return;
+					writerClosed = true;
+					await writer.abort(reason);
+				};
+				resolveOutput(new Response(readable, { status: prelude.statusCode, headers: responseHeaders }));
 
-		// We should not return a body for statusCode's that doesn't allow bodies
-		const body = NULL_BODY_STATUSES.has(result.statusCode)
-			? null
-			: (result.body as unknown as globalThis.ReadableStream);
+				return new Writable({
+					write(chunk, _encoding, callback) {
+						writer.write(chunk).then(
+							() => callback(),
+							(error: unknown) => callback(error instanceof Error ? error : new Error(String(error)))
+						);
+					},
+					final(callback) {
+						writerClosed = true;
+						writer.close().then(
+							() => callback(),
+							(error: unknown) => callback(error instanceof Error ? error : new Error(String(error)))
+						);
+					},
+					destroy(error, callback) {
+						if (writerClosed) {
+							callback(error);
+							return;
+						}
+						writerClosed = true;
+						const close = error ? writer.abort(error) : writer.close();
+						close.then(
+							() => callback(error),
+							(closeError: unknown) =>
+								callback(closeError instanceof Error ? closeError : new Error(String(closeError)))
+						);
+					},
+				});
+			},
+			abortSignal,
+			abort: async (reason) => abortResponseBody?.(reason),
+		};
 
-		return new Response(body, {
-			status: result.statusCode,
-			headers,
-		});
+		return {
+			type: "stream",
+			streamCreator,
+			output,
+			data: async (result) => {
+				if ("internalEvent" in result) {
+					return convertMiddlewareResult(result);
+				}
+				// When the handler streamed the response, `output` already holds it.
+				return isStreamed ? undefined : convertInternalResult(result);
+			},
+		};
 	},
 	name: "edge",
 };
+
+function convertInternalResult(result: InternalResult): Response {
+	const headers = new Headers();
+	for (const [key, value] of Object.entries(result.headers)) {
+		if (key === "set-cookie" && typeof value === "string") {
+			// If the value is a string, we need to parse it into an array
+			// This is the case for middleware direct result
+			for (const cookie of parseSetCookieHeader(value)) {
+				headers.append(key, cookie);
+			}
+			continue;
+		}
+		if (Array.isArray(value)) {
+			for (const v of value) {
+				headers.append(key, v);
+			}
+		} else {
+			headers.set(key, value);
+		}
+	}
+
+	// We should not return a body for statusCode's that doesn't allow bodies
+	const body = NULL_BODY_STATUSES.has(result.statusCode)
+		? null
+		: ((result.body ?? null) as unknown as globalThis.ReadableStream | null);
+
+	return new Response(body, {
+		status: result.statusCode,
+		headers,
+	});
+}
+
+async function convertMiddlewareResult(
+	result: MiddlewareResult
+): Promise<Response | Request | { initialResponse: InternalResult; request: Request }> {
+	const request = new Request(result.internalEvent.url, {
+		body: result.internalEvent.body as unknown as BodyInit | undefined,
+		method: result.internalEvent.method,
+		headers: {
+			...result.internalEvent.headers,
+			"x-forwarded-host": result.internalEvent.headers.host,
+		},
+	});
+
+	if (globalThis.__dangerous_ON_edge_converter_returns_request === true) {
+		if (result.initialResponse) {
+			return {
+				initialResponse: result.initialResponse,
+				request,
+			};
+		}
+		return request;
+	}
+
+	const cfCache =
+		(result.isISR || result.internalEvent.rawPath.startsWith("/_next/image")) &&
+		process.env.DISABLE_CACHE !== "true"
+			? { cacheEverything: true }
+			: {};
+
+	//TODO: we need to handle the PPR case here as well.
+	// We'll revisit this when we'll look at making StreamCreator mandatory.
+	return fetch(request, {
+		// This is a hack to make sure that the response is cached by Cloudflare
+		// See https://developers.cloudflare.com/workers/examples/cache-using-fetch/#caching-html-resources
+		// @ts-expect-error - This is a Cloudflare specific option
+		cf: cfCache,
+	});
+}
 
 export default converter;

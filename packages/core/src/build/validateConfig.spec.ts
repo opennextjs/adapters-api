@@ -47,6 +47,40 @@ describe("validateConfig", () => {
 		expect(validateConfig(config)).toEqual({ success: true });
 	});
 
+	test("defaults the AWS streaming wrapper to the streaming converter", () => {
+		const config = {
+			default: { override: { wrapper: "aws-lambda-streaming" } },
+		} as unknown as OpenNextConfig;
+
+		expect(validateConfig(config)).toEqual({ success: true });
+	});
+
+	test("rejects an explicit incompatible converter for the AWS streaming wrapper", () => {
+		const config = {
+			default: {
+				override: { wrapper: "aws-lambda-streaming", converter: "aws-apigw-v2" },
+			},
+		} as unknown as OpenNextConfig;
+
+		const result = validateConfig(config);
+		expect(result.success).toBe(false);
+		expect(result.message).toMatch(/not compatible/);
+	});
+
+	test("pairs partial overrides before applying adapter defaults", () => {
+		const config = {
+			default: { override: { wrapper: "aws-lambda" } },
+		} as unknown as OpenNextConfig;
+		expect(
+			validateConfig(config, {
+				server: {
+					wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda-streaming.js",
+					converter: "@opennextjs/aws/overrides/converters/aws-streaming.js",
+				},
+			})
+		).toEqual({ success: true });
+	});
+
 	test.each([
 		["C:\\overrides\\wrappers\\aws-lambda.cts", "C:\\overrides\\converters\\aws-apigw-v2.mts"],
 		["/overrides/wrappers/aws-lambda.js", "/overrides/converters/aws-apigw-v2.mjs"],
@@ -66,6 +100,30 @@ describe("validateConfig", () => {
 					converter: "edge",
 				},
 			},
+		} as unknown as OpenNextConfig;
+
+		expect(validateConfig(config)).toEqual({ success: true });
+	});
+
+	test("preserves a compatible adapter wrapper for an ambiguous converter", () => {
+		const config = {
+			default: { override: { converter: "edge" } },
+		} as unknown as OpenNextConfig;
+
+		expect(
+			validateConfig(config, {
+				server: {
+					wrapper: "@opennextjs/core/overrides/wrappers/cloudflare-node.js",
+					converter: "@opennextjs/core/overrides/converters/edge.js",
+				},
+			})
+		).toEqual({ success: true });
+	});
+
+	test.each([undefined, "node"] as const)("uses compatible %s external middleware defaults", (runtime) => {
+		const config = {
+			default: {},
+			middleware: { external: true, runtime },
 		} as unknown as OpenNextConfig;
 
 		expect(validateConfig(config)).toEqual({ success: true });
@@ -96,6 +154,26 @@ describe("validateConfig", () => {
 		expect(result.success).toBe(false);
 		expect(result.shouldThrow).toBe(true);
 		expect(result.message).toMatch(/Split function broken/);
+	});
+
+	test("returns a compatibility error instead of an earlier warning", () => {
+		const config = {
+			default: { override: { generateDockerfile: true } },
+			functions: {
+				incompatible: {
+					routes: ["app/page"],
+					override: {
+						wrapper: "aws-lambda-streaming",
+						converter: "aws-apigw-v2",
+					},
+				},
+			},
+		} as unknown as OpenNextConfig;
+
+		const result = validateConfig(config);
+		expect(result.success).toBe(false);
+		expect(result.level).toBe("error");
+		expect(result.message).toMatch(/not compatible/);
 	});
 
 	test("returns shouldThrow:false for disabled incremental cache warning", () => {

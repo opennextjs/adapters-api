@@ -43,7 +43,7 @@ export type MiddlewareEvent = InternalEvent & {
 export type InternalResult = {
 	statusCode: number;
 	headers: Record<string, string | string[]>;
-	body: ReadableStream;
+	body?: ReadableStream;
 	isBase64Encoded: boolean;
 	rewriteStatusCode?: number;
 } & BaseEventOrResult<"core">;
@@ -67,23 +67,18 @@ export type PartialResult = {
 };
 
 export interface StreamCreator {
-	writeHeaders(prelude: { statusCode: number; cookies: string[]; headers: Record<string, string> }): Writable;
+	writeHeaders(prelude: {
+		statusCode: number;
+		cookies: string[];
+		headers: Record<string, string>;
+		isBase64Encoded?: boolean;
+	}): Writable;
 	// Just to fix an issue with aws lambda streaming with empty body
 	onWrite?: () => void;
 	onFinish?: (length: number) => void;
 	abortSignal?: AbortSignal;
-	/**
-	 * Normally there is no need to retain the chunks that have been pushed to the response stream.
-	 *
-	 * However some implementations use a fake `StreamCreator` and expect the chunks to be retained.
-	 * When your stream controller implementation doesn't need to retain the chunk, you can set this
-	 * to `false` to reduce memory usage.
-	 *
-	 * @see https://github.com/opennextjs/opennextjs-aws/blob/main/packages/open-next/src/overrides/wrappers/aws-lambda.ts
-	 *
-	 * @default true for backward compatibility.
-	 */
-	retainChunks?: boolean;
+	/** Aborts an active platform response body after handler failure. */
+	abort?: (reason: unknown) => void | Promise<void>;
 }
 
 export type WaitUntil = (promise: Promise<void>) => void;
@@ -146,6 +141,7 @@ export type IncludedConverter =
 	| "aws-apigw-v2"
 	| "aws-apigw-v1"
 	| "aws-cloudfront"
+	| "aws-streaming"
 	| "edge"
 	| "node"
 	| "sqs-revalidate"

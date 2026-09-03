@@ -8,6 +8,9 @@ import type {
 	SplittedFunctionOptions,
 } from "@/types/open-next";
 
+import { getDefaultConverterName, getDefaultWrapperName } from "../overrides/compatibility.js";
+import type { BundleDefaults, DefaultOverrides } from "../plugins/resolve.js";
+
 export type ValidateConfigResult =
 	| { success: true }
 	| {
@@ -21,13 +24,13 @@ export type ValidateConfigResult =
 const compatibilityMatrix: Record<IncludedWrapper, IncludedConverter[]> = {
 	"aws-lambda": ["aws-apigw-v1", "aws-apigw-v2", "aws-cloudfront", "sqs-revalidate"],
 	"aws-lambda-compressed": ["aws-apigw-v2"],
-	"aws-lambda-streaming": ["aws-apigw-v2"],
+	"aws-lambda-streaming": ["aws-streaming"],
 	cloudflare: ["edge"],
 	"cloudflare-edge": ["edge"],
 	"cloudflare-node": ["edge"],
 	node: ["node"],
 	"express-dev": ["node"],
-	dummy: ["dummy"],
+	dummy: ["dummy", "edge"],
 };
 
 /**
@@ -47,15 +50,31 @@ function normalizeOverrideName(value: string): string {
  * @param fnOptions Function options to validate.
  * @return The first compatibility issue, or success.
  */
-function validateFunctionOptions(fnOptions: FunctionOptions): ValidateConfigResult {
-	const wrapper =
+function validateFunctionOptions(
+	fnOptions: FunctionOptions,
+	defaultOverrides?: DefaultOverrides
+): ValidateConfigResult {
+	const configuredWrapper =
 		typeof fnOptions.override?.wrapper === "string"
 			? normalizeOverrideName(fnOptions.override.wrapper)
-			: "aws-lambda";
-	const converter =
+			: undefined;
+	const configuredConverter =
 		typeof fnOptions.override?.converter === "string"
 			? normalizeOverrideName(fnOptions.override.converter)
-			: "aws-apigw-v2";
+			: undefined;
+	const defaultWrapper = normalizeOverrideName(defaultOverrides?.wrapper ?? "aws-lambda");
+	const wrapper =
+		configuredWrapper ??
+		(configuredConverter && getDefaultConverterName(defaultWrapper) === configuredConverter
+			? defaultWrapper
+			: configuredConverter
+				? getDefaultWrapperName(configuredConverter)
+				: undefined) ??
+		defaultWrapper;
+	const converter =
+		configuredConverter ??
+		(configuredWrapper ? getDefaultConverterName(configuredWrapper) : undefined) ??
+		normalizeOverrideName(defaultOverrides?.converter ?? getDefaultConverterName(wrapper) ?? "aws-apigw-v2");
 	if (fnOptions.override?.generateDockerfile && converter !== "node" && wrapper !== "node") {
 		return {
 			success: false,
@@ -112,7 +131,8 @@ function validateFunctionOptions(fnOptions: FunctionOptions): ValidateConfigResu
  */
 function validateSplittedFunctionOptions(
 	fnOptions: SplittedFunctionOptions,
-	name: string
+	name: string,
+	defaultOverrides?: DefaultOverrides
 ): ValidateConfigResult {
 	if (fnOptions.routes.length === 0) {
 		return {
@@ -138,7 +158,7 @@ function validateSplittedFunctionOptions(
 			message: `Edge function ${name} can only have one route`,
 		};
 	}
-	return validateFunctionOptions(fnOptions);
+	return validateFunctionOptions(fnOptions, defaultOverrides);
 }
 
 /**
@@ -147,12 +167,27 @@ function validateSplittedFunctionOptions(
  * Fatal structural issues take precedence over compatibility warnings so warnings cannot hide an invalid build.
  *
  * @param config OpenNext configuration to validate.
+ * @param defaultOverrides Adapter-provided defaults used by each bundle type.
  * @return A fatal issue, the first nonfatal issue, or success.
  */
-export function validateConfig(config: OpenNextConfig): ValidateConfigResult {
-	const results: ValidateConfigResult[] = [validateFunctionOptions(config.default)];
+export function validateConfig(
+	config: OpenNextConfig,
+	defaultOverrides?: BundleDefaults
+): ValidateConfigResult {
+	const results: ValidateConfigResult[] = [validateFunctionOptions(config.default, defaultOverrides?.server)];
 	for (const [name, fnOptions] of Object.entries(config.functions ?? {})) {
-		results.push(validateSplittedFunctionOptions(fnOptions, name));
+		results.push(
+			validateSplittedFunctionOptions(
+				fnOptions,
+				name,
+				fnOptions.placement === "global"
+					? (defaultOverrides?.global ??
+							(fnOptions.runtime === "edge" ? defaultOverrides?.edge : defaultOverrides?.server))
+					: fnOptions.runtime === "edge"
+						? defaultOverrides?.edge
+						: defaultOverrides?.server
+			)
+		);
 	}
 	if (config.dangerous?.disableIncrementalCache) {
 		results.push({
@@ -172,17 +207,25 @@ export function validateConfig(config: OpenNextConfig): ValidateConfigResult {
        It is safe to disable if you only use page router`,
 		});
 	}
-	results.push(validateFunctionOptions(config.imageOptimization ?? {}));
+	results.push(validateFunctionOptions(config.imageOptimization ?? {}, defaultOverrides?.imageOptimization));
 	if (config.middleware?.external === true) {
-		results.push(validateFunctionOptions(config.middleware ?? {}));
+		const isNodeMiddleware = config.middleware.runtime === "node";
+		results.push(
+			validateFunctionOptions(config.middleware, {
+				wrapper: isNodeMiddleware ? "node" : "dummy",
+				converter: isNodeMiddleware ? "node" : "edge",
+				...defaultOverrides?.middleware,
+			})
+		);
 	}
 	//@ts-expect-error - Revalidate custom wrapper type is different
-	results.push(validateFunctionOptions(config.revalidate ?? {}));
+	results.push(validateFunctionOptions(config.revalidate ?? {}, defaultOverrides?.revalidation));
 	//@ts-expect-error - Warmer custom wrapper type is different
-	results.push(validateFunctionOptions(config.warmer ?? {}));
-	results.push(validateFunctionOptions(config.initializationFunction ?? {}));
+	results.push(validateFunctionOptions(config.warmer ?? {}, defaultOverrides?.warmer));
+	results.push(validateFunctionOptions(config.initializationFunction ?? {}, defaultOverrides?.server));
 	return (
 		results.find((result) => !result.success && result.shouldThrow) ??
+		results.find((result) => !result.success && result.level === "error") ??
 		results.find((result) => !result.success) ?? { success: true }
 	);
 }

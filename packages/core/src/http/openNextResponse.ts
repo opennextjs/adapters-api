@@ -4,6 +4,7 @@ import { Transform } from "node:stream";
 import type { TransformCallback, Writable } from "node:stream";
 
 import type { StreamCreator } from "@/types/open-next";
+import { isBinaryContentType } from "@/utils/binary";
 
 import { debug } from "../adapters/logger";
 
@@ -18,7 +19,6 @@ export class OpenNextNodeResponse extends Transform implements ServerResponse {
 	statusMessage = "";
 	headers: OutgoingHttpHeaders = {};
 	headersSent = false;
-	_chunks: Buffer[] = [];
 	headersAlreadyFixed = false;
 
 	private _cookies: string[] = [];
@@ -179,6 +179,8 @@ export class OpenNextNodeResponse extends Transform implements ServerResponse {
 				statusCode: this.statusCode ?? 200,
 				cookies: this._cookies,
 				headers: parsedHeaders,
+				isBase64Encoded:
+					isBinaryContentType(parsedHeaders["content-type"]) || !!parsedHeaders["content-encoding"],
 			});
 			this.pipe(this.responseStream);
 		}
@@ -255,10 +257,6 @@ export class OpenNextNodeResponse extends Transform implements ServerResponse {
 		return this.headers;
 	}
 
-	getBody() {
-		return Buffer.concat(this._chunks);
-	}
-
 	private _internalWrite(chunk: Buffer | string, encoding: BufferEncoding) {
 		// When encoding === 'buffer', chunk is already a Buffer
 		// and does not need to be converted again.
@@ -266,10 +264,6 @@ export class OpenNextNodeResponse extends Transform implements ServerResponse {
 		// official type definition
 		const buffer = encoding === "buffer" ? (chunk as Buffer) : Buffer.from(chunk, encoding);
 		this.bodyLength += buffer.length;
-		if (this.streamCreator?.retainChunks !== false) {
-			// Avoid keeping chunks around when the `StreamCreator` supports it to save memory
-			this._chunks.push(buffer);
-		}
 		// No need to pass the encoding for buffers
 		this.push(buffer);
 		this.streamCreator?.onWrite?.();
@@ -342,9 +336,6 @@ export class OpenNextNodeResponse extends Transform implements ServerResponse {
 	}
 
 	send() {
-		for (const chunk of this._chunks) {
-			this.write(chunk);
-		}
 		this.end();
 	}
 

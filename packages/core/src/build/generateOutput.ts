@@ -11,6 +11,9 @@ import type {
 	OverrideOptions,
 } from "@/types/open-next";
 
+import { getDefaultConverterName, getDefaultWrapperName } from "../overrides/compatibility.js";
+import type { BundleDefaults, DefaultOverrides } from "../plugins/resolve.js";
+
 import { type BuildOptions, getBuildId } from "./helper.js";
 
 type BaseFunction = {
@@ -91,12 +94,12 @@ export interface OpenNextOutput {
 
 const indexHandler = "index.handler";
 
-async function canStream(opts: FunctionOptions) {
+async function canStream(opts: FunctionOptions, defaults?: DefaultOverrides) {
 	if (!opts.override?.wrapper) {
-		return false;
+		return bare(defaults?.wrapper ?? "aws-lambda") === "aws-lambda-streaming";
 	}
 	if (typeof opts.override.wrapper === "string") {
-		return opts.override.wrapper === "aws-lambda-streaming";
+		return bare(opts.override.wrapper) === "aws-lambda-streaming";
 	}
 	const wrapper = await opts.override.wrapper();
 	return wrapper.supportStreaming;
@@ -130,29 +133,34 @@ async function extractOverrideName(
 	return overrideModule.name;
 }
 
-async function extractOverrideFn(override?: DefaultOverrideOptions) {
-	if (!override) {
-		return {
-			wrapper: "aws-lambda",
-			converter: "aws-apigw-v2",
-		};
-	}
-	const wrapper = await extractOverrideName("aws-lambda", override.wrapper);
-	const converter = await extractOverrideName("aws-apigw-v2", override.converter);
+async function extractOverrideFn(override?: DefaultOverrideOptions, defaults?: DefaultOverrides) {
+	const configuredWrapper = typeof override?.wrapper === "string" ? bare(override.wrapper) : undefined;
+	const configuredConverter = typeof override?.converter === "string" ? bare(override.converter) : undefined;
+	const adapterWrapper = bare(defaults?.wrapper ?? "aws-lambda");
+	const defaultWrapper =
+		(configuredConverter && getDefaultConverterName(adapterWrapper) === configuredConverter
+			? adapterWrapper
+			: configuredConverter
+				? getDefaultWrapperName(configuredConverter)
+				: undefined) ?? adapterWrapper;
+	const wrapper = await extractOverrideName(defaultWrapper, override?.wrapper);
+	const defaultConverter = bare(
+		(configuredWrapper ? getDefaultConverterName(configuredWrapper) : undefined) ??
+			defaults?.converter ??
+			getDefaultConverterName(wrapper) ??
+			"aws-apigw-v2"
+	);
+	const converter = await extractOverrideName(defaultConverter, override?.converter);
 	return { wrapper, converter };
 }
 
-async function extractCommonOverride(override?: OverrideOptions) {
-	if (!override) {
-		return {
-			queue: "sqs",
-			incrementalCache: "s3",
-			tagCache: "dynamodb",
-		};
-	}
-	const queue = await extractOverrideName("sqs", override.queue);
-	const incrementalCache = await extractOverrideName("s3", override.incrementalCache);
-	const tagCache = await extractOverrideName("dynamodb", override.tagCache);
+async function extractCommonOverride(override?: OverrideOptions, defaults?: DefaultOverrides) {
+	const queue = await extractOverrideName(bare(defaults?.queue ?? "sqs"), override?.queue);
+	const incrementalCache = await extractOverrideName(
+		bare(defaults?.incrementalCache ?? "s3"),
+		override?.incrementalCache
+	);
+	const tagCache = await extractOverrideName(bare(defaults?.tagCache ?? "dynamodb"), override?.tagCache);
 	return { queue, incrementalCache, tagCache };
 }
 
@@ -163,31 +171,49 @@ function prefixPattern(basePath: string) {
 	};
 }
 
-export async function buildOpenNextOutput(options: BuildOptions): Promise<OpenNextOutput> {
+export async function buildOpenNextOutput(
+	options: BuildOptions,
+	defaultOverrides?: BundleDefaults
+): Promise<OpenNextOutput> {
 	const { appBuildOutputPath, config } = options;
 	const edgeFunctions: OpenNextOutput["edgeFunctions"] = {};
 	const isExternalMiddleware = config.middleware?.external ?? false;
 	if (isExternalMiddleware) {
 		const middlewareConfig = options.config.middleware as ExternalMiddlewareConfig;
+		const isNodeMiddleware = middlewareConfig.runtime === "node";
+		const middlewareDefaults: DefaultOverrides = {
+			wrapper: isNodeMiddleware ? "node" : "dummy",
+			converter: isNodeMiddleware ? "node" : "edge",
+			originResolver: "pattern-env",
+			...defaultOverrides?.middleware,
+		};
 		edgeFunctions.middleware = {
 			bundle: ".open-next/middleware",
 			handler: "handler.handler",
-			pathResolver: await extractOverrideName("pattern-env", middlewareConfig.originResolver),
-			...(await extractOverrideFn(middlewareConfig.override)),
+			pathResolver: await extractOverrideName(
+				bare(middlewareDefaults.originResolver ?? "pattern-env"),
+				middlewareConfig.originResolver
+			),
+			...(await extractOverrideFn(middlewareConfig.override, middlewareDefaults)),
 		};
 	}
 	// Add edge functions
-	Object.entries(config.functions ?? {}).forEach(async ([key, value]) => {
-		if (value.placement === "global") {
-			edgeFunctions[key] = {
-				bundle: `.open-next/server-functions/${key}`,
-				handler: indexHandler,
-				...(await extractOverrideFn(value.override)),
-			};
-		}
-	});
+	await Promise.all(
+		Object.entries(config.functions ?? {}).map(async ([key, value]) => {
+			if (value.placement === "global") {
+				const functionDefaults =
+					defaultOverrides?.global ??
+					(value.runtime === "edge" ? defaultOverrides?.edge : defaultOverrides?.server);
+				edgeFunctions[key] = {
+					bundle: `.open-next/server-functions/${key}`,
+					handler: indexHandler,
+					...(await extractOverrideFn(value.override, functionDefaults)),
+				};
+			}
+		})
+	);
 
-	const defaultOriginCanstream = await canStream(config.default);
+	const defaultOriginCanstream = await canStream(config.default, defaultOverrides?.server);
 
 	const nextConfig = loadConfig(path.join(appBuildOutputPath, ".next"));
 	const prefixer = prefixPattern(nextConfig.basePath ?? "");
@@ -221,24 +247,27 @@ export async function buildOpenNextOutput(options: BuildOptions): Promise<OpenNe
 			handler: indexHandler,
 			bundle: ".open-next/image-optimization-function",
 			streaming: false,
-			imageLoader: await extractOverrideName("s3", config.imageOptimization?.loader),
-			...(await extractOverrideFn(config.imageOptimization?.override)),
+			imageLoader: await extractOverrideName(
+				bare(defaultOverrides?.imageOptimization?.imageLoader ?? "s3"),
+				config.imageOptimization?.loader
+			),
+			...(await extractOverrideFn(config.imageOptimization?.override, defaultOverrides?.imageOptimization)),
 		},
 		default: config.default.override?.generateDockerfile
 			? {
 					type: "ecs",
 					bundle: ".open-next/server-functions/default",
 					dockerfile: ".open-next/server-functions/default/Dockerfile",
-					...(await extractOverrideFn(config.default.override)),
-					...(await extractCommonOverride(config.default.override)),
+					...(await extractOverrideFn(config.default.override, defaultOverrides?.server)),
+					...(await extractCommonOverride(config.default.override, defaultOverrides?.server)),
 				}
 			: {
 					type: "function",
 					handler: indexHandler,
 					bundle: ".open-next/server-functions/default",
 					streaming: defaultOriginCanstream,
-					...(await extractOverrideFn(config.default.override)),
-					...(await extractCommonOverride(config.default.override)),
+					...(await extractOverrideFn(config.default.override, defaultOverrides?.server)),
+					...(await extractCommonOverride(config.default.override, defaultOverrides?.server)),
 				},
 	};
 
@@ -249,23 +278,24 @@ export async function buildOpenNextOutput(options: BuildOptions): Promise<OpenNe
 	await Promise.all(
 		Object.entries(config.functions ?? {}).map(async ([key, value]) => {
 			if (!value.placement || value.placement === "regional") {
+				const functionDefaults = value.runtime === "edge" ? defaultOverrides?.edge : defaultOverrides?.server;
 				if (value.override?.generateDockerfile) {
 					origins[key] = {
 						type: "ecs",
 						bundle: `.open-next/server-functions/${key}`,
 						dockerfile: `.open-next/server-functions/${key}/Dockerfile`,
-						...(await extractOverrideFn(value.override)),
-						...(await extractCommonOverride(value.override)),
+						...(await extractOverrideFn(value.override, functionDefaults)),
+						...(await extractCommonOverride(value.override, functionDefaults)),
 					};
 				} else {
-					const streaming = await canStream(value);
+					const streaming = await canStream(value, functionDefaults);
 					origins[key] = {
 						type: "function",
 						handler: indexHandler,
 						bundle: `.open-next/server-functions/${key}`,
 						streaming,
-						...(await extractOverrideFn(value.override)),
-						...(await extractCommonOverride(value.override)),
+						...(await extractOverrideFn(value.override, functionDefaults)),
+						...(await extractCommonOverride(value.override, functionDefaults)),
 					};
 				}
 			}

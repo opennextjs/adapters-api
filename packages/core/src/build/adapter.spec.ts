@@ -558,7 +558,7 @@ describe("buildAdapter", () => {
 		await adapter.modifyConfig(nextConfig, { phase: "production" });
 		const ctx = createMockContext();
 		await adapter.onBuildComplete(ctx);
-		expect(buildOpenNextOutput).toHaveBeenCalledWith(expect.any(Object));
+		expect(buildOpenNextOutput).toHaveBeenCalledWith(expect.any(Object), undefined);
 		const fs = await import("node:fs");
 		expect(fs.default.writeFileSync).toHaveBeenCalledWith(
 			expect.stringMatching(/\/\.open-next\/open-next\.output\.json$/),

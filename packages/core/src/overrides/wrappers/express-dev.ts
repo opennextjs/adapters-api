@@ -3,7 +3,6 @@ import path from "node:path";
 import express from "express";
 
 import { NextConfig } from "@/config/index";
-import type { StreamCreator } from "@/types/open-next.js";
 import type { WrapperHandler } from "@/types/overrides.js";
 import { getMonorepoRelativePath } from "@/utils/normalize-path";
 
@@ -22,13 +21,14 @@ const wrapper: WrapperHandler = async (handler, converter) => {
 
 	app.all(`${NextConfig.basePath ?? ""}/_next/image`, async (req, res) => {
 		const internalEvent = await converter.convertFrom(req);
-		const streamCreator: StreamCreator = {
-			writeHeaders: (prelude) => {
-				res.writeHead(prelude.statusCode, prelude.headers);
-				return res;
-			},
-		};
-		await imageHandler(internalEvent, { streamCreator });
+		const output = await converter.convertTo(req, res);
+		if (output.type === "direct") {
+			await output.data(await imageHandler(internalEvent));
+			return;
+		}
+		const response = await imageHandler(internalEvent, { streamCreator: output.streamCreator });
+		const directResult = await output.data?.(response);
+		if (directResult === undefined) await output.output;
 	});
 
 	app.all(/.*/, async (req, res) => {
@@ -39,25 +39,13 @@ const wrapper: WrapperHandler = async (handler, converter) => {
 			req.headers["x-forwarded-proto"] = req.protocol;
 		}
 		const internalEvent = await converter.convertFrom(req);
-
-		const abortController = new AbortController();
-
-		const streamCreator: StreamCreator = {
-			writeHeaders: (prelude) => {
-				res.setHeader("Set-Cookie", prelude.cookies);
-				res.writeHead(prelude.statusCode, prelude.headers);
-				res.flushHeaders();
-				return res;
-			},
-			onFinish: () => {},
-			abortSignal: abortController.signal,
-		};
-
-		res.on("close", () => {
-			abortController.abort();
-		});
-
-		await handler(internalEvent, { streamCreator });
+		const output = await converter.convertTo(req, res);
+		if (output.type === "direct") {
+			await output.data(await handler(internalEvent));
+			return;
+		}
+		await handler(internalEvent, { streamCreator: output.streamCreator });
+		await output.output;
 	});
 
 	const server = app.listen(Number.parseInt(process.env.PORT ?? "3000", 10), () => {

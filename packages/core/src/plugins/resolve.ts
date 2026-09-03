@@ -16,6 +16,7 @@ import type {
 import type { ImageLoader, OriginResolver, Warmer } from "@/types/overrides";
 
 import logger from "../logger.js";
+import { getDefaultConverterName, getDefaultWrapperName } from "../overrides/compatibility.js";
 import { getCrossPlatformPathRegex } from "../utils/regex.js";
 
 export interface IPluginSettings {
@@ -69,6 +70,7 @@ export type BundleType =
 	| "server"
 	| "middleware"
 	| "edge"
+	| "global"
 	| "imageOptimization"
 	| "revalidation"
 	| "warmer"
@@ -81,6 +83,32 @@ export type BundleDefaults = Partial<Record<BundleType, DefaultOverrides>>;
  */
 function isFullPath(s: string): boolean {
 	return s.startsWith("@") || s.includes("/");
+}
+
+/** Returns the filename portion of an override name or package path. */
+function getOverrideName(value: string): string {
+	return value.slice(value.lastIndexOf("/") + 1).replace(/\.[^.]+$/, "");
+}
+
+/** Returns whether an override uses an AWS built-in name or package path. */
+function isAwsOverride(value: string): boolean {
+	return !isFullPath(value) || value.includes("@opennextjs/aws/overrides/");
+}
+
+/** Resolves a paired AWS override in the adapter package and core overrides by bare name. */
+function resolvePairedOverride(
+	name: string,
+	configuredPeer: string,
+	defaultPeer: string | undefined,
+	targetFolder: "converters" | "wrappers"
+): string {
+	if (!name.startsWith("aws-") && name !== "sqs-revalidate") return name;
+	const peer = isFullPath(configuredPeer) ? configuredPeer : defaultPeer;
+	if (!peer || !isFullPath(peer)) return name;
+	return peer.replace(
+		/\/overrides\/(?:converters|wrappers)\/[^/]+$/,
+		`/overrides/${targetFolder}/${name}.js`
+	);
 }
 
 /**
@@ -118,14 +146,70 @@ export function openNextResolvePlugin({
 		name: "opennext-resolve",
 		setup(build) {
 			logger.debug(chalk.blue("OpenNext Resolve plugin"), fnName ? `for ${fnName}` : "");
+			const effectiveOverrides = { ...overrides };
+			if (
+				typeof effectiveOverrides.wrapper === "string" &&
+				isAwsOverride(effectiveOverrides.wrapper) &&
+				getOverrideName(effectiveOverrides.wrapper).startsWith("aws-")
+			) {
+				effectiveOverrides.wrapper = resolvePairedOverride(
+					getOverrideName(effectiveOverrides.wrapper),
+					effectiveOverrides.wrapper,
+					defaultValues?.wrapper,
+					"wrappers"
+				) as NonNullable<DefaultOverrideOptions["wrapper"]>;
+			}
+			if (
+				typeof effectiveOverrides.converter === "string" &&
+				isAwsOverride(effectiveOverrides.converter) &&
+				(getOverrideName(effectiveOverrides.converter).startsWith("aws-") ||
+					getOverrideName(effectiveOverrides.converter) === "sqs-revalidate")
+			) {
+				effectiveOverrides.converter = resolvePairedOverride(
+					getOverrideName(effectiveOverrides.converter),
+					effectiveOverrides.converter,
+					defaultValues?.converter,
+					"converters"
+				) as NonNullable<DefaultOverrideOptions["converter"]>;
+			}
+			if (typeof effectiveOverrides.wrapper === "string" && !effectiveOverrides.converter) {
+				const converter = getDefaultConverterName(getOverrideName(effectiveOverrides.wrapper));
+				if (converter) {
+					effectiveOverrides.converter = resolvePairedOverride(
+						converter,
+						effectiveOverrides.wrapper,
+						defaultValues?.wrapper,
+						"converters"
+					) as NonNullable<DefaultOverrideOptions["converter"]>;
+				}
+			} else if (typeof effectiveOverrides.converter === "string" && !effectiveOverrides.wrapper) {
+				const converterName = getOverrideName(effectiveOverrides.converter);
+				const defaultWrapper = defaultValues?.wrapper;
+				if (
+					typeof defaultWrapper === "string" &&
+					getDefaultConverterName(getOverrideName(defaultWrapper)) === converterName
+				) {
+					effectiveOverrides.wrapper = defaultWrapper as NonNullable<DefaultOverrideOptions["wrapper"]>;
+				} else {
+					const wrapper = getDefaultWrapperName(converterName);
+					if (wrapper) {
+						effectiveOverrides.wrapper = resolvePairedOverride(
+							wrapper,
+							effectiveOverrides.converter,
+							defaultValues?.converter,
+							"wrappers"
+						) as NonNullable<DefaultOverrideOptions["wrapper"]>;
+					}
+				}
+			}
 
 			// Maps the overrides folder to the specifier that should be imported instead
 			// of the default one. Computed once, the config cannot change during a build.
 			const redirects = new Map<string, string>();
-			const allKeys = new Set([...Object.keys(overrides ?? {}), ...Object.keys(defaultValues ?? {})]);
+			const allKeys = new Set([...Object.keys(effectiveOverrides), ...Object.keys(defaultValues ?? {})]);
 
 			for (const overrideName of allKeys) {
-				const configValue = overrides?.[overrideName as keyof typeof overrides];
+				const configValue = effectiveOverrides[overrideName as keyof typeof effectiveOverrides];
 				const defaultValue = defaultValues?.[overrideName as keyof typeof defaultValues];
 				let overrideValue = configValue ?? defaultValue;
 				if (!overrideValue) {

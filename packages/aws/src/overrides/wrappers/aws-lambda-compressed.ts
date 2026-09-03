@@ -1,14 +1,16 @@
-import { Readable, type Transform, Writable } from "node:stream";
-import type { ReadableStream } from "node:stream/web";
+import type { Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import zlib from "node:zlib";
 
-import { error } from "@opennextjs/core/adapters/logger.js";
-import type { InternalResult, StreamCreator } from "@opennextjs/core/types/open-next.js";
+import type { StreamCreator } from "@opennextjs/core/types/open-next.js";
 import type { WrapperHandler } from "@opennextjs/core/types/overrides.js";
 
 import type { AwsLambdaEvent, AwsLambdaReturn } from "../../types/aws-lambda.js";
 
-import { formatWarmerResponse } from "./aws-lambda.js";
+import { formatWarmerResponse, streamResponse } from "./aws-lambda.js";
+import { selectCompressionEncoding, withCompressionVary } from "./compression.js";
+
+const NULL_BODY_STATUSES = new Set([101, 103, 204, 205, 304]);
 
 const handler: WrapperHandler =
 	async (handler, converter) =>
@@ -20,55 +22,22 @@ const handler: WrapperHandler =
 		}
 
 		const internalEvent = await converter.convertFrom(lambdaEvent);
-		// This is a workaround
-		// https://github.com/opennextjs/opennextjs-aws/blob/e9b37fd44eb856eb8ae73168bf455ff85dd8b285/packages/open-next/src/overrides/wrappers/aws-lambda.ts#L49-L53
-		const fakeStream: StreamCreator = {
-			writeHeaders: () => {
-				return new Writable({
-					write: (_chunk, _encoding, callback) => {
-						callback();
-					},
-				});
-			},
-		};
-
-		const handlerResponse = await handler(internalEvent, {
-			streamCreator: fakeStream,
-		});
-
-		// Check if response is already compressed
-		// The handlers response headers are lowercase
-		const alreadyEncoded = handlerResponse.headers["content-encoding"] ?? "";
-
-		// Return early here if the response is already compressed
-		if (alreadyEncoded) {
-			return converter.convertTo(handlerResponse, lambdaEvent);
+		const output = await converter.convertTo(lambdaEvent);
+		if (output.type === "direct") {
+			return output.data(await handler(internalEvent));
 		}
 
-		// We compress the body if the client accepts it
 		const acceptEncoding =
 			internalEvent.headers["accept-encoding"] ?? internalEvent.headers["Accept-Encoding"] ?? "";
+		const contentEncoding = selectCompressionEncoding(acceptEncoding);
 
-		let contentEncoding: string | null = null;
-		if (acceptEncoding?.includes("br")) {
-			contentEncoding = "br";
-		} else if (acceptEncoding?.includes("gzip")) {
-			contentEncoding = "gzip";
-		} else if (acceptEncoding?.includes("deflate")) {
-			contentEncoding = "deflate";
-		}
-
-		const response: InternalResult = {
-			...handlerResponse,
-			body: compressBody(handlerResponse.body, contentEncoding),
-			headers: {
-				...handlerResponse.headers,
-				...(contentEncoding ? { "content-encoding": contentEncoding } : {}),
-			},
-			isBase64Encoded: !!contentEncoding || handlerResponse.isBase64Encoded,
-		};
-
-		return converter.convertTo(response, lambdaEvent);
+		const response = await handler(internalEvent, {
+			streamCreator: withCompression(output.streamCreator, contentEncoding),
+		});
+		const directResult = await output.data?.(response);
+		if (directResult !== undefined) return directResult;
+		await streamResponse(response, withCompression(output.streamCreator, contentEncoding));
+		return output.output;
 	};
 
 export default {
@@ -77,38 +46,52 @@ export default {
 	supportStreaming: false,
 };
 
-function compressBody(body: ReadableStream, encoding: string | null) {
-	// If no encoding is specified, return original body
-	if (!encoding) return body;
-	try {
-		const readable = Readable.fromWeb(body);
-		let transform: Transform;
+/**
+ * Adds negotiated compression to a response stream creator.
+ *
+ * @param streamCreator - The underlying platform response stream creator.
+ * @param encoding - The negotiated response content encoding, if any.
+ * @returns A stream creator that compresses response bodies when required.
+ */
+function withCompression(streamCreator: StreamCreator, encoding: string | null): StreamCreator {
+	if (!encoding) return streamCreator;
+	return {
+		...streamCreator,
+		writeHeaders(prelude) {
+			if (prelude.headers["content-encoding"] || NULL_BODY_STATUSES.has(prelude.statusCode)) {
+				return streamCreator.writeHeaders(prelude);
+			}
+			const { "content-length": _contentLength, ...headers } = prelude.headers;
+			const target = streamCreator.writeHeaders({
+				...prelude,
+				headers: withCompressionVary({ ...headers, "content-encoding": encoding }),
+				isBase64Encoded: true,
+			});
+			let transform: Transform;
 
-		switch (encoding) {
-			case "br":
-				const quality = Number(process.env.BROTLI_QUALITY);
-				transform = zlib.createBrotliCompress({
-					params: {
-						// This is a compromise between speed and compression ratio.
-						// The default one will most likely timeout an AWS Lambda with default configuration on large bodies (>6mb).
-						// Therefore we set it to 6, which is a good compromise.
-						[zlib.constants.BROTLI_PARAM_QUALITY]: Number.isNaN(quality) ? 6 : quality,
-					},
-				});
-				break;
-			case "gzip":
-				transform = zlib.createGzip();
-				break;
-			case "deflate":
-				transform = zlib.createDeflate();
-				break;
-			default:
-				return body;
-		}
-		return Readable.toWeb(readable.pipe(transform));
-	} catch (e) {
-		error("Error compressing body:", e);
-		// Fall back to no compression on error
-		return body;
-	}
+			switch (encoding) {
+				case "br":
+					const quality = Number(process.env.BROTLI_QUALITY);
+					transform = zlib.createBrotliCompress({
+						params: {
+							// This is a compromise between speed and compression ratio.
+							// The default one will most likely timeout an AWS Lambda with default configuration on large bodies (>6mb).
+							// Therefore we set it to 6, which is a good compromise.
+							[zlib.constants.BROTLI_PARAM_QUALITY]: Number.isNaN(quality) ? 6 : quality,
+						},
+					});
+					break;
+				case "gzip":
+					transform = zlib.createGzip();
+					break;
+				case "deflate":
+					transform = zlib.createDeflate();
+					break;
+				default:
+					return target;
+			}
+			void pipeline(transform, target).catch(() => undefined);
+			return transform;
+		},
+	};
 }

@@ -1,7 +1,9 @@
-import { Writable } from "node:stream";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 
 import type { WarmerEvent, WarmerResponse } from "@opennextjs/core/adapters/warmer-function.js";
-import type { StreamCreator } from "@opennextjs/core/types/open-next.js";
+import { parseSetCookieHeader } from "@opennextjs/core/http/util.js";
+import type { InternalResult, StreamCreator } from "@opennextjs/core/types/open-next.js";
 import type { WrapperHandler } from "@opennextjs/core/types/overrides.js";
 
 import type { AwsLambdaEvent, AwsLambdaReturn } from "../../types/aws-lambda.js";
@@ -24,27 +26,15 @@ const handler: WrapperHandler =
 		}
 
 		const internalEvent = await converter.convertFrom(lambdaEvent);
-
-		//TODO: create a simple reproduction and open an issue in the node repo
-		//This is a workaround, there is an issue in node that causes node to crash silently if the OpenNextNodeResponse stream is not consumed
-		//This does not happen everytime, it's probably caused by suspended component in ssr (either via <Suspense> or loading.tsx)
-		//Everyone that wish to create their own wrapper without a StreamCreator should implement this workaround
-		//This is not necessary if the underlying handler does not use OpenNextNodeResponse (At the moment, OpenNextNodeResponse is used by the node runtime servers and the image server)
-		const fakeStream: StreamCreator = {
-			writeHeaders: () => {
-				return new Writable({
-					write: (_chunk, _encoding, callback) => {
-						callback();
-					},
-				});
-			},
-		};
-
-		const response = await handler(internalEvent, {
-			streamCreator: fakeStream,
-		});
-
-		return converter.convertTo(response, lambdaEvent);
+		const output = await converter.convertTo(lambdaEvent);
+		if (output.type === "direct") {
+			return output.data(await handler(internalEvent));
+		}
+		const response = await handler(internalEvent, { streamCreator: output.streamCreator });
+		const directResult = await output.data?.(response);
+		if (directResult !== undefined) return directResult;
+		await streamResponse(response, output.streamCreator);
+		return output.output;
 	};
 
 export default {
@@ -52,3 +42,32 @@ export default {
 	name: "aws-lambda",
 	supportStreaming: false,
 };
+
+/**
+ * Streams a returned response body when the handler did not write it directly.
+ *
+ * @param response - The internal response returned by the handler.
+ * @param streamCreator - The converter's platform response stream creator.
+ * @returns A promise that resolves after the returned body has been written.
+ */
+export async function streamResponse(response: InternalResult, streamCreator: StreamCreator): Promise<void> {
+	const { "set-cookie": setCookie, ...responseHeaders } = response.headers;
+	const headers = Object.fromEntries(
+		Object.entries(responseHeaders).map(([key, value]) => [
+			key,
+			Array.isArray(value) ? value.join(",") : value,
+		])
+	);
+	const cookies = Array.isArray(setCookie) ? setCookie : setCookie ? parseSetCookieHeader(setCookie) : [];
+	const stream = streamCreator.writeHeaders({
+		statusCode: response.statusCode,
+		headers,
+		cookies,
+		isBase64Encoded: response.isBase64Encoded,
+	});
+	if (!response.body) {
+		stream.end();
+		return;
+	}
+	await pipeline(Readable.fromWeb(response.body), stream);
+}
