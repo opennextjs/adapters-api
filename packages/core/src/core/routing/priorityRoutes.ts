@@ -98,34 +98,28 @@ export function resolvePriorityRedirect(
 	url: URL,
 	requestHeaders: Headers
 ): { status: number; headers: Headers } | undefined {
-	const headers = new Headers();
-	let status: number | undefined;
-
 	for (const route of priorityRoutes) {
 		const match = url.pathname.match(new RegExp(route.sourceRegex));
 		if (!match || !matchesConditions(route, url, requestHeaders)) {
 			continue;
 		}
+		const headers = new Headers();
 		for (const [key, value] of Object.entries(route.headers ?? {})) {
 			headers.set(
 				key,
 				value.replace(/\$(\d+)/g, (placeholder, index) => match[Number(index)] ?? placeholder)
 			);
 		}
-		if (route.status) {
-			status = route.status;
+		const status = route.status;
+		const location = headers.get("location");
+		if (location && status && status >= 300 && status < 400) {
+			// The captures come from the pathname only, so the query of the request has to be carried over.
+			// The location stays relative to avoid treating a `//host` pathname as another origin.
+			if (url.search && !location.includes("?")) {
+				headers.set("location", `${location}${url.search}`);
+			}
+			return { status, headers };
 		}
 	}
-
-	const location = headers.get("location");
-	if (!location || !status || status < 300 || status >= 400) {
-		return undefined;
-	}
-	// The captures come from the pathname only, so the query of the request has to be carried over.
-	// The location stays a relative path - resolving it against the request would turn a `//host`
-	// pathname into an absolute URL to another origin.
-	if (url.search && !location.includes("?")) {
-		headers.set("location", `${location}${url.search}`);
-	}
-	return { status, headers };
+	return undefined;
 }

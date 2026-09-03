@@ -103,4 +103,18 @@ describe("resolvePriorityRedirect", () => {
 
 		expect(resolve([route], "/blog")).toBeUndefined();
 	});
+
+	it("uses the first matching redirect", () => {
+		const first = { ...ADD_TRAILING_SLASH, headers: { Location: "/first" } };
+		const second = { ...ADD_TRAILING_SLASH, headers: { Location: "/second" } };
+
+		expect(resolve([first, second], "/blog")?.headers.get("location")).toBe("/first");
+	});
+
+	it("does not carry headers from an incomplete route into a later redirect", () => {
+		const incomplete = { ...ADD_TRAILING_SLASH, status: undefined, headers: { "x-first": "1" } };
+		const redirect = { ...ADD_TRAILING_SLASH, headers: { Location: "/second" } };
+
+		expect(resolve([incomplete, redirect], "/blog")?.headers.get("x-first")).toBeNull();
+	});
 });
