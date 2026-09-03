@@ -20,7 +20,7 @@ describe("validateConfig", () => {
 		const result = validateConfig(config);
 		expect(result.success).toBe(false);
 		expect(result.shouldThrow).toBe(true);
-		expect(result.message).toMatch(/Splitted function broken must have at least one route/);
+		expect(result.message).toMatch(/Split function broken must have at least one route/);
 	});
 
 	test("returns shouldThrow:false for incompatible wrapper and converter", () => {
@@ -32,6 +32,70 @@ describe("validateConfig", () => {
 		expect(result.shouldThrow).toBe(false);
 		expect(result.level).toBe("error");
 		expect(result.message).toMatch(/not compatible/);
+	});
+
+	test("normalizes full-path wrapper and converter overrides", () => {
+		const config = {
+			default: {
+				override: {
+					wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda.js",
+					converter: "@opennextjs/aws/overrides/converters/aws-apigw-v2.js",
+				},
+			},
+		} as unknown as OpenNextConfig;
+
+		expect(validateConfig(config)).toEqual({ success: true });
+	});
+
+	test.each([
+		["C:\\overrides\\wrappers\\aws-lambda.cts", "C:\\overrides\\converters\\aws-apigw-v2.mts"],
+		["/overrides/wrappers/aws-lambda.js", "/overrides/converters/aws-apigw-v2.mjs"],
+	])("normalizes Windows and POSIX override paths", (wrapper, converter) => {
+		const config = {
+			default: { override: { wrapper, converter } },
+		} as unknown as OpenNextConfig;
+
+		expect(validateConfig(config)).toEqual({ success: true });
+	});
+
+	test("does not validate a custom wrapper against the built-in compatibility matrix", () => {
+		const config = {
+			default: {
+				override: {
+					wrapper: async () => ({ name: "custom" }),
+					converter: "edge",
+				},
+			},
+		} as unknown as OpenNextConfig;
+
+		expect(validateConfig(config)).toEqual({ success: true });
+	});
+
+	test("returns a descriptive issue for an unknown wrapper", () => {
+		const config = {
+			default: { override: { wrapper: "typo", converter: "aws-apigw-v2" } },
+		} as unknown as OpenNextConfig;
+
+		expect(validateConfig(config)).toEqual({
+			success: false,
+			shouldThrow: false,
+			level: "error",
+			message: "Unknown wrapper typo",
+		});
+	});
+
+	test("returns a fatal route issue instead of an earlier warning", () => {
+		const config = {
+			default: { override: { generateDockerfile: true } },
+			functions: {
+				broken: { routes: [], runtime: "edge" },
+			},
+		} as unknown as OpenNextConfig;
+
+		const result = validateConfig(config);
+		expect(result.success).toBe(false);
+		expect(result.shouldThrow).toBe(true);
+		expect(result.message).toMatch(/Split function broken/);
 	});
 
 	test("returns shouldThrow:false for disabled incremental cache warning", () => {

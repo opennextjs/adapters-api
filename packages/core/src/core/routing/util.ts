@@ -203,15 +203,10 @@ export function unescapeRegex(str: string) {
 /**
  * @__PURE__
  */
-export function convertBodyToReadableStream(method: string, body?: string | Buffer) {
+export function convertBodyToReadableStream(method: string, body?: ReadableStream) {
 	if (method === "GET" || method === "HEAD") return undefined;
 	if (!body) return undefined;
-	return new ReadableStream({
-		start(controller) {
-			controller.enqueue(body);
-			controller.close();
-		},
-	});
+	return body;
 }
 
 enum CommonHeaders {

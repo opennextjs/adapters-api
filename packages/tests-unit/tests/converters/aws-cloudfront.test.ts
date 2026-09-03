@@ -1,6 +1,7 @@
 import { Readable } from "node:stream";
 
 import converter from "@opennextjs/aws/overrides/converters/aws-cloudfront.js";
+import { fromReadableStream } from "@opennextjs/core/utils/stream.js";
 import type { CloudFrontRequestEvent, CloudFrontRequestResult } from "aws-lambda";
 import { vi, describe, it, expect } from "vitest";
 
@@ -226,7 +227,7 @@ describe("convertFrom", () => {
 			method: "POST",
 			rawPath: "/",
 			url: "https://on/",
-			body: Buffer.from('{"message":"Hello, world!"}'),
+			body: expect.any(ReadableStream),
 			headers: {
 				"content-type": "application/json",
 			},
@@ -266,7 +267,7 @@ describe("convertFrom", () => {
 			method: "POST",
 			rawPath: "/",
 			url: "https://on/?hello=world&foo=1&foo=2",
-			body: Buffer.from('{"message":"Hello, world!"}'),
+			body: expect.any(ReadableStream),
 			headers: {
 				"content-type": "application/json",
 			},
@@ -309,7 +310,7 @@ describe("convertFrom", () => {
 			method: "POST",
 			rawPath: "/",
 			url: "https://on/",
-			body: Buffer.from('{"message":"Hello, world!"}'),
+			body: expect.any(ReadableStream),
 			headers: {
 				"content-type": "application/json",
 			},
@@ -317,5 +318,6 @@ describe("convertFrom", () => {
 			query: {},
 			cookies: {},
 		});
+		expect(await fromReadableStream(response.body!)).toEqual('{"message":"Hello, world!"}');
 	});
 });

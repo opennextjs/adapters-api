@@ -49,7 +49,7 @@ export type BuildCompleteContext = {
  */
 export type NextAdapter = {
 	name: string;
-	modifyConfig: (config: NextConfig, context: { phase: string; nextVersion?: string }) => Promise<NextConfig>;
+	modifyConfig: (config: NextConfig, { phase }: { phase: string }) => Promise<NextConfig>;
 	onBuildComplete: (props: BuildCompleteContext) => Promise<void>;
 };
 
@@ -62,6 +62,13 @@ export type OpenNextAdapterOptions<T = OpenNextOutput> = {
 	skipWarmer?: boolean;
 	skipGenerateOutput?: boolean;
 	middlewareOptions?: { forceOnlyBuildOnce?: boolean };
+	middlewareBundle?: {
+		additionalPlugins?: (updater: ContentUpdater, outputs: NextAdapterOutputs) => Plugin[];
+		additionalCodePatches?: CodePatcher[];
+		useEdgeConfig?: boolean;
+		externals?: string[];
+		banner?: string[] | ((name: string) => string[]);
+	};
 	serverBundle: {
 		additionalPlugins?: (updater: ContentUpdater, outputs: NextAdapterOutputs) => Plugin[];
 		additionalCodePatches?: CodePatcher[];
@@ -109,12 +116,7 @@ export function buildAdapter<T = OpenNextOutput>(
 	return {
 		name: "OpenNext",
 
-		async modifyConfig(nextConfig, { phase: _phase, nextVersion }) {
-			if (nextVersion && nextVersion !== "16.2.1") {
-				throw new Error(
-					`OpenNext routing requires next@16.2.1 and @next/routing@16.2.1; received next@${nextVersion}.`
-				);
-			}
+		async modifyConfig(nextConfig, { phase: _phase }) {
 			// Step 1: Compile OpenNext config with edge support, fallback on failure
 			let result: { config: OpenNextConfig; buildDir: string };
 			try {
@@ -197,23 +199,28 @@ export function buildAdapter<T = OpenNextOutput>(
 			const bundleDefaults = adapterOptions.defaultOverrides;
 
 			// Step 3: Create middleware
-			await createMiddleware(buildOpts, {
-				...adapterOptions.middlewareOptions,
-				defaultOverrides: bundleDefaults?.middleware,
-			});
-			console.log("Middleware created");
+			await createMiddleware(
+				buildOpts,
+				{
+					...adapterOptions.middlewareOptions,
+					defaultOverrides: bundleDefaults?.middleware,
+				},
+				ctx.outputs,
+				adapterOptions.middlewareBundle
+			);
+			logger.info("Middleware created");
 
 			// Step 4: Create static assets
 			createStaticAssets(buildOpts);
-			console.log("Static assets created");
+			logger.info("Static assets created");
 
 			// Step 5: Cache assets
 			if (buildOpts.config.dangerous?.disableIncrementalCache !== true) {
 				const { shouldUseTagCache } = createCacheAssets(buildOpts);
-				console.log("Cache assets created");
+				logger.info("Cache assets created");
 				if (shouldUseTagCache) {
 					await compileTagCacheProvider(buildOpts, bundleDefaults?.tagCache);
-					console.log("Tag cache provider compiled");
+					logger.info("Tag cache provider compiled");
 				}
 			}
 
@@ -236,7 +243,7 @@ export function buildAdapter<T = OpenNextOutput>(
 				},
 				ctx.outputs
 			);
-			console.log("Server bundle created");
+			logger.info("Server bundle created");
 
 			// Step 8: Call afterServerBundle hook
 			await adapterOptions.afterServerBundle?.(buildOpts, config);
@@ -244,19 +251,19 @@ export function buildAdapter<T = OpenNextOutput>(
 			// Step 9: Revalidation bundle
 			if (!adapterOptions.skipRevalidation) {
 				await createRevalidationBundle(buildOpts, bundleDefaults?.revalidation);
-				console.log("Revalidation bundle created");
+				logger.info("Revalidation bundle created");
 			}
 
 			// Step 10: Image optimization bundle
 			if (!adapterOptions.skipImageOptimization) {
 				await createImageOptimizationBundle(buildOpts, bundleDefaults?.imageOptimization);
-				console.log("Image optimization bundle created");
+				logger.info("Image optimization bundle created");
 			}
 
 			// Step 11: Warmer bundle
 			if (!adapterOptions.skipWarmer) {
 				await createWarmerBundle(buildOpts, bundleDefaults?.warmer);
-				console.log("Warmer bundle created");
+				logger.info("Warmer bundle created");
 			}
 
 			// Step 12: Generate output
@@ -268,7 +275,7 @@ export function buildAdapter<T = OpenNextOutput>(
 					path.join(buildOpts.appBuildOutputPath, ".open-next", "open-next.output.json"),
 					JSON.stringify(output)
 				);
-				console.log("Output generated");
+				logger.info("Output generated");
 			}
 		},
 	};

@@ -6,7 +6,7 @@ import { parseSetCookieHeader } from "@opennextjs/core/http/util.js";
 import { extractHostFromHeaders } from "@opennextjs/core/overrides/converters/utils.js";
 import type { InternalEvent, InternalResult, MiddlewareResult } from "@opennextjs/core/types/open-next.js";
 import type { Converter } from "@opennextjs/core/types/overrides.js";
-import { fromReadableStream } from "@opennextjs/core/utils/stream.js";
+import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream.js";
 import type {
 	CloudFrontCustomOrigin,
 	CloudFrontHeaders,
@@ -14,7 +14,6 @@ import type {
 	CloudFrontRequestEvent,
 	CloudFrontRequestResult,
 } from "aws-lambda";
-
 const cloudfrontBlacklistedHeaders = [
 	// Disallowed headers, see: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/edge-function-restrictions-all.html#function-restrictions-disallowed-headers
 	"connection",
@@ -82,7 +81,7 @@ async function convertFromCloudFrontRequestEvent(event: CloudFrontRequestEvent):
 		method,
 		rawPath: uri,
 		url: `https://${extractHostFromHeaders(headers)}${uri}${querystring ? `?${querystring}` : ""}`,
-		body: Buffer.from(body?.data ?? "", body?.encoding === "base64" ? "base64" : "utf8"),
+		body: body?.data ? toReadableStream(body.data, body.encoding === "base64") : undefined,
 		headers,
 		remoteAddress: clientIp,
 		query: convertToQuery(querystring),
