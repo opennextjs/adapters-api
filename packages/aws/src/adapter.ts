@@ -9,7 +9,7 @@ export default buildAdapter((_config, buildOpts: BuildOptions) => ({
 	defaultOverrides: {
 		server: {
 			wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda-streaming.js",
-			converter: "@opennextjs/aws/overrides/converters/aws-apigw-v2.js",
+			converter: "@opennextjs/aws/overrides/converters/aws-streaming.js",
 			incrementalCache: "@opennextjs/aws/overrides/incrementalCache/s3.js",
 			tagCache: "@opennextjs/aws/overrides/tagCache/dynamodb.js",
 			queue: "@opennextjs/aws/overrides/queue/sqs.js",

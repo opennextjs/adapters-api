@@ -12,10 +12,12 @@ const converter: Converter<DummyEventOrResult, DummyEventOrResult> = {
 			original: event,
 		});
 	},
-	convertTo(internalResult) {
+	convertTo() {
 		return Promise.resolve({
-			type: "dummy",
-			original: internalResult,
+			type: "direct" as const,
+			data(result) {
+				return Promise.resolve(result);
+			},
 		});
 	},
 	name: "dummy",

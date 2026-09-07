@@ -47,6 +47,17 @@ describe("validateConfig", () => {
 		expect(validateConfig(config)).toEqual({ success: true });
 	});
 
+	test.each(["aws-lambda-streaming", "@opennextjs/aws/overrides/wrappers/aws-lambda-streaming.js"])(
+		"uses the streaming converter by default for wrapper %s",
+		(wrapper) => {
+			const config = {
+				default: { override: { wrapper } },
+			} as unknown as OpenNextConfig;
+
+			expect(validateConfig(config)).toEqual({ success: true });
+		}
+	);
+
 	test.each([
 		["C:\\overrides\\wrappers\\aws-lambda.cts", "C:\\overrides\\converters\\aws-apigw-v2.mts"],
 		["/overrides/wrappers/aws-lambda.js", "/overrides/converters/aws-apigw-v2.mjs"],

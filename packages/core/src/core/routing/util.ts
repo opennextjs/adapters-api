@@ -104,21 +104,10 @@ export function convertRes(res: OpenNextNodeResponse): InternalResult {
 	// Probably some kind of race condition
 	const headers = parseHeaders(res.getFixedHeaders());
 	const isBase64Encoded = isBinaryContentType(headers["content-type"]) || !!headers["content-encoding"];
-	const body = new ReadableStream({
-		pull(controller) {
-			if (!res._chunks || res._chunks.length === 0) {
-				controller.close();
-				return;
-			}
-
-			controller.enqueue(res._chunks.shift());
-		},
-	});
 	return {
 		type: "core",
 		statusCode,
 		headers,
-		body,
 		isBase64Encoded,
 	};
 }

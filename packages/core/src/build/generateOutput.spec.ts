@@ -68,6 +68,22 @@ describe("buildOpenNextOutput", () => {
 		const output = await buildOpenNextOutput(opts);
 		expect(output.additionalProps?.revalidationFunction).toBeUndefined();
 	});
+
+	test("uses adapter defaults in generated function metadata", async () => {
+		const opts = createMockBuildOpts();
+		const output = await buildOpenNextOutput(opts, {
+			server: {
+				wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda-streaming.js",
+				converter: "@opennextjs/aws/overrides/converters/aws-streaming.js",
+			},
+		});
+
+		expect(output.origins.default).toMatchObject({
+			streaming: true,
+			wrapper: "aws-lambda-streaming",
+			converter: "aws-streaming",
+		});
+	});
 });
 
 describe("generateOutput (legacy wrapper)", () => {

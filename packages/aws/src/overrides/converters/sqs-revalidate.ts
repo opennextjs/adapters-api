@@ -14,12 +14,17 @@ const converter: Converter<RevalidateEvent, RevalidateEvent> = {
 			records,
 		});
 	},
-	convertTo(revalidateEvent) {
+	convertTo() {
 		return Promise.resolve({
-			type: "revalidate",
-			batchItemFailures: revalidateEvent.records.map((record) => ({
-				itemIdentifier: record.id,
-			})),
+			type: "direct" as const,
+			data(revalidateEvent) {
+				return Promise.resolve({
+					type: "revalidate",
+					batchItemFailures: revalidateEvent.records.map((record) => ({
+						itemIdentifier: record.id,
+					})),
+				});
+			},
 		});
 	},
 	name: "sqs-revalidate",

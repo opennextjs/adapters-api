@@ -6,7 +6,7 @@ import { parseSetCookieHeader } from "@opennextjs/core/http/util.js";
 import { extractHostFromHeaders } from "@opennextjs/core/overrides/converters/utils.js";
 import type { InternalEvent, InternalResult, MiddlewareResult } from "@opennextjs/core/types/open-next.js";
 import type { Converter } from "@opennextjs/core/types/overrides.js";
-import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream.js";
+import { toReadableStream } from "@opennextjs/core/utils/stream.js";
 import type {
 	CloudFrontCustomOrigin,
 	CloudFrontHeaders,
@@ -14,6 +14,9 @@ import type {
 	CloudFrontRequestEvent,
 	CloudFrontRequestResult,
 } from "aws-lambda";
+
+import { createBufferedStreamCreator } from "./response-stream.js";
+
 const cloudfrontBlacklistedHeaders = [
 	// Disallowed headers, see: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/edge-function-restrictions-all.html#function-restrictions-disallowed-headers
 	"connection",
@@ -128,59 +131,64 @@ function convertToCloudfrontHeaders(headers: Record<string, OutgoingHttpHeader>,
 	return cloudfrontHeaders;
 }
 
-async function convertToCloudFrontRequestResult(
-	result: InternalResult | MiddlewareResult,
+async function convertMiddlewareResult(
+	result: MiddlewareResult,
 	originalRequest: CloudFrontRequestEvent
 ): Promise<CloudFrontRequestResult> {
-	if (result.type === "middleware") {
-		const { method, clientIp, origin } = originalRequest.Records[0].cf.request;
-		const responseHeaders = result.internalEvent.headers;
+	const { method, clientIp, origin } = originalRequest.Records[0].cf.request;
+	const responseHeaders = result.internalEvent.headers;
 
-		// Handle external rewrite
+	// Handle external rewrite
 
-		let customOrigin = origin?.custom as CloudFrontCustomOrigin;
-		let host = responseHeaders.host ?? responseHeaders.Host;
-		if (result.origin) {
-			customOrigin = {
-				...customOrigin,
-				domainName: result.origin.host,
-				port: result.origin.port ?? 443,
-				protocol: result.origin.protocol ?? "https",
-				customHeaders: {},
-			};
-			host = result.origin.host;
-		}
-
-		const response: CloudFrontRequest = {
-			clientIp,
-			method,
-			uri: result.internalEvent.rawPath,
-			querystring: convertToQueryString(result.internalEvent.query).replace("?", ""),
-			headers: convertToCloudfrontHeaders({
-				...responseHeaders,
-				host,
-			}),
-			origin: origin?.custom
-				? {
-						custom: customOrigin,
-					}
-				: origin,
+	let customOrigin = origin?.custom as CloudFrontCustomOrigin;
+	let host = responseHeaders.host ?? responseHeaders.Host;
+	if (result.origin) {
+		customOrigin = {
+			...customOrigin,
+			domainName: result.origin.host,
+			port: result.origin.port ?? 443,
+			protocol: result.origin.protocol ?? "https",
+			customHeaders: {},
 		};
-
-		debug("response rewrite", response);
-
-		return response;
+		host = result.origin.host;
 	}
 
-	const body = await fromReadableStream(result.body, result.isBase64Encoded);
-	const responseHeaders = result.headers;
+	const response: CloudFrontRequest = {
+		clientIp,
+		method,
+		uri: result.internalEvent.rawPath,
+		querystring: convertToQueryString(result.internalEvent.query).replace("?", ""),
+		headers: convertToCloudfrontHeaders({
+			...responseHeaders,
+			host,
+		}),
+		origin: origin?.custom
+			? {
+					custom: customOrigin,
+				}
+			: origin,
+	};
 
+	debug("response rewrite", response);
+
+	return response;
+}
+
+function convertToCloudFrontRequestResult(
+	prelude: { statusCode: number; cookies: string[]; headers: Record<string, string> },
+	body: Buffer,
+	isBase64Encoded: boolean
+): CloudFrontRequestResult {
+	const responseHeaders = {
+		...prelude.headers,
+		...(prelude.cookies.length > 0 ? { "set-cookie": prelude.cookies } : {}),
+	};
 	const response: CloudFrontRequestResult = {
-		status: result.statusCode.toString(),
+		status: prelude.statusCode.toString(),
 		statusDescription: "OK",
 		headers: convertToCloudfrontHeaders(responseHeaders, true),
-		bodyEncoding: result.isBase64Encoded ? "base64" : "text",
-		body,
+		bodyEncoding: isBase64Encoded ? "base64" : "text",
+		body: body.toString(isBase64Encoded ? "base64" : "utf8"),
 	};
 
 	debug(response);
@@ -188,7 +196,18 @@ async function convertToCloudFrontRequestResult(
 }
 
 export default {
-	convertFrom: convertFromCloudFrontRequestEvent,
-	convertTo: convertToCloudFrontRequestResult,
+	convertFrom: (event) => convertFromCloudFrontRequestEvent(event as CloudFrontRequestEvent),
+	convertTo: async (event) => {
+		const { streamCreator, output } = createBufferedStreamCreator(convertToCloudFrontRequestResult);
+		return {
+			type: "stream" as const,
+			streamCreator,
+			output,
+			data: async (result) =>
+				result.type === "middleware"
+					? convertMiddlewareResult(result, event as CloudFrontRequestEvent)
+					: undefined,
+		};
+	},
 	name: "aws-cloudfront",
-} as Converter;
+} satisfies Converter<InternalEvent, InternalResult | MiddlewareResult>;

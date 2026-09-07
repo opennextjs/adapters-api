@@ -135,12 +135,14 @@ export async function openNextHandler(
 					);
 					response.statusCode = routingResult.statusCode;
 					response.flushHeaders();
-					const [bodyToConsume, bodyToReturn] = routingResult.body.tee();
-					for await (const chunk of bodyToConsume) {
-						response.write(chunk);
+					if (routingResult.body) {
+						const [bodyToConsume, bodyToReturn] = routingResult.body.tee();
+						for await (const chunk of bodyToConsume) {
+							response.write(chunk);
+						}
+						routingResult.body = bodyToReturn;
 					}
 					response.end();
-					routingResult.body = bodyToReturn;
 				}
 				return routingResult;
 			}
@@ -181,8 +183,10 @@ export async function openNextHandler(
 			if (routingResult.initialResponse) {
 				res.statusCode = routingResult.initialResponse.statusCode;
 				res.flushHeaders();
-				for await (const chunk of routingResult.initialResponse.body) {
-					res.write(chunk);
+				if (routingResult.initialResponse.body) {
+					for await (const chunk of routingResult.initialResponse.body) {
+						res.write(chunk);
+					}
 				}
 
 				//We create a special response for the PPR resume request
@@ -218,13 +222,12 @@ export async function openNextHandler(
 			});
 			//#endOverride
 
-			const { statusCode, headers: responseHeaders, isBase64Encoded, body } = convertRes(res);
+			const { statusCode, headers: responseHeaders, isBase64Encoded } = convertRes(res);
 
 			const internalResult = {
 				type: internalEvent.type,
 				statusCode,
 				headers: responseHeaders,
-				body,
 				isBase64Encoded,
 			};
 

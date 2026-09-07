@@ -1,10 +1,5 @@
-import { Writable } from "node:stream";
-
-import type { InternalEvent, InternalResult, StreamCreator } from "@/types/open-next";
+import type { InternalEvent, InternalResult } from "@/types/open-next";
 import type { Wrapper, WrapperHandler } from "@/types/overrides";
-
-// Response with null body status (101, 204, 205, or 304) cannot have a body.
-const NULL_BODY_STATUSES = new Set([101, 204, 205, 304]);
 
 const handler: WrapperHandler<InternalEvent, InternalResult> =
 	async (handler, converter) =>
@@ -25,101 +20,19 @@ const handler: WrapperHandler<InternalEvent, InternalResult> =
 		}
 
 		const internalEvent = await converter.convertFrom(request);
-		const url = new URL(request.url);
-
-		const { promise: promiseResponse, resolve: resolveResponse } = Promise.withResolvers<Response>();
-
-		const streamCreator: StreamCreator = {
-			writeHeaders(prelude: {
-				statusCode: number;
-				cookies: string[];
-				headers: Record<string, string>;
-			}): Writable {
-				const { statusCode, cookies, headers } = prelude;
-
-				const responseHeaders = new Headers(headers);
-				for (const cookie of cookies) {
-					responseHeaders.append("Set-Cookie", cookie);
-				}
-
-				// TODO(vicb): this is a workaround to make PPR work with `wrangler dev`
-				// See https://github.com/cloudflare/workers-sdk/issues/8004
-				if (url.hostname === "localhost") {
-					responseHeaders.set("Content-Encoding", "identity");
-				}
-
-				// Optimize: skip ReadableStream creation for null body statuses
-				if (NULL_BODY_STATUSES.has(statusCode)) {
-					const response = new Response(null, {
-						status: statusCode,
-						headers: responseHeaders,
-					});
-					resolveResponse(response);
-
-					// Return a no-op Writable that discards all data
-					return new Writable({
-						write(chunk, encoding, callback) {
-							callback();
-						},
-					});
-				}
-
-				let controller: ReadableStreamDefaultController<Uint8Array>;
-				const readable = new ReadableStream({
-					start(c) {
-						controller = c;
-					},
-				});
-
-				const response = new Response(readable, {
-					status: statusCode,
-					headers: responseHeaders,
-				});
-				resolveResponse(response);
-
-				return new Writable({
-					write(chunk, encoding, callback) {
-						try {
-							controller.enqueue(chunk);
-						} catch (e: unknown) {
-							return callback(e instanceof Error ? e : new Error(String(e)));
-						}
-						callback();
-					},
-					final(callback) {
-						controller.close();
-						callback();
-					},
-					destroy(error, callback) {
-						if (error) {
-							controller.error(error);
-						} else {
-							try {
-								controller.close();
-							} catch {
-								// Ignore "This ReadableStream is closed" error
-							}
-						}
-						callback(error);
-					},
-				});
-			},
-			// This is for passing along the original abort signal from the initial Request you retrieve in your worker
-			// Ensures that the response we pass to NextServer is aborted if the request is aborted
-			// By doing this `request.signal.onabort` will work in route handlers
-			abortSignal: abortSignal,
-			// There is no need to retain the chunks that were pushed to the response stream.
-			retainChunks: false,
-		};
+		const output = await converter.convertTo(request, { abortSignal });
+		if (output.type === "direct") {
+			return output.data(await handler(internalEvent));
+		}
 
 		ctx.waitUntil(
 			handler(internalEvent, {
-				streamCreator,
+				streamCreator: output.streamCreator,
 				waitUntil: ctx.waitUntil.bind(ctx),
 			})
 		);
 
-		return promiseResponse;
+		return output.output;
 	};
 
 export default {
