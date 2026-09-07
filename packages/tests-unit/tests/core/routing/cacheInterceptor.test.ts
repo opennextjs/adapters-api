@@ -2,7 +2,7 @@ import { cacheInterceptor } from "@opennextjs/core/core/routing/cacheInterceptor
 import { convertFromQueryString } from "@opennextjs/core/core/routing/util.js";
 import type { MiddlewareEvent } from "@opennextjs/core/types/open-next.js";
 import type { Queue } from "@opennextjs/core/types/overrides.js";
-import { fromReadableStream } from "@opennextjs/core/utils/stream.js";
+import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream.js";
 import { vi } from "vitest";
 
 vi.mock("@/config/index.js", () => ({
@@ -37,7 +37,7 @@ function createEvent(event: PartialEvent): MiddlewareEvent {
 		method: event.method ?? "GET",
 		rawPath,
 		url: event.url ?? "/",
-		body: Buffer.from(event.body ?? ""),
+		body: event.body !== undefined ? toReadableStream(event.body) : undefined,
 		headers: event.headers ?? {},
 		query: convertFromQueryString(qs ?? ""),
 		cookies: event.cookies ?? {},

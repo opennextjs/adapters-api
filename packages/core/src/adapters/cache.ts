@@ -45,7 +45,7 @@ export default class Cache {
 			const _lastModified = cachedEntry.lastModified ?? Date.now();
 			const _hasBeenRevalidated = cachedEntry.shouldBypassTagCache
 				? false
-				: await hasBeenRevalidated(key, _tags, cachedEntry);
+				: await hasBeenRevalidated<"fetch">(key, _tags, cachedEntry);
 
 			if (_hasBeenRevalidated) return null;
 
@@ -59,7 +59,7 @@ export default class Cache {
 				if (path) {
 					const hasPathBeenUpdated = cachedEntry.shouldBypassTagCache
 						? false
-						: await hasBeenRevalidated(path.replace(SOFT_TAG_PREFIX, ""), [], cachedEntry);
+						: await hasBeenRevalidated<"fetch">(path.replace(SOFT_TAG_PREFIX, ""), [], cachedEntry);
 					if (hasPathBeenUpdated) {
 						// In case the path has been revalidated, we don't want to use the fetch cache
 						return null;

@@ -19,10 +19,11 @@
 		"directory": "packages/cloudflare"
 	},
 	"bin": {
-		"opennextjs-cloudflare": "dist/cli/index.js"
+		"opennextjs-cloudflare": "bin/opennextjs-cloudflare.js"
 	},
 	"files": [
 		"README.md",
+		"bin",
 		"dist",
 		"templates"
 	],
@@ -72,14 +73,14 @@
 		"esbuild": "catalog:",
 		"globals": "catalog:",
 		"mock-fs": "catalog:",
-		"next": "catalog:",
+		"next": "catalog:aws",
 		"picomatch": "^4.0.2",
 		"rimraf": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"next": "^16.0.10",
+		"next": "16.2.1",
 		"wrangler": "catalog:"
 	}
 }

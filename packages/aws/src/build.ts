@@ -3,18 +3,8 @@ import path from "node:path";
 import url from "node:url";
 
 import { buildNextjsApp, setStandaloneBuildMode } from "@opennextjs/core/build/buildNextApp.js";
-import { compileCache } from "@opennextjs/core/build/compileCache.js";
 import { compileOpenNextConfig } from "@opennextjs/core/build/compileConfig.js";
-import { compileTagCacheProvider } from "@opennextjs/core/build/compileTagCacheProvider.js";
-import { createCacheAssets, createStaticAssets } from "@opennextjs/core/build/createAssets.js";
-import { createImageOptimizationBundle } from "@opennextjs/core/build/createImageOptimizationBundle.js";
-import { createMiddleware } from "@opennextjs/core/build/createMiddleware.js";
-import { createRevalidationBundle } from "@opennextjs/core/build/createRevalidationBundle.js";
-import { createServerBundle } from "@opennextjs/core/build/createServerBundle.js";
-import { createWarmerBundle } from "@opennextjs/core/build/createWarmerBundle.js";
-import { generateOutput } from "@opennextjs/core/build/generateOutput.js";
 import * as buildHelper from "@opennextjs/core/build/helper.js";
-import { patchOriginalNextConfig } from "@opennextjs/core/build/patch/patches/index.js";
 import { printHeader, showWarningOnWindows } from "@opennextjs/core/build/utils.js";
 import logger from "@opennextjs/core/logger.js";
 

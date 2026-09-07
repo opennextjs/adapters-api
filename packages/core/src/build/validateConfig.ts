@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import type {
 	FunctionOptions,
 	IncludedConverter,
@@ -6,7 +8,15 @@ import type {
 	SplittedFunctionOptions,
 } from "@/types/open-next";
 
-import logger from "../logger.js";
+export type ValidateConfigResult =
+	| { success: true }
+	| {
+			success: false;
+			message: string;
+			shouldThrow?: boolean;
+			/** Logging level the caller should use when shouldThrow is false. Defaults to "warn". */
+			level?: "warn" | "error";
+	  };
 
 const compatibilityMatrix: Record<IncludedWrapper, IncludedConverter[]> = {
 	"aws-lambda": ["aws-apigw-v1", "aws-apigw-v2", "aws-cloudfront", "sqs-revalidate"],
@@ -20,77 +30,161 @@ const compatibilityMatrix: Record<IncludedWrapper, IncludedConverter[]> = {
 	dummy: ["dummy"],
 };
 
-function validateFunctionOptions(fnOptions: FunctionOptions) {
-	const wrapper = typeof fnOptions.override?.wrapper === "string" ? fnOptions.override.wrapper : "aws-lambda";
+/**
+ * Extracts a built-in override name from a package or file specifier.
+ *
+ * @param value Override name or module specifier.
+ * @return The final filename without its extension.
+ */
+function normalizeOverrideName(value: string): string {
+	// The Win32 parser recognizes both `\` and `/`, regardless of the host OS.
+	return path.win32.parse(value).name;
+}
+
+/**
+ * Validates wrapper and converter options for one function.
+ *
+ * @param fnOptions Function options to validate.
+ * @return The first compatibility issue, or success.
+ */
+function validateFunctionOptions(fnOptions: FunctionOptions): ValidateConfigResult {
+	const wrapper =
+		typeof fnOptions.override?.wrapper === "string"
+			? normalizeOverrideName(fnOptions.override.wrapper)
+			: "aws-lambda";
 	const converter =
 		typeof fnOptions.override?.converter === "string"
-			? fnOptions.override.converter
+			? normalizeOverrideName(fnOptions.override.converter)
 			: wrapper === "aws-lambda-streaming"
 				? "aws-streaming"
 				: "aws-apigw-v2";
 	if (fnOptions.override?.generateDockerfile && converter !== "node" && wrapper !== "node") {
-		logger.warn(
-			"You've specified generateDockerfile without node converter and wrapper. Without custom converter and wrapper the dockerfile will not work"
-		);
+		return {
+			success: false,
+			shouldThrow: false,
+			level: "warn",
+			message:
+				"You've specified generateDockerfile without node converter and wrapper. Without custom converter and wrapper the dockerfile will not work",
+		};
 	}
 	if (converter === "aws-cloudfront" && fnOptions.placement !== "global") {
-		logger.warn(
-			"You've specified aws-cloudfront converter without global placement. This may not generate the correct output"
-		);
+		return {
+			success: false,
+			shouldThrow: false,
+			level: "warn",
+			message:
+				"You've specified aws-cloudfront converter without global placement. This may not generate the correct output",
+		};
 	}
 	const isCustomWrapper = typeof fnOptions.override?.wrapper === "function";
 	const isCustomConverter = typeof fnOptions.override?.converter === "function";
 	// Check if the wrapper and converter are compatible
 	// Only check if using one of the included converters or wrapper
-	if (!compatibilityMatrix[wrapper].includes(converter) && !isCustomWrapper && !isCustomConverter) {
-		logger.error(
-			`Wrapper ${wrapper} and converter ${converter} are not compatible. For the wrapper ${wrapper} you should only use the following converters: ${compatibilityMatrix[
-				wrapper
-			].join(", ")}`
-		);
+	const compatibleConverters = compatibilityMatrix[wrapper as IncludedWrapper];
+	if (!compatibleConverters && !isCustomWrapper) {
+		return {
+			success: false,
+			shouldThrow: false,
+			level: "error",
+			message: `Unknown wrapper ${wrapper}`,
+		};
 	}
+	if (
+		compatibleConverters &&
+		!compatibleConverters.includes(converter as IncludedConverter) &&
+		!isCustomWrapper &&
+		!isCustomConverter
+	) {
+		return {
+			success: false,
+			shouldThrow: false,
+			level: "error",
+			message: `Wrapper ${wrapper} and converter ${converter} are not compatible. For the wrapper ${wrapper} you should only use the following converters: ${compatibleConverters.join(", ")}`,
+		};
+	}
+	return { success: true };
 }
 
-function validateSplittedFunctionOptions(fnOptions: SplittedFunctionOptions, name: string) {
-	validateFunctionOptions(fnOptions);
+/**
+ * Validates one split function and its routes.
+ *
+ * @param fnOptions Split function options to validate.
+ * @param name Function name used in diagnostics.
+ * @return The first structural or compatibility issue, or success.
+ */
+function validateSplittedFunctionOptions(
+	fnOptions: SplittedFunctionOptions,
+	name: string
+): ValidateConfigResult {
 	if (fnOptions.routes.length === 0) {
-		throw new Error(`Splitted function ${name} must have at least one route`);
+		return {
+			success: false,
+			shouldThrow: true,
+			message: `Split function ${name} must have at least one route`,
+		};
 	}
-	// Check if the routes are properly formated
-	fnOptions.routes.forEach((route) => {
+	// Check if the routes are properly formatted
+	for (const route of fnOptions.routes) {
 		if (!route.startsWith("app/") && !route.startsWith("pages/")) {
-			throw new Error(
-				`Route ${route} in function ${name} is not a valid route. It should starts with app/ or pages/ depending on if you use page or app router`
-			);
+			return {
+				success: false,
+				shouldThrow: true,
+				message: `Route ${route} in function ${name} is not valid. It should start with app/ or pages/, depending on whether you use the app or pages router`,
+			};
 		}
-	});
-	if (fnOptions.runtime === "edge" && fnOptions.routes.length > 1) {
-		throw new Error(`Edge function ${name} can only have one route`);
 	}
+	if (fnOptions.runtime === "edge" && fnOptions.routes.length > 1) {
+		return {
+			success: false,
+			shouldThrow: true,
+			message: `Edge function ${name} can only have one route`,
+		};
+	}
+	return validateFunctionOptions(fnOptions);
 }
 
-export function validateConfig(config: OpenNextConfig) {
-	validateFunctionOptions(config.default);
-	Object.entries(config.functions ?? {}).forEach(([name, fnOptions]) => {
-		validateSplittedFunctionOptions(fnOptions, name);
-	});
+/**
+ * Validates an OpenNext configuration.
+ *
+ * Fatal structural issues take precedence over compatibility warnings so warnings cannot hide an invalid build.
+ *
+ * @param config OpenNext configuration to validate.
+ * @return A fatal issue, the first nonfatal issue, or success.
+ */
+export function validateConfig(config: OpenNextConfig): ValidateConfigResult {
+	const results: ValidateConfigResult[] = [validateFunctionOptions(config.default)];
+	for (const [name, fnOptions] of Object.entries(config.functions ?? {})) {
+		results.push(validateSplittedFunctionOptions(fnOptions, name));
+	}
 	if (config.dangerous?.disableIncrementalCache) {
-		logger.warn("You've disabled incremental cache. This means that ISR and SSG will not work.");
+		results.push({
+			success: false,
+			shouldThrow: false,
+			level: "warn",
+			message: "You've disabled incremental cache. This means that ISR and SSG will not work.",
+		});
 	}
 	if (config.dangerous?.disableTagCache) {
-		logger.warn(
-			`You've disabled tag cache.
+		results.push({
+			success: false,
+			shouldThrow: false,
+			level: "warn",
+			message: `You've disabled tag cache.
        This means that revalidatePath and revalidateTag from next/cache will not work.
-       It is safe to disable if you only use page router`
-		);
+       It is safe to disable if you only use page router`,
+		});
 	}
-	validateFunctionOptions(config.imageOptimization ?? {});
+	results.push(validateFunctionOptions(config.imageOptimization ?? {}));
 	if (config.middleware?.external === true) {
-		validateFunctionOptions(config.middleware ?? {});
+		results.push(validateFunctionOptions(config.middleware ?? {}));
 	}
 	//@ts-expect-error - Revalidate custom wrapper type is different
-	validateFunctionOptions(config.revalidate ?? {});
+	results.push(validateFunctionOptions(config.revalidate ?? {}));
 	//@ts-expect-error - Warmer custom wrapper type is different
-	validateFunctionOptions(config.warmer ?? {});
-	validateFunctionOptions(config.initializationFunction ?? {});
+	results.push(validateFunctionOptions(config.warmer ?? {}));
+	results.push(validateFunctionOptions(config.initializationFunction ?? {}));
+	return (
+		results.find((result) => !result.success && result.shouldThrow) ??
+		results.find((result) => !result.success) ?? { success: true }
+	);
 }

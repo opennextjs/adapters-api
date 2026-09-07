@@ -2,12 +2,16 @@ import fs from "node:fs";
 import path from "node:path";
 
 import logger from "../logger.js";
+import type { DefaultOverrides } from "../plugins/resolve.js";
 import { openNextResolvePlugin } from "../plugins/resolve.js";
 
 import * as buildHelper from "./helper.js";
 import { installDependencies } from "./installDeps.js";
 
-export async function createWarmerBundle(options: buildHelper.BuildOptions) {
+export async function createWarmerBundle(
+	options: buildHelper.BuildOptions,
+	defaultOverrides?: DefaultOverrides
+) {
 	logger.info("Bundling warmer function...");
 
 	const { config, outputDir } = options;
@@ -31,8 +35,12 @@ export async function createWarmerBundle(options: buildHelper.BuildOptions) {
 			plugins: [
 				openNextResolvePlugin({
 					overrides: {
-						converter: config.warmer?.override?.converter ?? "dummy",
+						converter: config.warmer?.override?.converter,
 						wrapper: config.warmer?.override?.wrapper,
+					},
+					defaultOverrides: {
+						converter: defaultOverrides?.converter ?? "dummy",
+						wrapper: defaultOverrides?.wrapper,
 					},
 					fnName: "warmer",
 				}),

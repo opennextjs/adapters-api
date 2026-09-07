@@ -30,7 +30,7 @@ test("Headers", async ({ page }) => {
 });
 
 /**
- * Tests that the middleware headers are applied after next.config.js headers. Requires 'dangerous.middlewareHeadersOverrideNextConfigHeaders' to be set.
+ * Tests that the middleware headers are applied after next.config.js headers.
  */
 test("Middleware headers override next.config.js headers", async ({ page }) => {
 	const responsePromise = page.waitForResponse((response) => {

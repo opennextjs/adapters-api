@@ -3,12 +3,16 @@ import os from "node:os";
 import path from "node:path";
 
 import logger from "../logger.js";
+import type { DefaultOverrides } from "../plugins/resolve.js";
 import { openNextResolvePlugin } from "../plugins/resolve.js";
 
 import * as buildHelper from "./helper.js";
 import { installDependencies } from "./installDeps.js";
 
-export async function createImageOptimizationBundle(options: buildHelper.BuildOptions) {
+export async function createImageOptimizationBundle(
+	options: buildHelper.BuildOptions,
+	defaultOverrides?: DefaultOverrides
+) {
 	logger.info("Bundling image optimization function...");
 
 	const { appBuildOutputPath, config, outputDir } = options;
@@ -27,6 +31,11 @@ export async function createImageOptimizationBundle(options: buildHelper.BuildOp
 				converter: config.imageOptimization?.override?.converter,
 				wrapper: config.imageOptimization?.override?.wrapper,
 				imageLoader: config.imageOptimization?.loader,
+			},
+			defaultOverrides: {
+				converter: defaultOverrides?.converter,
+				wrapper: defaultOverrides?.wrapper,
+				imageLoader: defaultOverrides?.imageLoader,
 			},
 		}),
 	];

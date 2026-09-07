@@ -86,7 +86,7 @@ export function createCacheAssets(options: buildHelper.BuildOptions) {
 	const { appBuildOutputPath, outputDir } = options;
 	const packagePath = buildHelper.getPackagePath(options);
 	const buildId = buildHelper.getBuildId(options);
-	let useTagCache = false;
+	let shouldUseTagCache = false;
 
 	const dotNextPath = appBuildOutputPath;
 
@@ -258,7 +258,7 @@ export function createCacheAssets(options: buildHelper.BuildOptions) {
 		});
 
 		if (metaFiles.length > 0) {
-			useTagCache = true;
+			shouldUseTagCache = true;
 			const providerPath = path.join(outputDir, "dynamodb-provider");
 
 			// Copy open-next.config.mjs into the bundle
@@ -270,5 +270,5 @@ export function createCacheAssets(options: buildHelper.BuildOptions) {
 		}
 	}
 
-	return { useTagCache, metaFiles };
+	return { shouldUseTagCache, metaFiles };
 }

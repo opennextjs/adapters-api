@@ -38,7 +38,14 @@ export async function compileOpenNextConfig(
 		process.exit(1);
 	}
 
-	validateConfig(config);
+	const validateResult = validateConfig(config);
+	if (!validateResult.success) {
+		if (validateResult.shouldThrow) {
+			throw new Error(validateResult.message);
+		}
+		const level = validateResult.level ?? "warn";
+		logger[level](validateResult.message);
+	}
 
 	// We need to check if the config uses the edge runtime at any point
 	// If it does, we need to compile it with the edge runtime

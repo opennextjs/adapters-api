@@ -1,4 +1,4 @@
-import { handleMiddleware } from "@opennextjs/core/core/routing/middleware.js";
+import { getMiddlewareMatchPath, handleMiddleware } from "@opennextjs/core/core/routing/middleware.js";
 import { convertFromQueryString } from "@opennextjs/core/core/routing/util.js";
 import type { InternalEvent } from "@opennextjs/core/types/open-next.js";
 import { toReadableStream } from "@opennextjs/core/utils/stream.js";
@@ -54,7 +54,7 @@ function createEvent(event: PartialEvent): InternalEvent {
 		method: event.method ?? "GET",
 		rawPath: pathname,
 		url,
-		body: Buffer.from(event.body ?? ""),
+		body: event.body !== undefined ? toReadableStream(event.body) : undefined,
 		headers: event.headers ?? {},
 		query: convertFromQueryString(search.slice(1)),
 		cookies: event.cookies ?? {},
@@ -247,6 +247,79 @@ describe("handleMiddleware", () => {
 		});
 	});
 
+	it("should cancel the middleware body branch after forwarding", async () => {
+		const cancel = vi.fn();
+		const event = {
+			...createEvent({ method: "POST" }),
+			body: new ReadableStream({
+				start(controller) {
+					controller.enqueue(new TextEncoder().encode("request"));
+				},
+				cancel,
+			}),
+		};
+		middleware.mockResolvedValue({
+			headers: new Headers({
+				"x-middleware-next": "1",
+			}),
+		});
+
+		const result = await handleMiddleware(event, "", middlewareLoader);
+		const reader = result.body!.getReader();
+		const { value } = await reader.read();
+		expect(new TextDecoder().decode(value)).toBe("request");
+		await reader.cancel();
+
+		expect(cancel).toHaveBeenCalledOnce();
+	});
+
+	it("should cancel both request body branches when processing the middleware result throws", async () => {
+		const cancel = vi.fn();
+		const event = {
+			...createEvent({ method: "POST" }),
+			body: new ReadableStream({ cancel }),
+		};
+		middleware.mockResolvedValue({
+			headers: new Headers({
+				"x-middleware-rewrite": "invalid-url",
+			}),
+		});
+
+		await expect(handleMiddleware(event, "", middlewareLoader)).rejects.toThrow();
+
+		await vi.waitFor(() => expect(cancel).toHaveBeenCalledOnce());
+	});
+
+	it("should cancel both request body branches for a direct response", async () => {
+		const cancel = vi.fn();
+		const event = {
+			...createEvent({ method: "POST" }),
+			body: new ReadableStream({ cancel }),
+		};
+		middleware.mockResolvedValue({
+			status: 200,
+			headers: new Headers(),
+			body: toReadableStream("response"),
+		});
+
+		await handleMiddleware(event, "", middlewareLoader);
+
+		await vi.waitFor(() => expect(cancel).toHaveBeenCalledOnce());
+	});
+
+	it("should cancel both request body branches when middleware throws", async () => {
+		const cancel = vi.fn();
+		const event = {
+			...createEvent({ method: "POST" }),
+			body: new ReadableStream({ cancel }),
+		};
+		middleware.mockRejectedValue(new Error("middleware failed"));
+
+		await expect(handleMiddleware(event, "", middlewareLoader)).rejects.toThrow("middleware failed");
+
+		await vi.waitFor(() => expect(cancel).toHaveBeenCalledOnce());
+	});
+
 	it("should return a response from middleware", async () => {
 		const event = createEvent({});
 		const body = toReadableStream("Hello, world!");
@@ -350,6 +423,37 @@ describe("handleMiddleware", () => {
 			expect.objectContaining({
 				url: "https://test.me/path?something=General%2520Banner",
 			})
+		);
+	});
+});
+
+describe("getMiddlewareMatchPath", () => {
+	it("should leave a regular pathname untouched", () => {
+		expect(getMiddlewareMatchPath("/foo", "build-id")).toBe("/foo");
+		expect(getMiddlewareMatchPath("/base/foo", "build-id", "/base")).toBe("/base/foo");
+	});
+
+	it("should normalize a `_next/data` pathname", () => {
+		expect(getMiddlewareMatchPath("/_next/data/build-id/foo.json", "build-id")).toBe("/foo");
+		expect(getMiddlewareMatchPath("/_next/data/build-id/en/foo/bar.json", "build-id")).toBe("/en/foo/bar");
+	});
+
+	it("should normalize the index `_next/data` pathname to the root", () => {
+		expect(getMiddlewareMatchPath("/_next/data/build-id/index.json", "build-id")).toBe("/");
+	});
+
+	it("should keep the basePath when normalizing a `_next/data` pathname", () => {
+		expect(getMiddlewareMatchPath("/base/_next/data/build-id/foo.json", "build-id", "/base")).toBe(
+			"/base/foo"
+		);
+		expect(getMiddlewareMatchPath("/base/_next/data/build-id/index.json", "build-id", "/base")).toBe(
+			"/base/"
+		);
+	});
+
+	it("should not normalize a `_next/data` pathname of another build", () => {
+		expect(getMiddlewareMatchPath("/_next/data/other-id/foo.json", "build-id")).toBe(
+			"/_next/data/other-id/foo.json"
 		);
 	});
 });

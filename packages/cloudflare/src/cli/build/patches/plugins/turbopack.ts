@@ -1,5 +1,6 @@
 import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
 import type { CodePatcher } from "@opennextjs/core/build/patch/codePatcher.js";
+import { normalizePath } from "@opennextjs/core/utils/normalize-path.js";
 import { getCrossPlatformPathRegex } from "@opennextjs/core/utils/regex.js";
 
 const inlineChunksRule = `
@@ -29,33 +30,44 @@ export const patchTurbopackRuntime: CodePatcher = {
 	],
 };
 
+/**
+ * Returns traced Turbopack chunks using paths that are valid in generated JavaScript.
+ *
+ * @param tracedFiles Files copied from the Next.js middleware trace.
+ * @returns Normalized chunk paths, excluding the runtime itself.
+ */
 function getInlinableChunks(tracedFiles: string[]): string[] {
 	const chunks = new Set<string>();
 	for (const file of tracedFiles) {
-		if (file === "[turbopack]_runtime.js") {
+		const normalizedFile = normalizePath(file);
+		if (normalizedFile.endsWith("/[turbopack]_runtime.js") || normalizedFile === "[turbopack]_runtime.js") {
 			continue;
 		}
-		if (file.includes(".next/server/chunks/")) {
-			chunks.add(file);
+		if (normalizedFile.includes(".next/server/chunks/")) {
+			chunks.add(normalizedFile);
 		}
 	}
 	return Array.from(chunks);
 }
 
-function inlineChunksFn(tracedFiles: string[]) {
+/**
+ * Generates a static Turbopack chunk loader for a middleware trace.
+ *
+ * @param tracedFiles Files copied from the Next.js middleware trace.
+ * @returns JavaScript source for the static chunk loader.
+ */
+function inlineChunksFn(tracedFiles: string[]): string {
 	// From the outputs, we extract every chunks
 	const chunks = getInlinableChunks(tracedFiles);
 	return `
   function requireChunk(chunkPath) {
     switch(chunkPath) {
 ${chunks
-	.map(
-		(chunk) =>
-			`      case "${
-				// we only want the path after /path/to/.next/
-				chunk.replace(/.*\/\.next\//, "")
-			}": return require("${chunk}");`
-	)
+	.map((chunk) => {
+		// We only want the path after /path/to/.next/ for the runtime lookup.
+		const chunkPath = chunk.replace(/.*\/\.next\//, "");
+		return `      case ${JSON.stringify(chunkPath)}: return require(${JSON.stringify(chunk)});`;
+	})
 	.join("\n")}
       default:
         throw new Error(\`Not found \${chunkPath}\`);

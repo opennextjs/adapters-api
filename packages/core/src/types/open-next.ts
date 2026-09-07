@@ -26,7 +26,7 @@ export type InternalEvent = {
 	readonly rawPath: string;
 	// Full URL - starts with "https://on/" when the host is not available
 	readonly url: string;
-	readonly body?: Buffer;
+	readonly body?: ReadableStream;
 	//TODO: change the type of headers to Record<string, string | string[]>
 	readonly headers: Record<string, string>;
 	readonly query: Record<string, string | string[]>;
@@ -93,17 +93,6 @@ export interface DangerousOptions {
 	 * This is executed for every request and after next config headers and middleware has executed.
 	 */
 	headersAndCookiesPriority?: (event: InternalEvent) => "middleware" | "handler";
-
-	/**
-	 * Configuration option to prioritize headers set via middleware over headers set via the option in the Next config.
-	 *
-	 * The default will change to 'true' in v4.
-	 *
-	 * See also {@link https://nextjs.org/docs/app/api-reference/file-conventions/middleware#execution-order}
-	 *
-	 * @default false
-	 */
-	middlewareHeadersOverrideNextConfigHeaders?: boolean;
 }
 
 export type BaseOverride = {
@@ -150,6 +139,11 @@ export interface ResolvedRoute {
 	 * They shouldn't be used to serve the request directly.
 	 */
 	isFallback: boolean;
+	/**
+	 * Indicates if the route is prerendered - it either has a build time cache entry or is a
+	 * dynamic route generating (and caching) its pages on demand.
+	 */
+	isISR?: boolean;
 }
 
 /**

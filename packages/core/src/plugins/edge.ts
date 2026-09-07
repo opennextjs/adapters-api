@@ -7,18 +7,13 @@ import type { Plugin } from "esbuild";
 import type { MiddlewareInfo } from "@/types/next-types.js";
 
 import {
-	loadAppPathRoutesManifest,
-	loadAppPathsManifest,
-	loadAppPathsManifestKeys,
 	loadBuildId,
 	loadConfig,
-	loadConfigHeaders,
 	loadFunctionsConfigManifest,
 	loadHtmlPages,
 	loadMiddlewareManifest,
-	loadPagesManifest,
 	loadPrerenderManifest,
-	loadRoutesManifest,
+	loadRoutingConfig,
 } from "../adapters/config/util.js";
 import logger from "../logger.js";
 import { normalizePath } from "../utils/normalize-path.js";
@@ -143,16 +138,11 @@ ${contents}
 			build.onLoad({ filter: getCrossPlatformPathRegex("adapters/config/index") }, async () => {
 				const NextConfig = loadConfig(nextDir);
 				const BuildId = loadBuildId(nextDir);
+				const RoutingConfig = loadRoutingConfig(nextDir);
 				const HtmlPages = loadHtmlPages(nextDir);
-				const RoutesManifest = loadRoutesManifest(nextDir);
-				const ConfigHeaders = loadConfigHeaders(nextDir);
 				const PrerenderManifest = loadPrerenderManifest(nextDir);
-				const AppPathsManifestKeys = loadAppPathsManifestKeys(nextDir);
 				const MiddlewareManifest = loadMiddlewareManifest(nextDir);
-				const AppPathsManifest = loadAppPathsManifest(nextDir);
-				const AppPathRoutesManifest = loadAppPathRoutesManifest(nextDir);
 				const FunctionsConfigManifest = loadFunctionsConfigManifest(nextDir);
-				const PagesManifest = loadPagesManifest(nextDir);
 
 				const contents = `
   import path from "node:path";
@@ -168,16 +158,11 @@ ${contents}
 
   export const NextConfig = ${JSON.stringify(NextConfig)};
   export const BuildId = ${JSON.stringify(BuildId)};
+  export const RoutingConfig = ${JSON.stringify(RoutingConfig)};
   export const HtmlPages = ${JSON.stringify(HtmlPages)};
-  export const RoutesManifest = ${JSON.stringify(RoutesManifest)};
-  export const ConfigHeaders = ${JSON.stringify(ConfigHeaders)};
   export const PrerenderManifest = ${JSON.stringify(PrerenderManifest)};
-  export const AppPathsManifestKeys = ${JSON.stringify(AppPathsManifestKeys)};
   export const MiddlewareManifest = ${JSON.stringify(MiddlewareManifest)};
-  export const AppPathsManifest = ${JSON.stringify(AppPathsManifest)};
-  export const AppPathRoutesManifest = ${JSON.stringify(AppPathRoutesManifest)};
   export const FunctionsConfigManifest = ${JSON.stringify(FunctionsConfigManifest)};
-  export const PagesManifest = ${JSON.stringify(PagesManifest)};
 
   process.env.NEXT_BUILD_ID = BuildId;
   process.env.NEXT_PREVIEW_MODE_ID = PrerenderManifest?.preview?.previewModeId;

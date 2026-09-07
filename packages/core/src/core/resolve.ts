@@ -19,7 +19,9 @@ export async function resolveConverter<
 	if (typeof converter === "function") {
 		return converter();
 	}
-	const m_1 = (await import("../overrides/converters/node.js")) as unknown as { default: Converter<E, R> };
+	const m_1 = (await import("../overrides/converters/node.js")) as unknown as {
+		default: Converter<E, R>;
+	};
 	return m_1.default;
 }
 
@@ -30,7 +32,9 @@ export async function resolveWrapper<
 	if (typeof wrapper === "function") {
 		return wrapper();
 	}
-	const m_1 = (await import("../overrides/wrappers/node.js")) as unknown as { default: Wrapper<E, R> };
+	const m_1 = (await import("../overrides/wrappers/node.js")) as unknown as {
+		default: Wrapper<E, R>;
+	};
 	return m_1.default;
 }
 
