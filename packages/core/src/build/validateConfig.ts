@@ -21,7 +21,7 @@ export type ValidateConfigResult =
 const compatibilityMatrix: Record<IncludedWrapper, IncludedConverter[]> = {
 	"aws-lambda": ["aws-apigw-v1", "aws-apigw-v2", "aws-cloudfront", "sqs-revalidate"],
 	"aws-lambda-compressed": ["aws-apigw-v2"],
-	"aws-lambda-streaming": ["aws-apigw-v2"],
+	"aws-lambda-streaming": ["aws-streaming"],
 	cloudflare: ["edge"],
 	"cloudflare-edge": ["edge"],
 	"cloudflare-node": ["edge"],
@@ -55,7 +55,9 @@ function validateFunctionOptions(fnOptions: FunctionOptions): ValidateConfigResu
 	const converter =
 		typeof fnOptions.override?.converter === "string"
 			? normalizeOverrideName(fnOptions.override.converter)
-			: "aws-apigw-v2";
+			: wrapper === "aws-lambda-streaming"
+				? "aws-streaming"
+				: "aws-apigw-v2";
 	if (fnOptions.override?.generateDockerfile && converter !== "node" && wrapper !== "node") {
 		return {
 			success: false,

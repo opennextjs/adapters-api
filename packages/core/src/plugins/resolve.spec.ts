@@ -91,6 +91,7 @@ const AWS_PKG_MODULES = [
 	"overrides/wrappers/aws-lambda.js",
 	"overrides/wrappers/aws-lambda-streaming.js",
 	"overrides/converters/aws-apigw-v2.js",
+	"overrides/converters/aws-streaming.js",
 	"overrides/tagCache/dynamodb.js",
 	"overrides/queue/sqs.js",
 	"overrides/incrementalCache/s3.js",
@@ -252,7 +253,7 @@ describe("openNextResolvePlugin", () => {
 			overrides: {},
 			defaultOverrides: {
 				wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda-streaming.js",
-				converter: "@opennextjs/aws/overrides/converters/aws-apigw-v2.js",
+				converter: "@opennextjs/aws/overrides/converters/aws-streaming.js",
 				incrementalCache: "@opennextjs/aws/overrides/incrementalCache/s3.js",
 				tagCache: "@opennextjs/aws/overrides/tagCache/dynamodb.js",
 				queue: "@opennextjs/aws/overrides/queue/sqs.js",
@@ -260,7 +261,7 @@ describe("openNextResolvePlugin", () => {
 			fnName: "server",
 		});
 		expect(contents).toContain(pkg("@opennextjs/aws", "wrappers/aws-lambda-streaming.js"));
-		expect(contents).toContain(pkg("@opennextjs/aws", "converters/aws-apigw-v2.js"));
+		expect(contents).toContain(pkg("@opennextjs/aws", "converters/aws-streaming.js"));
 		expect(contents).toContain(pkg("@opennextjs/aws", "incrementalCache/s3.js"));
 		expect(contents).toContain(pkg("@opennextjs/aws", "tagCache/dynamodb.js"));
 		expect(contents).toContain(pkg("@opennextjs/aws", "queue/sqs.js"));
