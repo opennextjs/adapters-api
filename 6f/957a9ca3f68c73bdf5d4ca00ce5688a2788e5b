@@ -1,0 +1,237 @@
+.changeset/config.json
+  s_9ce9cd18aa88c7::t_85f3706cdaa7e9 2
+.github/actions/setup-playwright/action.yml
+  s_9ce9cd18aa88c7::t_056598fdbdf90a 14
+.github/actions/setup/action.yml
+  s_9ce9cd18aa88c7::t_e70a1772992cb2 13,15,18
+.github/workflows/changesets.yml
+  s_9ce9cd18aa88c7::t_4cf9e194a6ae98 10-11,19,38,40-41
+.github/workflows/checks.yml
+  s_9ce9cd18aa88c7::t_3a09fd9b6381f9 21
+.github/workflows/e2e.yml
+  s_9ce9cd18aa88c7::t_1a5e7b12c16a91 47,83,88,95,97,100,128,162,165,167-168,175
+.github/workflows/local.yml
+  s_9ce9cd18aa88c7::t_c6280fc264e8d0 22,78
+.github/workflows/playwright.yml
+  s_9ce9cd18aa88c7::t_0046a5c36f59eb 17,38
+.github/workflows/prereleases.yml
+  s_9ce9cd18aa88c7::t_b6535c6e880b78 14,21
+.oxlintrc.json
+  s_9ce9cd18aa88c7::t_fe5a7d9e5e22d6 17
+README.md
+  s_9ce9cd18aa88c7::t_0f84f53d4b07eb 63,65,68-71,75,107-115,121-137,140-142,145,151-162
+examples-cloudflare/e2e/app-pages-router/package.json
+  s_9ce9cd18aa88c7::t_7c2bc15392370c 12-13,17
+examples-cloudflare/e2e/app-router/e2e/headers.test.ts
+  s_9ce9cd18aa88c7::t_d61fdc4ad66e7a 32
+examples-cloudflare/e2e/app-router/e2e/middleware.rewrite.test.ts
+  s_9ce9cd18aa88c7::t_863cc7c036d66a 26-32,66
+examples-cloudflare/e2e/app-router/open-next.config.ts
+  s_9ce9cd18aa88c7::t_e8f3cd923ab4e1 27
+examples-cloudflare/e2e/app-router/package.json
+  s_013bbfdbbae39f::t_73f60cd37f37ef 12-13
+examples-cloudflare/e2e/app-router/proxy.ts
+  s_9ce9cd18aa88c7::t_c004bb8207a1d9 4,50
+examples-cloudflare/e2e/experimental/package.json
+  s_9ce9cd18aa88c7::t_091821cf013272 11-12
+examples-cloudflare/e2e/pages-router/package.json
+  s_9ce9cd18aa88c7::t_5b77a05a3b03ba 12-13
+examples-cloudflare/playground16/package.json
+  s_9ce9cd18aa88c7::t_b3050227eb1b2a 20
+examples/app-router/proxy.ts
+  s_9ce9cd18aa88c7::t_7b2406cc7b82d1 50
+package.json
+  s_9ce9cd18aa88c7::t_b3f1fa8e943cfb 31,35,40-42
+packages/aws/bin/open-next.js
+  s_9ce9cd18aa88c7::t_2470157950c36f 1,3
+packages/aws/package.json
+  s_9ce9cd18aa88c7::t_9decf7c635ec8c 18,22,79
+packages/aws/src/adapter.ts
+  s_9ce9cd18aa88c7::t_6cafc68fec93b1 12,40
+packages/aws/src/overrides/converters/aws-apigw-v1.ts
+  s_9ce9cd18aa88c7::t_f3b3c948bde7ca 6,8,11-12,77,93-97,100,111-113,116,118-119,127-131,133
+packages/aws/src/overrides/converters/aws-apigw-v2.ts
+  s_9ce9cd18aa88c7::t_0c8ebd91d3eead 1-2,10,12,15-16,43,46,49,52,54,75-77,101-105,107,124,126-133,140-144,146
+packages/aws/src/overrides/converters/aws-cloudfront.ts
+  s_9ce9cd18aa88c7::t_1f9961ad02657d 9,18-19,87,134-135,138-151,153-154,156-170,172,174-175,177-185,187,190-191,199-211,213
+packages/aws/src/overrides/converters/aws-streaming.ts
+  s_9ce9cd18aa88c7::t_dcbce1c5f77d73 1-41
+packages/aws/src/overrides/converters/response-stream.ts
+  s_9ce9cd18aa88c7::t_72ffaff4ecd14b 1-45
+packages/aws/src/overrides/converters/sqs-revalidate.ts
+  s_9ce9cd18aa88c7::t_00d6be23daeba1 17,19-27
+packages/aws/src/overrides/wrappers/aws-lambda-compressed.ts
+  s_9ce9cd18aa88c7::t_1e0a5a7d793046 1,4,21-23,37-41,50-62,64-88
+packages/aws/src/overrides/wrappers/aws-lambda-streaming.ts
+  s_9ce9cd18aa88c7::t_49ad29235da9a8 4,72-80,82-84
+packages/aws/src/overrides/wrappers/aws-lambda.ts
+  s_9ce9cd18aa88c7::t_227f54442fd4bd 24-30
+packages/cloudflare/bin/opennextjs-cloudflare.js
+  s_9ce9cd18aa88c7::t_61ecd297b12cc3 1-3
+packages/cloudflare/package.json
+  s_9ce9cd18aa88c7::t_bc888162cb7133 22,26,77,84
+packages/cloudflare/src/cli/adapter.ts
+  s_013bbfdbbae39f::t_15e680e8e62cd6 24,26,42,60,62,74-75,98-126
+packages/cloudflare/src/cli/build/patches/ast/webpack-runtime.spec.ts
+  s_9ce9cd18aa88c7::t_bc10f8570762ec 4-8,117-145
+packages/cloudflare/src/cli/build/patches/ast/webpack-runtime.ts
+  s_9ce9cd18aa88c7::t_035d414daaa138 12-13,28-29,55,74-111,127-132,147
+packages/cloudflare/src/cli/build/patches/plugins/opentelemetry.spec.ts
+  s_9ce9cd18aa88c7::t_e0f2841b1252d2 1-42
+packages/cloudflare/src/cli/build/patches/plugins/opentelemetry.ts
+  s_9ce9cd18aa88c7::t_d0fcf84775d141 1-41
+packages/cloudflare/src/cli/build/patches/plugins/turbopack.spec.ts
+  s_9ce9cd18aa88c7::t_c3553d02b27e74 1-50
+packages/cloudflare/src/cli/build/patches/plugins/turbopack.ts
+  s_9ce9cd18aa88c7::t_8a430975f25272 3,33-38,42-43,46-47,53-59,66-70
+packages/cloudflare/src/cli/utils/nextjs-support.spec.ts
+  s_9ce9cd18aa88c7::t_784e8ddef1da8a 1,3-14
+packages/cloudflare/src/cli/utils/nextjs-support.ts
+  s_9ce9cd18aa88c7::t_43ac8aac0c1ce0 4-13
+packages/core/package.json
+  s_9ce9cd18aa88c7::t_46e66ee04ba139 72-73
+packages/core/src/adapters/config/index.ts
+  s_9ce9cd18aa88c7::t_19fb15697717b7 12,22
+packages/core/src/adapters/config/util.ts
+  s_9ce9cd18aa88c7::t_8174384ead2395 4,18,20-25,29,35-36,39-44,47-49,57,61,67,69
+packages/core/src/build/adapter.spec.ts
+  s_013bbfdbbae39f::t_f3160a051bcbf0 63-66,104,138-145,160,164-167,190,196,204,221,238,260,272-279,285,298,302-304,318,325,358,374,392,407,422,438,449-460,494-531,533,537,553,567,576,585,602,607,617-621
+packages/core/src/build/adapter.ts
+  s_013bbfdbbae39f::t_5762af25545b6f 11,22,37,44,65,72-83,103,192,196,198-199,204-213,217,221-223,225,230-232,240-243,248,256,262,268,275,280
+packages/core/src/build/copyAdapterFiles.ts
+  s_9ce9cd18aa88c7::t_431d24c950a282 14-15,17,27,31
+packages/core/src/build/createAssets.ts
+  s_9ce9cd18aa88c7::t_8b3d35df656bbe 89,261,273
+packages/core/src/build/createMiddleware.ts
+  s_9ce9cd18aa88c7::t_d2237602376786 5,11,17-18,30-32,50
+packages/core/src/build/createRoutingConfig.ts
+  s_9ce9cd18aa88c7::t_14394bec9a15fc 1-185
+packages/core/src/build/createServerBundle.ts
+  s_013bbfdbbae39f::t_671f7a6cf31a1d 34-36,43,61,133,156,178-182,184,202,222,228,262,264,269
+packages/core/src/build/generateOutput.spec.ts
+  s_9ce9cd18aa88c7::t_fc347dd846424b 71-86
+packages/core/src/build/generateOutput.ts
+  s_9ce9cd18aa88c7::t_94da0042c13ebd 14-15,96-103,106-107,109,127-140,163-166,191-201,207,211-215,221,225,230-232,266-270,277-278,285-286,297,303-304,307,313-314
+packages/core/src/build/middleware/buildNodeMiddleware.spec.ts
+  s_9ce9cd18aa88c7::t_d863a39afa83a5 1-224
+packages/core/src/build/middleware/buildNodeMiddleware.ts
+  s_9ce9cd18aa88c7::t_f8ecaa54bdb779 4,8,12-14,17-18,24-35,38-40,42,48-52,55-57,63-64,66-76,78-80,86-115,121-124,155-157,160,176-178
+packages/core/src/build/normalizeRouting.ts
+  s_9ce9cd18aa88c7::t_c975290515cffc 1,3-9,11,13,15-16,18-22,25-26,29-34,36-42,46-50,52-58,60-73,75-86,88-90,92-99,101-107,111-121,124-133,135-145,147,150-170,172-185,188-196,198-202,205-220,222-240,243
+packages/core/src/build/validateConfig.spec.ts
+  s_9ce9cd18aa88c7::t_c496e706ed877b 23,37-111
+packages/core/src/build/validateConfig.ts
+  s_9ce9cd18aa88c7::t_fda4867b3bb1c4 1-2,11-19,24,33-49,51-54,56-60,83-97,102,108-114,123,126,132,143,146-153,155,157,160,165,168,175,177,179,182,184-189
+packages/core/src/core/nodeMiddlewareHandler.ts
+  s_9ce9cd18aa88c7::t_227886e8f69161 5-6,31-32
+packages/core/src/core/requestHandler.ts
+  s_9ce9cd18aa88c7::t_4da290f5b0d751 138-143,186-189,225
+packages/core/src/core/routing/cacheInterceptor.ts
+  s_9ce9cd18aa88c7::t_780a740b4e1f67 147
+packages/core/src/core/routing/middleware.ts
+  s_9ce9cd18aa88c7::t_46abc6df204022 37-74,81,89,98-125,137-154,156-163,165-187,191-204,206-209,211-227
+packages/core/src/core/routing/priorityRoutes.ts
+  s_9ce9cd18aa88c7::t_9be3ca52f3502f 1-125
+packages/core/src/core/routing/util.ts
+  s_9ce9cd18aa88c7::t_90140acf4e2a66 195,198
+packages/core/src/core/routingHandler.ts
+  s_9ce9cd18aa88c7::t_20808bd83e4b56 1-3,12,15,19-21,32-33,42-71,73,75-77,79-82,84,87-213,216-219,235-304,306-344,346-348,351-358,360-367,370-378,382-402,405-420,423-438,440-444,447-449,451,453,457-461,464-478,481-483,485,488-489,494,499-501
+packages/core/src/http/request.ts
+  s_9ce9cd18aa88c7::t_11d1b0a05623a1 7,20,44-91
+packages/core/src/overrides/converters/dummy.ts
+  s_9ce9cd18aa88c7::t_d23d0a7712693b 15,17-20
+packages/core/src/overrides/converters/edge.ts
+  s_9ce9cd18aa88c7::t_8c1826cb251a9e 1-2,7,36,53-66,69-72,75-119,121-132,137-206
+packages/core/src/overrides/converters/node.ts
+  s_9ce9cd18aa88c7::t_d51194c015fc37 1-3,7,15-16,44-65
+packages/core/src/overrides/proxyExternalRequest/node.ts
+  s_9ce9cd18aa88c7::t_98dcb03e3fd57b 3,39-47,80,84-87,90-94
+packages/core/src/overrides/wrappers/cloudflare-edge.ts
+  s_9ce9cd18aa88c7::t_3840ac0502230d 33,47-50,52,55-56
+packages/core/src/overrides/wrappers/cloudflare-node.ts
+  s_9ce9cd18aa88c7::t_3852ee4cefe502 1,23-26,30,35
+packages/core/src/overrides/wrappers/dummy.ts
+  s_9ce9cd18aa88c7::t_0564bd4cfc2474 5,8-12
+packages/core/src/overrides/wrappers/express-dev.ts
+  s_9ce9cd18aa88c7::t_27def4accdb74c 24-29,40-46
+packages/core/src/overrides/wrappers/node.ts
+  s_9ce9cd18aa88c7::t_22c384d89f6737 10,18-23
+packages/core/src/plugins/edge.ts
+  s_9ce9cd18aa88c7::t_de1e69ff68097c 16,141,161
+packages/core/src/plugins/resolve.spec.ts
+  s_9ce9cd18aa88c7::t_ce3b7c17989e68 1,3,5-6,65-80,82-108,111-131,133-142,144-160,163-165,168,173-174,178,183-184,188,193,197,213-226,230,235-236,242,247-248,252,256,263-269,273,278-279,282-283,285,289,291,297-324
+packages/core/src/plugins/resolve.ts
+  s_9ce9cd18aa88c7::t_b23c834d965aee 3,57-61,63-66,86-107,121-132,135-137,140-170,173
+packages/core/src/types/adapter.ts
+  s_9ce9cd18aa88c7::t_28ae64403db32c 1-2,4-5,11-25,31-32,36-63
+packages/core/src/types/open-next.ts
+  s_9ce9cd18aa88c7::t_84d5233607b269 29,46,126,142-146
+packages/core/src/types/overrides.ts
+  s_9ce9cd18aa88c7::t_235ed70f56cf8d 228-250,256-262
+packages/tests-e2e/tests/appRouter/headers.test.ts
+  s_9ce9cd18aa88c7::t_422ed9566bf0bb 33
+packages/tests-e2e/tests/appRouter/middleware.rewrite.test.ts
+  s_9ce9cd18aa88c7::t_fd423d4749c168 59
+packages/tests-unit/tests/build/copyAdapterFiles.test.ts
+  s_9ce9cd18aa88c7::t_628d67ba79cb50 1-138
+packages/tests-unit/tests/build/createRoutingConfig.test.ts
+  s_9ce9cd18aa88c7::t_da11b88a5848b9 1-235
+packages/tests-unit/tests/build/normalizeRouting.test.ts
+  s_9ce9cd18aa88c7::t_4d069bf5e700e8 1-272
+packages/tests-unit/tests/converters/aws-apigw-v1.test.ts
+  s_9ce9cd18aa88c7::t_d82a6f77427ba0 4,8-29,33,50,65,115,154,195,236,277,320,328
+packages/tests-unit/tests/converters/aws-apigw-v2.test.ts
+  s_9ce9cd18aa88c7::t_01694bde420430 4,10-31,34,51,67,154,191,232,272,280
+packages/tests-unit/tests/converters/aws-cloudfront.test.ts
+  s_9ce9cd18aa88c7::t_8acb26a643812a 4,10-31,34,62,87,113,140,252,292,335,343
+packages/tests-unit/tests/converters/aws-streaming.test.ts
+  s_9ce9cd18aa88c7::t_56222cdc3f6be5 1-54
+packages/tests-unit/tests/converters/node.test.ts
+  s_9ce9cd18aa88c7::t_21e3b887dc766c 3,27,56,82,111,140,159,174,180,194,209,216
+packages/tests-unit/tests/converters/sqs-revalidate.test.ts
+  s_9ce9cd18aa88c7::t_d399b2ad1fedd9 1-25
+packages/tests-unit/tests/core/routing/cacheInterceptor.test.ts
+  s_9ce9cd18aa88c7::t_988b1bf0900ecb 5,40
+packages/tests-unit/tests/core/routing/i18n.test.ts
+  s_9ce9cd18aa88c7::t_08a3d2e18e9fe6 4,32
+packages/tests-unit/tests/core/routing/middleware.test.ts
+  s_9ce9cd18aa88c7::t_63f46523b540f4 1,57,250-322,429-459
+packages/tests-unit/tests/core/routing/priorityRoutes.test.ts
+  s_9ce9cd18aa88c7::t_a1496de26f4097 1-120
+packages/tests-unit/tests/core/routing/routingHandler.middleware.test.ts
+  s_9ce9cd18aa88c7::t_fff1a4399998b1 1-150
+packages/tests-unit/tests/core/routing/routingHandler.test.ts
+  s_9ce9cd18aa88c7::t_d5d333f424ce5e 1-2,5-17,20,22-25,28-31,34-36,38-39,41-42,44-45,48-49,52-54,57-58,61-67,72,75-77,79-82,84,88-89,91-94,96,100-101,103-105,109-110,112-116,118,122-123,125,128-129,131-134,138-139,141-143,147-148,150-152,154-156,159-160,162,164-166,168,172-173,175,178-180,185-186,188-190
+packages/tests-unit/tests/core/routing/routingHandler.trailingSlash.test.ts
+  s_9ce9cd18aa88c7::t_80dbf21b2d542b 1-2,5-11,13-35,37-38,40-44,47-50,53-58,61-63,66-78,80-82,84-86,88-90,92-93,95-96,99-100,102-105,107-112,114-117,119-124
+packages/tests-unit/tests/core/routing/util.test.ts
+  s_9ce9cd18aa88c7::t_36e67bb34e459e 237,260,283,452-458
+pnpm-lock.yaml
+  s_9ce9cd18aa88c7::t_98c98d68c060e1 122-123,134-135,504-505,826-827,927-928,947-949,972-973,1788-1790,1792-1794,1796-1798,1803-1805,1808-1810,1812-1814,1816-1822,1827-1829,1831-1833,1835-1837,1839-1841,1843-1845,1847-1848,1850-1852,1854-1856,1858-1860,1862-1864,2976-2978,2980-2982,2984-2986,2994-2995,3233-3236,4621-4624,5218-5223,5234-5236,5403,5417,5422,5517-5518,5553-5555,5736-5738,5780-5781,5820-5822,6343-6344,6422-6425,6434-6435,6771-6772,6776-6777,6816-6819,6860-6862,7083-7088,7591-7595,9924,9926-9933,9935,9937-9941,9943,9945,9955-9997,10006,10008-10012,10014,10016-10017,10019,10021-10023,10025,10027-10029,10031,10033,10035,10037,10039-10043,10045-10048,10050,10052-10055,10762,10764,10766,10768-10769,10771-10775,10781,10942-10943,12761-12762,13506-13511,13523-13526,13553-13556,13851,13879-13880,14076-14077,14132,14161-14165,14576-14601,14717,14771,14773,14777,15142-15143,15244-15245,15299-15300,15665-15667,15669-15670,16155-16156
+pnpm-workspace.yaml
+  s_9ce9cd18aa88c7::t_c65531b4717608 10-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6f957a9ca3f68c73bdf5d4ca00ce5688a2788e5b",
+  "prompts": {},
+  "sessions": {
+    "s_013bbfdbbae39f": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f50111acaffeDX6mhtNcJdNtK1",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    },
+    "s_9ce9cd18aa88c7": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f5054bdabffe0Cy7W3SWNVFhj7",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
