@@ -2,15 +2,19 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { loadFunctionsConfigManifest, loadMiddlewareManifest } from "@/config/util.js";
+import type { NextAdapterOutputs } from "@/types/adapter.js";
 
 import logger from "../logger.js";
 import type { DefaultOverrides } from "../plugins/resolve.js";
 import type { MiddlewareInfo } from "../types/next-types.js";
 
+import type { OpenNextAdapterOptions } from "./adapter.js";
 import { buildEdgeBundle, copyMiddlewareResources } from "./edge/createEdgeBundle.js";
 import * as buildHelper from "./helper.js";
 import { installDependencies } from "./installDeps.js";
 import { buildBundledNodeMiddleware, buildExternalNodeMiddleware } from "./middleware/buildNodeMiddleware.js";
+
+type MiddlewareBundle = NonNullable<OpenNextAdapterOptions["middlewareBundle"]>;
 
 /**
  * Compiles the middleware bundle.
@@ -23,7 +27,9 @@ export async function createMiddleware(
 	{
 		forceOnlyBuildOnce = false,
 		defaultOverrides,
-	}: { forceOnlyBuildOnce?: boolean; defaultOverrides?: DefaultOverrides } = {}
+	}: { forceOnlyBuildOnce?: boolean; defaultOverrides?: DefaultOverrides } = {},
+	nextOutputs?: NextAdapterOutputs,
+	middlewareBundle?: MiddlewareBundle
 ) {
 	logger.info("Bundling middleware function...");
 
@@ -41,7 +47,7 @@ export async function createMiddleware(
 
 		if (functionsConfigManifest?.functions["/_middleware"]) {
 			await (config.middleware?.external
-				? buildExternalNodeMiddleware(options, defaultOverrides)
+				? buildExternalNodeMiddleware(options, defaultOverrides, nextOutputs, middlewareBundle)
 				: buildBundledNodeMiddleware(options));
 			return;
 		}

@@ -153,6 +153,7 @@ async function generateBundle(
 	// Normal cache
 	fs.copyFileSync(path.join(options.buildDir, `cache.${ext}`), path.join(outPackagePath, "cache.cjs"));
 	// Composable cache
+	fs.mkdirSync(path.join(outPackagePath, ".next"), { recursive: true });
 	fs.copyFileSync(
 		path.join(options.buildDir, `composable-cache.${ext}`),
 		path.join(outPackagePath, "composable-cache.cjs")
@@ -173,6 +174,11 @@ async function generateBundle(
 
 		copyMiddlewareResources(options, middlewareManifest.middleware["/"], outPackagePath);
 	}
+
+	fs.copyFileSync(
+		path.join(options.appBuildOutputPath, ".next", "open-next-routing.json"),
+		path.join(outPackagePath, ".next", "open-next-routing.json")
+	);
 
 	// Copy open-next.config.mjs
 	buildHelper.copyOpenNextConfig(options.buildDir, outPackagePath, codeCustomization.useEdgeConfig ?? false);
