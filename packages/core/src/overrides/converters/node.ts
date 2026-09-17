@@ -1,8 +1,10 @@
-import type { IncomingMessage } from "node:http";
+import type { IncomingMessage, ServerResponse } from "node:http";
+import { Readable } from "node:stream";
+import type { ReadableStream } from "node:stream/web";
 
 import cookieParser from "cookie";
 
-import type { InternalResult } from "@/types/open-next";
+import type { StreamCreator } from "@/types/open-next";
 import type { Converter } from "@/types/overrides";
 
 import { extractHostFromHeaders, getQueryFromSearchParams } from "./utils.js";
@@ -10,15 +12,8 @@ import { extractHostFromHeaders, getQueryFromSearchParams } from "./utils.js";
 const converter: Converter = {
 	convertFrom: async (event: unknown) => {
 		const req = event as IncomingMessage & { protocol?: string };
-		const body = await new Promise<Buffer>((resolve) => {
-			const chunks: Uint8Array[] = [];
-			req.on("data", (chunk) => {
-				chunks.push(chunk);
-			});
-			req.on("end", () => {
-				resolve(Buffer.concat(chunks));
-			});
-		});
+		const shouldHaveBody = req.method !== "GET" && req.method !== "HEAD";
+		const body: ReadableStream | undefined = shouldHaveBody ? Readable.toWeb(req) : undefined;
 
 		const headers = Object.fromEntries(
 			Object.entries(req.headers ?? {})
@@ -46,12 +41,28 @@ const converter: Converter = {
 			cookies,
 		};
 	},
-	// Nothing to do here, it's streaming
-	convertTo: async (internalResult: InternalResult) => ({
-		body: internalResult.body,
-		headers: internalResult.headers,
-		statusCode: internalResult.statusCode,
-	}),
+	convertTo: async (_event, context) => {
+		const res = context as ServerResponse;
+		const abortController = new AbortController();
+		const streamCreator: StreamCreator = {
+			writeHeaders: (prelude) => {
+				res.setHeader("Set-Cookie", prelude.cookies);
+				res.writeHead(prelude.statusCode, prelude.headers);
+				res.flushHeaders();
+				return res;
+			},
+			abortSignal: abortController.signal,
+		};
+
+		res.on("close", () => {
+			abortController.abort();
+		});
+
+		return {
+			type: "stream",
+			streamCreator,
+		};
+	},
 	name: "node",
 };
 

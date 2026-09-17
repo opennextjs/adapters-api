@@ -31,14 +31,16 @@ interface CodeCustomization {
 	// This will only apply to OpenNext code.
 	additionalPlugins?: (contentUpdater: ContentUpdater) => Plugin[];
 	useEdgeConfig?: boolean;
-	externals?: string[];
+	// The esbuild externals for the server bundle. Mandatory: every adapter has to
+	// declare what it keeps external instead of relying on an implicit default.
+	externals: string[];
 	banner?: string[] | ((name: string) => string[]);
 	bundleDefaults?: BundleDefaults;
 }
 
 export async function createServerBundle(
 	options: buildHelper.BuildOptions,
-	codeCustomization?: CodeCustomization,
+	codeCustomization: CodeCustomization,
 	nextOutputs?: NextAdapterOutputs
 ) {
 	const { config } = options;
@@ -56,7 +58,7 @@ export async function createServerBundle(
 		const routes = fnOptions.routes;
 		routes.forEach((route) => foundRoutes.add(route));
 		if (fnOptions.runtime === "edge") {
-			await generateEdgeBundle(name, options, fnOptions, undefined, codeCustomization?.bundleDefaults?.edge);
+			await generateEdgeBundle(name, options, fnOptions, undefined, codeCustomization.bundleDefaults?.edge);
 		} else {
 			await generateBundle(name, options, fnOptions, codeCustomization, nextOutputs);
 		}
@@ -128,7 +130,7 @@ async function generateBundle(
 	name: string,
 	options: buildHelper.BuildOptions,
 	fnOptions: SplittedFunctionOptions,
-	codeCustomization?: CodeCustomization,
+	codeCustomization: CodeCustomization,
 	nextOutputs?: NextAdapterOutputs
 ) {
 	const { appPath, appBuildOutputPath, config, outputDir, monorepoRoot } = options;
@@ -151,6 +153,7 @@ async function generateBundle(
 	// Normal cache
 	fs.copyFileSync(path.join(options.buildDir, `cache.${ext}`), path.join(outPackagePath, "cache.cjs"));
 	// Composable cache
+	fs.mkdirSync(path.join(outPackagePath, ".next"), { recursive: true });
 	fs.copyFileSync(
 		path.join(options.buildDir, `composable-cache.${ext}`),
 		path.join(outPackagePath, "composable-cache.cjs")
@@ -172,8 +175,13 @@ async function generateBundle(
 		copyMiddlewareResources(options, middlewareManifest.middleware["/"], outPackagePath);
 	}
 
+	fs.copyFileSync(
+		path.join(options.appBuildOutputPath, ".next", "open-next-routing.json"),
+		path.join(outPackagePath, ".next", "open-next-routing.json")
+	);
+
 	// Copy open-next.config.mjs
-	buildHelper.copyOpenNextConfig(options.buildDir, outPackagePath, codeCustomization?.useEdgeConfig ?? false);
+	buildHelper.copyOpenNextConfig(options.buildDir, outPackagePath, codeCustomization.useEdgeConfig ?? false);
 
 	// Copy env files
 	buildHelper.copyEnvFile(appBuildOutputPath, packagePath, outputPath);
@@ -191,7 +199,7 @@ async function generateBundle(
 	tracedFiles = await copyAdapterFiles(options, name, packagePath, nextOutputs);
 	//TODO: we should load manifests here
 
-	const additionalCodePatches = codeCustomization?.additionalCodePatches ?? [];
+	const additionalCodePatches = codeCustomization.additionalCodePatches ?? [];
 
 	await applyCodePatches(options, tracedFiles, manifests as ReturnType<typeof getManifests>, [
 		patches.patchFetchCacheSetMissingWaitUntil,
@@ -211,13 +219,13 @@ async function generateBundle(
 	//       Next.js app.
 
 	const overrides = fnOptions.override ?? {};
-	const defaultOverrides = codeCustomization?.bundleDefaults?.server;
+	const defaultOverrides = codeCustomization.bundleDefaults?.server;
 
 	const disableRouting = config.middleware?.external;
 
 	const updater = new ContentUpdater(options);
 
-	const additionalPlugins = codeCustomization?.additionalPlugins
+	const additionalPlugins = codeCustomization.additionalPlugins
 		? codeCustomization.additionalPlugins(updater)
 		: [];
 
@@ -251,14 +259,14 @@ async function generateBundle(
 		name === "default" ? "" : `globalThis.fnName = "${name}";`,
 	];
 	const bannerLines =
-		typeof codeCustomization?.banner === "function"
+		typeof codeCustomization.banner === "function"
 			? codeCustomization.banner(name)
-			: (codeCustomization?.banner ?? defaultBanner);
+			: (codeCustomization.banner ?? defaultBanner);
 
 	await buildHelper.esbuildAsync(
 		{
 			entryPoints: [path.join(options.openNextDistDir, "adapters", "server-adapter.js")],
-			external: codeCustomization?.externals ?? ["next", "./middleware.mjs", "./next-server.runtime.prod.js"],
+			external: codeCustomization.externals,
 			outfile: path.join(outputPath, packagePath, `index.${outfileExt}`),
 			banner: {
 				js: bannerLines.join(""),

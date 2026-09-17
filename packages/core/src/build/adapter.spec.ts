@@ -60,6 +60,10 @@ vi.mock("./createRevalidationBundle.js", () => ({
 	createRevalidationBundle: vi.fn(),
 }));
 
+vi.mock("./createRoutingConfig.js", () => ({
+	createRoutingConfig: vi.fn(),
+}));
+
 vi.mock("./createImageOptimizationBundle.js", () => ({
 	createImageOptimizationBundle: vi.fn(),
 }));
@@ -97,6 +101,7 @@ import { createStaticAssets, createCacheAssets } from "./createAssets.js";
 import { createImageOptimizationBundle } from "./createImageOptimizationBundle.js";
 import { createMiddleware } from "./createMiddleware.js";
 import { createRevalidationBundle } from "./createRevalidationBundle.js";
+import { createRoutingConfig } from "./createRoutingConfig.js";
 import { createServerBundle } from "./createServerBundle.js";
 import { createWarmerBundle } from "./createWarmerBundle.js";
 import { buildOpenNextOutput } from "./generateOutput.js";
@@ -130,7 +135,14 @@ function createMockBuildOpts(): BuildOptions {
 // Helper to create mock BuildCompleteContext
 function createMockContext(): BuildCompleteContext {
 	return {
-		routes: [],
+		routing: {
+			beforeMiddleware: [],
+			beforeFiles: [],
+			afterFiles: [],
+			fallback: [],
+			dynamicRoutes: [],
+			onMatch: [],
+		},
 		outputs: {
 			pages: [],
 			pagesApi: [],
@@ -145,8 +157,13 @@ function createMockContext(): BuildCompleteContext {
 			images: {},
 		} as BuildCompleteContext["config"],
 		nextVersion: "16.0.0",
+		buildId: "build-id",
 	};
 }
+
+// serverBundle.externals is mandatory for every adapter, minimal value for tests
+// that don't exercise the server bundle customization.
+const serverBundle = { externals: [] };
 
 describe("buildAdapter", () => {
 	beforeEach(() => {
@@ -170,13 +187,13 @@ describe("buildAdapter", () => {
 		});
 
 		vi.mocked(createCacheAssets).mockReturnValue({
-			useTagCache: false,
+			shouldUseTagCache: false,
 			metaFiles: [],
 		});
 	});
 
 	test("returns an object with name, modifyConfig, and onBuildComplete", () => {
-		const adapter = buildAdapter(() => ({}));
+		const adapter = buildAdapter(() => ({ serverBundle }));
 
 		expect(adapter.name).toBe("OpenNext");
 		expect(typeof adapter.modifyConfig).toBe("function");
@@ -184,7 +201,7 @@ describe("buildAdapter", () => {
 	});
 
 	test("modifyConfig calls compileOpenNextConfig with compileEdge: true, then callback", async () => {
-		const mockCallback = vi.fn(() => ({}));
+		const mockCallback = vi.fn(() => ({ serverBundle }));
 		const adapter = buildAdapter(mockCallback);
 
 		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
@@ -201,7 +218,7 @@ describe("buildAdapter", () => {
 		process.env.OPEN_NEXT_CONFIG_PATH = "open-next.container.config.ts";
 
 		try {
-			const adapter = buildAdapter(() => ({}));
+			const adapter = buildAdapter(() => ({ serverBundle }));
 			const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
 			await adapter.modifyConfig(nextConfig, { phase: "production" });
 
@@ -218,7 +235,7 @@ describe("buildAdapter", () => {
 	});
 
 	test("modifyConfig returns nextConfig with cacheHandler, cacheHandlers, cacheMaxMemorySize, and trustHostHeader", async () => {
-		const adapter = buildAdapter(() => ({}));
+		const adapter = buildAdapter(() => ({ serverBundle }));
 
 		const nextConfig = {
 			experimental: { serverActions: true },
@@ -240,6 +257,7 @@ describe("buildAdapter", () => {
 
 	test("onBuildComplete calls createMiddleware with influence.middlewareOptions", async () => {
 		const adapter = buildAdapter(() => ({
+			serverBundle,
 			middlewareOptions: { forceOnlyBuildOnce: true },
 		}));
 
@@ -251,12 +269,20 @@ describe("buildAdapter", () => {
 
 		expect(createMiddleware).toHaveBeenCalledWith(
 			expect.any(Object),
-			expect.objectContaining({ forceOnlyBuildOnce: true })
+			expect.objectContaining({ forceOnlyBuildOnce: true }),
+			expect.objectContaining({
+				pages: expect.any(Array),
+				appPages: expect.any(Array),
+				appRoutes: expect.any(Array),
+				pagesApi: expect.any(Array),
+			}),
+			undefined
 		);
 	});
 
 	test("onBuildComplete skips createRevalidationBundle when skipRevalidation is true", async () => {
 		const adapter = buildAdapter(() => ({
+			serverBundle,
 			skipRevalidation: true,
 		}));
 
@@ -269,12 +295,13 @@ describe("buildAdapter", () => {
 		expect(createRevalidationBundle).not.toHaveBeenCalled();
 	});
 
-	test("onBuildComplete calls influence.beforeMiddleware BEFORE createMiddleware", async () => {
+	test("onBuildComplete calls influence.beforeServerBundle BEFORE createMiddleware", async () => {
 		const callOrder: string[] = [];
 
 		const adapter = buildAdapter(() => ({
-			beforeMiddleware: vi.fn(async () => {
-				callOrder.push("beforeMiddleware");
+			serverBundle,
+			beforeServerBundle: vi.fn(async () => {
+				callOrder.push("beforeServerBundle");
 			}),
 		}));
 
@@ -288,13 +315,14 @@ describe("buildAdapter", () => {
 		const ctx = createMockContext();
 		await adapter.onBuildComplete(ctx);
 
-		expect(callOrder).toEqual(["beforeMiddleware", "createMiddleware"]);
+		expect(callOrder).toEqual(["beforeServerBundle", "createMiddleware"]);
 	});
 
 	test("onBuildComplete calls influence.afterServerBundle after createServerBundle but BEFORE createRevalidationBundle", async () => {
 		const callOrder: string[] = [];
 
 		const adapter = buildAdapter(() => ({
+			serverBundle,
 			afterServerBundle: vi.fn(async () => {
 				callOrder.push("afterServerBundle");
 			}),
@@ -327,7 +355,7 @@ describe("buildAdapter", () => {
 				buildDir: "/tmp/open-next-tmp",
 			});
 
-		const adapter = buildAdapter(() => ({}));
+		const adapter = buildAdapter(() => ({ serverBundle }));
 		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
 		await adapter.modifyConfig(nextConfig, { phase: "production" });
 
@@ -343,6 +371,7 @@ describe("buildAdapter", () => {
 		const mockTempCachePath = vi.fn(() => "/custom/temp/cache/path");
 
 		const adapter = buildAdapter(() => ({
+			serverBundle,
 			tempCachePath: mockTempCachePath,
 		}));
 
@@ -360,6 +389,7 @@ describe("buildAdapter", () => {
 
 	test("onBuildComplete skips image optimization when skipImageOptimization is true", async () => {
 		const adapter = buildAdapter(() => ({
+			serverBundle,
 			skipImageOptimization: true,
 		}));
 
@@ -374,6 +404,7 @@ describe("buildAdapter", () => {
 
 	test("onBuildComplete skips warmer when skipWarmer is true", async () => {
 		const adapter = buildAdapter(() => ({
+			serverBundle,
 			skipWarmer: true,
 		}));
 
@@ -388,6 +419,7 @@ describe("buildAdapter", () => {
 
 	test("onBuildComplete skips generateOutput when skipGenerateOutput is true", async () => {
 		const adapter = buildAdapter(() => ({
+			serverBundle,
 			skipGenerateOutput: true,
 		}));
 
@@ -403,7 +435,7 @@ describe("buildAdapter", () => {
 	});
 
 	test("onBuildComplete calls addDebugFile with outputs.json", async () => {
-		const adapter = buildAdapter(() => ({}));
+		const adapter = buildAdapter(() => ({ serverBundle }));
 
 		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
 		await adapter.modifyConfig(nextConfig, { phase: "production" });
@@ -412,6 +444,18 @@ describe("buildAdapter", () => {
 		await adapter.onBuildComplete(ctx);
 
 		expect(addDebugFile).toHaveBeenCalledWith(expect.any(Object), "outputs.json", ctx);
+	});
+
+	test("onBuildComplete creates the runtime routing configuration", async () => {
+		const adapter = buildAdapter(() => ({ serverBundle }));
+		await adapter.modifyConfig({ experimental: {}, images: {} } as BuildCompleteContext["config"], {
+			phase: "production",
+		});
+		const ctx = createMockContext();
+
+		await adapter.onBuildComplete(ctx);
+
+		expect(createRoutingConfig).toHaveBeenCalledWith(expect.any(Object), ctx);
 	});
 
 	test("onBuildComplete passes serverBundle customization to createServerBundle", async () => {
@@ -447,13 +491,50 @@ describe("buildAdapter", () => {
 		);
 	});
 
-	test("onBuildComplete compiles tag cache provider when useTagCache is true", async () => {
+	test("onBuildComplete forwards middlewareBundle to createMiddleware intact", async () => {
+		const mockPlugin = { name: "mock-plugin", setup: vi.fn() };
+		const additionalPlugins = vi.fn(() => [mockPlugin]);
+		const additionalCodePatches = [{ name: "test-middleware-patch", patches: [] }];
+		const middlewareBundle = {
+			additionalPlugins,
+			additionalCodePatches,
+			useEdgeConfig: true,
+			externals: ["./externals-test"],
+			banner: ["// test banner"],
+		};
+
+		const adapter = buildAdapter(() => ({
+			serverBundle,
+			middlewareBundle,
+		}));
+
+		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
+		await adapter.modifyConfig(nextConfig, { phase: "production" });
+
+		const ctx = createMockContext();
+		await adapter.onBuildComplete(ctx);
+
+		expect(createMiddleware).toHaveBeenCalledWith(
+			expect.any(Object),
+			expect.any(Object),
+			ctx.outputs,
+			middlewareBundle
+		);
+
+		const calls = vi.mocked(createMiddleware).mock.calls;
+		expect(calls).toHaveLength(1);
+		expect(calls[0]).toHaveLength(4);
+		expect(calls[0][3]).toEqual(middlewareBundle);
+		expect(calls[0][3]).toBe(middlewareBundle);
+	});
+
+	test("onBuildComplete compiles tag cache provider when shouldUseTagCache is true", async () => {
 		vi.mocked(createCacheAssets).mockReturnValue({
-			useTagCache: true,
+			shouldUseTagCache: true,
 			metaFiles: [],
 		});
 
-		const adapter = buildAdapter(() => ({}));
+		const adapter = buildAdapter(() => ({ serverBundle }));
 
 		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
 		await adapter.modifyConfig(nextConfig, { phase: "production" });
@@ -469,7 +550,7 @@ describe("buildAdapter", () => {
 		(mockBuildOpts.config as OpenNextConfig).dangerous = { disableIncrementalCache: true };
 		vi.mocked(buildHelper.normalizeOptions).mockReturnValue(mockBuildOpts);
 
-		const adapter = buildAdapter(() => ({}));
+		const adapter = buildAdapter(() => ({ serverBundle }));
 
 		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
 		await adapter.modifyConfig(nextConfig, { phase: "production" });
@@ -483,7 +564,7 @@ describe("buildAdapter", () => {
 
 	test("validateConfig override is called after callback in modifyConfig and halts build on shouldThrow:true", async () => {
 		const mockValidator = vi.fn(() => ({ success: false, shouldThrow: true, message: "nope" }));
-		const adapter = buildAdapter(() => ({ validateConfig: mockValidator }));
+		const adapter = buildAdapter(() => ({ serverBundle, validateConfig: mockValidator }));
 
 		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
 		await expect(adapter.modifyConfig(nextConfig, { phase: "production" })).rejects.toThrow("nope");
@@ -492,7 +573,7 @@ describe("buildAdapter", () => {
 
 	test("validateConfig override with shouldThrow:false logs warn and continues", async () => {
 		const mockValidator = vi.fn(() => ({ success: false, message: "heads up" }));
-		const adapter = buildAdapter(() => ({ validateConfig: mockValidator }));
+		const adapter = buildAdapter(() => ({ serverBundle, validateConfig: mockValidator }));
 
 		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
 		await adapter.modifyConfig(nextConfig, { phase: "production" });
@@ -501,7 +582,7 @@ describe("buildAdapter", () => {
 
 	test("onBuildComplete calls generateOutput override and writes its return via buildAdapter", async () => {
 		const mockOutput = vi.fn(async () => ({ custom: "shape" }));
-		const adapter = buildAdapter(() => ({ generateOutput: mockOutput }));
+		const adapter = buildAdapter(() => ({ serverBundle, generateOutput: mockOutput }));
 		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
 		await adapter.modifyConfig(nextConfig, { phase: "production" });
 		const ctx = createMockContext();
@@ -518,12 +599,12 @@ describe("buildAdapter", () => {
 		vi.mocked(buildOpenNextOutput).mockResolvedValue({
 			origins: { default: {} },
 		} as any); // oxlint-disable-line @typescript-eslint/no-explicit-any
-		const adapter = buildAdapter(() => ({}));
+		const adapter = buildAdapter(() => ({ serverBundle }));
 		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
 		await adapter.modifyConfig(nextConfig, { phase: "production" });
 		const ctx = createMockContext();
 		await adapter.onBuildComplete(ctx);
-		expect(buildOpenNextOutput).toHaveBeenCalledWith(expect.any(Object));
+		expect(buildOpenNextOutput).toHaveBeenCalledWith(expect.any(Object), undefined);
 		const fs = await import("node:fs");
 		expect(fs.default.writeFileSync).toHaveBeenCalledWith(
 			expect.stringMatching(/\/\.open-next\/open-next\.output\.json$/),
@@ -533,7 +614,11 @@ describe("buildAdapter", () => {
 
 	test("onBuildComplete skipGenerateOutput skips generateOutput override and buildOpenNextOutput", async () => {
 		const mockOutput = vi.fn();
-		const adapter = buildAdapter(() => ({ skipGenerateOutput: true, generateOutput: mockOutput }));
+		const adapter = buildAdapter(() => ({
+			serverBundle,
+			skipGenerateOutput: true,
+			generateOutput: mockOutput,
+		}));
 		const nextConfig = { experimental: {}, images: {} } as BuildCompleteContext["config"];
 		await adapter.modifyConfig(nextConfig, { phase: "production" });
 		const ctx = createMockContext();

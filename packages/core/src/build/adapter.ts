@@ -8,7 +8,7 @@ import { addDebugFile } from "../debug.js";
 import logger from "../logger.js";
 import type { ContentUpdater } from "../plugins/content-updater.js";
 import type { BundleDefaults } from "../plugins/resolve.js";
-import type { NextAdapterOutputs } from "../types/adapter.js";
+import type { NextAdapterOutputs, NextAdapterRouting } from "../types/adapter.js";
 import type { NextConfig } from "../types/next-types.js";
 import type { OpenNextConfig } from "../types/open-next.js";
 
@@ -19,6 +19,7 @@ import { createCacheAssets, createStaticAssets } from "./createAssets.js";
 import { createImageOptimizationBundle } from "./createImageOptimizationBundle.js";
 import { createMiddleware } from "./createMiddleware.js";
 import { createRevalidationBundle } from "./createRevalidationBundle.js";
+import { createRoutingConfig } from "./createRoutingConfig.js";
 import { createServerBundle } from "./createServerBundle.js";
 import { createWarmerBundle } from "./createWarmerBundle.js";
 import { buildOpenNextOutput } from "./generateOutput.js";
@@ -33,13 +34,14 @@ const require = createRequire(import.meta.url);
  * The parameter type for onBuildComplete.
  */
 export type BuildCompleteContext = {
-	routes: unknown;
+	routing: NextAdapterRouting;
 	outputs: NextAdapterOutputs;
 	projectDir: string;
 	repoRoot: string;
 	distDir: string;
 	config: NextConfig;
 	nextVersion: string;
+	buildId: string;
 };
 
 /**
@@ -60,14 +62,25 @@ export type OpenNextAdapterOptions<T = OpenNextOutput> = {
 	skipWarmer?: boolean;
 	skipGenerateOutput?: boolean;
 	middlewareOptions?: { forceOnlyBuildOnce?: boolean };
-	serverBundle?: {
+	middlewareBundle?: {
 		additionalPlugins?: (updater: ContentUpdater, outputs: NextAdapterOutputs) => Plugin[];
 		additionalCodePatches?: CodePatcher[];
 		useEdgeConfig?: boolean;
 		externals?: string[];
 		banner?: string[] | ((name: string) => string[]);
 	};
-	beforeMiddleware?: (buildOpts: buildHelper.BuildOptions, config: OpenNextConfig) => Promise<void>;
+	serverBundle: {
+		additionalPlugins?: (updater: ContentUpdater, outputs: NextAdapterOutputs) => Plugin[];
+		additionalCodePatches?: CodePatcher[];
+		useEdgeConfig?: boolean;
+		/**
+		 * The esbuild externals for the server bundle. Every adapter has to declare
+		 * them explicitly — there is no implicit default.
+		 */
+		externals: string[];
+		banner?: string[] | ((name: string) => string[]);
+	};
+	beforeServerBundle?: (buildOpts: buildHelper.BuildOptions, config: OpenNextConfig) => Promise<void>;
 	afterServerBundle?: (buildOpts: buildHelper.BuildOptions, config: OpenNextConfig) => Promise<void>;
 	tempCachePath?: (buildOpts: buildHelper.BuildOptions, packagePath: string) => string;
 	/**
@@ -87,6 +100,7 @@ export type OpenNextAdapterOptions<T = OpenNextOutput> = {
  *
  * This function eliminates duplicated build logic across platform-specific adapters
  * (AWS, Cloudflare, etc.) by centralizing the build orchestration in core.
+ * It uses the config path selected through `OPEN_NEXT_CONFIG_PATH` when provided.
  *
  * @param callback - A function that receives the OpenNext config and build options,
  *                   returning adapter-specific influence over the build process.
@@ -175,40 +189,47 @@ export function buildAdapter<T = OpenNextOutput>(
 		},
 
 		async onBuildComplete(ctx) {
-			console.log("OpenNext build will start now");
+			logger.info("OpenNext build will start now");
 
 			// Step 1: Save debug output
 			addDebugFile(buildOpts, "outputs.json", ctx);
+			createRoutingConfig(buildOpts, ctx);
 
-			// Step 2: Call beforeMiddleware hook
-			await adapterOptions.beforeMiddleware?.(buildOpts, config);
+			// Step 2: Call beforeServerBundle hook
+			await adapterOptions.beforeServerBundle?.(buildOpts, config);
 
 			const bundleDefaults = adapterOptions.defaultOverrides;
 
 			// Step 3: Create middleware
-			await createMiddleware(buildOpts, {
-				...adapterOptions.middlewareOptions,
-				defaultOverrides: bundleDefaults?.middleware,
-			});
-			console.log("Middleware created");
+			await createMiddleware(
+				buildOpts,
+				{
+					...adapterOptions.middlewareOptions,
+					defaultOverrides: bundleDefaults?.middleware,
+				},
+				ctx.outputs,
+				adapterOptions.middlewareBundle
+			);
+			logger.info("Middleware created");
 
 			// Step 4: Create static assets
 			createStaticAssets(buildOpts);
-			console.log("Static assets created");
+			logger.info("Static assets created");
 
 			// Step 5: Cache assets
 			if (buildOpts.config.dangerous?.disableIncrementalCache !== true) {
-				const { useTagCache } = createCacheAssets(buildOpts);
-				console.log("Cache assets created");
-				if (useTagCache) {
+				const { shouldUseTagCache } = createCacheAssets(buildOpts);
+				logger.info("Cache assets created");
+				if (shouldUseTagCache) {
 					await compileTagCacheProvider(buildOpts, bundleDefaults?.tagCache);
-					console.log("Tag cache provider compiled");
+					logger.info("Tag cache provider compiled");
 				}
 			}
 
 			// Step 6: Build wrapped additionalPlugins
-			const wrappedAdditionalPlugins = adapterOptions.serverBundle?.additionalPlugins
-				? (updater: ContentUpdater) => adapterOptions.serverBundle!.additionalPlugins!(updater, ctx.outputs)
+			const serverBundle = adapterOptions.serverBundle;
+			const wrappedAdditionalPlugins = serverBundle.additionalPlugins
+				? (updater: ContentUpdater) => serverBundle.additionalPlugins!(updater, ctx.outputs)
 				: undefined;
 
 			// Step 7: Create server bundle
@@ -216,15 +237,15 @@ export function buildAdapter<T = OpenNextOutput>(
 				buildOpts,
 				{
 					additionalPlugins: wrappedAdditionalPlugins,
-					additionalCodePatches: adapterOptions.serverBundle?.additionalCodePatches,
-					useEdgeConfig: adapterOptions.serverBundle?.useEdgeConfig,
-					externals: adapterOptions.serverBundle?.externals,
-					banner: adapterOptions.serverBundle?.banner,
+					additionalCodePatches: serverBundle.additionalCodePatches,
+					useEdgeConfig: serverBundle.useEdgeConfig,
+					externals: serverBundle.externals,
+					banner: serverBundle.banner,
 					bundleDefaults,
 				},
 				ctx.outputs
 			);
-			console.log("Server bundle created");
+			logger.info("Server bundle created");
 
 			// Step 8: Call afterServerBundle hook
 			await adapterOptions.afterServerBundle?.(buildOpts, config);
@@ -232,31 +253,31 @@ export function buildAdapter<T = OpenNextOutput>(
 			// Step 9: Revalidation bundle
 			if (!adapterOptions.skipRevalidation) {
 				await createRevalidationBundle(buildOpts, bundleDefaults?.revalidation);
-				console.log("Revalidation bundle created");
+				logger.info("Revalidation bundle created");
 			}
 
 			// Step 10: Image optimization bundle
 			if (!adapterOptions.skipImageOptimization) {
 				await createImageOptimizationBundle(buildOpts, bundleDefaults?.imageOptimization);
-				console.log("Image optimization bundle created");
+				logger.info("Image optimization bundle created");
 			}
 
 			// Step 11: Warmer bundle
 			if (!adapterOptions.skipWarmer) {
 				await createWarmerBundle(buildOpts, bundleDefaults?.warmer);
-				console.log("Warmer bundle created");
+				logger.info("Warmer bundle created");
 			}
 
 			// Step 12: Generate output
 			if (!adapterOptions.skipGenerateOutput) {
 				const output = adapterOptions.generateOutput
 					? await adapterOptions.generateOutput(buildOpts)
-					: await buildOpenNextOutput(buildOpts);
+					: await buildOpenNextOutput(buildOpts, bundleDefaults);
 				fs.writeFileSync(
 					path.join(buildOpts.appBuildOutputPath, ".open-next", "open-next.output.json"),
 					JSON.stringify(output)
 				);
-				console.log("Output generated");
+				logger.info("Output generated");
 			}
 		},
 	};

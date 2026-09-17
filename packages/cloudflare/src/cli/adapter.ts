@@ -21,7 +21,9 @@ import { compileInit } from "./build/open-next/compile-init.js";
 import { compileSkewProtection } from "./build/open-next/compile-skew-protection.js";
 import { compileContainer } from "./build/open-next/compileContainer.js";
 import { compileDurableObjects } from "./build/open-next/compileDurableObjects.js";
+import { patchWebpackMiddlewareRuntime } from "./build/patches/ast/webpack-runtime.js";
 import { inlineLoadManifest } from "./build/patches/plugins/load-manifest.js";
+import { patchOpenTelemetryGlobalUtils } from "./build/patches/plugins/opentelemetry.js";
 import { patchResRevalidate } from "./build/patches/plugins/res-revalidate.js";
 import { patchTurbopackRuntime } from "./build/patches/plugins/turbopack.js";
 import { patchUseCacheIO } from "./build/patches/plugins/use-cache.js";
@@ -37,7 +39,7 @@ export default buildAdapter((config: OpenNextConfig, buildOpts: BuildOptions) =>
 		skipWarmer: true,
 		skipGenerateOutput: true,
 		middlewareOptions: { forceOnlyBuildOnce: true },
-		beforeMiddleware: async (buildOpts, _config) => {
+		beforeServerBundle: async (buildOpts, _config) => {
 			// Import edge-compiled config for skew protection
 			const configPath = path.join(
 				buildOpts.appBuildOutputPath,
@@ -55,10 +57,9 @@ export default buildAdapter((config: OpenNextConfig, buildOpts: BuildOptions) =>
 			useEdgeConfig: !isContainer,
 			externals: ["./middleware.mjs"],
 			banner: (name: string) => {
-				const cloudflareBanner = [`globalThis.monorepoPackagePath = "${normalizePath(packagePath)}";`];
-
+				const banner = [`globalThis.monorepoPackagePath = "${normalizePath(packagePath)}";`];
 				if (isContainer) {
-					cloudflareBanner.push(
+					banner.push(
 						"import process from 'node:process';",
 						"import { Buffer } from 'node:buffer';",
 						"import { AsyncLocalStorage as NodeAsyncLocalStorage } from 'node:async_hooks';",
@@ -70,9 +71,8 @@ export default buildAdapter((config: OpenNextConfig, buildOpts: BuildOptions) =>
 						"const __filename = bannerUrl.fileURLToPath(import.meta.url);"
 					);
 				}
-
-				cloudflareBanner.push(name === "default" ? "" : `globalThis.fnName = "${name}";`);
-				return cloudflareBanner;
+				banner.push(name === "default" ? "" : `globalThis.fnName = "${name}";`);
+				return banner;
 			},
 			additionalPlugins: (updater: ContentUpdater, outputs: NextAdapterOutputs) => [
 				inlineRouteHandler(updater, outputs, packagePath),
@@ -95,7 +95,35 @@ export default buildAdapter((config: OpenNextConfig, buildOpts: BuildOptions) =>
 			],
 			additionalCodePatches: isContainer
 				? [patchUseCacheIO, patchTurbopackRuntime]
-				: [patchResRevalidate, patchUseCacheIO, patchTurbopackRuntime],
+				: [patchResRevalidate, patchUseCacheIO, patchOpenTelemetryGlobalUtils, patchTurbopackRuntime],
+		},
+		middlewareBundle: {
+			useEdgeConfig: true,
+			banner: (_name: string) => [
+				`globalThis.monorepoPackagePath = "${normalizePath(packagePath)}";`,
+				`import { Buffer } from "node:buffer";
+globalThis.Buffer = Buffer;
+
+import { AsyncLocalStorage } from "node:async_hooks";
+globalThis.AsyncLocalStorage = AsyncLocalStorage;
+
+`,
+			],
+			additionalPlugins: (updater: ContentUpdater, outputs: NextAdapterOutputs) => [
+				inlineRouteHandler(updater, outputs, packagePath),
+				inlineLoadManifest(updater, buildOpts),
+				openNextEdgePlugins({
+					nextDir: path.join(buildOpts.appBuildOutputPath, ".next"),
+					isInCloudflare: true,
+				}),
+			],
+			additionalCodePatches: [
+				patchResRevalidate,
+				patchUseCacheIO,
+				patchOpenTelemetryGlobalUtils,
+				patchWebpackMiddlewareRuntime,
+				patchTurbopackRuntime,
+			],
 		},
 		afterServerBundle: async (buildOpts, _config) => {
 			if (isContainer) {
