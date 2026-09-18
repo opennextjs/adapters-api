@@ -32,7 +32,7 @@ vi.mock("@opennextjs/core/utils/cache", () => ({
 	writeTags: vi.fn(),
 }));
 
-import { handler } from "@opennextjs/core/adapters/cache-adapter";
+import { handler } from "@opennextjs/core/adapters/cache-handler";
 
 function createEvent(method: string, rawPath: string, body?: string): InternalEvent {
 	return {

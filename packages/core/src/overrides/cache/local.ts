@@ -8,9 +8,15 @@ import { fromReadableStream, toReadableStream } from "@/utils/stream";
 
 let handler: ((event: InternalEvent) => Promise<InternalResult>) | null = null;
 
+/**
+ * Loads the raw in-process cache handler.
+ *
+ * @return The cached internal cache handler.
+ * @throws When the cache handler bundle cannot be imported.
+ */
 async function getHandler() {
 	if (!handler) {
-		const cacheHandlerPath = path.join(getMonorepoRelativePath(), "cache-function/index.mjs");
+		const cacheHandlerPath = path.join(getMonorepoRelativePath(), "cache-function/handler.mjs");
 		const m = await import(cacheHandlerPath);
 		handler = m.handler;
 	}

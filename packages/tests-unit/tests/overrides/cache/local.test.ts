@@ -9,7 +9,7 @@ vi.mock("@opennextjs/core/utils/normalize-path", () => ({
 
 const mockHandler = vi.fn();
 
-vi.mock("/mock/root/cache-function/index.mjs", () => ({
+vi.mock("/mock/root/cache-function/handler.mjs", () => ({
 	handler: mockHandler,
 }));
 
