@@ -20,6 +20,17 @@ export function getContainerEnvVars(bindings: Record<string, unknown>): Record<s
 }
 
 /**
+ * Reattaches a client abort signal to a request produced by middleware.
+ *
+ * @param request The middleware-normalized request.
+ * @param signal The original client request signal.
+ * @returns A request that follows the client signal.
+ */
+export function withRequestSignal(request: Request, signal: AbortSignal): Request {
+	return new Request(request, { signal });
+}
+
+/**
  * The Durable Object controller for the Node.js OpenNext server container.
  *
  * The matching Wrangler configuration must declare this class as a container
@@ -50,6 +61,7 @@ export class OpenNextContainer extends Container {
 				method: request.method,
 				headers,
 				body: request.method === "GET" || request.method === "HEAD" ? undefined : request.body,
+				signal: request.signal,
 			},
 			this.defaultPort
 		);
