@@ -1,0 +1,19 @@
+packages/core/src/build/middleware/buildNodeMiddleware.spec.ts
+  s_6e7661281c33ab::t_e34640d891b6df 58,225-243
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "76e2c649911d7a9e1878e2c7eeb385c63ca396d7",
+  "prompts": {},
+  "sessions": {
+    "s_6e7661281c33ab": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f50547400ffeepgu0St3mEd9GA",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
