@@ -15,4 +15,17 @@ describe("ensureCloudflareConfig", () => {
 
 		expect(() => ensureCloudflareConfig(config)).toThrow("Cloudflare Containers");
 	});
+
+	test("rejects split functions in container mode", () => {
+		const config = defineCloudflareConfig({ container: true });
+		config.functions = {
+			api: {
+				routes: ["app/api/route"],
+			},
+		};
+
+		expect(() => ensureCloudflareConfig(config)).toThrow(
+			"Cloudflare Container mode does not support split functions."
+		);
+	});
 });

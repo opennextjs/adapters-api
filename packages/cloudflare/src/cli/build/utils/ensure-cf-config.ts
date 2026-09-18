@@ -7,11 +7,16 @@ import type { OpenNextConfig } from "../../../api/config.js";
  * Ensures open next is configured for cloudflare.
  *
  * @param config OpenNext configuration.
+ * @returns Nothing.
+ * @throws When the configuration is unsupported by the Cloudflare adapter.
  */
 export function ensureCloudflareConfig(config: OpenNextConfig) {
 	const mwIsMiddlewareExternal = config.middleware?.external === true;
 	const mwConfig = mwIsMiddlewareExternal ? (config.middleware as ExternalMiddlewareConfig) : undefined;
 	const isContainer = config.cloudflare?.container === true;
+	if (isContainer && Object.keys(config.functions ?? {}).length > 0) {
+		throw new Error("Cloudflare Container mode does not support split functions.");
+	}
 
 	const requirements = {
 		// Check for the default function
