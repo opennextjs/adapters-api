@@ -201,7 +201,7 @@ declare global {
 	 * Only available in main functions.
 	 * Defined in `createMainHandler`.
 	 */
-	var cache: Cache;
+	var cache: Cache | undefined;
 
 	/**
 	 * The function that is used when resolving external rewrite requests.

@@ -28,6 +28,13 @@ describe("CacheHandler", () => {
 		delete: vi.fn(),
 	};
 	globalThis.incrementalCache = incrementalCache;
+	const cacheTransport = {
+		name: "transport",
+		get: vi.fn(),
+		set: vi.fn(),
+		delete: vi.fn(),
+		revalidateTags: vi.fn(),
+	};
 
 	const tagCache = {
 		name: "mock",
@@ -69,8 +76,48 @@ describe("CacheHandler", () => {
 			},
 		};
 		globalThis.isNextAfter15 = false;
+		globalThis.cache = undefined;
 		tagCache.mode = "original";
 		tagCache.getPathsByTags = undefined;
+	});
+
+	describe("dedicated cache transport", () => {
+		beforeEach(() => {
+			globalThis.cache = cacheTransport;
+		});
+
+		it("uses the transport for reads", async () => {
+			cacheTransport.get.mockResolvedValueOnce({
+				value: { type: "route", body: "{}" },
+				lastModified: Date.now(),
+			});
+
+			await cache.get("key");
+
+			expect(cacheTransport.get).toHaveBeenCalledWith("key", "cache");
+			expect(incrementalCache.get).not.toHaveBeenCalled();
+		});
+
+		it("uses the transport for writes and deletes", async () => {
+			await cache.set("key", { kind: "REDIRECT", props: {} });
+			await cache.set("deleted", undefined);
+
+			expect(cacheTransport.set).toHaveBeenCalledWith(
+				"key",
+				expect.objectContaining({ type: "redirect" }),
+				"cache"
+			);
+			expect(cacheTransport.delete).toHaveBeenCalledWith("deleted");
+			expect(incrementalCache.set).not.toHaveBeenCalled();
+			expect(incrementalCache.delete).not.toHaveBeenCalled();
+		});
+
+		it("uses the transport for tag revalidation", async () => {
+			await cache.revalidateTag(["one", "two"]);
+
+			expect(cacheTransport.revalidateTags).toHaveBeenCalledWith(["one", "two"]);
+			expect(tagCache.getByTag).not.toHaveBeenCalled();
+		});
 	});
 
 	describe("get", () => {

@@ -53,6 +53,14 @@ const incrementalCache = {
 	delete: vi.fn(),
 };
 
+const cacheTransport = {
+	name: "transport",
+	get: vi.fn(),
+	set: vi.fn(),
+	delete: vi.fn(),
+	revalidateTags: vi.fn(),
+};
+
 const tagCache = {
 	name: "mock",
 	getByTag: vi.fn(),
@@ -85,6 +93,7 @@ beforeEach(() => {
 			disableIncrementalCache: false,
 		},
 	};
+	globalThis.cache = undefined;
 });
 
 describe("cacheInterceptor", () => {
@@ -149,6 +158,22 @@ describe("cacheInterceptor", () => {
 				}),
 			})
 		);
+	});
+
+	it("should retrieve content through the dedicated cache transport", async () => {
+		globalThis.cache = cacheTransport;
+		cacheTransport.get.mockResolvedValueOnce({
+			value: {
+				type: "app",
+				html: "From transport",
+			},
+		});
+
+		const result = await cacheInterceptor(createEvent({ url: "/albums" }));
+
+		expect(cacheTransport.get).toHaveBeenCalledWith("/albums");
+		expect(incrementalCache.get).not.toHaveBeenCalled();
+		expect(await fromReadableStream(result.body)).toBe("From transport");
 	});
 
 	it("should take no action when tagCache lasModified is -1 for app type", async () => {
