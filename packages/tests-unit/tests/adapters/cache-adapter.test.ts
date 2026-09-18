@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from "node:async_hooks";
+
 import { handler } from "@opennextjs/core/adapters/cache-handler";
 import type { InternalEvent } from "@opennextjs/core/types/open-next";
 import { toReadableStream } from "@opennextjs/core/utils/stream";
@@ -51,6 +53,16 @@ describe("cache adapter stream bodies", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		globalThis.openNextConfig = { default: {} };
+	});
+
+	test("preserves existing request context storage", async () => {
+		const requestStorage = new AsyncLocalStorage();
+		globalThis.__openNextAls = requestStorage;
+		vi.resetModules();
+
+		await import("@opennextjs/core/adapters/cache-handler");
+
+		expect(globalThis.__openNextAls).toBe(requestStorage);
 	});
 
 	test("stores a value from a streamed request body", async () => {

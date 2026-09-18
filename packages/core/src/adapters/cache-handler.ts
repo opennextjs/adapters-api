@@ -19,7 +19,7 @@ import { fromReadableStream, toReadableStream } from "../utils/stream.js";
 
 import { debug, error } from "./logger.js";
 
-globalThis.__openNextAls = new AsyncLocalStorage();
+globalThis.__openNextAls ??= new AsyncLocalStorage();
 
 const SOFT_TAG_PREFIX = "_N_T_/";
 
