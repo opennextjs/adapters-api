@@ -186,6 +186,14 @@ describe("local cache", () => {
 			const event = mockHandler.mock.calls[0][0];
 			expect(event.query).toEqual({ type: "composable" });
 		});
+
+		it("should reject an unsuccessful response", async () => {
+			mockHandler.mockResolvedValue(createMockResult({ statusCode: 500 }));
+
+			await expect(localCache.set("key", {})).rejects.toThrow(
+				"Failed to set cache entry: cache handler returned 500"
+			);
+		});
 	});
 
 	describe("delete", () => {
@@ -197,6 +205,14 @@ describe("local cache", () => {
 			const event = mockHandler.mock.calls[0][0];
 			expect(event.method).toBe("DELETE");
 			expect(event.rawPath).toBe("/cache/key");
+		});
+
+		it("should reject an unsuccessful response", async () => {
+			mockHandler.mockResolvedValue(createMockResult({ statusCode: 500 }));
+
+			await expect(localCache.delete("key")).rejects.toThrow(
+				"Failed to delete cache entry: cache handler returned 500"
+			);
 		});
 	});
 
@@ -210,6 +226,14 @@ describe("local cache", () => {
 			expect(event.method).toBe("POST");
 			expect(event.rawPath).toBe("/cache/revalidate-tags");
 			expect(await fromReadableStream(event.body)).toBe(JSON.stringify({ tags: ["tag1", "tag2"] }));
+		});
+
+		it("should reject an unsuccessful response", async () => {
+			mockHandler.mockResolvedValue(createMockResult({ statusCode: 500 }));
+
+			await expect(localCache.revalidateTags(["tag"])).rejects.toThrow(
+				"Failed to revalidate cache tags: cache handler returned 500"
+			);
 		});
 	});
 

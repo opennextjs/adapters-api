@@ -23,6 +23,19 @@ async function getHandler() {
 	return handler;
 }
 
+/**
+ * Rejects unsuccessful in-process cache mutations.
+ *
+ * @param result Internal cache handler response.
+ * @param operation Mutation being performed.
+ * @throws When the cache handler returns a non-success status.
+ */
+function ensureResultOk(result: InternalResult, operation: string): void {
+	if (result.statusCode < 200 || result.statusCode >= 300) {
+		throw new Error(`Failed to ${operation}: cache handler returned ${result.statusCode}`);
+	}
+}
+
 const localCache: Cache = {
 	name: "local-cache",
 	get: async (key, cacheType) => {
@@ -63,7 +76,8 @@ const localCache: Cache = {
 			remoteAddress: "127.0.0.1",
 			body: toReadableStream(JSON.stringify({ value })),
 		};
-		await h(event);
+		const result = await h(event);
+		ensureResultOk(result, "set cache entry");
 	},
 	delete: async (key) => {
 		const h = (await getHandler())!;
@@ -79,7 +93,8 @@ const localCache: Cache = {
 			cookies: {},
 			remoteAddress: "127.0.0.1",
 		};
-		await h(event);
+		const result = await h(event);
+		ensureResultOk(result, "delete cache entry");
 	},
 	revalidateTags: async (tags) => {
 		const h = (await getHandler())!;
@@ -95,7 +110,8 @@ const localCache: Cache = {
 			remoteAddress: "127.0.0.1",
 			body: toReadableStream(JSON.stringify({ tags })),
 		};
-		await h(event);
+		const result = await h(event);
+		ensureResultOk(result, "revalidate cache tags");
 	},
 };
 
