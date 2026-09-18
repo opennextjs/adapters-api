@@ -59,6 +59,21 @@ describe("convertFrom", () => {
 		});
 	});
 
+	it("should preserve HTTPS from the forwarded protocol header", async () => {
+		const result = await converter.convertFrom(
+			new IncomingMessage({
+				url: "/path",
+				method: "GET",
+				headers: {
+					host: "example.com",
+					"x-forwarded-proto": "https",
+				},
+			})
+		);
+
+		expect(result.url).toBe("https://example.com/path");
+	});
+
 	it("should convert GET request with default remoteAddress", async () => {
 		const result = await converter.convertFrom(
 			new IncomingMessage({

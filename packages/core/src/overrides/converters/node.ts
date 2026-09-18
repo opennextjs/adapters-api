@@ -20,10 +20,10 @@ const converter: Converter = {
 				.map(([key, value]) => [key.toLowerCase(), Array.isArray(value) ? value.join(",") : value])
 				.filter(([key]) => key)
 		);
+		const forwardedProtocol = headers["x-forwarded-proto"]?.split(",", 1)[0]?.trim();
+		const protocol = req.protocol ?? (forwardedProtocol === "https" ? "https" : "http");
 		// https://nodejs.org/api/http.html#messageurl
-		const url = new URL(
-			`${req.protocol ? req.protocol : "http"}://${extractHostFromHeaders(headers)}${req.url}`
-		);
+		const url = new URL(`${protocol}://${extractHostFromHeaders(headers)}${req.url}`);
 		const query = getQueryFromSearchParams(url.searchParams);
 
 		const cookieHeader = req.headers.cookie;
