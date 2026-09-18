@@ -45,9 +45,10 @@ export async function createCacheBundle(
 					overrides: {
 						converter: config.cacheHandler?.override?.converter,
 						wrapper: config.cacheHandler?.override?.wrapper,
-						incrementalCache: config.cacheHandler?.incrementalCache,
-						tagCache: config.cacheHandler?.tagCache,
-						cdnInvalidation: config.cacheHandler?.cdnInvalidation,
+						incrementalCache:
+							config.cacheHandler?.incrementalCache ?? config.default.override?.incrementalCache,
+						tagCache: config.cacheHandler?.tagCache ?? config.default.override?.tagCache,
+						cdnInvalidation: config.cacheHandler?.cdnInvalidation ?? config.default.override?.cdnInvalidation,
 					},
 					defaultOverrides: {
 						converter: defaultOverrides?.converter ?? "node",
