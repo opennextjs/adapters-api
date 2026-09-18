@@ -55,6 +55,7 @@ vi.mock("node:fs", () => ({
 
 import fs from "node:fs";
 
+import { openNextResolvePlugin } from "../../plugins/resolve.js";
 import type { NextAdapterOutputs } from "../../types/adapter.js";
 import type { BuildOptions } from "../helper.js";
 import * as buildHelper from "../helper.js";
@@ -220,5 +221,24 @@ describe("buildExternalNodeMiddleware", () => {
 		const esbuildCall = vi.mocked(buildHelper.esbuildAsync).mock.calls[0];
 		const esbuildOptions = esbuildCall[0];
 		expect(esbuildOptions.banner?.js).toContain("// banner for middleware");
+	});
+
+	test("forwards cache overrides to the resolve plugin", async () => {
+		const options = createMockBuildOpts({
+			config: {
+				default: {},
+				dangerous: {},
+				middleware: { external: true, override: { cache: "fetch" } },
+			} as BuildOptions["config"],
+		});
+
+		await buildExternalNodeMiddleware(options, { cache: "platform-cache" }, createMockNextOutputs());
+
+		expect(openNextResolvePlugin).toHaveBeenCalledWith(
+			expect.objectContaining({
+				overrides: expect.objectContaining({ cache: "fetch" }),
+				defaultOverrides: expect.objectContaining({ cache: "platform-cache" }),
+			})
+		);
 	});
 });
