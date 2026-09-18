@@ -81,4 +81,15 @@ describe("cache adapter stream bodies", () => {
 		expect(result.statusCode).toBe(200);
 		expect(mocks.tagCache.getPathsByTags).toHaveBeenCalledWith(["one", "two"]);
 	});
+
+	test("rejects non-string tags", async () => {
+		const result = await handler(
+			createEvent("POST", "/cache/revalidate-tags", JSON.stringify({ tags: ["one", 2] }))
+		);
+
+		expect(result.statusCode).toBe(400);
+		expect(mocks.tagCache.getPathsByTags).not.toHaveBeenCalled();
+		expect(mocks.tagCache.writeTags).not.toHaveBeenCalled();
+		expect(mocks.cdnInvalidationHandler.invalidatePaths).not.toHaveBeenCalled();
+	});
 });

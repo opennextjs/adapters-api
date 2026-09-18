@@ -208,8 +208,12 @@ async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<
 
 	let tags: string[];
 	try {
-		const parsed = JSON.parse(bodyText);
-		tags = Array.isArray(parsed.tags) ? parsed.tags : [];
+		const parsed = JSON.parse(bodyText) as { tags?: unknown };
+		tags =
+			Array.isArray(parsed.tags) &&
+			parsed.tags.every((tag: unknown): tag is string => typeof tag === "string")
+				? parsed.tags
+				: [];
 	} catch {
 		return buildErrorResponse("Invalid JSON body", 400);
 	}
