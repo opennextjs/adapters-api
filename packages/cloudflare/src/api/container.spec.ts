@@ -10,7 +10,9 @@ vi.mock("cloudflare:workers", () => ({
 }));
 
 vi.mock("@cloudflare/containers", () => ({
-	Container: class {},
+	Container: class {
+		containerFetch = vi.fn(() => Promise.resolve(new Response()));
+	},
 	getContainer: vi.fn(),
 }));
 
@@ -40,5 +42,18 @@ describe("OpenNextContainer", () => {
 			API_SECRET: "secret",
 			APP_ENV: "production",
 		});
+	});
+
+	test("forwards the public request protocol to the Node.js server", async () => {
+		const container = new OpenNextContainer({} as never, {} as never);
+
+		await container.fetch(
+			new Request("https://example.com/path", {
+				headers: { "x-forwarded-proto": "http" },
+			})
+		);
+
+		const init = vi.mocked(container.containerFetch).mock.calls[0]?.[1] as RequestInit;
+		expect(new Headers(init.headers).get("x-forwarded-proto")).toBe("https");
 	});
 });

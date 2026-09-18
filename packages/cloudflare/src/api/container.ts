@@ -35,13 +35,20 @@ export class OpenNextContainer extends Container {
 	 * In local workerd, the request received by a Durable Object can originate
 	 * from another runtime realm. The Container base class checks it with
 	 * `instanceof Request`, which then fails and coerces it to "[object Request]".
+	 * The public protocol is also recorded at this trusted boundary because the
+	 * container transport itself uses HTTP.
+	 *
+	 * @param request The request to forward to the container.
+	 * @returns The response produced by the container.
 	 */
 	override fetch(request: Request): Promise<Response> {
+		const headers = new Headers(request.headers);
+		headers.set("x-forwarded-proto", new URL(request.url).protocol.slice(0, -1));
 		return this.containerFetch(
 			request.url,
 			{
 				method: request.method,
-				headers: request.headers,
+				headers,
 				body: request.method === "GET" || request.method === "HEAD" ? undefined : request.body,
 			},
 			this.defaultPort
