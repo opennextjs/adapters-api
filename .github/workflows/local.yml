@@ -91,3 +91,9 @@ jobs:
       - name: Run E2E Test in Cloudflare Environment
         shell: bash
         run: pnpm turbo e2e:cf
+
+      - name: Run Cloudflare Container E2E Test
+        shell: bash
+        run: |
+          pnpm --filter examples-cloudflare/e2e-app-router build:worker:container
+          pnpm --filter examples-cloudflare/e2e-app-router e2e:container
