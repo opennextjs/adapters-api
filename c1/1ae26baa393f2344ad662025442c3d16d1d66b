@@ -1,0 +1,25 @@
+packages/core/src/build/adapter.ts
+  s_6e7661281c33ab::t_9d51ff8203029a 19,64,267-273,279,283-285
+packages/core/src/build/generateOutput.ts
+  s_6e7661281c33ab::t_d0bb1cbbbbab84 197,202-203
+packages/core/src/plugins/resolve.ts
+  s_6e7661281c33ab::t_27a0ef5b3a3429 77
+packages/tests-unit/tests/overrides/cache/local.test.ts
+  s_6e7661281c33ab::t_8f9207d5f04b55 3,84-91,167,212
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c11ae26baa393f2344ad662025442c3d16d1d66b",
+  "prompts": {},
+  "sessions": {
+    "s_6e7661281c33ab": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f50547400ffeepgu0St3mEd9GA",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
