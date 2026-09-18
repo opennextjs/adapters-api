@@ -1,3 +1,4 @@
+import adapterCallback from "@opennextjs/aws/adapter.js";
 import { describe, expect, test, vi } from "vitest";
 
 const buildAdapter = vi.hoisted(() => vi.fn((callback) => callback));
@@ -5,8 +6,6 @@ const buildAdapter = vi.hoisted(() => vi.fn((callback) => callback));
 vi.mock("@opennextjs/core/build/adapter.js", () => ({
 	buildAdapter,
 }));
-
-import adapterCallback from "@opennextjs/aws/adapter.js";
 
 describe("AWS adapter cache defaults", () => {
 	test("builds the cache handler as an AWS Lambda backed by shared caches", () => {
