@@ -1,0 +1,21 @@
+packages/core/src/build/adapter.spec.ts
+  s_6e7661281c33ab::t_939114158f6f23 410-427
+packages/tests-unit/tests/build/aws-adapter.test.ts
+  s_6e7661281c33ab::t_3aa91e28637e14 1-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f22f401c61ce94dd5b4aa2f574e8a4ede6861212",
+  "prompts": {},
+  "sessions": {
+    "s_6e7661281c33ab": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f50547400ffeepgu0St3mEd9GA",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
