@@ -1,0 +1,21 @@
+packages/core/src/build/dockerfile.spec.ts
+  s_9ce9cd18aa88c7::t_cd984f542793e5 10-17
+packages/core/src/build/dockerfile.ts
+  s_9ce9cd18aa88c7::t_b3bf120650d6df 14-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "b47c567ec650487548947d9b729f0eac6f4be188",
+  "prompts": {},
+  "sessions": {
+    "s_9ce9cd18aa88c7": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f5054bdabffe0Cy7W3SWNVFhj7",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
