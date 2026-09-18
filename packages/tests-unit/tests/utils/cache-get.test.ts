@@ -133,6 +133,20 @@ describe("parseCacheGetResponse", () => {
 			});
 		});
 
+		it("should preserve a false revalidation value", () => {
+			const result = parseCacheGetResponse(
+				{
+					"x-opennext-cache-found": "true",
+					"x-opennext-cache-type": "fetch",
+					"x-opennext-cache-fetch-kind": "FETCH",
+					"x-opennext-cache-revalidate": "false",
+				},
+				"body"
+			);
+
+			expect(result?.value).toMatchObject({ revalidate: false });
+		});
+
 		it("should collect prefixed headers", () => {
 			const headers = {
 				"x-opennext-cache-found": "true",
@@ -184,6 +198,20 @@ describe("parseCacheGetResponse", () => {
 				meta: { status: 200 },
 				revalidate: 300,
 			});
+		});
+
+		it("should preserve a false revalidation value", () => {
+			const result = parseCacheGetResponse(
+				{
+					"x-opennext-cache-found": "true",
+					"x-opennext-cache-type": "cache",
+					"x-opennext-cache-sub-type": "route",
+					"x-opennext-cache-revalidate": "false",
+				},
+				"route body"
+			);
+
+			expect(result?.value).toMatchObject({ revalidate: false });
 		});
 
 		it("should reconstruct a page cache entry", () => {
