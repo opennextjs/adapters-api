@@ -74,6 +74,7 @@ export type BundleType =
 	| "imageOptimization"
 	| "revalidation"
 	| "warmer"
+	| "cache"
 	| "tagCache";
 export type BundleDefaults = Partial<Record<BundleType, DefaultOverrides>>;
 

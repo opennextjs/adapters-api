@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
+import type { ReadableStream } from "node:stream/web";
 
 import type { StoredComposableCacheEntry } from "@/types/cache";
 import type { InternalEvent, InternalResult } from "@/types/open-next";
@@ -15,7 +16,7 @@ import { createGenericHandler } from "../core/createGenericHandler.js";
 import { resolveCdnInvalidation, resolveIncrementalCache, resolveTagCache } from "../core/resolve.js";
 import { writeTags } from "../utils/cache.js";
 import { runWithOpenNextRequestContext } from "../utils/promise.js";
-import { toReadableStream } from "../utils/stream.js";
+import { fromReadableStream, toReadableStream } from "../utils/stream.js";
 
 import { debug, error } from "./logger.js";
 
@@ -135,16 +136,30 @@ async function handleGet(key: string, cacheType: CacheEntryType): Promise<Intern
 	}
 }
 
-async function handleSet(key: string, cacheType: CacheEntryType, body?: Buffer): Promise<InternalResult> {
+/**
+ * Stores a cache entry from a streamed JSON request body.
+ *
+ * @param key Cache key to update.
+ * @param cacheType Type of cache entry being stored.
+ * @param body Stream containing the serialized cache value.
+ * @return The cache operation response.
+ * @throws When reading the request stream fails.
+ */
+async function handleSet(
+	key: string,
+	cacheType: CacheEntryType,
+	body?: ReadableStream<Uint8Array>
+): Promise<InternalResult> {
 	debug("set", { key, cacheType });
+	const bodyText = body ? await fromReadableStream(body) : "";
 
 	let payload: {
 		value?: Record<string, unknown>;
 	} = {};
 
-	if (body && body.length > 0) {
+	if (bodyText.length > 0) {
 		try {
-			payload = JSON.parse(body.toString("utf-8"));
+			payload = JSON.parse(bodyText);
 		} catch {
 			return buildErrorResponse("Invalid JSON body", 400);
 		}
@@ -175,16 +190,24 @@ async function handleDelete(key: string): Promise<InternalResult> {
 	}
 }
 
-async function handleRevalidateTags(body?: Buffer): Promise<InternalResult> {
+/**
+ * Revalidates cache tags from a streamed JSON request body.
+ *
+ * @param body Stream containing the tags to revalidate.
+ * @return The cache operation response.
+ * @throws When reading the request stream fails.
+ */
+async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<InternalResult> {
 	debug("revalidateTags");
+	const bodyText = body ? await fromReadableStream(body) : "";
 
-	if (!body || body.length === 0) {
+	if (bodyText.length === 0) {
 		return buildErrorResponse("Missing request body", 400);
 	}
 
 	let tags: string[];
 	try {
-		const parsed = JSON.parse(body.toString("utf-8"));
+		const parsed = JSON.parse(bodyText);
 		tags = Array.isArray(parsed.tags) ? parsed.tags : [];
 	} catch {
 		return buildErrorResponse("Invalid JSON body", 400);

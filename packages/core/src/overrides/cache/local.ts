@@ -4,7 +4,7 @@ import type { InternalEvent, InternalResult } from "@/types/open-next";
 import type { Cache } from "@/types/overrides";
 import { parseCacheGetResponse } from "@/utils/cache-get";
 import { getMonorepoRelativePath } from "@/utils/normalize-path";
-import { fromReadableStream } from "@/utils/stream";
+import { fromReadableStream, toReadableStream } from "@/utils/stream";
 
 let handler: ((event: InternalEvent) => Promise<InternalResult>) | null = null;
 
@@ -34,7 +34,7 @@ const localCache: Cache = {
 			remoteAddress: "127.0.0.1",
 		};
 		const result = await h(event);
-		const bodyText = await fromReadableStream(result.body);
+		const bodyText = result.body ? await fromReadableStream(result.body) : "";
 		// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 		return parseCacheGetResponse(result.headers, bodyText) as any;
 	},
@@ -55,7 +55,7 @@ const localCache: Cache = {
 			query,
 			cookies: {},
 			remoteAddress: "127.0.0.1",
-			body: Buffer.from(JSON.stringify({ value })),
+			body: toReadableStream(JSON.stringify({ value })),
 		};
 		await h(event);
 	},
@@ -87,7 +87,7 @@ const localCache: Cache = {
 			query: {},
 			cookies: {},
 			remoteAddress: "127.0.0.1",
-			body: Buffer.from(JSON.stringify({ tags })),
+			body: toReadableStream(JSON.stringify({ tags })),
 		};
 		await h(event);
 	},
