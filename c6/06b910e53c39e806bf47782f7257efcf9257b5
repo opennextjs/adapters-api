@@ -1,0 +1,297 @@
+.changeset/cloudflare-containers.md
+  s_acee190a31ec7d::t_8c2b0a91d0e3a8 1-8
+.changeset/config.json
+  s_acee190a31ec7d::t_7bd4aacda219d2 2
+.github/actions/setup-playwright/action.yml
+  s_acee190a31ec7d::t_a8e78c8aa6476a 14
+.github/actions/setup/action.yml
+  s_acee190a31ec7d::t_b0ef86dd2b0528 13,15,18
+.github/workflows/changesets.yml
+  s_acee190a31ec7d::t_69a356f3f3cb03 10-11,19,38,40-41
+.github/workflows/checks.yml
+  s_acee190a31ec7d::t_717af8314f3cd6 21
+.github/workflows/e2e.yml
+  s_acee190a31ec7d::t_28c092d012ec71 47,83,88,95,97,100,128,162,165,167-168,175
+.github/workflows/local.yml
+  s_acee190a31ec7d::t_4bbcb627fd9ae0 22,78,94-99
+.github/workflows/playwright.yml
+  s_acee190a31ec7d::t_262df348fe7b27 17,38
+.github/workflows/prereleases.yml
+  s_acee190a31ec7d::t_04f7447e2119dd 14
+.oxlintrc.json
+  s_acee190a31ec7d::t_2c205500a1aaf4 17
+README.md
+  s_acee190a31ec7d::t_8867318aa70729 107-115,121,124,127-145,151-162
+examples-cloudflare/common/config-e2e.ts
+  s_acee190a31ec7d::t_2f211ac2f8c80c 7-21,32-38,46-47,50,84
+examples-cloudflare/e2e/app-pages-router/package.json
+  s_acee190a31ec7d::t_92ab7477582896 12-13,17
+examples-cloudflare/e2e/app-router/e2e/container.test.ts
+  s_acee190a31ec7d::t_0f92ca86cbb99c 1,3-4,6,9-10,12-14
+examples-cloudflare/e2e/app-router/e2e/headers.test.ts
+  s_acee190a31ec7d::t_d8f6fb5cd784fd 32
+examples-cloudflare/e2e/app-router/e2e/middleware.rewrite.test.ts
+  s_acee190a31ec7d::t_0cec1929766451 26-32,66
+examples-cloudflare/e2e/app-router/e2e/playwright.container.config.ts
+  s_acee190a31ec7d::t_d6c1f91161cf23 1-8
+examples-cloudflare/e2e/app-router/open-next.config.ts
+  s_acee190a31ec7d::t_b8608adc1f5557 27
+examples-cloudflare/e2e/app-router/open-next.container.config.ts
+  s_acee190a31ec7d::t_a0c79565e04515 4
+examples-cloudflare/e2e/app-router/package.json
+  s_acee190a31ec7d::t_b29543d5c3796e 12-14,16-17,19
+examples-cloudflare/e2e/app-router/proxy.ts
+  s_acee190a31ec7d::t_78212050e8c586 4,50
+examples-cloudflare/e2e/app-router/wrangler.container.jsonc
+  s_acee190a31ec7d::t_b06eea03a6ac77 4-5,8,11,13-16,18-27,29-31
+examples-cloudflare/e2e/experimental/package.json
+  s_acee190a31ec7d::t_aa08a1ff20952a 11-12
+examples-cloudflare/e2e/pages-router/package.json
+  s_acee190a31ec7d::t_8320b0a73ae71d 12-13
+examples-cloudflare/playground16/package.json
+  s_acee190a31ec7d::t_b34bf6e31ec191 20
+examples/app-router/proxy.ts
+  s_acee190a31ec7d::t_9c66683a6ff68d 50
+package.json
+  s_acee190a31ec7d::t_72fd6dd56e5bc3 31,40-42
+packages/aws/bin/open-next.js
+  s_acee190a31ec7d::t_5274a947c295d2 1,3
+packages/aws/package.json
+  s_acee190a31ec7d::t_b74f52d8298338 18,22,79
+packages/aws/src/adapter.ts
+  s_acee190a31ec7d::t_207a9a4093a78a 12
+packages/aws/src/overrides/converters/aws-apigw-v1.ts
+  s_acee190a31ec7d::t_9371ec719d9e45 6,8,11-12,77,93-97,100,111-113,116,118-119,127-131,133
+packages/aws/src/overrides/converters/aws-apigw-v2.ts
+  s_acee190a31ec7d::t_990443bdb94e35 1-2,10,12,15-16,43,46,49,52,54,75-77,101-105,107,124,126-133,140-144,146
+packages/aws/src/overrides/converters/aws-cloudfront.ts
+  s_acee190a31ec7d::t_da0e763a00f31f 9,18-19,87,134-135,138-151,153-154,156-170,172,174-175,177-185,187,190-191,199-211,213
+packages/aws/src/overrides/converters/aws-streaming.ts
+  s_acee190a31ec7d::t_667cc91f9abfc7 1-41
+packages/aws/src/overrides/converters/response-stream.ts
+  s_acee190a31ec7d::t_42b852d49ce688 1-45
+packages/aws/src/overrides/converters/sqs-revalidate.ts
+  s_acee190a31ec7d::t_049ef022cf1d19 17,19-27
+packages/aws/src/overrides/wrappers/aws-lambda-compressed.ts
+  s_acee190a31ec7d::t_54716004b715f1 1,4,21-23,37-41,50-62,64-88
+packages/aws/src/overrides/wrappers/aws-lambda-streaming.ts
+  s_acee190a31ec7d::t_a4a7f34f71f7ef 4,72-80,82-84
+packages/aws/src/overrides/wrappers/aws-lambda.ts
+  s_acee190a31ec7d::t_88bdd5cc3cbc08 24-30
+packages/cloudflare/bin/opennextjs-cloudflare.js
+  s_acee190a31ec7d::t_be3947fd1e80ac 1-3
+packages/cloudflare/package.json
+  s_acee190a31ec7d::t_b025c573bd0779 22,26,55,77,84
+packages/cloudflare/src/api/config.spec.ts
+  s_acee190a31ec7d::t_a2434d10f143bb 1-47
+packages/cloudflare/src/api/config.ts
+  s_acee190a31ec7d::t_a0667db64b67a5 25-35,71-99,104-108,115,166-171
+packages/cloudflare/src/api/container.spec.ts
+  s_acee190a31ec7d::t_154c1703d5497d 1-80
+packages/cloudflare/src/api/container.ts
+  s_acee190a31ec7d::t_96499d8124757e 1-73
+packages/cloudflare/src/cli/build/open-next/compileContainer.ts
+  s_acee190a31ec7d::t_733612a79b61c3 1-18,20-21
+packages/cloudflare/src/cli/build/patches/ast/webpack-runtime.spec.ts
+  s_acee190a31ec7d::t_23b5c23812cccd 4-8,117-145
+packages/cloudflare/src/cli/build/patches/ast/webpack-runtime.ts
+  s_acee190a31ec7d::t_ff34fe8a3a1607 12-13,28-29,55,74-111,127-132,147
+packages/cloudflare/src/cli/build/patches/plugins/opentelemetry.spec.ts
+  s_acee190a31ec7d::t_233365ff703670 1-42
+packages/cloudflare/src/cli/build/patches/plugins/opentelemetry.ts
+  s_acee190a31ec7d::t_5df960e1201908 1-41
+packages/cloudflare/src/cli/build/patches/plugins/turbopack.spec.ts
+  s_acee190a31ec7d::t_4c9ef0d2192bcd 1-50
+packages/cloudflare/src/cli/build/patches/plugins/turbopack.ts
+  s_acee190a31ec7d::t_9617c2d249d7c8 3,33-38,42-43,46-47,53-59,66-70
+packages/cloudflare/src/cli/build/utils/copy-package-cli-files.spec.ts
+  s_acee190a31ec7d::t_232dfab0675ae1 1-29
+packages/cloudflare/src/cli/build/utils/copy-package-cli-files.ts
+  s_acee190a31ec7d::t_c2a0d0f1b89235 8-9,13,15-19,28-31
+packages/cloudflare/src/cli/build/utils/ensure-cf-config.spec.ts
+  s_acee190a31ec7d::t_9d05ada32d2646 1-31
+packages/cloudflare/src/cli/build/utils/ensure-cf-config.ts
+  s_acee190a31ec7d::t_9341d2f6444a2c 10-11,16-19,36-41,54-81,107-131
+packages/cloudflare/src/cli/commands/build.ts
+  s_acee190a31ec7d::t_ec7039fccc19d5 2,43,61-65
+packages/cloudflare/src/cli/templates/container.ts
+  s_acee190a31ec7d::t_9768751377f44b 1-52,54
+packages/cloudflare/src/cli/utils/nextjs-support.spec.ts
+  s_acee190a31ec7d::t_a6390a56d289ab 1-15
+packages/cloudflare/src/cli/utils/nextjs-support.ts
+  s_acee190a31ec7d::t_da1dd86ef631d6 4-13
+packages/core/package.json
+  s_acee190a31ec7d::t_28f8658306c73f 72-73
+packages/core/src/adapters/cache-adapter.ts
+  s_acee190a31ec7d::t_a25281781831f0 3,6
+packages/core/src/adapters/cache-handler.ts
+  s_acee190a31ec7d::t_08f00e8efdce4b 1-2,4,6-13,15-18,20,22-24,26-45,48-59,61-69,72-102,104-106,110-130,133-165,167,169-170,173-179,182-183,185-191,194-206,209-218,220-301,305-307,309-310,312-315,317-318,320-332,335-344,347-348,350-368,371-379,382-438,440-460,462-467,469-491
+packages/core/src/adapters/cache.ts
+  s_acee190a31ec7d::t_67e1e9b91005ee 10-18,49,92,186,193,213,228,249,268,271,308-312
+packages/core/src/adapters/composable-cache.ts
+  s_acee190a31ec7d::t_83c66cfe128da9 10-18,33,73,114-116
+packages/core/src/adapters/config/index.ts
+  s_acee190a31ec7d::t_34124f1e57143f 12,22
+packages/core/src/adapters/config/util.ts
+  s_acee190a31ec7d::t_e7c8705dcb3853 4,18,20-25,29,35-36,39-44,47-49,57,61,67,69
+packages/core/src/build/adapter.spec.ts
+  s_acee190a31ec7d::t_eedf4deefcded8 63-66,109,143-150,165,221-241,277-284,454-465,499-535,612-614
+packages/core/src/build/adapter.ts
+  s_acee190a31ec7d::t_74b2f50ab1c41c 11,23,38,45,67-73,105,123,127,130,133,198,206-215,219,224,227,250,258,264,270,276,283-285,290
+packages/core/src/build/copyAdapterFiles.ts
+  s_acee190a31ec7d::t_f7547ef6045f6b 14-15,17,27,31
+packages/core/src/build/createCacheBundle.spec.ts
+  s_acee190a31ec7d::t_6810c122be9aa5 1-116
+packages/core/src/build/createCacheBundle.ts
+  s_acee190a31ec7d::t_a09a47bd1df43b 10-16,32,36-41,48-51
+packages/core/src/build/createMiddleware.ts
+  s_acee190a31ec7d::t_67fcfd9ab710e4 5,11,17-18,30-32,50
+packages/core/src/build/createRoutingConfig.ts
+  s_acee190a31ec7d::t_c83a62ff00eb0b 1-185
+packages/core/src/build/createServerBundle.ts
+  s_acee190a31ec7d::t_225fa71dcaa2c4 21,157,179-183,295
+packages/core/src/build/dockerfile.spec.ts
+  s_acee190a31ec7d::t_61ce1ea7932d40 1-20
+packages/core/src/build/dockerfile.ts
+  s_acee190a31ec7d::t_84702ecb72349a 1-21
+packages/core/src/build/edge/createEdgeBundle.ts
+  s_acee190a31ec7d::t_18a84929b22468 82,93
+packages/core/src/build/generateOutput.spec.ts
+  s_acee190a31ec7d::t_90d6457b163c9d 71-86
+packages/core/src/build/generateOutput.ts
+  s_acee190a31ec7d::t_3b15f4c46187d3 14-15,97-104,107-108,110,128-141,164-167,192-199,202,210,214-218,224,228,233-235,269-273,280-281,288-289,300,306-307,310,316-317
+packages/core/src/build/middleware/buildNodeMiddleware.spec.ts
+  s_acee190a31ec7d::t_af8e2eee1dfcfc 1-244
+packages/core/src/build/middleware/buildNodeMiddleware.ts
+  s_acee190a31ec7d::t_a5ca83bb8546a9 4,8,12-14,17-18,24-35,38-40,42,48-52,55-57,63-64,66-76,78-80,86-115,121-124,133,144,157-159,162,178-180
+packages/core/src/build/normalizeRouting.ts
+  s_acee190a31ec7d::t_2d725092bf73ad 1-244
+packages/core/src/build/validateConfig.spec.ts
+  s_acee190a31ec7d::t_6025f9e8ac7197 23,37-111
+packages/core/src/build/validateConfig.ts
+  s_acee190a31ec7d::t_afa50d48492fa2 1-2,11-19,24,33-49,51-54,56-60,83-97,102,108-114,123,126,132,143,146-153,155,157,160,165,168,175,177,179,182,184-189
+packages/core/src/core/nodeMiddlewareHandler.ts
+  s_acee190a31ec7d::t_63ddba2657f801 5-6,31-32
+packages/core/src/core/requestHandler.ts
+  s_acee190a31ec7d::t_9704ac96c4ff7d 138-143,186-189,225
+packages/core/src/core/resolve.ts
+  s_acee190a31ec7d::t_d78aed478f12eb 162-165,167-170
+packages/core/src/core/routing/cacheInterceptor.ts
+  s_acee190a31ec7d::t_42ead43a6394f8 147,343
+packages/core/src/core/routing/middleware.ts
+  s_acee190a31ec7d::t_51de0336473e11 37-74,81,89,98-125,137-154,156-163,165-187,191-204,206-209,211-227
+packages/core/src/core/routing/priorityRoutes.ts
+  s_acee190a31ec7d::t_c7da7f4effe2f0 1-125
+packages/core/src/core/routing/util.ts
+  s_acee190a31ec7d::t_692b47585615d9 195,198
+packages/core/src/core/routingHandler.ts
+  s_acee190a31ec7d::t_52e341fc19f88f 1-3,12,15,19-21,32-33,42-71,73,75-77,79-82,84,87-213,216-219,235-304,306-344,346-348,351-358,360-367,370-378,382-402,405-420,423-438,440-444,447-449,451,453,457-461,464-478,481-483,485,488-489,494,499-501
+packages/core/src/http/request.ts
+  s_acee190a31ec7d::t_ff9d4d7d2cf9ae 7,20,44-91
+packages/core/src/overrides/cache/fetch.ts
+  s_acee190a31ec7d::t_c6b95bbdbfc478 6-18,40,45,49-50,53,58
+packages/core/src/overrides/cache/local.ts
+  s_acee190a31ec7d::t_70040bade71f70 7,11-16,19,26-38,56,77,79-80,96-97,111,113-114
+packages/core/src/overrides/converters/dummy.ts
+  s_acee190a31ec7d::t_b9f29ec0162b50 15,17-20
+packages/core/src/overrides/converters/edge.ts
+  s_acee190a31ec7d::t_35ce035b7c8d54 1-2,7,36,53-66,69-72,75-119,121-132,137-206
+packages/core/src/overrides/converters/node.ts
+  s_acee190a31ec7d::t_49223a5d3316f1 1-3,7,15-16,23-24,26,44-65
+packages/core/src/overrides/proxyExternalRequest/node.ts
+  s_acee190a31ec7d::t_1f009671e2b5ae 3,39-47,80,84-87,90-94
+packages/core/src/overrides/wrappers/cloudflare-edge.ts
+  s_acee190a31ec7d::t_3f9e49ae9f6f6d 33,47-50,52,55-56
+packages/core/src/overrides/wrappers/cloudflare-node.ts
+  s_acee190a31ec7d::t_39237105fe1242 1,23-26,30,35
+packages/core/src/overrides/wrappers/dummy.ts
+  s_acee190a31ec7d::t_1754128bb60c42 5,8-12
+packages/core/src/overrides/wrappers/express-dev.ts
+  s_acee190a31ec7d::t_a26cea437c37c7 24-29,40-46
+packages/core/src/overrides/wrappers/node.ts
+  s_acee190a31ec7d::t_7bf37530b92d9a 10,18-23
+packages/core/src/plugins/edge.ts
+  s_acee190a31ec7d::t_39ddf82671efe3 16,141,161
+packages/core/src/plugins/resolve.spec.ts
+  s_acee190a31ec7d::t_3b68c4b45305f4 94,256,264
+packages/core/src/types/adapter.ts
+  s_acee190a31ec7d::t_a3a6559051e58a 1-2,4-5,11-25,31-32,36-63
+packages/core/src/types/global.ts
+  s_acee190a31ec7d::t_42758851cfd9da 204
+packages/core/src/types/open-next.ts
+  s_acee190a31ec7d::t_abb853f68e8565 30,47,127,143-147
+packages/core/src/types/overrides.ts
+  s_acee190a31ec7d::t_ea3ceddb48a03a 228-250,256-262
+packages/core/src/utils/cache-get.ts
+  s_acee190a31ec7d::t_62c6489113ac47 25-36,114,138
+packages/tests-e2e/tests/appRouter/headers.test.ts
+  s_acee190a31ec7d::t_62e23fd4fd410f 33
+packages/tests-e2e/tests/appRouter/middleware.rewrite.test.ts
+  s_acee190a31ec7d::t_1c3e2b4b9fb4ab 59
+packages/tests-unit/tests/adapters/cache-adapter.test.ts
+  s_acee190a31ec7d::t_0d8fe559b1de2f 1-95
+packages/tests-unit/tests/adapters/cache.test.ts
+  s_acee190a31ec7d::t_cf3d1e38659df6 31-37,79,84-122
+packages/tests-unit/tests/adapters/composable-cache.test.ts
+  s_acee190a31ec7d::t_b49df8ec767e30 27-33,74-122
+packages/tests-unit/tests/build/copyAdapterFiles.test.ts
+  s_acee190a31ec7d::t_40fcea6489a98f 1-138
+packages/tests-unit/tests/build/createRoutingConfig.test.ts
+  s_acee190a31ec7d::t_7951381cf6954a 1-235
+packages/tests-unit/tests/build/normalizeRouting.test.ts
+  s_acee190a31ec7d::t_948b4e6f1d960d 1-272
+packages/tests-unit/tests/converters/aws-apigw-v1.test.ts
+  s_acee190a31ec7d::t_c348117855e034 4,8-29,33,50,65,115,154,195,236,277,320,328
+packages/tests-unit/tests/converters/aws-apigw-v2.test.ts
+  s_acee190a31ec7d::t_c56155df90a523 4,10-31,34,51,67,154,191,232,272,280
+packages/tests-unit/tests/converters/aws-cloudfront.test.ts
+  s_acee190a31ec7d::t_2fadbbe6e39e1c 4,10-31,34,62,87,113,140,252,292,335,343
+packages/tests-unit/tests/converters/aws-streaming.test.ts
+  s_acee190a31ec7d::t_f0ca8969f68ee2 1-54
+packages/tests-unit/tests/converters/node.test.ts
+  s_acee190a31ec7d::t_ca213f11d882d8 3,27,56,62-76,97,126,155,174,189,195,209,224,231
+packages/tests-unit/tests/converters/sqs-revalidate.test.ts
+  s_acee190a31ec7d::t_42dc9a4be85913 1-25
+packages/tests-unit/tests/core/routing/cacheInterceptor.test.ts
+  s_acee190a31ec7d::t_aa455fa0f18cb3 5,40,56-63,96,163-178
+packages/tests-unit/tests/core/routing/i18n.test.ts
+  s_acee190a31ec7d::t_21b423b7203ceb 4,32
+packages/tests-unit/tests/core/routing/middleware.test.ts
+  s_acee190a31ec7d::t_2f595046bed998 1,57,250-322,429-459
+packages/tests-unit/tests/core/routing/priorityRoutes.test.ts
+  s_acee190a31ec7d::t_b5af0b681ba492 1-120
+packages/tests-unit/tests/core/routing/routingHandler.middleware.test.ts
+  s_acee190a31ec7d::t_0d3ae00ef41245 1-150
+packages/tests-unit/tests/core/routing/routingHandler.test.ts
+  s_acee190a31ec7d::t_ed82abddb8b008 1-2,5-17,20,22-25,28-31,34-36,38-39,41-42,44-45,48-49,52-54,57-58,61-67,72,75-77,79-82,84,88-89,91-94,96,100-101,103-105,109-110,112-116,118,122-123,125,128-129,131-134,138-139,141-143,147-148,150-152,154-156,159-160,162,164-166,168,172-173,175,178-180,185-186,188-190
+packages/tests-unit/tests/core/routing/routingHandler.trailingSlash.test.ts
+  s_acee190a31ec7d::t_c8ac0f3ee4d608 1-2,5-11,13-35,37-38,40-44,47-50,53-58,61-63,66-78,80-82,84-86,88-90,92-93,95-96,99-100,102-105,107-112,114-117,119-124
+packages/tests-unit/tests/core/routing/util.test.ts
+  s_acee190a31ec7d::t_b813e5854b589c 237,260,283,452-458
+packages/tests-unit/tests/overrides/cache/fetch.test.ts
+  s_acee190a31ec7d::t_2958fb95bf3f02 14,16-17,21,27,31,180-187,196-203,216-223
+packages/tests-unit/tests/overrides/cache/local.test.ts
+  s_acee190a31ec7d::t_02b9f1285378b1 3,12,84-91,167,189-196,209-216,228-236
+packages/tests-unit/tests/utils/cache-get.test.ts
+  s_acee190a31ec7d::t_618220eaa48d53 136-149,203-216
+pnpm-lock.yaml
+  s_acee190a31ec7d::t_52e42d5882e85c 80-81,122-123,184,230,264,310,363,397,431,465,499,504-505,536,576,826-827,862-864,888,927-928,947-949,972-973,1788-1790,1792-1794,1796-1798,1803-1805,1808-1814,1816-1818,1820-1822,1827-1829,1831-1833,1835-1837,1839-1841,1843-1845,1847-1848,1850-1852,1854-1856,1858-1860,1862-1864,1866-1867,1873-1876,1886-1894,1901-1906,1913-1918,1925-1930,1937-1942,1949-1954,2016-2021,2046-2051,2076-2081,2106-2111,2136-2141,2166-2171,2196-2201,2226-2231,2256-2261,2286-2291,2316-2321,2346-2351,2376-2381,2406-2411,2436-2441,2466-2471,2496-2501,2514-2519,2544-2549,2562-2567,2592-2597,2604-2609,2634-2639,2664-2669,2694-2699,2724-2729,2976-2978,2980-2982,2984-2986,2994-2995,3233-3236,4621-4624,5130-5134,5218-5223,5234-5236,5403,5417,5422,5517-5518,5553-5555,5736-5738,5780-5781,5820-5822,6066-6070,6343-6344,6422-6425,6771-6772,6776-6777,6816-6819,6860-6862,7083-7090,7255-7258,7477-7491,7541-7552,7591-7595,9924,9926-9933,9935,9937-9941,9943,9945,9955-9997,10006,10008-10012,10014,10016-10017,10019,10021-10023,10025,10027-10029,10031,10033,10035,10037,10039-10043,10045-10048,10050,10052-10057,10061-10062,10069-10074,10078-10080,10084-10086,10090-10092,10096-10098,10102-10104,10168-10170,10183-10185,10198-10200,10213-10215,10228-10230,10243-10245,10258-10260,10273-10275,10288-10290,10303-10305,10318-10320,10333-10335,10348-10350,10363-10365,10378-10380,10393-10395,10408-10410,10417-10419,10432-10434,10441-10443,10456-10462,10477-10479,10492-10494,10507-10509,10522-10524,10762,10764,10766,10768-10769,10771-10775,10781,10942-10943,12761-12762,13322-13350,13506-13511,13523-13526,13553-13556,13851,13879-13880,14076-14077,14132,14161-14165,14352-14363,14576-14601,14717,14771,14773,15142-15143,15244-15245,15299-15300,15665-15671,15831-15832,16064-16088,16130-16131,16155-16156
+pnpm-workspace.yaml
+  s_acee190a31ec7d::t_af6fb2141de087 10-21,44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c606b910e53c39e806bf47782f7257efcf9257b5",
+  "prompts": {},
+  "sessions": {
+    "s_acee190a31ec7d": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f3c2e2acdffeuD5UNstAJgOoRv",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
