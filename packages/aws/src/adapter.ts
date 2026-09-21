@@ -24,12 +24,6 @@ export default buildAdapter((_config, buildOpts: BuildOptions) => ({
 			imageLoader: "@opennextjs/aws/overrides/imageLoader/s3.js",
 		},
 		warmer: { wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda.js" },
-		cache: {
-			wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda.js",
-			converter: "@opennextjs/aws/overrides/converters/aws-apigw-v2.js",
-			incrementalCache: "@opennextjs/aws/overrides/incrementalCache/s3.js",
-			tagCache: "@opennextjs/aws/overrides/tagCache/dynamodb.js",
-		},
 		tagCache: {
 			wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda.js",
 			tagCache: "@opennextjs/aws/overrides/tagCache/dynamodb.js",

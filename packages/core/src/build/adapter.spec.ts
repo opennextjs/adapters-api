@@ -407,24 +407,6 @@ describe("buildAdapter", () => {
 		expect(createImageOptimizationBundle).not.toHaveBeenCalled();
 	});
 
-	test("onBuildComplete forwards cache bundle defaults", async () => {
-		const cacheDefaults = {
-			wrapper: "platform-cache-wrapper",
-			incrementalCache: "platform-incremental-cache",
-		};
-		const adapter = buildAdapter(() => ({
-			serverBundle,
-			defaultOverrides: { cache: cacheDefaults },
-		}));
-
-		await adapter.modifyConfig({ experimental: {}, images: {} } as BuildCompleteContext["config"], {
-			phase: "production",
-		});
-		await adapter.onBuildComplete(createMockContext());
-
-		expect(createCacheBundle).toHaveBeenCalledWith(expect.any(Object), cacheDefaults);
-	});
-
 	test("onBuildComplete skips warmer when skipWarmer is true", async () => {
 		const adapter = buildAdapter(() => ({
 			serverBundle,
