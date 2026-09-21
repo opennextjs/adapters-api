@@ -340,7 +340,7 @@ export async function cacheInterceptor(
 			} else if (localizedPath === "") {
 				pathToUse = "/index";
 			}
-			const cachedData = await globalThis.incrementalCache.get(pathToUse);
+			const cachedData = await (globalThis.cache ?? globalThis.incrementalCache).get(pathToUse);
 			debug("cached data in interceptor", cachedData);
 
 			if (!cachedData?.value) {

@@ -32,6 +32,7 @@ export interface IPluginSettings {
 		warmer?: LazyLoadedOverride<Warmer> | IncludedWarmer;
 		proxyExternalRequest?: OverrideOptions["proxyExternalRequest"];
 		cdnInvalidation?: OverrideOptions["cdnInvalidation"];
+		cache?: OverrideOptions["cache"];
 	};
 	defaultOverrides?: DefaultOverrides;
 	fnName?: string;
@@ -49,6 +50,7 @@ const nameToFolder = {
 	warmer: "warmer",
 	proxyExternalRequest: "proxyExternalRequest",
 	cdnInvalidation: "cdnInvalidation",
+	cache: "cache",
 };
 
 export type OverrideKey = keyof typeof nameToFolder;
@@ -72,6 +74,7 @@ export type BundleType =
 	| "imageOptimization"
 	| "revalidation"
 	| "warmer"
+	| "cache"
 	| "tagCache";
 export type BundleDefaults = Partial<Record<BundleType, DefaultOverrides>>;
 

@@ -7,6 +7,15 @@ import { debug, error, warn } from "./logger";
 
 export const SOFT_TAG_PREFIX = "_N_T_/";
 
+/**
+ * Selects the dedicated cache transport when one is configured.
+ *
+ * @return The effective cache storage implementation.
+ */
+function getCacheStorage() {
+	return globalThis.cache ?? globalThis.incrementalCache;
+}
+
 function isFetchCache(options?: { kindHint?: "app" | "pages" | "fetch"; kind?: "FETCH" }): boolean {
 	if (typeof options === "object") {
 		return options.kindHint === "fetch" || options.kind === "FETCH";
@@ -37,7 +46,7 @@ export default class Cache {
 	async getFetchCache(key: string, softTags?: string[], tags?: string[]) {
 		debug("get fetch cache", { key, softTags, tags });
 		try {
-			const cachedEntry = await globalThis.incrementalCache.get(key, "fetch");
+			const cachedEntry = await getCacheStorage().get(key, "fetch");
 
 			if (cachedEntry?.value === undefined) return null;
 
@@ -80,7 +89,7 @@ export default class Cache {
 
 	async getIncrementalCache(key: string): Promise<CacheHandlerValue | null> {
 		try {
-			const cachedEntry = await globalThis.incrementalCache.get(key, "cache");
+			const cachedEntry = await getCacheStorage().get(key, "cache");
 
 			if (!cachedEntry?.value) {
 				return null;
@@ -174,14 +183,14 @@ export default class Cache {
 		const detachedPromise = globalThis.__openNextAls.getStore()?.pendingPromiseRunner.withResolvers<void>();
 		try {
 			if (data === null || data === undefined) {
-				await globalThis.incrementalCache.delete(key);
+				await getCacheStorage().delete(key);
 			} else {
 				const revalidate = this.extractRevalidateForSet(ctx);
 				switch (data.kind) {
 					case "ROUTE":
 					case "APP_ROUTE": {
 						const { body, status, headers } = data;
-						await globalThis.incrementalCache.set(
+						await getCacheStorage().set(
 							key,
 							{
 								type: "route",
@@ -201,7 +210,7 @@ export default class Cache {
 						const { html, pageData, status, headers } = data;
 						const isAppPath = typeof pageData === "string";
 						if (isAppPath) {
-							await globalThis.incrementalCache.set(
+							await getCacheStorage().set(
 								key,
 								{
 									type: "app",
@@ -216,7 +225,7 @@ export default class Cache {
 								"cache"
 							);
 						} else {
-							await globalThis.incrementalCache.set(
+							await getCacheStorage().set(
 								key,
 								{
 									type: "page",
@@ -237,7 +246,7 @@ export default class Cache {
 								segmentToWrite[segmentPath] = segmentContent.toString("utf8");
 							}
 						}
-						await globalThis.incrementalCache.set(
+						await getCacheStorage().set(
 							key,
 							{
 								type: "app",
@@ -256,10 +265,10 @@ export default class Cache {
 						break;
 					}
 					case "FETCH":
-						await globalThis.incrementalCache.set(key, data, "fetch");
+						await getCacheStorage().set(key, data, "fetch");
 						break;
 					case "REDIRECT":
-						await globalThis.incrementalCache.set(
+						await getCacheStorage().set(
 							key,
 							{
 								type: "redirect",
@@ -296,6 +305,11 @@ export default class Cache {
 		}
 
 		try {
+			if (globalThis.cache) {
+				await globalThis.cache.revalidateTags(_tags);
+				return;
+			}
+
 			if (globalThis.tagCache.mode === "nextMode") {
 				const paths = (await globalThis.tagCache.getPathsByTags?.(_tags)) ?? [];
 

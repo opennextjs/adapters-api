@@ -88,6 +88,7 @@ export interface OpenNextOutput {
 		initializationFunction?: BaseFunction;
 		warmer?: BaseFunction;
 		revalidationFunction?: BaseFunction;
+		cacheFunction?: BaseFunction;
 	};
 }
 
@@ -193,11 +194,13 @@ function prefixPattern(basePath: string) {
  *
  * @param options Normalized build options.
  * @param bundleDefaults Adapter defaults used to build each bundle type.
+ * @param outputOptions Output-generation options.
  * @return Deployment metadata matching the effective bundle overrides.
  */
 export async function buildOpenNextOutput(
 	options: BuildOptions,
-	bundleDefaults?: BundleDefaults
+	bundleDefaults?: BundleDefaults,
+	{ skipCache = false }: { skipCache?: boolean } = {}
 ): Promise<OpenNextOutput> {
 	const { appBuildOutputPath, config } = options;
 	const edgeFunctions: OpenNextOutput["edgeFunctions"] = {};
@@ -391,6 +394,13 @@ export async function buildOpenNextOutput(
 						handler: indexHandler,
 						bundle: ".open-next/revalidation-function",
 					},
+			cacheFunction:
+				skipCache || config.dangerous?.disableIncrementalCache
+					? undefined
+					: {
+							handler: indexHandler,
+							bundle: ".open-next/cache-function",
+						},
 		},
 	};
 	return output;

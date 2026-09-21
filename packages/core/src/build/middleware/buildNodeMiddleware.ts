@@ -130,6 +130,7 @@ export async function buildExternalNodeMiddleware(
 						converter: override("converter"),
 						tagCache: override("tagCache"),
 						incrementalCache: override("incrementalCache"),
+						cache: override("cache"),
 						queue: override("queue"),
 						originResolver: override("originResolver"),
 						proxyExternalRequest: override("proxyExternalRequest"),
@@ -140,6 +141,7 @@ export async function buildExternalNodeMiddleware(
 						tagCache: defaultOverrides?.tagCache ?? "@opennextjs/core/overrides/tagCache/dummy.js",
 						incrementalCache:
 							defaultOverrides?.incrementalCache ?? "@opennextjs/core/overrides/incrementalCache/dummy.js",
+						cache: defaultOverrides?.cache ?? "@opennextjs/core/overrides/cache/dummy.js",
 						queue: defaultOverrides?.queue ?? "@opennextjs/core/overrides/queue/direct.js",
 						originResolver:
 							defaultOverrides?.originResolver ?? "@opennextjs/core/overrides/originResolver/pattern-env.js",

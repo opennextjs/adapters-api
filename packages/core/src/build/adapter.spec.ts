@@ -68,6 +68,10 @@ vi.mock("./createImageOptimizationBundle.js", () => ({
 	createImageOptimizationBundle: vi.fn(),
 }));
 
+vi.mock("./createCacheBundle.js", () => ({
+	createCacheBundle: vi.fn(),
+}));
+
 vi.mock("./createWarmerBundle.js", () => ({
 	createWarmerBundle: vi.fn(),
 }));
@@ -98,6 +102,7 @@ import { compileCache } from "./compileCache.js";
 import { compileOpenNextConfig } from "./compileConfig.js";
 import { compileTagCacheProvider } from "./compileTagCacheProvider.js";
 import { createStaticAssets, createCacheAssets } from "./createAssets.js";
+import { createCacheBundle } from "./createCacheBundle.js";
 import { createImageOptimizationBundle } from "./createImageOptimizationBundle.js";
 import { createMiddleware } from "./createMiddleware.js";
 import { createRevalidationBundle } from "./createRevalidationBundle.js";
@@ -604,7 +609,9 @@ describe("buildAdapter", () => {
 		await adapter.modifyConfig(nextConfig, { phase: "production" });
 		const ctx = createMockContext();
 		await adapter.onBuildComplete(ctx);
-		expect(buildOpenNextOutput).toHaveBeenCalledWith(expect.any(Object), undefined);
+		expect(buildOpenNextOutput).toHaveBeenCalledWith(expect.any(Object), undefined, {
+			skipCache: undefined,
+		});
 		const fs = await import("node:fs");
 		expect(fs.default.writeFileSync).toHaveBeenCalledWith(
 			expect.stringMatching(/\/\.open-next\/open-next\.output\.json$/),

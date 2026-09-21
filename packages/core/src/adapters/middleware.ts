@@ -11,6 +11,7 @@ import { debug, error } from "../adapters/logger";
 import { createGenericHandler } from "../core/createGenericHandler";
 import {
 	resolveAssetResolver,
+	resolveCache,
 	resolveIncrementalCache,
 	resolveOriginResolver,
 	resolveProxyRequest,
@@ -45,6 +46,8 @@ const defaultHandler = async (
 	globalThis.queue = await resolveQueue(middlewareConfig?.override?.queue);
 
 	globalThis.incrementalCache = await resolveIncrementalCache(middlewareConfig?.override?.incrementalCache);
+
+	globalThis.cache = await resolveCache(middlewareConfig?.override?.cache);
 
 	const requestId = Math.random().toString(36);
 
