@@ -74,6 +74,14 @@ describe("serviceCache", () => {
 				value: { kind: "FETCH", data: { headers: {}, body: "b", url: "u" } },
 			});
 		});
+
+		it("rejects unsuccessful responses", async () => {
+			fetchMock.mockResolvedValue(new Response(null, { status: 500 }));
+
+			await expect(
+				serviceCache.set("key", { kind: "FETCH", data: { headers: {}, body: "b", url: "u" } }, "fetch")
+			).rejects.toThrow("Failed to set cache entry: cache handler returned 500");
+		});
 	});
 
 	it("deletes a key", async () => {
@@ -84,6 +92,14 @@ describe("serviceCache", () => {
 		expect(url.pathname).toBe("/cache/key");
 	});
 
+	it("rejects an unsuccessful delete", async () => {
+		fetchMock.mockResolvedValue(new Response(null, { status: 503 }));
+
+		await expect(serviceCache.delete("key")).rejects.toThrow(
+			"Failed to delete cache entry: cache handler returned 503"
+		);
+	});
+
 	it("revalidates tags", async () => {
 		await serviceCache.revalidateTags(["tag1", "tag2"]);
 
@@ -91,5 +107,13 @@ describe("serviceCache", () => {
 		expect(method).toBe("POST");
 		expect(url.pathname).toBe("/cache/revalidate-tags");
 		expect(JSON.parse(body as string)).toEqual({ tags: ["tag1", "tag2"] });
+	});
+
+	it("rejects an unsuccessful tag revalidation", async () => {
+		fetchMock.mockResolvedValue(new Response(null, { status: 502 }));
+
+		await expect(serviceCache.revalidateTags(["tag"])).rejects.toThrow(
+			"Failed to revalidate cache tags: cache handler returned 502"
+		);
 	});
 });

@@ -45,6 +45,20 @@ function getCacheUrl(key: string, cacheType?: CacheEntryType) {
 }
 
 /**
+ * Rejects unsuccessful cache mutation responses.
+ *
+ * @param response - The cache handler response.
+ * @param operation - The mutation being performed.
+ * @return Nothing.
+ * @throws When the cache handler returns a non-success status.
+ */
+function ensureResponseOk(response: Pick<Response, "ok" | "status">, operation: string): void {
+	if (!response.ok) {
+		throw new Error(`Failed to ${operation}: cache handler returned ${response.status}`);
+	}
+}
+
+/**
  * Cache client for the cache handler function.
  *
  * It talks to the `OpenNextCache` entrypoint over the service binding, using the HTTP API of
@@ -67,23 +81,26 @@ const serviceCache = {
 	},
 
 	set: async (key, value, cacheType) => {
-		await getCacheService().fetch(getCacheUrl(key, cacheType), {
+		const response = await getCacheService().fetch(getCacheUrl(key, cacheType), {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ value }),
 		});
+		ensureResponseOk(response, "set cache entry");
 	},
 
 	delete: async (key) => {
-		await getCacheService().fetch(getCacheUrl(key), { method: "DELETE" });
+		const response = await getCacheService().fetch(getCacheUrl(key), { method: "DELETE" });
+		ensureResponseOk(response, "delete cache entry");
 	},
 
 	revalidateTags: async (tags) => {
-		await getCacheService().fetch(new URL("/cache/revalidate-tags", CACHE_ORIGIN).href, {
+		const response = await getCacheService().fetch(new URL("/cache/revalidate-tags", CACHE_ORIGIN).href, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ tags }),
 		});
+		ensureResponseOk(response, "revalidate cache tags");
 	},
 } satisfies Cache;
 
