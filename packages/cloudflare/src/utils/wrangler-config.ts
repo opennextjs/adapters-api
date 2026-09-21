@@ -22,8 +22,9 @@ type ResolvedConfig = {
  * Those bindings are only used at runtime by the generated worker, dropping them has no effect on
  * what `getPlatformProxy` is used for, so the configuration is rewritten without them.
  *
- * @returns the configuration path to pass to `getPlatformProxy` and a cleanup function to call
- * once the proxy has been disposed of.
+ * @param config - The resolved Wrangler configuration for the selected environment.
+ * @return The configuration path to pass to `getPlatformProxy`, whether it is flattened, and a
+ * cleanup function to call once the proxy has been disposed of.
  */
 export function withoutSelfEntrypointServices(config: ResolvedConfig): {
 	configPath: string | undefined;
