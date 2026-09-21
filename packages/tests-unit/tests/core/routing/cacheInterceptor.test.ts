@@ -2,7 +2,7 @@ import { cacheInterceptor } from "@opennextjs/core/core/routing/cacheInterceptor
 import { convertFromQueryString } from "@opennextjs/core/core/routing/util.js";
 import type { MiddlewareEvent } from "@opennextjs/core/types/open-next.js";
 import type { Queue } from "@opennextjs/core/types/overrides.js";
-import { fromReadableStream } from "@opennextjs/core/utils/stream.js";
+import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream.js";
 import { vi } from "vitest";
 
 vi.mock("@/config/index.js", () => ({
@@ -37,7 +37,7 @@ function createEvent(event: PartialEvent): MiddlewareEvent {
 		method: event.method ?? "GET",
 		rawPath,
 		url: event.url ?? "/",
-		body: Buffer.from(event.body ?? ""),
+		body: event.body !== undefined ? toReadableStream(event.body) : undefined,
 		headers: event.headers ?? {},
 		query: convertFromQueryString(qs ?? ""),
 		cookies: event.cookies ?? {},
@@ -51,6 +51,14 @@ const incrementalCache = {
 	get: vi.fn(),
 	set: vi.fn(),
 	delete: vi.fn(),
+};
+
+const cacheTransport = {
+	name: "transport",
+	get: vi.fn(),
+	set: vi.fn(),
+	delete: vi.fn(),
+	revalidateTags: vi.fn(),
 };
 
 const tagCache = {
@@ -85,6 +93,7 @@ beforeEach(() => {
 			disableIncrementalCache: false,
 		},
 	};
+	globalThis.cache = undefined;
 });
 
 describe("cacheInterceptor", () => {
@@ -149,6 +158,22 @@ describe("cacheInterceptor", () => {
 				}),
 			})
 		);
+	});
+
+	it("should retrieve content through the dedicated cache transport", async () => {
+		globalThis.cache = cacheTransport;
+		cacheTransport.get.mockResolvedValueOnce({
+			value: {
+				type: "app",
+				html: "From transport",
+			},
+		});
+
+		const result = await cacheInterceptor(createEvent({ url: "/albums" }));
+
+		expect(cacheTransport.get).toHaveBeenCalledWith("/albums");
+		expect(incrementalCache.get).not.toHaveBeenCalled();
+		expect(await fromReadableStream(result.body)).toBe("From transport");
 	});
 
 	it("should take no action when tagCache lasModified is -1 for app type", async () => {

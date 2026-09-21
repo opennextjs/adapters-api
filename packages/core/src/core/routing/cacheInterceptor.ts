@@ -144,7 +144,7 @@ function createPprPartialResult(
 				"next-resume": "1",
 			},
 			rawPath: localizedPath,
-			body: Buffer.from(cachedValue.meta?.postponed || "", "utf-8"),
+			body: toReadableStream(cachedValue.meta?.postponed || ""),
 		},
 		result: {
 			type: "core",
@@ -340,7 +340,7 @@ export async function cacheInterceptor(
 			} else if (localizedPath === "") {
 				pathToUse = "/index";
 			}
-			const cachedData = await globalThis.incrementalCache.get(pathToUse);
+			const cachedData = await (globalThis.cache ?? globalThis.incrementalCache).get(pathToUse);
 			debug("cached data in interceptor", cachedData);
 
 			if (!cachedData?.value) {

@@ -7,6 +7,15 @@ import { debug } from "./logger";
 
 const pendingWritePromiseMap = new Map<string, Promise<CacheValue<"composable">>>();
 
+/**
+ * Selects the dedicated cache transport when one is configured.
+ *
+ * @return The effective cache storage implementation.
+ */
+function getCacheStorage() {
+	return globalThis.cache ?? globalThis.incrementalCache;
+}
+
 export default {
 	async get(cacheKey: string) {
 		try {
@@ -21,7 +30,7 @@ export default {
 					}));
 				}
 			}
-			const result = await globalThis.incrementalCache.get(cacheKey, "composable");
+			const result = await getCacheStorage().get(cacheKey, "composable");
 			if (!result?.value?.value) {
 				return undefined;
 			}
@@ -61,7 +70,7 @@ export default {
 		const entry = await promiseEntry.finally(() => {
 			pendingWritePromiseMap.delete(cacheKey);
 		});
-		await globalThis.incrementalCache.set(
+		await getCacheStorage().set(
 			cacheKey,
 			{
 				...entry,
@@ -102,6 +111,9 @@ export default {
 	 * This method is only used before Next.js 16
 	 */
 	async expireTags(...tags: string[]) {
+		if (globalThis.cache) {
+			return globalThis.cache.revalidateTags(tags);
+		}
 		if (globalThis.tagCache.mode === "nextMode") {
 			return writeTags(tags);
 		}

@@ -11,8 +11,10 @@ export async function copyAdapterFiles(
 	options: buildHelper.BuildOptions,
 	fnName: string,
 	packagePath: string,
-	outputs: NextAdapterOutputs
+	outputs: NextAdapterOutputs,
+	destDir?: string
 ) {
+	const destRoot = destDir ?? `${options.outputDir}/server-functions/${fnName}`;
 	const filesToCopy = new Map<string, string>();
 
 	// Copying the files from outputs to the output dir
@@ -22,14 +24,11 @@ export async function copyAdapterFiles(
 				const assets = route.assets;
 				// We need to copy the filepaths to the output dir
 				const relativeFilePath = path.join(packagePath, path.relative(options.appPath, route.filePath));
-				filesToCopy.set(
-					route.filePath,
-					`${options.outputDir}/server-functions/${fnName}/${relativeFilePath}`
-				);
+				filesToCopy.set(route.filePath, `${destRoot}/${relativeFilePath}`);
 
 				for (const [relative, from] of Object.entries(assets || {})) {
 					//  console.log("route.assets", from, relative, packagePath);
-					filesToCopy.set(from as string, `${options.outputDir}/server-functions/${fnName}/${relative}`);
+					filesToCopy.set(from as string, `${destRoot}/${relative}`);
 				}
 			};
 			if (key === "middleware") {

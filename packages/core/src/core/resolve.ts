@@ -159,9 +159,15 @@ export async function resolveCdnInvalidation(cdnInvalidation: OverrideOptions["c
 }
 
 /**
- * @__PURE__
+ * Resolves the configured dedicated cache transport.
+ *
+ * @param cache Cache transport override.
+ * @return The configured transport, or undefined when dedicated caching is not enabled.
  */
-export async function resolveCache(cache: OverrideOptions["cache"]): Promise<Cache> {
+export async function resolveCache(cache: OverrideOptions["cache"]): Promise<Cache | undefined> {
+	if (cache === undefined) {
+		return undefined;
+	}
 	if (typeof cache === "function") {
 		return cache();
 	}

@@ -1,5 +1,6 @@
 import { request } from "node:https";
 import { Readable } from "node:stream";
+import type { ReadableStream } from "node:stream/web";
 
 import type { InternalEvent, InternalResult } from "@/types/open-next";
 import type { ProxyExternalRequest } from "@/types/overrides";
@@ -35,6 +36,15 @@ const nodeProxy: ProxyExternalRequest = {
 		const { url, headers, method, body } = internalEvent;
 		debug("proxyRequest", url);
 		return new Promise<InternalResult>((resolve, reject) => {
+			let hasRejected = false;
+			const rejectOnce = (e: Error) => {
+				if (hasRejected) {
+					return;
+				}
+
+				hasRejected = true;
+				reject(e);
+			};
 			const filteredHeaders = filterHeadersForProxy(headers);
 			debug("filteredHeaders", filteredHeaders);
 			const req = request(
@@ -67,15 +77,22 @@ const nodeProxy: ProxyExternalRequest = {
 
 					_res.on("error", (e) => {
 						error("proxyRequest error", e);
-						reject(e);
+						rejectOnce(e);
 					});
 				}
 			);
+			req.on("error", (e) => {
+				error("proxyRequest error", e);
+				rejectOnce(e);
+			});
 
 			if (body && method !== "GET" && method !== "HEAD") {
-				req.write(body);
+				Readable.fromWeb(body as ReadableStream<Uint8Array>)
+					.on("error", rejectOnce)
+					.pipe(req);
+			} else {
+				req.end();
 			}
-			req.end();
 		});
 	},
 };

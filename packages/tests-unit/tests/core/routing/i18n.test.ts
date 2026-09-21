@@ -1,6 +1,7 @@
 import { handleLocaleRedirect, localizePath } from "@opennextjs/core/core/routing/i18n/index.js";
 import { convertFromQueryString } from "@opennextjs/core/core/routing/util.js";
 import type { InternalEvent } from "@opennextjs/core/types/open-next.js";
+import { toReadableStream } from "@opennextjs/core/utils/stream.js";
 import { expect, vi } from "vitest";
 
 import { NextConfig } from "@/config/index.js";
@@ -28,7 +29,7 @@ function createEvent(event: PartialEvent): InternalEvent {
 		method: event.method ?? "GET",
 		rawPath,
 		url: event.url ?? "/",
-		body: Buffer.from(event.body ?? ""),
+		body: event.body !== undefined ? toReadableStream(event.body) : undefined,
 		headers: event.headers ?? {},
 		query: convertFromQueryString(qs),
 		cookies: event.cookies ?? {},

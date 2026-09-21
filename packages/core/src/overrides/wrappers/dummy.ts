@@ -2,10 +2,14 @@ import type { InternalEvent } from "@/types/open-next";
 import type { OpenNextHandlerOptions, Wrapper, WrapperHandler } from "@/types/overrides";
 
 const dummyWrapper: WrapperHandler =
-	async (handler, _converter) =>
+	async (handler, converter) =>
 	async (...args: unknown[]): Promise<unknown> => {
 		const [event, options] = args as [InternalEvent, OpenNextHandlerOptions | undefined];
-		return await handler(event, options);
+		const output = await converter.convertTo(event, options);
+		if (output.type === "direct") {
+			return output.data(await handler(event, options));
+		}
+		return handler(event, { ...options, streamCreator: output.streamCreator });
 	};
 
 export default {

@@ -1,9 +1,16 @@
 import { compareSemver } from "@opennextjs/core/build/helper.js";
 import logger from "@opennextjs/core/logger.js";
 
-export async function ensureNextjsVersionSupported({ nextVersion }: { nextVersion: string }) {
-	if (compareSemver(nextVersion, "<", "14.2.0")) {
-		throw new Error("Next.js version unsupported, please upgrade to version 14.2 or greater.");
+/**
+ * Verifies that Next.js and Wrangler support the adapter contract.
+ *
+ * @param options The installed Next.js version.
+ * @returns A promise that resolves when the versions are supported.
+ * @throws When Next.js predates the routing-aware adapter contract.
+ */
+export async function ensureNextjsVersionSupported({ nextVersion }: { nextVersion: string }): Promise<void> {
+	if (compareSemver(nextVersion, "<", "16.2.1")) {
+		throw new Error("Next.js version unsupported, please upgrade to version 16.2.1 or greater.");
 	}
 
 	const {

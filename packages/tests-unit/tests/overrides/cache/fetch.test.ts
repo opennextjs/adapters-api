@@ -11,22 +11,24 @@ function toHeadersMap(headers: Record<string, string>): Map<string, string> {
 }
 
 function mockFetch(resp: { headers: Record<string, string>; body: string; status?: number }) {
+	const status = resp.status ?? 200;
 	const response = {
-		ok: true,
-		status: resp.status ?? 200,
+		ok: status >= 200 && status < 300,
+		status,
 		text: vi.fn().mockResolvedValue(resp.body),
 		headers: toHeadersMap(resp.headers),
 	};
-	global.fetch = vi.fn().mockResolvedValue(response);
+	vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
 }
 
 describe("fetch cache", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockFetch({ headers: {}, body: "" });
 	});
 
 	afterEach(() => {
-		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
 	});
 
 	it("should have name 'fetch-cache'", () => {
@@ -175,6 +177,14 @@ describe("fetch cache", () => {
 
 			expect(global.fetch).toHaveBeenCalledWith("/cache/key?type=composable", expect.any(Object));
 		});
+
+		it("should reject an unsuccessful response", async () => {
+			mockFetch({ headers: {}, body: "", status: 500 });
+
+			await expect(fetchCache.set("key", {})).rejects.toThrow(
+				"Failed to set cache entry: cache handler returned 500"
+			);
+		});
 	});
 
 	describe("delete", () => {
@@ -182,6 +192,14 @@ describe("fetch cache", () => {
 			await fetchCache.delete("key");
 
 			expect(global.fetch).toHaveBeenCalledWith("/cache/key", { method: "DELETE" });
+		});
+
+		it("should reject an unsuccessful response", async () => {
+			mockFetch({ headers: {}, body: "", status: 500 });
+
+			await expect(fetchCache.delete("key")).rejects.toThrow(
+				"Failed to delete cache entry: cache handler returned 500"
+			);
 		});
 	});
 
@@ -194,6 +212,14 @@ describe("fetch cache", () => {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ tags: ["tag1", "tag2"] }),
 			});
+		});
+
+		it("should reject an unsuccessful response", async () => {
+			mockFetch({ headers: {}, body: "", status: 500 });
+
+			await expect(fetchCache.revalidateTags(["tag"])).rejects.toThrow(
+				"Failed to revalidate cache tags: cache handler returned 500"
+			);
 		});
 	});
 });

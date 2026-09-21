@@ -18,6 +18,7 @@ import { getCrossPlatformPathRegex } from "../utils/regex.js";
 import { compileCache } from "./compileCache.js";
 import { copyAdapterFiles } from "./copyAdapterFiles.js";
 import { getManifests } from "./copyTracedFiles.js";
+import { getDefaultDockerfile } from "./dockerfile.js";
 import { copyMiddlewareResources, generateEdgeBundle } from "./edge/createEdgeBundle.js";
 import * as buildHelper from "./helper.js";
 import { installDependencies } from "./installDeps.js";
@@ -153,6 +154,7 @@ async function generateBundle(
 	// Normal cache
 	fs.copyFileSync(path.join(options.buildDir, `cache.${ext}`), path.join(outPackagePath, "cache.cjs"));
 	// Composable cache
+	fs.mkdirSync(path.join(outPackagePath, ".next"), { recursive: true });
 	fs.copyFileSync(
 		path.join(options.buildDir, `composable-cache.${ext}`),
 		path.join(outPackagePath, "composable-cache.cjs")
@@ -173,6 +175,11 @@ async function generateBundle(
 
 		copyMiddlewareResources(options, middlewareManifest.middleware["/"], outPackagePath);
 	}
+
+	fs.copyFileSync(
+		path.join(options.appBuildOutputPath, ".next", "open-next-routing.json"),
+		path.join(outPackagePath, ".next", "open-next-routing.json")
+	);
 
 	// Copy open-next.config.mjs
 	buildHelper.copyOpenNextConfig(options.buildDir, outPackagePath, codeCustomization.useEdgeConfig ?? false);
@@ -285,15 +292,7 @@ async function generateBundle(
 	if (shouldGenerateDocker) {
 		fs.writeFileSync(
 			path.join(outputPath, "Dockerfile"),
-			typeof shouldGenerateDocker === "string"
-				? shouldGenerateDocker
-				: `
-FROM node:18-alpine
-WORKDIR /app
-COPY . /app
-EXPOSE 3000
-CMD ["node", "index.mjs"]
-    `
+			typeof shouldGenerateDocker === "string" ? shouldGenerateDocker : getDefaultDockerfile()
 		);
 	}
 }

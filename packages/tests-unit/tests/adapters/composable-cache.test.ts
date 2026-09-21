@@ -24,6 +24,13 @@ describe("Composable cache handler", () => {
 		delete: vi.fn(),
 	};
 	globalThis.incrementalCache = incrementalCache;
+	const cacheTransport = {
+		name: "transport",
+		get: vi.fn(),
+		set: vi.fn(),
+		delete: vi.fn(),
+		revalidateTags: vi.fn(),
+	};
 
 	const tagCache = {
 		name: "mock",
@@ -64,6 +71,55 @@ describe("Composable cache handler", () => {
 				disableTagCache: false,
 			},
 		};
+		globalThis.cache = undefined;
+	});
+
+	describe("dedicated cache transport", () => {
+		beforeEach(() => {
+			globalThis.cache = cacheTransport;
+		});
+
+		it("uses the transport for reads", async () => {
+			cacheTransport.get.mockResolvedValueOnce({
+				value: {
+					value: "transport-value",
+					tags: [],
+					stale: 0,
+					timestamp: Date.now(),
+					expire: Date.now() + 1000,
+					revalidate: 3600,
+				},
+			});
+
+			const result = await ComposableCache.get("key");
+
+			expect(cacheTransport.get).toHaveBeenCalledWith("key", "composable");
+			expect(incrementalCache.get).not.toHaveBeenCalled();
+			expect(await fromReadableStream(result!.value)).toBe("transport-value");
+		});
+
+		it("uses the transport for writes and tag expiry", async () => {
+			await ComposableCache.set(
+				"key",
+				Promise.resolve({
+					value: toReadableStream("value"),
+					tags: [],
+					stale: 0,
+					timestamp: Date.now(),
+					expire: Date.now() + 1000,
+					revalidate: 3600,
+				})
+			);
+			await ComposableCache.expireTags("tag");
+
+			expect(cacheTransport.set).toHaveBeenCalledWith(
+				"key",
+				expect.objectContaining({ value: "value" }),
+				"composable"
+			);
+			expect(cacheTransport.revalidateTags).toHaveBeenCalledWith(["tag"]);
+			expect(incrementalCache.set).not.toHaveBeenCalled();
+		});
 	});
 
 	describe("get", () => {
