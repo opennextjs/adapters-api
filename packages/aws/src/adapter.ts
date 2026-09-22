@@ -10,9 +10,14 @@ export default buildAdapter((_config, buildOpts: BuildOptions) => ({
 		server: {
 			wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda-streaming.js",
 			converter: "@opennextjs/aws/overrides/converters/aws-streaming.js",
+			cache: "@opennextjs/core/overrides/cache/fetch.js",
+			queue: "@opennextjs/aws/overrides/queue/sqs.js",
+		},
+		cache: {
+			wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda.js",
+			converter: "@opennextjs/aws/overrides/converters/aws-apigw-v2.js",
 			incrementalCache: "@opennextjs/aws/overrides/incrementalCache/s3.js",
 			tagCache: "@opennextjs/aws/overrides/tagCache/dynamodb.js",
-			queue: "@opennextjs/aws/overrides/queue/sqs.js",
 		},
 		revalidation: {
 			wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda.js",
@@ -31,8 +36,7 @@ export default buildAdapter((_config, buildOpts: BuildOptions) => ({
 		middleware: {
 			wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda.js",
 			converter: "@opennextjs/aws/overrides/converters/aws-cloudfront.js",
-			incrementalCache: "@opennextjs/aws/overrides/incrementalCache/s3-lite.js",
-			tagCache: "@opennextjs/aws/overrides/tagCache/dynamodb-lite.js",
+			cache: "@opennextjs/core/overrides/cache/fetch.js",
 			queue: "@opennextjs/aws/overrides/queue/sqs-lite.js",
 		},
 	},
