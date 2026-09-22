@@ -5,8 +5,19 @@ packages:
   - "examples-cloudflare/bugs/*"
   - "examples-cloudflare/overrides/*"
   - "!examples-cloudflare/common"
-  - "create-cloudflare/*"
   - "packages/*"
+
+allowBuilds:
+  "@prisma/client": true
+  "@prisma/engines": true
+  aws-crt: true
+  aws-sdk: true
+  better-sqlite3: true
+  esbuild: true
+  prisma: true
+  sharp: true
+  turbo: true
+  workerd: true
 
 catalog:
   "@cloudflare/workers-types": ^4.20260114.0
@@ -30,7 +41,7 @@ catalog:
   tsx: ^4.19.2
   typescript: ^6.0.3
   vitest: ^2.1.1
-  wrangler: ^4.59.2
+  wrangler: ^4.110.0
   yargs: ^18.0.0
 
 catalogs:

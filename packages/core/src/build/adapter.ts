@@ -8,7 +8,7 @@ import { addDebugFile } from "../debug.js";
 import logger from "../logger.js";
 import type { ContentUpdater } from "../plugins/content-updater.js";
 import type { BundleDefaults } from "../plugins/resolve.js";
-import type { NextAdapterOutputs } from "../types/adapter.js";
+import type { NextAdapterOutputs, NextAdapterRouting } from "../types/adapter.js";
 import type { NextConfig } from "../types/next-types.js";
 import type { OpenNextConfig } from "../types/open-next.js";
 
@@ -20,6 +20,7 @@ import { createCacheBundle } from "./createCacheBundle.js";
 import { createImageOptimizationBundle } from "./createImageOptimizationBundle.js";
 import { createMiddleware } from "./createMiddleware.js";
 import { createRevalidationBundle } from "./createRevalidationBundle.js";
+import { createRoutingConfig } from "./createRoutingConfig.js";
 import { createServerBundle } from "./createServerBundle.js";
 import { createWarmerBundle } from "./createWarmerBundle.js";
 import { buildOpenNextOutput } from "./generateOutput.js";
@@ -34,13 +35,14 @@ const require = createRequire(import.meta.url);
  * The parameter type for onBuildComplete.
  */
 export type BuildCompleteContext = {
-	routes: unknown;
+	routing: NextAdapterRouting;
 	outputs: NextAdapterOutputs;
 	projectDir: string;
 	repoRoot: string;
 	distDir: string;
 	config: NextConfig;
 	nextVersion: string;
+	buildId: string;
 };
 
 /**
@@ -62,6 +64,13 @@ export type OpenNextAdapterOptions<T = OpenNextOutput> = {
 	skipCache?: boolean;
 	skipGenerateOutput?: boolean;
 	middlewareOptions?: { forceOnlyBuildOnce?: boolean };
+	middlewareBundle?: {
+		additionalPlugins?: (updater: ContentUpdater, outputs: NextAdapterOutputs) => Plugin[];
+		additionalCodePatches?: CodePatcher[];
+		useEdgeConfig?: boolean;
+		externals?: string[];
+		banner?: string[] | ((name: string) => string[]);
+	};
 	serverBundle: {
 		additionalPlugins?: (updater: ContentUpdater, outputs: NextAdapterOutputs) => Plugin[];
 		additionalCodePatches?: CodePatcher[];
@@ -93,6 +102,7 @@ export type OpenNextAdapterOptions<T = OpenNextOutput> = {
  *
  * This function eliminates duplicated build logic across platform-specific adapters
  * (AWS, Cloudflare, etc.) by centralizing the build orchestration in core.
+ * It uses the config path selected through `OPEN_NEXT_CONFIG_PATH` when provided.
  *
  * @param callback - A function that receives the OpenNext config and build options,
  *                   returning adapter-specific influence over the build process.
@@ -110,16 +120,17 @@ export function buildAdapter<T = OpenNextOutput>(
 		name: "OpenNext",
 
 		async modifyConfig(nextConfig, { phase: _phase }) {
+			const openNextConfigPath = process.env.OPEN_NEXT_CONFIG_PATH ?? "open-next.config.ts";
 			// Step 1: Compile OpenNext config with edge support, fallback on failure
 			let result: { config: OpenNextConfig; buildDir: string };
 			try {
-				result = await compileOpenNextConfig("open-next.config.ts", { compileEdge: true });
+				result = await compileOpenNextConfig(openNextConfigPath, { compileEdge: true });
 			} catch (error) {
 				console.warn(
-					"Failed to compile open-next.config.ts for edge runtime, falling back to node-only compilation.",
+					`Failed to compile ${openNextConfigPath} for edge runtime, falling back to node-only compilation.`,
 					error instanceof Error ? error.message : error
 				);
-				result = await compileOpenNextConfig("open-next.config.ts", { compileEdge: false });
+				result = await compileOpenNextConfig(openNextConfigPath, { compileEdge: false });
 			}
 
 			config = result.config;
@@ -184,6 +195,7 @@ export function buildAdapter<T = OpenNextOutput>(
 
 			// Step 1: Save debug output
 			addDebugFile(buildOpts, "outputs.json", ctx);
+			createRoutingConfig(buildOpts, ctx);
 
 			// Step 2: Call beforeServerBundle hook
 			await adapterOptions.beforeServerBundle?.(buildOpts, config);
@@ -191,23 +203,28 @@ export function buildAdapter<T = OpenNextOutput>(
 			const bundleDefaults = adapterOptions.defaultOverrides;
 
 			// Step 3: Create middleware
-			await createMiddleware(buildOpts, {
-				...adapterOptions.middlewareOptions,
-				defaultOverrides: bundleDefaults?.middleware,
-			});
-			console.log("Middleware created");
+			await createMiddleware(
+				buildOpts,
+				{
+					...adapterOptions.middlewareOptions,
+					defaultOverrides: bundleDefaults?.middleware,
+				},
+				ctx.outputs,
+				adapterOptions.middlewareBundle
+			);
+			logger.info("Middleware created");
 
 			// Step 4: Create static assets
 			createStaticAssets(buildOpts);
-			console.log("Static assets created");
+			logger.info("Static assets created");
 
 			// Step 5: Cache assets
 			if (buildOpts.config.dangerous?.disableIncrementalCache !== true) {
 				const { shouldUseTagCache } = createCacheAssets(buildOpts);
-				console.log("Cache assets created");
+				logger.info("Cache assets created");
 				if (shouldUseTagCache) {
 					await compileTagCacheProvider(buildOpts, bundleDefaults?.tagCache);
-					console.log("Tag cache provider compiled");
+					logger.info("Tag cache provider compiled");
 				}
 			}
 
@@ -230,7 +247,7 @@ export function buildAdapter<T = OpenNextOutput>(
 				},
 				ctx.outputs
 			);
-			console.log("Server bundle created");
+			logger.info("Server bundle created");
 
 			// Step 8: Call afterServerBundle hook
 			await adapterOptions.afterServerBundle?.(buildOpts, config);
@@ -238,37 +255,39 @@ export function buildAdapter<T = OpenNextOutput>(
 			// Step 9: Revalidation bundle
 			if (!adapterOptions.skipRevalidation) {
 				await createRevalidationBundle(buildOpts, bundleDefaults?.revalidation);
-				console.log("Revalidation bundle created");
+				logger.info("Revalidation bundle created");
 			}
 
 			// Step 10: Image optimization bundle
 			if (!adapterOptions.skipImageOptimization) {
 				await createImageOptimizationBundle(buildOpts, bundleDefaults?.imageOptimization);
-				console.log("Image optimization bundle created");
+				logger.info("Image optimization bundle created");
 			}
 
 			// Step 11: Cache bundle
 			if (!adapterOptions.skipCache && config.dangerous?.disableIncrementalCache !== true) {
 				await createCacheBundle(buildOpts, bundleDefaults?.cache);
-				console.log("Cache bundle created");
+				logger.info("Cache bundle created");
 			}
 
 			// Step 12: Warmer bundle
 			if (!adapterOptions.skipWarmer) {
 				await createWarmerBundle(buildOpts, bundleDefaults?.warmer);
-				console.log("Warmer bundle created");
+				logger.info("Warmer bundle created");
 			}
 
 			// Step 13: Generate output
 			if (!adapterOptions.skipGenerateOutput) {
 				const output = adapterOptions.generateOutput
 					? await adapterOptions.generateOutput(buildOpts)
-					: await buildOpenNextOutput(buildOpts, { skipCache: adapterOptions.skipCache });
+					: await buildOpenNextOutput(buildOpts, bundleDefaults, {
+							skipCache: adapterOptions.skipCache,
+						});
 				fs.writeFileSync(
 					path.join(buildOpts.appBuildOutputPath, ".open-next", "open-next.output.json"),
 					JSON.stringify(output)
 				);
-				console.log("Output generated");
+				logger.info("Output generated");
 			}
 		},
 	};

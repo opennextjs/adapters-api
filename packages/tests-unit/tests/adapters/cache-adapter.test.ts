@@ -1,8 +1,8 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
-import { handler } from "@opennextjs/core/adapters/cache-adapter";
+import { handler } from "@opennextjs/core/adapters/cache-handler";
 import type { InternalEvent, InternalResult, OpenNextConfig } from "@opennextjs/core/types/open-next";
-import { fromReadableStream } from "@opennextjs/core/utils/stream";
+import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream";
 import { type Mock, vi, describe, expect, it, beforeEach } from "vitest";
 
 const mockResolveIncrementalCache = vi.hoisted(() => vi.fn());
@@ -38,22 +38,6 @@ vi.mock("@opennextjs/core/core/resolve", () => ({
 	resolveCdnInvalidation: mockResolveCdnInvalidation,
 }));
 
-vi.mock("@opennextjs/core/core/createGenericHandler", () => ({
-	createGenericHandler: vi.fn(
-		async ({
-			handler: h,
-		}: {
-			handler: (event: InternalEvent, options?: unknown) => Promise<InternalResult>;
-		}) => {
-			//@ts-ignore
-			globalThis.openNextConfig = {
-				dangerous: {},
-			} as Partial<OpenNextConfig>;
-			return async (event: InternalEvent, options?: unknown) => h(event, options);
-		}
-	),
-}));
-
 function createEvent(overrides: Partial<InternalEvent> = {}): InternalEvent {
 	return {
 		type: "core",
@@ -85,7 +69,7 @@ async function runHandler(event: InternalEvent): Promise<InternalResult> {
 	);
 }
 
-describe("cache-adapter", () => {
+describe("cache-handler", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		globalThis.__openNextAls = new AsyncLocalStorage();
@@ -96,6 +80,16 @@ describe("cache-adapter", () => {
 		mockResolveCdnInvalidation.mockResolvedValue(mockCdnInvalidationHandler);
 		mockTagCache.mode = "original";
 		mockTagCache.getPathsByTags = undefined;
+	});
+
+	it("preserves existing request context storage", async () => {
+		const requestStorage = new AsyncLocalStorage();
+		globalThis.__openNextAls = requestStorage;
+		vi.resetModules();
+
+		await import("@opennextjs/core/adapters/cache-handler");
+
+		expect(globalThis.__openNextAls).toBe(requestStorage);
 	});
 
 	describe("routing", () => {
@@ -391,21 +385,21 @@ describe("cache-adapter", () => {
 		});
 
 		it("should return 400 when body is empty", async () => {
-			const event = createEvent({ method: "PUT", body: Buffer.from("") });
+			const event = createEvent({ method: "PUT", body: toReadableStream("") });
 			const result = await runHandler(event);
 
 			expect(result.statusCode).toBe(400);
 		});
 
 		it("should return 400 when value is missing in body", async () => {
-			const event = createEvent({ method: "PUT", body: Buffer.from(JSON.stringify({})) });
+			const event = createEvent({ method: "PUT", body: toReadableStream(JSON.stringify({})) });
 			const result = await runHandler(event);
 
 			expect(result.statusCode).toBe(400);
 		});
 
 		it("should return 400 when body is invalid JSON", async () => {
-			const event = createEvent({ method: "PUT", body: Buffer.from("invalid json") });
+			const event = createEvent({ method: "PUT", body: toReadableStream("invalid json") });
 			const result = await runHandler(event);
 
 			expect(result.statusCode).toBe(400);
@@ -415,7 +409,7 @@ describe("cache-adapter", () => {
 			const value = { type: "route", body: "content" };
 			const event = createEvent({
 				method: "PUT",
-				body: Buffer.from(JSON.stringify({ value })),
+				body: toReadableStream(JSON.stringify({ value })),
 			});
 
 			const result = await runHandler(event);
@@ -437,7 +431,7 @@ describe("cache-adapter", () => {
 			};
 			const event = createEvent({
 				method: "PUT",
-				body: Buffer.from(JSON.stringify({ value })),
+				body: toReadableStream(JSON.stringify({ value })),
 			});
 
 			await runHandler(event);
@@ -458,7 +452,7 @@ describe("cache-adapter", () => {
 			};
 			const event = createEvent({
 				method: "PUT",
-				body: Buffer.from(JSON.stringify({ value })),
+				body: toReadableStream(JSON.stringify({ value })),
 			});
 
 			await handler(event);
@@ -470,7 +464,7 @@ describe("cache-adapter", () => {
 			mockTagCache.mode = "nextMode";
 			const event = createEvent({
 				method: "PUT",
-				body: Buffer.from(JSON.stringify({ value: { type: "route", body: "content" } })),
+				body: toReadableStream(JSON.stringify({ value: { type: "route", body: "content" } })),
 			});
 
 			await runHandler(event);
@@ -485,7 +479,7 @@ describe("cache-adapter", () => {
 			} as Partial<OpenNextConfig>;
 			const event = createEvent({
 				method: "PUT",
-				body: Buffer.from(JSON.stringify({ value: { type: "route", body: "content" } })),
+				body: toReadableStream(JSON.stringify({ value: { type: "route", body: "content" } })),
 			});
 
 			await runHandler(event);
@@ -503,7 +497,7 @@ describe("cache-adapter", () => {
 			};
 			const event = createEvent({
 				method: "PUT",
-				body: Buffer.from(JSON.stringify({ value })),
+				body: toReadableStream(JSON.stringify({ value })),
 			});
 
 			await runHandler(event);
@@ -515,7 +509,7 @@ describe("cache-adapter", () => {
 			mockIncrementalCache.set.mockRejectedValue(new Error("set error"));
 			const event = createEvent({
 				method: "PUT",
-				body: Buffer.from(JSON.stringify({ value: { type: "route", body: "content" } })),
+				body: toReadableStream(JSON.stringify({ value: { type: "route", body: "content" } })),
 			});
 
 			const result = await runHandler(event);
@@ -555,7 +549,7 @@ describe("cache-adapter", () => {
 			const event = createEvent({
 				rawPath: "/cache/revalidate-tags",
 				method: "POST",
-				body: Buffer.from(""),
+				body: toReadableStream(""),
 			});
 			const result = await runHandler(event);
 
@@ -566,7 +560,7 @@ describe("cache-adapter", () => {
 			const event = createEvent({
 				rawPath: "/cache/revalidate-tags",
 				method: "POST",
-				body: Buffer.from(JSON.stringify({})),
+				body: toReadableStream(JSON.stringify({})),
 			});
 			const result = await runHandler(event);
 
@@ -577,18 +571,31 @@ describe("cache-adapter", () => {
 			const event = createEvent({
 				rawPath: "/cache/revalidate-tags",
 				method: "POST",
-				body: Buffer.from(JSON.stringify({ tags: [] })),
+				body: toReadableStream(JSON.stringify({ tags: [] })),
 			});
 			const result = await runHandler(event);
 
 			expect(result.statusCode).toBe(400);
 		});
 
+		it("should reject non-string tags", async () => {
+			const event = createEvent({
+				rawPath: "/cache/revalidate-tags",
+				method: "POST",
+				body: toReadableStream(JSON.stringify({ tags: ["tag1", 2] })),
+			});
+
+			const result = await runHandler(event);
+
+			expect(result.statusCode).toBe(400);
+			expect(mockTagCache.writeTags).not.toHaveBeenCalled();
+		});
+
 		it("should return 400 when body is invalid JSON", async () => {
 			const event = createEvent({
 				rawPath: "/cache/revalidate-tags",
 				method: "POST",
-				body: Buffer.from("not json"),
+				body: toReadableStream("not json"),
 			});
 			const result = await runHandler(event);
 
@@ -601,7 +608,7 @@ describe("cache-adapter", () => {
 			const event = createEvent({
 				rawPath: "/cache/revalidate-tags",
 				method: "POST",
-				body: Buffer.from(JSON.stringify({ tags: ["tag1"] })),
+				body: toReadableStream(JSON.stringify({ tags: ["tag1"] })),
 			});
 
 			const result = await runHandler(event);
@@ -619,7 +626,7 @@ describe("cache-adapter", () => {
 			const event = createEvent({
 				rawPath: "/cache/revalidate-tags",
 				method: "POST",
-				body: Buffer.from(JSON.stringify({ tags: ["tag1"] })),
+				body: toReadableStream(JSON.stringify({ tags: ["tag1"] })),
 			});
 
 			const result = await runHandler(event);
@@ -638,7 +645,7 @@ describe("cache-adapter", () => {
 			const event = createEvent({
 				rawPath: "/cache/revalidate-tags",
 				method: "POST",
-				body: Buffer.from(JSON.stringify({ tags: ["tag1"] })),
+				body: toReadableStream(JSON.stringify({ tags: ["tag1"] })),
 			});
 
 			const result = await runHandler(event);
@@ -655,7 +662,7 @@ describe("cache-adapter", () => {
 			const event = createEvent({
 				rawPath: "/cache/revalidate-tags",
 				method: "POST",
-				body: Buffer.from(JSON.stringify({ tags: ["_N_T_//some-path"] })),
+				body: toReadableStream(JSON.stringify({ tags: ["_N_T_//some-path"] })),
 			});
 
 			await runHandler(event);
@@ -669,7 +676,7 @@ describe("cache-adapter", () => {
 			const event = createEvent({
 				rawPath: "/cache/revalidate-tags",
 				method: "POST",
-				body: Buffer.from(JSON.stringify({ tags: ["tag1"] })),
+				body: toReadableStream(JSON.stringify({ tags: ["tag1"] })),
 			});
 
 			const result = await runHandler(event);

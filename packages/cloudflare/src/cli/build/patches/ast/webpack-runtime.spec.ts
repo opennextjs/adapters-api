@@ -1,7 +1,11 @@
 import { patchCode } from "@opennextjs/core/build/patch/astCodePatcher.js";
 import { describe, expect, test } from "vitest";
 
-import { buildMultipleChunksRule, singleChunkRule } from "./webpack-runtime.js";
+import {
+	buildMultipleChunksRule,
+	patchWebpackMiddlewareRuntime,
+	singleChunkRule,
+} from "./webpack-runtime.js";
 
 describe("webpack runtime", () => {
 	describe("multiple chunks", () => {
@@ -108,6 +112,35 @@ describe("webpack runtime", () => {
 
               "
       `);
+		});
+	});
+
+	describe("middleware runtime", () => {
+		const runtimeCode = `
+      t.f.require=(o,n)=>{e[o]||(658!=o?r(require("./chunks/"+t.u(o))):e[o]=1)}
+      `;
+
+		test("uses the middleware traced chunks", async () => {
+			const patch = patchWebpackMiddlewareRuntime.patches[0]!;
+			const result = await patch.patchCode({
+				code: runtimeCode,
+				tracedFiles: ["/app/.open-next/middleware/app/.next/server/chunks/123.js"],
+			} as never);
+
+			expect(result).toContain('case 123: r(require("./chunks/123.js")); break;');
+			expect(result).not.toContain('require("./chunks/" +');
+		});
+
+		test("matches minified runtime code", () => {
+			expect(patchWebpackMiddlewareRuntime.patches[0]!.contentFilter?.test(runtimeCode)).toBe(true);
+		});
+
+		test("supports middleware with no chunks", async () => {
+			const patch = patchWebpackMiddlewareRuntime.patches[0]!;
+			const result = await patch.patchCode({ code: runtimeCode, tracedFiles: [] } as never);
+
+			expect(result).toContain("case 658: e[o] = 1; break;");
+			expect(result).not.toContain('require("./chunks/" +');
 		});
 	});
 });

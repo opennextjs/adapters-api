@@ -7,7 +7,8 @@ on:
 
 permissions:
   id-token: write
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
   release:
@@ -15,7 +16,7 @@ jobs:
     name: Handle Changesets
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # See https://github.com/changesets/action/issues/187
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -34,9 +35,9 @@ jobs:
 
       - name: Create Version PR or Publish to NPM
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         with:
-          publish: pnpm exec changeset publish
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          publish-script: pnpm exec changeset publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_ENV: production
