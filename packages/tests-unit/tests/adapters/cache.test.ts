@@ -357,7 +357,7 @@ describe("CacheHandler", () => {
 				html: "<html></html>",
 				pageData: {},
 				status: 200,
-				headers: {},
+				headers: { "x-next-cache-tags": "tag1,tag2" },
 			});
 
 			expect(cache.set).toHaveBeenCalledWith(
@@ -367,7 +367,8 @@ describe("CacheHandler", () => {
 					html: "<html></html>",
 					json: {},
 				},
-				"cache"
+				"cache",
+				["tag1", "tag2"]
 			);
 		});
 

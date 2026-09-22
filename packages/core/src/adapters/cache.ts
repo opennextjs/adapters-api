@@ -190,7 +190,8 @@ export default class Cache {
 									json: pageData,
 									revalidate,
 								},
-								"cache"
+								"cache",
+								headers?.["x-next-cache-tags"]?.split(",")
 							);
 						}
 						break;
