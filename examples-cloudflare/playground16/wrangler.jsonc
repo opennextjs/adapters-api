@@ -21,6 +21,11 @@
 		{
 			"binding": "WORKER_SELF_REFERENCE",
 			"service": "playground16"
+		},
+		{
+			"binding": "NEXT_CACHE_SERVICE",
+			"service": "playground16",
+			"entrypoint": "OpenNextCache"
 		}
 	],
 	"durable_objects": {

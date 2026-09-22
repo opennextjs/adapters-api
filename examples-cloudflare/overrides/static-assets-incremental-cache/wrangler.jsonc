@@ -7,5 +7,12 @@
 	"assets": {
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
-	}
+	},
+	"services": [
+		{
+			"binding": "NEXT_CACHE_SERVICE",
+			"service": "static-assets-incremental-cache",
+			"entrypoint": "OpenNextCache"
+		}
+	]
 }

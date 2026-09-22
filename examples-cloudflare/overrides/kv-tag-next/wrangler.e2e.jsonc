@@ -8,6 +8,13 @@
 		"directory": ".open-next/assets",
 		"binding": "ASSETS",
 	},
+	"services": [
+		{
+			"binding": "NEXT_CACHE_SERVICE",
+			"service": "ssg-app",
+			"entrypoint": "OpenNextCache",
+		},
+	],
 	"vars": {
 		"APP_VERSION": "1.2.345",
 	},

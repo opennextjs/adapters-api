@@ -14,6 +14,14 @@
 			// see https://opennext.js.org/cloudflare/caching
 			"binding": "WORKER_SELF_REFERENCE",
 			"service": "<WORKER_NAME>"
+		},
+		{
+			// The OpenNext cache runs behind a named entrypoint of this worker.
+			// The service name must match the worker name.
+			// see https://opennext.js.org/cloudflare/caching
+			"binding": "NEXT_CACHE_SERVICE",
+			"service": "<WORKER_NAME>",
+			"entrypoint": "OpenNextCache"
 		}
 	],
 	"r2_buckets": [

@@ -14,6 +14,8 @@ export { DOQueueHandler } from "./.build/durable-objects/queue.js";
 export { DOShardedTagCache } from "./.build/durable-objects/sharded-tag-cache.js";
 //@ts-expect-error: Will be resolved by wrangler build
 export { BucketCachePurge } from "./.build/durable-objects/bucket-cache-purge.js";
+//@ts-expect-error: Will be resolved by wrangler build
+export { OpenNextCache } from "./cloudflare/cache-entrypoint.js";
 
 export default {
 	async fetch(request, env, ctx) {

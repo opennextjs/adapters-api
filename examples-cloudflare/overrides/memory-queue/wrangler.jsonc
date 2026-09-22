@@ -18,6 +18,11 @@
 		{
 			"binding": "WORKER_SELF_REFERENCE",
 			"service": "memory-queue"
+		},
+		{
+			"binding": "NEXT_CACHE_SERVICE",
+			"service": "memory-queue",
+			"entrypoint": "OpenNextCache"
 		}
 	]
 }

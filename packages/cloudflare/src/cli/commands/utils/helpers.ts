@@ -1,6 +1,7 @@
 import { type BuildOptions } from "@opennextjs/core/build/helper.js";
-import { getPlatformProxy, type GetPlatformProxyOptions } from "wrangler";
+import { getPlatformProxy, type GetPlatformProxyOptions, unstable_readConfig } from "wrangler";
 
+import { withoutSelfEntrypointServices } from "../../../utils/wrangler-config.js";
 import { extractProjectEnvVars } from "../../utils/extract-project-env-vars.js";
 
 export type WorkerEnvVar = Record<keyof CloudflareEnv, string | undefined>;
@@ -8,18 +9,29 @@ export type WorkerEnvVar = Record<keyof CloudflareEnv, string | undefined>;
 export async function getEnvFromPlatformProxy(options: GetPlatformProxyOptions, buildOpts: BuildOptions) {
 	const envVars = process.env;
 
-	const proxy = await getPlatformProxy<CloudflareEnv>({
-		...options,
-		envFiles: [],
-	});
+	const { configPath, isFlattened, cleanup } = withoutSelfEntrypointServices(
+		unstable_readConfig({ env: options.environment, config: options.configPath })
+	);
 
-	Object.entries(proxy.env).forEach(([key, value]) => {
-		if (typeof value === "string") {
-			envVars[key as keyof CloudflareEnv] = value;
-		}
-	});
+	try {
+		const proxy = await getPlatformProxy<CloudflareEnv>({
+			...options,
+			configPath,
+			// The rewritten configuration is already flattened to `options.environment`.
+			...(isFlattened ? { environment: undefined } : {}),
+			envFiles: [],
+		});
 
-	await proxy.dispose();
+		Object.entries(proxy.env).forEach(([key, value]) => {
+			if (typeof value === "string") {
+				envVars[key as keyof CloudflareEnv] = value;
+			}
+		});
+
+		await proxy.dispose();
+	} finally {
+		cleanup();
+	}
 
 	let mode: "production" | "development" | "test" = "production";
 	if (envVars.NEXTJS_ENV === "development") {
