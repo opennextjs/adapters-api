@@ -84,8 +84,8 @@ const serviceCache = {
 		return parseCacheGetResponse(headers, body) as any;
 	},
 
-	set: async (key, value, cacheType) => {
-		const response = await getCacheService().fetch(getCacheUrl(key, cacheType), {
+	set: async (key, value, cacheType, additionalTags) => {
+		const response = await getCacheService().fetch(getCacheUrl(key, cacheType, additionalTags), {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ value }),

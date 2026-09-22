@@ -60,7 +60,7 @@ const localCache: Cache = {
 		// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 		return parseCacheGetResponse(result.headers, bodyText) as any;
 	},
-	set: async (key, value, cacheType) => {
+	set: async (key, value, cacheType, additionalTags) => {
 		const h = (await getHandler())!;
 		const encodedKey = encodeURIComponent(key);
 		const url = `https://on/cache/${encodedKey}`;
@@ -68,6 +68,7 @@ const localCache: Cache = {
 		// writing without it would store the entry where `get` does not look for it.
 		const query: Record<string, string> = {};
 		if (cacheType) query.type = cacheType;
+		if (additionalTags && additionalTags.length > 0) query.tags = additionalTags.join(",");
 		const event: InternalEvent = {
 			type: "core",
 			method: "PUT",

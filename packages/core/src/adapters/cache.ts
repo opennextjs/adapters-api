@@ -222,7 +222,12 @@ export default class Cache {
 						break;
 					}
 					case "FETCH":
-						await globalThis.cache.set(key, data, "fetch");
+						await globalThis.cache.set(
+							key,
+							data,
+							"fetch",
+							typeof ctx === "object" && "tags" in ctx ? ctx.tags : undefined
+						);
 						break;
 					case "REDIRECT":
 						await globalThis.cache.set(

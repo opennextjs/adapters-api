@@ -178,6 +178,12 @@ describe("fetch cache", () => {
 			expect(global.fetch).toHaveBeenCalledWith("/cache/key?type=composable", expect.any(Object));
 		});
 
+		it("should forward additional tags", async () => {
+			await fetchCache.set("key", {}, "fetch", ["tag1", "tag2"]);
+
+			expect(global.fetch).toHaveBeenCalledWith("/cache/key?type=fetch&tags=tag1%2Ctag2", expect.any(Object));
+		});
+
 		it("should reject an unsuccessful response", async () => {
 			mockFetch({ headers: {}, body: "", status: 500 });
 

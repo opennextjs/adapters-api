@@ -439,6 +439,26 @@ describe("cache-handler", () => {
 			expect(mockTagCache.writeTags).toHaveBeenCalled();
 		});
 
+		it("should write additional tags supplied with a fetch entry", async () => {
+			const event = createEvent({
+				method: "PUT",
+				query: { type: "fetch", tags: "tag1,tag2" },
+				body: toReadableStream(
+					JSON.stringify({
+						value: { kind: "FETCH", data: { headers: {}, body: "body", url: "url" } },
+					})
+				),
+			});
+
+			const result = await runHandler(event);
+
+			expect(result.statusCode).toBe(200);
+			expect(mockTagCache.writeTags).toHaveBeenCalledWith([
+				{ path: "test-key", tag: "tag1", revalidatedAt: 1 },
+				{ path: "test-key", tag: "tag2", revalidatedAt: 1 },
+			]);
+		});
+
 		it("should write derived tags without an ambient request context", async () => {
 			// The cache handler runs as its own function: nothing establishes an OpenNext request
 			// context for it, and `writeTags` gives up when there is none.

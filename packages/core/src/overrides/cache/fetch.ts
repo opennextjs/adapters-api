@@ -33,10 +33,13 @@ const fetchCache: Cache = {
 		// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 		return parseCacheGetResponse(headers, bodyText) as any;
 	},
-	set: async (key, value, cacheType) => {
+	set: async (key, value, cacheType, additionalTags) => {
 		// The cache type has to be forwarded: incremental caches may key entries on it,
 		// writing without it would store the entry where `get` does not look for it.
-		const queryString = cacheType ? `?type=${cacheType}` : "";
+		const query = new URLSearchParams();
+		if (cacheType) query.set("type", cacheType);
+		if (additionalTags && additionalTags.length > 0) query.set("tags", additionalTags.join(","));
+		const queryString = query.size > 0 ? `?${query.toString()}` : "";
 		const url = `${CACHE_URL}/cache/${encodeURIComponent(key)}${queryString}`;
 		const response = await fetch(url, {
 			method: "PUT",

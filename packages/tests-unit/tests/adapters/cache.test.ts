@@ -450,17 +450,24 @@ describe("CacheHandler", () => {
 		});
 
 		it("Should set cache when for FETCH", async () => {
-			await instance.set("key", {
-				kind: "FETCH",
-				data: {
-					headers: {},
-					body: "{}",
-					url: "https://example.com",
-					status: 200,
-					tags: [],
+			await instance.set(
+				"key",
+				{
+					kind: "FETCH",
+					data: {
+						headers: {},
+						body: "{}",
+						url: "https://example.com",
+						status: 200,
+						tags: [],
+					},
+					revalidate: 60,
 				},
-				revalidate: 60,
-			});
+				{
+					fetchCache: true,
+					tags: ["tag1", "tag2"],
+				}
+			);
 
 			expect(cache.set).toHaveBeenCalledWith(
 				"key",
@@ -475,7 +482,8 @@ describe("CacheHandler", () => {
 					},
 					revalidate: 60,
 				},
-				"fetch"
+				"fetch",
+				["tag1", "tag2"]
 			);
 		});
 

@@ -291,7 +291,8 @@ export type Cache = BaseOverride & {
 	set<CacheType extends CacheEntryType = "cache">(
 		key: string,
 		value: CacheValue<CacheType>,
-		isFetch?: CacheType
+		isFetch?: CacheType,
+		additionalTags?: string[]
 	): Promise<void>;
 	delete(key: string): Promise<void>;
 	revalidateTags(tags: string[]): Promise<void>;

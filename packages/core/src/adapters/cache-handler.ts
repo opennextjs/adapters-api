@@ -92,7 +92,7 @@ export async function handler(
 			case "GET":
 				return await handleGet(key, cacheType, additionalTags);
 			case "PUT":
-				return await handleSet(key, cacheType, body);
+				return await handleSet(key, cacheType, additionalTags, body);
 			case "DELETE":
 				return await handleDelete(key);
 			default:
@@ -193,6 +193,7 @@ async function checkTagRevalidation(
  *
  * @param key Cache key to update.
  * @param cacheType Type of cache entry being stored.
+ * @param additionalTags Tags supplied separately from the cache value.
  * @param body Stream containing the serialized cache value.
  * @return The cache operation response.
  * @throws When reading the request stream fails.
@@ -200,6 +201,7 @@ async function checkTagRevalidation(
 async function handleSet(
 	key: string,
 	cacheType: CacheEntryType,
+	additionalTags: string[],
 	body?: ReadableStream<Uint8Array>
 ): Promise<InternalResult> {
 	debug("set", { key, cacheType });
@@ -231,18 +233,18 @@ async function handleSet(
 			const tagCache = globalThis.tagCache;
 			// TODO: fix this horrible typing
 			if (tagCache.mode !== "nextMode" && !globalThis.openNextConfig?.dangerous?.disableTagCache) {
-				let derivedTags: string[] = [];
+				let derivedTags: string[] = [...additionalTags];
 
 				if (cacheType === "cache") {
 					const tags = getTagsFromValue(payload.value as CacheValue<"cache">);
-					derivedTags = tags;
+					derivedTags.push(...tags);
 				} else if (cacheType === "fetch") {
 					const fetchValue = payload.value as CacheValue<"fetch">;
 					const data = fetchValue.data as Record<string, unknown> | undefined;
-					derivedTags = (fetchValue.tags as string[]) ?? (data?.tags as string[]) ?? [];
+					derivedTags.push(...((fetchValue.tags as string[]) ?? (data?.tags as string[]) ?? []));
 				} else if (cacheType === "composable") {
 					const composableValue = payload.value as CacheValue<"composable">;
-					derivedTags = composableValue.tags ?? [];
+					derivedTags.push(...(composableValue.tags ?? []));
 				}
 
 				if (derivedTags.length > 0) {

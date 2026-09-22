@@ -70,13 +70,17 @@ describe("serviceCache", () => {
 	describe("set", () => {
 		// The cache type is part of the key for the incremental caches, it has to be forwarded
 		// or entries would be written where they are not read from.
-		it("sends the value and the cache type", async () => {
-			await serviceCache.set("key", { kind: "FETCH", data: { headers: {}, body: "b", url: "u" } }, "fetch");
+		it("sends the value, cache type, and additional tags", async () => {
+			await serviceCache.set("key", { kind: "FETCH", data: { headers: {}, body: "b", url: "u" } }, "fetch", [
+				"tag1",
+				"tag2",
+			]);
 
 			const { url, method, body } = lastRequest();
 			expect(method).toBe("PUT");
 			expect(url.pathname).toBe("/cache/key");
 			expect(url.searchParams.get("type")).toBe("fetch");
+			expect(url.searchParams.get("tags")).toBe("tag1,tag2");
 			expect(JSON.parse(body as string)).toEqual({
 				value: { kind: "FETCH", data: { headers: {}, body: "b", url: "u" } },
 			});
