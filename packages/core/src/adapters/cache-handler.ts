@@ -147,21 +147,34 @@ async function handleGet(
 		}
 
 		if (!result.shouldBypassTagCache) {
+			let revalidated = false;
 			if (tags.length > 0) {
-				const revalidated = await checkTagRevalidation(key, tags, result);
-				if (revalidated) {
-					return {
-						type: "core",
-						statusCode: 404,
-						body: toReadableStream(""),
-						isBase64Encoded: false,
-						headers: {
-							"x-opennext-cache-found": "false",
-							"x-opennext-cache-tag-status": "revalidated",
-							"Cache-Control": "no-store",
-						},
-					};
+				revalidated = await checkTagRevalidation(key, tags, result);
+			}
+
+			if (cacheType === "fetch" && globalThis.tagCache.mode === "original") {
+				const hasHardTags = additionalTags.some((tag) => !tag.startsWith(SOFT_TAG_PREFIX));
+				const path = additionalTags.find(
+					(tag) => tag.startsWith(SOFT_TAG_PREFIX) && !tag.endsWith("layout") && !tag.endsWith("page")
+				);
+
+				if (!revalidated && !hasHardTags && path) {
+					revalidated = await checkTagRevalidation(path.slice(SOFT_TAG_PREFIX.length), [], result);
 				}
+			}
+
+			if (revalidated) {
+				return {
+					type: "core",
+					statusCode: 404,
+					body: toReadableStream(""),
+					isBase64Encoded: false,
+					headers: {
+						"x-opennext-cache-found": "false",
+						"x-opennext-cache-tag-status": "revalidated",
+						"Cache-Control": "no-store",
+					},
+				};
 			}
 		}
 
@@ -177,7 +190,10 @@ async function checkTagRevalidation(
 	tags: string[],
 	cacheEntry: WithLastModified<CacheValue<CacheEntryType>>
 ): Promise<boolean> {
-	if (globalThis.openNextConfig?.dangerous?.disableTagCache || tags.length === 0) {
+	if (
+		globalThis.openNextConfig?.dangerous?.disableTagCache ||
+		(globalThis.tagCache.mode === "nextMode" && tags.length === 0)
+	) {
 		return false;
 	}
 	const lastModified = cacheEntry.lastModified ?? Date.now();

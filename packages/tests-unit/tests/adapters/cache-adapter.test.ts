@@ -345,6 +345,25 @@ describe("cache-handler", () => {
 			expect(result.headers["x-opennext-cache-tag-status"]).toBe("revalidated");
 		});
 
+		it("should return 404 when a fetch entry's owning path has been revalidated", async () => {
+			mockTagCache.mode = "original";
+			mockTagCache.getLastModified.mockResolvedValueOnce(1000).mockResolvedValueOnce(-1);
+			mockIncrementalCache.get.mockResolvedValue({
+				value: {
+					kind: "FETCH",
+					data: { headers: {}, body: "data", url: "https://example.com" },
+				},
+				lastModified: 1000,
+			});
+
+			const result = await runHandler(createEvent({ query: { type: "fetch", tags: "_N_T_/some-path" } }));
+
+			expect(mockTagCache.getLastModified).toHaveBeenNthCalledWith(1, "test-key", 1000);
+			expect(mockTagCache.getLastModified).toHaveBeenNthCalledWith(2, "some-path", 1000);
+			expect(result.statusCode).toBe(404);
+			expect(result.headers["x-opennext-cache-tag-status"]).toBe("revalidated");
+		});
+
 		it("should skip tag revalidation when shouldBypassTagCache is true", async () => {
 			mockIncrementalCache.get.mockResolvedValue({
 				value: { type: "route", body: "data" },
