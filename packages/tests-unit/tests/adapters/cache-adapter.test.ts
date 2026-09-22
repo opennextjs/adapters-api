@@ -366,7 +366,11 @@ describe("cache-handler", () => {
 
 		it("should skip tag revalidation when shouldBypassTagCache is true", async () => {
 			mockIncrementalCache.get.mockResolvedValue({
-				value: { type: "route", body: "data" },
+				value: {
+					type: "route",
+					body: "data",
+					meta: { headers: { "x-next-cache-tags": "internal-tag" } },
+				},
 				lastModified: 1000,
 				shouldBypassTagCache: true,
 			});
@@ -374,6 +378,7 @@ describe("cache-handler", () => {
 			const result = await runHandler(createEvent());
 
 			expect(result.statusCode).toBe(200);
+			expect(result.headers).not.toHaveProperty("x-opennext-cache-header-x-next-cache-tags");
 			expect(mockTagCache.getLastModified).not.toHaveBeenCalled();
 			expect(mockTagCache.hasBeenRevalidated).not.toHaveBeenCalled();
 		});
