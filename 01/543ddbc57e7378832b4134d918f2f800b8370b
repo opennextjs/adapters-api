@@ -1,0 +1,23 @@
+packages/cloudflare/src/api/overrides/cache/service-cache.spec.ts
+  s_17e1b55ac03a80::t_f3ffda18fceacf 73-77,83
+packages/tests-unit/tests/adapters/cache.test.ts
+  s_17e1b55ac03a80::t_0c21829982942b 453-464,466-470,485-486
+packages/tests-unit/tests/overrides/cache/fetch.test.ts
+  s_17e1b55ac03a80::t_1dbcaf0b2d5c25 181-186
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "01543ddbc57e7378832b4134d918f2f800b8370b",
+  "prompts": {},
+  "sessions": {
+    "s_17e1b55ac03a80": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f377c50aeffeogGMSSeusd13Qf",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
