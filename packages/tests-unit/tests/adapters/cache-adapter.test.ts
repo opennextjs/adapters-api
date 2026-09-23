@@ -260,8 +260,9 @@ describe("cache-handler", () => {
 	});
 
 	describe("tag revalidation in GET", () => {
-		it("should return cached value when there are no tags", async () => {
+		it("should check the cache key in original mode when there are no tags", async () => {
 			mockTagCache.mode = "original";
+			mockTagCache.getLastModified.mockResolvedValue(1000);
 			mockIncrementalCache.get.mockResolvedValue({
 				value: { type: "route", body: "data" },
 				lastModified: 1000,
@@ -270,7 +271,21 @@ describe("cache-handler", () => {
 			const result = await runHandler(createEvent());
 
 			expect(result.statusCode).toBe(200);
-			expect(mockTagCache.getLastModified).not.toHaveBeenCalled();
+			expect(mockTagCache.getLastModified).toHaveBeenCalledWith("test-key", 1000);
+		});
+
+		it("should return 404 when an untagged original-mode entry has been revalidated", async () => {
+			mockTagCache.mode = "original";
+			mockTagCache.getLastModified.mockResolvedValue(-1);
+			mockIncrementalCache.get.mockResolvedValue({
+				value: { type: "route", body: "data" },
+				lastModified: 1000,
+			});
+
+			const result = await runHandler(createEvent());
+
+			expect(result.statusCode).toBe(404);
+			expect(result.headers["x-opennext-cache-tag-status"]).toBe("revalidated");
 		});
 
 		it("should check tag revalidation in nextMode", async () => {

@@ -147,10 +147,7 @@ async function handleGet(
 		}
 
 		if (!result.shouldBypassTagCache) {
-			let revalidated = false;
-			if (tags.length > 0) {
-				revalidated = await checkTagRevalidation(key, tags, result);
-			}
+			let revalidated = await checkTagRevalidation(key, tags, result);
 
 			if (cacheType === "fetch" && globalThis.tagCache.mode === "original") {
 				const hasHardTags = additionalTags.some((tag) => !tag.startsWith(SOFT_TAG_PREFIX));
