@@ -18,10 +18,10 @@ describe("AWS adapter", () => {
 		const { defaultOverrides } = createOptions({}, {});
 
 		expect(defaultOverrides.server).toMatchObject({
-			cache: "@opennextjs/core/overrides/cache/fetch.js",
+			cache: "@opennextjs/core/overrides/cache/local.js",
 		});
 		expect(defaultOverrides.middleware).toMatchObject({
-			cache: "@opennextjs/core/overrides/cache/fetch.js",
+			cache: "@opennextjs/core/overrides/cache/local.js",
 		});
 		expect(defaultOverrides.cache).toEqual({
 			wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda.js",

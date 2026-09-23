@@ -10,7 +10,7 @@ export default buildAdapter((_config, buildOpts: BuildOptions) => ({
 		server: {
 			wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda-streaming.js",
 			converter: "@opennextjs/aws/overrides/converters/aws-streaming.js",
-			cache: "@opennextjs/core/overrides/cache/fetch.js",
+			cache: "@opennextjs/core/overrides/cache/local.js",
 			queue: "@opennextjs/aws/overrides/queue/sqs.js",
 		},
 		cache: {
@@ -36,7 +36,7 @@ export default buildAdapter((_config, buildOpts: BuildOptions) => ({
 		middleware: {
 			wrapper: "@opennextjs/aws/overrides/wrappers/aws-lambda.js",
 			converter: "@opennextjs/aws/overrides/converters/aws-cloudfront.js",
-			cache: "@opennextjs/core/overrides/cache/fetch.js",
+			cache: "@opennextjs/core/overrides/cache/local.js",
 			queue: "@opennextjs/aws/overrides/queue/sqs-lite.js",
 		},
 	},
