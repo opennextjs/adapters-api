@@ -187,6 +187,15 @@ describe("local cache", () => {
 			expect(event.query).toEqual({ type: "composable" });
 		});
 
+		it("should forward additional tags", async () => {
+			mockHandler.mockResolvedValue(createMockResult());
+
+			await localCache.set("key", {}, "fetch", ["tag1", "tag2"]);
+
+			const event = mockHandler.mock.calls[0][0];
+			expect(event.query).toEqual({ type: "fetch", tags: "tag1,tag2" });
+		});
+
 		it("should reject an unsuccessful response", async () => {
 			mockHandler.mockResolvedValue(createMockResult({ statusCode: 500 }));
 

@@ -22,8 +22,7 @@ describe("defineCloudflareConfig", () => {
 			wrapper: "node",
 			converter: "node",
 			generateDockerfile: true,
-			incrementalCache: "dummy",
-			tagCache: "dummy",
+			cache: "dummy",
 			queue: "dummy",
 		});
 		expect(config.middleware).toMatchObject({

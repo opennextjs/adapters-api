@@ -51,14 +51,12 @@ describe("createCacheBundle", () => {
 		);
 	});
 
-	test("falls back to legacy default function cache providers", async () => {
+	test("uses adapter cache provider defaults and the default function CDN fallback", async () => {
 		const options = {
 			buildDir: "/app/.open-next/.build",
 			config: {
 				default: {
 					override: {
-						incrementalCache: "legacy-incremental",
-						tagCache: "legacy-tags",
 						cdnInvalidation: "legacy-cdn",
 					},
 				},
@@ -67,27 +65,30 @@ describe("createCacheBundle", () => {
 			outputDir: "/app/.open-next",
 		};
 
-		await createCacheBundle(options as never);
+		await createCacheBundle(options as never, {
+			incrementalCache: "adapter-incremental",
+			tagCache: "adapter-tags",
+		});
 
 		expect(openNextResolvePlugin).toHaveBeenCalledWith(
 			expect.objectContaining({
 				overrides: expect.objectContaining({
-					incrementalCache: "legacy-incremental",
-					tagCache: "legacy-tags",
 					cdnInvalidation: "legacy-cdn",
+				}),
+				defaultOverrides: expect.objectContaining({
+					incrementalCache: "adapter-incremental",
+					tagCache: "adapter-tags",
 				}),
 			})
 		);
 	});
 
-	test("prefers cache handler providers over legacy defaults", async () => {
+	test("prefers cache handler providers over adapter defaults", async () => {
 		const options = {
 			buildDir: "/app/.open-next/.build",
 			config: {
 				default: {
 					override: {
-						incrementalCache: "legacy-incremental",
-						tagCache: "legacy-tags",
 						cdnInvalidation: "legacy-cdn",
 					},
 				},
@@ -101,7 +102,10 @@ describe("createCacheBundle", () => {
 			outputDir: "/app/.open-next",
 		};
 
-		await createCacheBundle(options as never);
+		await createCacheBundle(options as never, {
+			incrementalCache: "adapter-incremental",
+			tagCache: "adapter-tags",
+		});
 
 		expect(openNextResolvePlugin).toHaveBeenCalledWith(
 			expect.objectContaining({

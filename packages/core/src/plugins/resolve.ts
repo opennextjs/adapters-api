@@ -8,12 +8,14 @@ import type { Plugin } from "esbuild";
 import type {
 	DefaultOverrideOptions,
 	IncludedImageLoader,
+	IncludedIncrementalCache,
 	IncludedOriginResolver,
+	IncludedTagCache,
 	IncludedWarmer,
 	LazyLoadedOverride,
 	OverrideOptions,
 } from "@/types/open-next";
-import type { ImageLoader, OriginResolver, Warmer } from "@/types/overrides";
+import type { ImageLoader, IncrementalCache, OriginResolver, TagCache, Warmer } from "@/types/overrides";
 
 import logger from "../logger.js";
 import { getCrossPlatformPathRegex } from "../utils/regex.js";
@@ -24,9 +26,9 @@ export interface IPluginSettings {
 		wrapper?: DefaultOverrideOptions<any, any>["wrapper"];
 		// oxlint-disable-next-line @typescript-eslint/no-explicit-any - generic overrides for flexibility
 		converter?: DefaultOverrideOptions<any, any>["converter"];
-		tagCache?: OverrideOptions["tagCache"];
+		tagCache?: IncludedTagCache | LazyLoadedOverride<TagCache>;
 		queue?: OverrideOptions["queue"];
-		incrementalCache?: OverrideOptions["incrementalCache"];
+		incrementalCache?: IncludedIncrementalCache | LazyLoadedOverride<IncrementalCache>;
 		imageLoader?: LazyLoadedOverride<ImageLoader> | IncludedImageLoader;
 		originResolver?: LazyLoadedOverride<OriginResolver> | IncludedOriginResolver;
 		warmer?: LazyLoadedOverride<Warmer> | IncludedWarmer;

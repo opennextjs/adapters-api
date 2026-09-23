@@ -90,7 +90,7 @@ export async function populateCache(
 	populateCacheOptions: PopulateCacheOptions,
 	envVars: WorkerEnvVar
 ) {
-	const { incrementalCache, tagCache } = config.default.override ?? {};
+	const { incrementalCache, tagCache } = config.cacheHandler ?? {};
 
 	if (!fs.existsSync(buildOpts.outputDir)) {
 		logger.error("Unable to populate cache: Open Next build not found");

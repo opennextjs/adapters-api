@@ -23,12 +23,12 @@ export function ensureCloudflareConfig(config: OpenNextConfig) {
 		dftUseCloudflareWrapper: config.default?.override?.wrapper === "cloudflare-node",
 		dftUseEdgeConverter: config.default?.override?.converter === "edge",
 		dftUseFetchProxy: config.default?.override?.proxyExternalRequest === "fetch",
-		dftMaybeUseCache:
-			config.default?.override?.incrementalCache === "dummy" ||
-			typeof config.default?.override?.incrementalCache === "function",
-		dftMaybeUseTagCache:
-			config.default?.override?.tagCache === "dummy" ||
-			typeof config.default?.override?.incrementalCache === "function",
+		dftUseCacheClient: typeof config.default?.override?.cache === "function",
+		chMaybeUseIncrementalCache:
+			config.cacheHandler?.incrementalCache === "dummy" ||
+			typeof config.cacheHandler?.incrementalCache === "function",
+		chMaybeUseTagCache:
+			config.cacheHandler?.tagCache === "dummy" || typeof config.cacheHandler?.tagCache === "function",
 		dftMaybeUseQueue:
 			config.default?.override?.queue === "dummy" ||
 			config.default?.override?.queue === "direct" ||
@@ -36,14 +36,14 @@ export function ensureCloudflareConfig(config: OpenNextConfig) {
 		dftUseNodeWrapper: config.default?.override?.wrapper === "node",
 		dftUseNodeConverter: config.default?.override?.converter === "node",
 		dftGenerateDockerfile: config.default?.override?.generateDockerfile === true,
-		dftUseDummyCache: config.default?.override?.incrementalCache === "dummy",
-		dftUseDummyTagCache: config.default?.override?.tagCache === "dummy",
+		dftUseDummyCache: config.default?.override?.cache === "dummy",
 		dftUseDummyQueue: config.default?.override?.queue === "dummy",
 		// Check for the middleware function
 		mwIsMiddlewareExternal,
 		mwUseCloudflareWrapper: mwConfig?.override?.wrapper === "cloudflare-edge",
 		mwUseEdgeConverter: mwConfig?.override?.converter === "edge",
 		mwUseFetchProxy: mwConfig?.override?.proxyExternalRequest === "fetch",
+		mwUseCacheClient: typeof mwConfig?.override?.cache === "function",
 		hasCryptoExternal: config.edgeExternals?.includes("node:crypto"),
 	};
 
@@ -55,8 +55,9 @@ export function ensureCloudflareConfig(config: OpenNextConfig) {
 		requirements.dftUseCloudflareWrapper,
 		requirements.dftUseEdgeConverter,
 		requirements.dftUseFetchProxy,
-		requirements.dftMaybeUseCache,
-		requirements.dftMaybeUseTagCache,
+		requirements.dftUseCacheClient,
+		requirements.chMaybeUseIncrementalCache,
+		requirements.chMaybeUseTagCache,
 		requirements.dftMaybeUseQueue,
 	];
 	const containerRequirements = [
@@ -64,7 +65,6 @@ export function ensureCloudflareConfig(config: OpenNextConfig) {
 		requirements.dftUseNodeConverter,
 		requirements.dftGenerateDockerfile,
 		requirements.dftUseDummyCache,
-		requirements.dftUseDummyTagCache,
 		requirements.dftUseDummyQueue,
 	];
 	const commonRequirements = [
@@ -72,6 +72,7 @@ export function ensureCloudflareConfig(config: OpenNextConfig) {
 		requirements.mwUseCloudflareWrapper,
 		requirements.mwUseEdgeConverter,
 		requirements.mwUseFetchProxy,
+		requirements.mwUseCacheClient,
 		requirements.hasCryptoExternal,
 	];
 
@@ -86,10 +87,13 @@ export function ensureCloudflareConfig(config: OpenNextConfig) {
               wrapper: "cloudflare-node",
               converter: "edge",
               proxyExternalRequest: "fetch",
-              incrementalCache: "dummy" | function,
-              tagCache: "dummy" | function,
+              cache: function,
               queue: "dummy" | "direct" | function,
             },
+          },
+          cacheHandler: {
+            incrementalCache: "dummy" | function,
+            tagCache: "dummy" | function,
           },
           edgeExternals: ["node:crypto"],
           middleware: {
@@ -98,8 +102,7 @@ export function ensureCloudflareConfig(config: OpenNextConfig) {
               wrapper: "cloudflare-edge",
               converter: "edge",
               proxyExternalRequest: "fetch",
-              incrementalCache: "dummy" | function,
-              tagCache: "dummy" | function,
+              cache: function,
               queue: "dummy" | "direct" | function,
             },
           },

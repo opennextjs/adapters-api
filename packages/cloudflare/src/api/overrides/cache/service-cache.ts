@@ -35,12 +35,16 @@ function getCacheService(): Service {
 	return service;
 }
 
-function getCacheUrl(key: string, cacheType?: CacheEntryType) {
+function getCacheUrl(key: string, cacheType?: CacheEntryType, additionalTags?: string[]) {
 	const url = new URL(`/cache/${encodeURIComponent(key)}`, CACHE_ORIGIN);
 
 	if (cacheType) {
 		url.searchParams.set("type", cacheType);
 	}
+	if (additionalTags && additionalTags.length > 0) {
+		url.searchParams.set("tags", additionalTags.join(","));
+	}
+
 	return url.href;
 }
 
@@ -67,8 +71,8 @@ function ensureResponseOk(response: Pick<Response, "ok" | "status">, operation: 
 const serviceCache = {
 	name: NAME,
 
-	get: async (key, cacheType) => {
-		const response = await getCacheService().fetch(getCacheUrl(key, cacheType));
+	get: async (key, cacheType, additionalTags) => {
+		const response = await getCacheService().fetch(getCacheUrl(key, cacheType, additionalTags));
 
 		const body = await response.text();
 		const headers: Record<string, string> = {};
@@ -80,8 +84,8 @@ const serviceCache = {
 		return parseCacheGetResponse(headers, body) as any;
 	},
 
-	set: async (key, value, cacheType) => {
-		const response = await getCacheService().fetch(getCacheUrl(key, cacheType), {
+	set: async (key, value, cacheType, additionalTags) => {
+		const response = await getCacheService().fetch(getCacheUrl(key, cacheType, additionalTags), {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ value }),

@@ -285,12 +285,14 @@ export type ProxyExternalRequest = BaseOverride & {
 export type Cache = BaseOverride & {
 	get<CacheType extends CacheEntryType = "cache">(
 		key: string,
-		cacheType?: CacheType
+		cacheType?: CacheType,
+		additionalTags?: string[]
 	): Promise<WithLastModified<CacheValue<CacheType>> | null>;
 	set<CacheType extends CacheEntryType = "cache">(
 		key: string,
 		value: CacheValue<CacheType>,
-		isFetch?: CacheType
+		isFetch?: CacheType,
+		additionalTags?: string[]
 	): Promise<void>;
 	delete(key: string): Promise<void>;
 	revalidateTags(tags: string[]): Promise<void>;

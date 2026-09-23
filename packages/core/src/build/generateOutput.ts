@@ -8,6 +8,7 @@ import type {
 	ExternalMiddlewareConfig,
 	FunctionOptions,
 	LazyLoadedOverride,
+	OpenNextConfig,
 	OverrideOptions,
 } from "@/types/open-next";
 
@@ -37,6 +38,9 @@ type OpenNextECSOrigin = {
 
 type CommonOverride = {
 	queue: string;
+};
+
+type CacheFunction = BaseFunction & {
 	incrementalCache: string;
 	tagCache: string;
 };
@@ -88,7 +92,7 @@ export interface OpenNextOutput {
 		initializationFunction?: BaseFunction;
 		warmer?: BaseFunction;
 		revalidationFunction?: BaseFunction;
-		cacheFunction?: BaseFunction;
+		cacheFunction?: CacheFunction;
 	};
 }
 
@@ -169,17 +173,26 @@ async function extractOverrideFn(override?: DefaultOverrideOptions) {
 }
 
 async function extractCommonOverride(override?: OverrideOptions) {
-	if (!override) {
-		return {
-			queue: "sqs",
-			incrementalCache: "s3",
-			tagCache: "dynamodb",
-		};
-	}
-	const queue = await extractOverrideName("sqs", override.queue);
-	const incrementalCache = await extractOverrideName("s3", override.incrementalCache);
-	const tagCache = await extractOverrideName("dynamodb", override.tagCache);
-	return { queue, incrementalCache, tagCache };
+	return { queue: await extractOverrideName("sqs", override?.queue) };
+}
+
+/**
+ * Resolves provider names for the dedicated cache function.
+ *
+ * @param cacheHandler User cache-handler configuration.
+ * @param defaults Adapter defaults for the cache bundle.
+ * @return Effective incremental-cache and tag-cache provider names.
+ */
+async function extractCacheOverride(
+	cacheHandler?: OpenNextConfig["cacheHandler"],
+	defaults?: DefaultOverrides
+): Promise<Pick<CacheFunction, "incrementalCache" | "tagCache">> {
+	const incrementalCache = await extractOverrideName(
+		"s3",
+		cacheHandler?.incrementalCache ?? defaults?.incrementalCache
+	);
+	const tagCache = await extractOverrideName("dynamodb", cacheHandler?.tagCache ?? defaults?.tagCache);
+	return { incrementalCache, tagCache };
 }
 
 function prefixPattern(basePath: string) {
@@ -400,6 +413,7 @@ export async function buildOpenNextOutput(
 					: {
 							handler: indexHandler,
 							bundle: ".open-next/cache-function",
+							...(await extractCacheOverride(config.cacheHandler, bundleDefaults?.cache)),
 						},
 		},
 	};

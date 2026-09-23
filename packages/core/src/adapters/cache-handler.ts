@@ -13,7 +13,7 @@ import type {
 } from "@/types/overrides";
 
 import { resolveCdnInvalidation, resolveIncrementalCache, resolveTagCache } from "../core/resolve.js";
-import { writeTags } from "../utils/cache.js";
+import { getTagsFromValue, writeTags } from "../utils/cache.js";
 import { runWithOpenNextRequestContext } from "../utils/promise.js";
 import { fromReadableStream, toReadableStream } from "../utils/stream.js";
 
@@ -30,13 +30,9 @@ async function initializeCaches() {
 	if (initialized) return;
 	const config = globalThis.openNextConfig;
 
-	globalThis.incrementalCache = await resolveIncrementalCache(
-		config.cacheHandler?.incrementalCache ?? config.default?.override?.incrementalCache
-	);
+	globalThis.incrementalCache = await resolveIncrementalCache(config.cacheHandler?.incrementalCache);
 
-	globalThis.tagCache = await resolveTagCache(
-		config.cacheHandler?.tagCache ?? config.default?.override?.tagCache
-	);
+	globalThis.tagCache = await resolveTagCache(config.cacheHandler?.tagCache);
 
 	globalThis.cdnInvalidationHandler = await resolveCdnInvalidation(
 		config.cacheHandler?.cdnInvalidation ?? config.default?.override?.cdnInvalidation
@@ -90,12 +86,13 @@ export async function handler(
 
 		const rawType = typeof query?.type === "string" ? query.type : undefined;
 		const cacheType: CacheEntryType = rawType === "fetch" || rawType === "composable" ? rawType : "cache";
+		const additionalTags = query?.tags ? (query.tags as string).split(",") : [];
 
 		switch (method) {
 			case "GET":
-				return await handleGet(key, cacheType);
+				return await handleGet(key, cacheType, additionalTags);
 			case "PUT":
-				return await handleSet(key, cacheType, body);
+				return await handleSet(key, cacheType, additionalTags, body);
 			case "DELETE":
 				return await handleDelete(key);
 			default:
@@ -111,8 +108,12 @@ export async function handler(
 // Route handlers   //
 //////////////////////
 
-async function handleGet(key: string, cacheType: CacheEntryType): Promise<InternalResult> {
-	debug("get", { key, cacheType });
+async function handleGet(
+	key: string,
+	cacheType: CacheEntryType,
+	additionalTags: string[]
+): Promise<InternalResult> {
+	debug("get", { key, cacheType, additionalTags });
 
 	try {
 		const result = await globalThis.incrementalCache.get(key, cacheType);
@@ -130,6 +131,50 @@ async function handleGet(key: string, cacheType: CacheEntryType): Promise<Intern
 			};
 		}
 
+		// `getTagsFromValue` also strips the internal `x-next-cache-tags` header from the entry, so
+		// the tags are derived for every hit - including the ones bypassing the tag cache - or that
+		// header would be handed back to Next.js and echoed to the client.
+		let tags: string[] = [...additionalTags];
+
+		if (cacheType === "cache") {
+			tags = [...tags, ...getTagsFromValue(result.value as CacheValue<"cache">)];
+		} else if (cacheType === "fetch") {
+			const fetchValue = result.value as CachedFetchValue;
+			tags = [...tags, ...(fetchValue.tags ?? []), ...(fetchValue.data?.tags ?? [])];
+		} else if (cacheType === "composable") {
+			const composableValue = result.value as StoredComposableCacheEntry;
+			tags = [...tags, ...(composableValue.tags ?? [])];
+		}
+
+		if (!result.shouldBypassTagCache) {
+			let revalidated = await checkTagRevalidation(key, tags, result);
+
+			if (cacheType === "fetch" && globalThis.tagCache.mode === "original") {
+				const hasHardTags = additionalTags.some((tag) => !tag.startsWith(SOFT_TAG_PREFIX));
+				const path = additionalTags.find(
+					(tag) => tag.startsWith(SOFT_TAG_PREFIX) && !tag.endsWith("layout") && !tag.endsWith("page")
+				);
+
+				if (!revalidated && !hasHardTags && path) {
+					revalidated = await checkTagRevalidation(path.slice(SOFT_TAG_PREFIX.length), [], result);
+				}
+			}
+
+			if (revalidated) {
+				return {
+					type: "core",
+					statusCode: 404,
+					body: toReadableStream(""),
+					isBase64Encoded: false,
+					headers: {
+						"x-opennext-cache-found": "false",
+						"x-opennext-cache-tag-status": "revalidated",
+						"Cache-Control": "no-store",
+					},
+				};
+			}
+		}
+
 		return buildCacheGetResponse(result);
 	} catch (e) {
 		error("Failed to get cache entry", e);
@@ -137,11 +182,31 @@ async function handleGet(key: string, cacheType: CacheEntryType): Promise<Intern
 	}
 }
 
+async function checkTagRevalidation(
+	key: string,
+	tags: string[],
+	cacheEntry: WithLastModified<CacheValue<CacheEntryType>>
+): Promise<boolean> {
+	if (
+		globalThis.openNextConfig?.dangerous?.disableTagCache ||
+		(globalThis.tagCache.mode === "nextMode" && tags.length === 0)
+	) {
+		return false;
+	}
+	const lastModified = cacheEntry.lastModified ?? Date.now();
+	if (globalThis.tagCache.mode === "nextMode") {
+		return globalThis.tagCache.hasBeenRevalidated(tags, lastModified);
+	}
+	const _lastModified = await globalThis.tagCache.getLastModified(key, lastModified);
+	return _lastModified === -1;
+}
+
 /**
  * Stores a cache entry from a streamed JSON request body.
  *
  * @param key Cache key to update.
  * @param cacheType Type of cache entry being stored.
+ * @param additionalTags Tags supplied separately from the cache value.
  * @param body Stream containing the serialized cache value.
  * @return The cache operation response.
  * @throws When reading the request stream fails.
@@ -149,6 +214,7 @@ async function handleGet(key: string, cacheType: CacheEntryType): Promise<Intern
 async function handleSet(
 	key: string,
 	cacheType: CacheEntryType,
+	additionalTags: string[],
 	body?: ReadableStream<Uint8Array>
 ): Promise<InternalResult> {
 	debug("set", { key, cacheType });
@@ -172,6 +238,45 @@ async function handleSet(
 
 	try {
 		await globalThis.incrementalCache.set(key, payload.value as CacheValue<CacheEntryType>, cacheType);
+
+		// `writeTags` deduplicates through the OpenNext request context and gives up when there is
+		// none. The cache handler runs as its own function, so nothing established a context for us.
+		await runWithOpenNextRequestContext({ isISRRevalidation: false }, async () => {
+			// Write tags for non-composable and non-nextMode tag caches
+			const tagCache = globalThis.tagCache;
+			// TODO: fix this horrible typing
+			if (tagCache.mode !== "nextMode" && !globalThis.openNextConfig?.dangerous?.disableTagCache) {
+				let derivedTags: string[] = [...additionalTags];
+
+				if (cacheType === "cache") {
+					const tags = getTagsFromValue(payload.value as CacheValue<"cache">);
+					derivedTags.push(...tags);
+				} else if (cacheType === "fetch") {
+					const fetchValue = payload.value as CacheValue<"fetch">;
+					const data = fetchValue.data as Record<string, unknown> | undefined;
+					derivedTags.push(...((fetchValue.tags as string[]) ?? (data?.tags as string[]) ?? []));
+				} else if (cacheType === "composable") {
+					const composableValue = payload.value as CacheValue<"composable">;
+					derivedTags.push(...(composableValue.tags ?? []));
+				}
+
+				if (derivedTags.length > 0) {
+					const storedTags = await tagCache.getByPath(key);
+					const tagsToWrite = derivedTags.filter((tag) => !storedTags.includes(tag));
+					if (tagsToWrite.length > 0) {
+						await writeTags(
+							tagsToWrite.map((tag) => ({
+								path: key,
+								tag,
+								revalidatedAt: 1,
+							})),
+							tagCache
+						);
+					}
+				}
+			}
+		});
+
 		return buildJsonResponse({ ok: true }, 200);
 	} catch (e) {
 		error("Failed to set cache entry", e);

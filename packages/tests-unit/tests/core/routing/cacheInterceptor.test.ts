@@ -2,7 +2,7 @@ import { cacheInterceptor } from "@opennextjs/core/core/routing/cacheInterceptor
 import { convertFromQueryString } from "@opennextjs/core/core/routing/util.js";
 import type { MiddlewareEvent } from "@opennextjs/core/types/open-next.js";
 import type { Queue } from "@opennextjs/core/types/overrides.js";
-import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream.js";
+import { fromReadableStream } from "@opennextjs/core/utils/stream.js";
 import { vi } from "vitest";
 
 vi.mock("@/config/index.js", () => ({
@@ -37,7 +37,7 @@ function createEvent(event: PartialEvent): MiddlewareEvent {
 		method: event.method ?? "GET",
 		rawPath,
 		url: event.url ?? "/",
-		body: event.body !== undefined ? toReadableStream(event.body) : undefined,
+		body: Buffer.from(event.body ?? ""),
 		headers: event.headers ?? {},
 		query: convertFromQueryString(qs ?? ""),
 		cookies: event.cookies ?? {},
@@ -46,27 +46,12 @@ function createEvent(event: PartialEvent): MiddlewareEvent {
 	};
 }
 
-const incrementalCache = {
+const cache = {
 	name: "mock",
-	get: vi.fn(),
-	set: vi.fn(),
-	delete: vi.fn(),
-};
-
-const cacheTransport = {
-	name: "transport",
 	get: vi.fn(),
 	set: vi.fn(),
 	delete: vi.fn(),
 	revalidateTags: vi.fn(),
-};
-
-const tagCache = {
-	name: "mock",
-	getByTag: vi.fn(),
-	getByPath: vi.fn(),
-	getLastModified: vi.fn(),
-	writeTags: vi.fn(),
 };
 
 const queue = {
@@ -76,12 +61,10 @@ const queue = {
 
 declare global {
 	var queue: Queue;
-	var incrementalCache: any;
-	var tagCache: any;
+	var cache: any;
 }
 
-globalThis.incrementalCache = incrementalCache;
-globalThis.tagCache = tagCache;
+globalThis.cache = cache;
 globalThis.queue = queue;
 
 beforeEach(() => {
@@ -93,7 +76,6 @@ beforeEach(() => {
 			disableIncrementalCache: false,
 		},
 	};
-	globalThis.cache = undefined;
 });
 
 describe("cacheInterceptor", () => {
@@ -119,12 +101,12 @@ describe("cacheInterceptor", () => {
 		expect(result).toEqual(event);
 	});
 
-	it("should take no action when incremental cache throws", async () => {
+	it("should take no action when cache throws", async () => {
 		const event = createEvent({
 			url: "/albums",
 		});
 
-		incrementalCache.get.mockRejectedValueOnce(new Error("mock error"));
+		cache.get.mockRejectedValueOnce(new Error("mock error"));
 		const result = await cacheInterceptor(event);
 
 		expect(result).toEqual(event);
@@ -134,7 +116,7 @@ describe("cacheInterceptor", () => {
 		const event = createEvent({
 			url: "/albums",
 		});
-		incrementalCache.get.mockResolvedValueOnce({
+		cache.get.mockResolvedValueOnce({
 			value: {
 				type: "app",
 				html: "Hello, world!",
@@ -160,80 +142,11 @@ describe("cacheInterceptor", () => {
 		);
 	});
 
-	it("should retrieve content through the dedicated cache transport", async () => {
-		globalThis.cache = cacheTransport;
-		cacheTransport.get.mockResolvedValueOnce({
-			value: {
-				type: "app",
-				html: "From transport",
-			},
-		});
-
-		const result = await cacheInterceptor(createEvent({ url: "/albums" }));
-
-		expect(cacheTransport.get).toHaveBeenCalledWith("/albums");
-		expect(incrementalCache.get).not.toHaveBeenCalled();
-		expect(await fromReadableStream(result.body)).toBe("From transport");
-	});
-
-	it("should take no action when tagCache lasModified is -1 for app type", async () => {
-		const event = createEvent({
-			url: "/albums",
-		});
-		incrementalCache.get.mockResolvedValueOnce({
-			value: {
-				type: "app",
-				html: "Hello, world!",
-			},
-		});
-		tagCache.getLastModified.mockResolvedValueOnce(-1);
-
-		const result = await cacheInterceptor(event);
-
-		expect(result).toEqual(event);
-	});
-
-	it("should bypass the tag cache when shouldBypassTagCache is true", async () => {
-		const event = createEvent({
-			url: "/albums",
-		});
-		incrementalCache.get.mockResolvedValueOnce({
-			value: {
-				type: "app",
-				html: "Hello, world!",
-			},
-			shouldBypassTagCache: true,
-		});
-
-		await cacheInterceptor(event);
-
-		expect(tagCache.getLastModified).not.toHaveBeenCalled();
-	});
-
-	it("should take no action when tagCache lasModified is -1 for route type", async () => {
-		const event = createEvent({
-			url: "/albums",
-		});
-
-		const body = "route";
-		incrementalCache.get.mockResolvedValueOnce({
-			value: {
-				type: "route",
-				body: body,
-				revalidate: false,
-			},
-			lastModified: new Date("2024-01-01T23:58:00Z").getTime(),
-		});
-		tagCache.getLastModified.mockResolvedValueOnce(-1);
-		const result = await cacheInterceptor(event);
-		expect(result).toEqual(event);
-	});
-
 	it("should retrieve page router content from stale cache", async () => {
 		const event = createEvent({
 			url: "/revalidate",
 		});
-		incrementalCache.get.mockResolvedValueOnce({
+		cache.get.mockResolvedValueOnce({
 			value: {
 				type: "page",
 				html: "Hello, world!",
@@ -265,7 +178,7 @@ describe("cacheInterceptor", () => {
 		const event = createEvent({
 			url: "/revalidate",
 		});
-		incrementalCache.get.mockResolvedValueOnce({
+		cache.get.mockResolvedValueOnce({
 			value: {
 				type: "page",
 				html: "Hello, world!",
@@ -297,7 +210,7 @@ describe("cacheInterceptor", () => {
 		const event = createEvent({
 			url: "/albums",
 		});
-		incrementalCache.get.mockResolvedValueOnce({
+		cache.get.mockResolvedValueOnce({
 			value: {
 				type: "redirect",
 				meta: {
@@ -326,7 +239,7 @@ describe("cacheInterceptor", () => {
 		const event = createEvent({
 			url: "/albums",
 		});
-		incrementalCache.get.mockResolvedValueOnce({
+		cache.get.mockResolvedValueOnce({
 			value: {
 				type: "?",
 				html: "Hello, world!",
@@ -343,7 +256,7 @@ describe("cacheInterceptor", () => {
 			url: "/albums",
 		});
 		const routeBody = JSON.stringify({ message: "Hello from API" });
-		incrementalCache.get.mockResolvedValueOnce({
+		cache.get.mockResolvedValueOnce({
 			value: {
 				type: "route",
 				body: routeBody,
@@ -383,7 +296,7 @@ describe("cacheInterceptor", () => {
 			url: "/albums",
 		});
 		const routeBody = "randomBinaryData";
-		incrementalCache.get.mockResolvedValueOnce({
+		cache.get.mockResolvedValueOnce({
 			value: {
 				type: "route",
 				body: routeBody,
@@ -423,7 +336,7 @@ describe("cacheInterceptor", () => {
 			url: "/albums",
 		});
 		const routeBody = "API response";
-		incrementalCache.get.mockResolvedValueOnce({
+		cache.get.mockResolvedValueOnce({
 			value: {
 				type: "route",
 				body: routeBody,
@@ -465,7 +378,7 @@ describe("cacheInterceptor", () => {
 			url: "/albums",
 		});
 		const routeBody = "Simple response";
-		incrementalCache.get.mockResolvedValueOnce({
+		cache.get.mockResolvedValueOnce({
 			value: {
 				type: "route",
 				body: routeBody,
@@ -498,7 +411,7 @@ describe("cacheInterceptor", () => {
 			url: "/albums",
 			rewriteStatusCode: 403,
 		});
-		incrementalCache.get.mockResolvedValueOnce({
+		cache.get.mockResolvedValueOnce({
 			value: {
 				type: "app",
 				html: "Hello, world!",
@@ -514,7 +427,7 @@ describe("cacheInterceptor", () => {
 			url: "/albums",
 			rewriteStatusCode: 203,
 		});
-		incrementalCache.get.mockResolvedValueOnce({
+		cache.get.mockResolvedValueOnce({
 			value: {
 				type: "app",
 				html: "Hello, world!",
@@ -532,7 +445,7 @@ describe("cacheInterceptor", () => {
 		const event = createEvent({
 			url: "/albums",
 		});
-		incrementalCache.get.mockResolvedValueOnce({
+		cache.get.mockResolvedValueOnce({
 			value: {
 				type: "app",
 				html: "Hello, world!",
@@ -550,7 +463,7 @@ describe("cacheInterceptor", () => {
 		const event = createEvent({
 			url: "/albums",
 		});
-		incrementalCache.get.mockResolvedValueOnce({
+		cache.get.mockResolvedValueOnce({
 			value: {
 				type: "app",
 				html: "Hello, world!",

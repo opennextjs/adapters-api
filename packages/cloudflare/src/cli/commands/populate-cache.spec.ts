@@ -113,10 +113,8 @@ describe("populateCache", () => {
 						outputDir: "/test/output",
 					} as BuildOptions,
 					{
-						default: {
-							override: {
-								incrementalCache: "cf-r2-incremental-cache",
-							},
+						cacheHandler: {
+							incrementalCache: "cf-r2-incremental-cache",
 						},
 					} as any, // oxlint-disable-line @typescript-eslint/no-explicit-any
 					{
@@ -149,10 +147,8 @@ describe("populateCache", () => {
 						outputDir: "/test/output",
 					} as BuildOptions,
 					{
-						default: {
-							override: {
-								incrementalCache: "cf-r2-incremental-cache",
-							},
+						cacheHandler: {
+							incrementalCache: "cf-r2-incremental-cache",
 						},
 					} as any, // oxlint-disable-line @typescript-eslint/no-explicit-any
 					{

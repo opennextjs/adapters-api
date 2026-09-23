@@ -44,7 +44,9 @@ export async function resolveWrapper<
  * @returns
  * @__PURE__
  */
-export async function resolveTagCache(tagCache: OverrideOptions["tagCache"]): Promise<TagCache> {
+export async function resolveTagCache(
+	tagCache: RemoveUndefined<OpenNextConfig["cacheHandler"]>["tagCache"]
+): Promise<TagCache> {
 	if (typeof tagCache === "function") {
 		return tagCache();
 	}
@@ -72,7 +74,9 @@ export async function resolveQueue(queue: OverrideOptions["queue"]) {
  * @returns
  * @__PURE__
  */
-export async function resolveIncrementalCache(incrementalCache: OverrideOptions["incrementalCache"]) {
+export async function resolveIncrementalCache(
+	incrementalCache: RemoveUndefined<OpenNextConfig["cacheHandler"]>["incrementalCache"]
+) {
 	if (typeof incrementalCache === "function") {
 		return incrementalCache();
 	}
@@ -162,12 +166,9 @@ export async function resolveCdnInvalidation(cdnInvalidation: OverrideOptions["c
  * Resolves the configured dedicated cache transport.
  *
  * @param cache Cache transport override.
- * @return The configured transport, or undefined when dedicated caching is not enabled.
+ * @return The configured transport, or the dummy cache when no override is configured.
  */
-export async function resolveCache(cache: OverrideOptions["cache"]): Promise<Cache | undefined> {
-	if (cache === undefined) {
-		return undefined;
-	}
+export async function resolveCache(cache: OverrideOptions["cache"]): Promise<Cache> {
 	if (typeof cache === "function") {
 		return cache();
 	}

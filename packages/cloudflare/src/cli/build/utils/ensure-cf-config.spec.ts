@@ -11,7 +11,7 @@ describe("ensureCloudflareConfig", () => {
 
 	test("rejects binding-backed caches in container mode", () => {
 		const config = defineCloudflareConfig({ container: true });
-		config.default.override!.incrementalCache = () => ({ name: "unsupported" }) as never;
+		config.default.override!.cache = () => ({ name: "unsupported" }) as never;
 
 		expect(() => ensureCloudflareConfig(config)).toThrow("Cloudflare Containers");
 	});

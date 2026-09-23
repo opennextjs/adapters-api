@@ -12,11 +12,9 @@ import { createGenericHandler } from "../core/createGenericHandler";
 import {
 	resolveAssetResolver,
 	resolveCache,
-	resolveIncrementalCache,
 	resolveOriginResolver,
 	resolveProxyRequest,
 	resolveQueue,
-	resolveTagCache,
 } from "../core/resolve";
 import { constructNextUrl } from "../core/routing/util";
 import routingHandler, {
@@ -41,11 +39,7 @@ const defaultHandler = async (
 
 	const assetResolver = await resolveAssetResolver(middlewareConfig?.assetResolver);
 
-	globalThis.tagCache = await resolveTagCache(middlewareConfig?.override?.tagCache);
-
 	globalThis.queue = await resolveQueue(middlewareConfig?.override?.queue);
-
-	globalThis.incrementalCache = await resolveIncrementalCache(middlewareConfig?.override?.incrementalCache);
 
 	globalThis.cache = await resolveCache(middlewareConfig?.override?.cache);
 

@@ -84,6 +84,38 @@ describe("buildOpenNextOutput", () => {
 			converter: "aws-streaming",
 		});
 	});
+
+	test("reports cache providers on the cache function", async () => {
+		const opts = createMockBuildOpts();
+		(opts.config as OpenNextConfig).cacheHandler = {
+			incrementalCache: "dummy",
+			tagCache: "dummy",
+		};
+
+		const output = await buildOpenNextOutput(opts);
+
+		expect(output.origins.default).not.toHaveProperty("incrementalCache");
+		expect(output.origins.default).not.toHaveProperty("tagCache");
+		expect(output.additionalProps?.cacheFunction).toMatchObject({
+			incrementalCache: "dummy",
+			tagCache: "dummy",
+		});
+	});
+
+	test("uses adapter cache defaults in generated metadata", async () => {
+		const opts = createMockBuildOpts();
+		const output = await buildOpenNextOutput(opts, {
+			cache: {
+				incrementalCache: "custom-incremental",
+				tagCache: "custom-tags",
+			},
+		});
+
+		expect(output.additionalProps?.cacheFunction).toMatchObject({
+			incrementalCache: "custom-incremental",
+			tagCache: "custom-tags",
+		});
+	});
 });
 
 describe("generateOutput (legacy wrapper)", () => {

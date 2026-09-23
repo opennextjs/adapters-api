@@ -28,13 +28,20 @@ describe("serviceCache", () => {
 	});
 
 	describe("get", () => {
-		it("requests the key and the cache type", async () => {
-			await serviceCache.get("key/with/slashes", "fetch");
+		it("requests the key, the cache type and the additional tags", async () => {
+			await serviceCache.get("key/with/slashes", "fetch", ["tag1", "tag2"]);
 
 			const { url, method } = lastRequest();
 			expect(method).toBe("GET");
 			expect(url.pathname).toBe(`/cache/${encodeURIComponent("key/with/slashes")}`);
 			expect(url.searchParams.get("type")).toBe("fetch");
+			expect(url.searchParams.get("tags")).toBe("tag1,tag2");
+		});
+
+		it("omits the tags when there is none", async () => {
+			await serviceCache.get("key", "cache", []);
+
+			expect(lastRequest().url.searchParams.has("tags")).toBe(false);
 		});
 
 		it("returns null on a cache miss", async () => {
@@ -63,13 +70,17 @@ describe("serviceCache", () => {
 	describe("set", () => {
 		// The cache type is part of the key for the incremental caches, it has to be forwarded
 		// or entries would be written where they are not read from.
-		it("sends the value and the cache type", async () => {
-			await serviceCache.set("key", { kind: "FETCH", data: { headers: {}, body: "b", url: "u" } }, "fetch");
+		it("sends the value, cache type, and additional tags", async () => {
+			await serviceCache.set("key", { kind: "FETCH", data: { headers: {}, body: "b", url: "u" } }, "fetch", [
+				"tag1",
+				"tag2",
+			]);
 
 			const { url, method, body } = lastRequest();
 			expect(method).toBe("PUT");
 			expect(url.pathname).toBe("/cache/key");
 			expect(url.searchParams.get("type")).toBe("fetch");
+			expect(url.searchParams.get("tags")).toBe("tag1,tag2");
 			expect(JSON.parse(body as string)).toEqual({
 				value: { kind: "FETCH", data: { headers: {}, body: "b", url: "u" } },
 			});
