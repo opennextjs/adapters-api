@@ -1,0 +1,19 @@
+packages/tests-unit/tests/overrides/tag-cache/dynamodb.test.ts
+  s_825fbe81760922::t_bc96f2b449449b 3,36-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "1d60cf8d279a7d66d9387e27d77afe823e797e7d",
+  "prompts": {},
+  "sessions": {
+    "s_825fbe81760922": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f2dbc8f64ffeGzJEW7RfB77HlB",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
