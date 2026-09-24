@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { hasHardRevalidation as hasLiteHardRevalidation } from "../../../../aws/src/overrides/tagCache/dynamodb-lite.js";
 import { hasHardRevalidation } from "../../../../aws/src/overrides/tagCache/dynamodb.js";
 
 describe("DynamoDB tag cache", () => {
@@ -25,6 +26,16 @@ describe("DynamoDB tag cache", () => {
 
 	it("keeps a tag stale when its SWR window has no expiry", () => {
 		const result = hasHardRevalidation(
+			[{ revalidatedAt: { N: "1500" }, stale: { N: "1500" } }],
+			1_000,
+			2_000
+		);
+
+		expect(result).toBe(false);
+	});
+
+	it("keeps a lightweight tag stale when its SWR window has no expiry", () => {
+		const result = hasLiteHardRevalidation(
 			[{ revalidatedAt: { N: "1500" }, stale: { N: "1500" } }],
 			1_000,
 			2_000
