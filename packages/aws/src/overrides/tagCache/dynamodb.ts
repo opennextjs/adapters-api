@@ -18,6 +18,28 @@ type DynamoDBItem = {
 	expire?: { N: string };
 };
 
+/**
+ * Determines whether tag records require blocking cache regeneration.
+ *
+ * @param items Tag records newer than the cached entry.
+ * @param lastModified Cached entry timestamp.
+ * @param now Current timestamp.
+ * @return Whether a tag was hard-revalidated or its SWR window expired.
+ */
+export function hasHardRevalidation(items: DynamoDBItem[], lastModified: number, now: number): boolean {
+	return items.some((item) => {
+		const revalidatedAt = Number.parseInt(item.revalidatedAt?.N ?? "0");
+		if (revalidatedAt <= lastModified) {
+			return false;
+		}
+		if (!item.expire?.N) {
+			return true;
+		}
+		const expiry = Number.parseInt(item.expire.N);
+		return expiry <= now && expiry > lastModified;
+	});
+}
+
 function parseDynamoClientConfigFromEnv(): DynamoDBClientConfig {
 	return {
 		region: CACHE_BUCKET_REGION,
@@ -151,26 +173,9 @@ const tagCache: TagCache = {
 			}
 			debug("revalidatedTags", revalidatedTags);
 
-			// Check if any tag has expired
-			const now = Date.now();
-			const hasExpiredTag = revalidatedTags.some((item) => {
-				if (item.expire?.N) {
-					const expiry = Number.parseInt(item.expire.N);
-					return expiry <= now && expiry > (lastModified ?? 0);
-				}
-				return false;
-			});
-			// Exclude expired tags from the revalidated count — they are handled
-			// separately via hasExpiredTag above.
-			const nonExpiredRevalidatedTags = revalidatedTags.filter((item) => {
-				if (item.expire?.N) {
-					return Number.parseInt(item.expire.N) > now;
-				}
-				return true;
-			});
-
-			// If we have revalidated tags or expired tags we return -1 to force revalidation
-			return nonExpiredRevalidatedTags.length > 0 || hasExpiredTag ? -1 : (lastModified ?? Date.now());
+			return hasHardRevalidation(revalidatedTags, lastModified ?? 0, Date.now())
+				? -1
+				: (lastModified ?? Date.now());
 		} catch (e) {
 			error("Failed to get revalidated tags", e);
 			return lastModified ?? Date.now();
