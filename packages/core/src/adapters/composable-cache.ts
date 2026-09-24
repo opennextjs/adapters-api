@@ -26,6 +26,7 @@ export default {
 			}
 
 			debug("composable cache result", result);
+			const revalidate = result.lastModified === 1 ? -1 : result.value.revalidate;
 
 			return {
 				...result.value,

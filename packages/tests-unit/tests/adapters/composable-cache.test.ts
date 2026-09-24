@@ -58,6 +58,24 @@ describe("Composable cache handler", () => {
 			expect(result?.value).toBeInstanceOf(ReadableStream);
 		});
 
+		it("should trigger revalidation for an entry marked stale by the cache handler", async () => {
+			cache.get.mockResolvedValueOnce({
+				value: {
+					value: "stale-value",
+					tags: ["tag1"],
+					stale: 0,
+					timestamp: Date.now(),
+					expire: Date.now() + 1000,
+					revalidate: 3600,
+				},
+				lastModified: 1,
+			});
+
+			const result = await ComposableCache.get("stale-key");
+
+			expect(result?.revalidate).toBe(-1);
+		});
+
 		it("should return undefined when cache entry does not exist", async () => {
 			cache.get.mockResolvedValueOnce(null);
 
