@@ -33,6 +33,16 @@ describe("next-mode SWR tag revalidation", () => {
 		).toBe(true);
 	});
 
+	it("ignores an expired DynamoDB SWR window older than the cached entry", () => {
+		expect(
+			hasHardRevalidation(
+				{ revalidatedAt: { N: "1000" }, stale: { N: "1000" }, expire: { N: "1800" } },
+				1_500,
+				2_000
+			)
+		).toBe(false);
+	});
+
 	it("keeps DynamoDB records stale when their SWR window has no expiry", () => {
 		expect(hasHardRevalidation({ revalidatedAt: { N: "1500" }, stale: { N: "1500" } }, 1_000, 2_000)).toBe(
 			false
@@ -60,6 +70,14 @@ describe("next-mode SWR tag revalidation", () => {
 		await fsDevTagCache.writeTags([{ tag: "expired-swr", stale: 1_500, expire: 1_800 }]);
 
 		expect(await fsDevTagCache.hasBeenRevalidated(["expired-swr"], 1_000)).toBe(true);
+	});
+
+	it("ignores an expired filesystem SWR window older than the cached entry", async () => {
+		vi.setSystemTime(1_000);
+		await fsDevTagCache.writeTags([{ tag: "old-expired-swr", stale: 1_000, expire: 1_800 }]);
+		vi.setSystemTime(2_000);
+
+		expect(await fsDevTagCache.hasBeenRevalidated(["old-expired-swr"], 1_500)).toBe(false);
 	});
 
 	it("keeps filesystem records stale when their SWR window has no expiry", async () => {

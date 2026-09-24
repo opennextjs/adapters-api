@@ -29,6 +29,10 @@ export type DynamoDBItem = {
  * @return Whether the tag was hard-revalidated or its SWR window expired.
  */
 export function hasHardRevalidation(item: DynamoDBItem, lastModified: number, now: number): boolean {
+	const revalidatedAt = Number.parseInt(item.revalidatedAt?.N ?? "0");
+	if (revalidatedAt <= lastModified) {
+		return false;
+	}
 	if (item.expire?.N) {
 		const expiry = Number.parseInt(item.expire.N);
 		return expiry <= now && expiry > lastModified;
@@ -36,7 +40,7 @@ export function hasHardRevalidation(item: DynamoDBItem, lastModified: number, no
 	if (item.stale?.N) {
 		return false;
 	}
-	return Number.parseInt(item.revalidatedAt?.N ?? "0") > lastModified;
+	return true;
 }
 
 const getAwsClient = () => {
