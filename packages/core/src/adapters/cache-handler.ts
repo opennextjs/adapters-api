@@ -334,7 +334,11 @@ async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<
 
 	let durations: { expire?: number } | undefined;
 	if (parsed.durations !== undefined) {
-		if (typeof parsed.durations !== "object" || parsed.durations === null || Array.isArray(parsed.durations)) {
+		if (
+			typeof parsed.durations !== "object" ||
+			parsed.durations === null ||
+			Array.isArray(parsed.durations)
+		) {
 			return buildErrorResponse("Invalid 'durations' object in request body", 400);
 		}
 		const expire = Reflect.get(parsed.durations, "expire");
@@ -407,10 +411,7 @@ async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<
 												path,
 												tag: hardTag,
 												stale: now,
-												expire:
-													durations.expire === undefined
-														? undefined
-														: now + durations.expire * 1000,
+												expire: durations.expire === undefined ? undefined : now + durations.expire * 1000,
 											}
 										: { path, tag: hardTag, expire: now }
 								)

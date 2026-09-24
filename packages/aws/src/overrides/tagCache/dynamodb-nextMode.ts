@@ -189,9 +189,7 @@ export default {
 		}
 
 		const store = globalThis.__openNextAls.getStore();
-		const itemsCache = store?.requestCache.getOrCreate<string, DynamoDBItem | null>(
-			"ddb-nextMode:tagItems"
-		);
+		const itemsCache = store?.requestCache.getOrCreate<string, DynamoDBItem | null>("ddb-nextMode:tagItems");
 
 		const now = Date.now();
 		const compute = (item: DynamoDBItem): boolean => {
@@ -221,9 +219,7 @@ export default {
 		}
 
 		const store = globalThis.__openNextAls.getStore();
-		const itemsCache = store?.requestCache.getOrCreate<string, DynamoDBItem | null>(
-			"ddb-nextMode:tagItems"
-		);
+		const itemsCache = store?.requestCache.getOrCreate<string, DynamoDBItem | null>("ddb-nextMode:tagItems");
 
 		const compute = (item: DynamoDBItem): boolean => {
 			if (!item?.stale?.N) return false;

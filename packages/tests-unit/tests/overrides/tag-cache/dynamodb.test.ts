@@ -1,5 +1,6 @@
-import { hasHardRevalidation } from "../../../../aws/src/overrides/tagCache/dynamodb.js";
 import { describe, expect, it } from "vitest";
+
+import { hasHardRevalidation } from "../../../../aws/src/overrides/tagCache/dynamodb.js";
 
 describe("DynamoDB tag cache", () => {
 	it("does not hard-invalidate a tag before its SWR expiry", () => {

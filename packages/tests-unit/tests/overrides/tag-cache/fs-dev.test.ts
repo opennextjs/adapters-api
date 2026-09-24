@@ -13,9 +13,7 @@ describe("filesystem tag cache SWR revalidation", () => {
 	});
 
 	it("serves a stale entry before its expiry", async () => {
-		await fsDevTagCache.writeTags([
-			{ path: "future-page", tag: "future-tag", stale: 2_000, expire: 3_000 },
-		]);
+		await fsDevTagCache.writeTags([{ path: "future-page", tag: "future-tag", stale: 2_000, expire: 3_000 }]);
 
 		expect(await fsDevTagCache.getLastModified("future-page", 1_000)).toBe(1_000);
 		expect(await fsDevTagCache.isStale?.("future-page", 1_000)).toBe(true);
@@ -30,9 +28,7 @@ describe("filesystem tag cache SWR revalidation", () => {
 	});
 
 	it("serves a stale entry indefinitely when no expiry is set", async () => {
-		await fsDevTagCache.writeTags([
-			{ path: "indefinite-page", tag: "indefinite-tag", stale: 2_000 },
-		]);
+		await fsDevTagCache.writeTags([{ path: "indefinite-page", tag: "indefinite-tag", stale: 2_000 }]);
 
 		expect(await fsDevTagCache.getLastModified("indefinite-page", 1_000)).toBe(1_000);
 		expect(await fsDevTagCache.isStale?.("indefinite-page", 1_000)).toBe(true);

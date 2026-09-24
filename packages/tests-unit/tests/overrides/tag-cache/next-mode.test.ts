@@ -1,10 +1,11 @@
+import fsDevTagCache from "@opennextjs/core/overrides/tagCache/fs-dev-nextMode";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import {
 	cacheDynamoItems,
 	hasHardRevalidation,
 } from "../../../../aws/src/overrides/tagCache/dynamodb-nextMode.js";
 import type { DynamoDBItem } from "../../../../aws/src/overrides/tagCache/dynamodb-nextMode.js";
-import fsDevTagCache from "@opennextjs/core/overrides/tagCache/fs-dev-nextMode";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("next-mode SWR tag revalidation", () => {
 	beforeEach(() => {
@@ -33,9 +34,9 @@ describe("next-mode SWR tag revalidation", () => {
 	});
 
 	it("keeps DynamoDB records stale when their SWR window has no expiry", () => {
-		expect(
-			hasHardRevalidation({ revalidatedAt: { N: "1500" }, stale: { N: "1500" } }, 1_000, 2_000)
-		).toBe(false);
+		expect(hasHardRevalidation({ revalidatedAt: { N: "1500" }, stale: { N: "1500" } }, 1_000, 2_000)).toBe(
+			false
+		);
 	});
 
 	it("caches missing DynamoDB tags for the duration of the request", () => {
