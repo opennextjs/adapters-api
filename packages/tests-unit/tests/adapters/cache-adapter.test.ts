@@ -687,6 +687,42 @@ describe("cache-handler", () => {
 			expect(mockTagCache.writeTags).not.toHaveBeenCalled();
 		});
 
+		it.each([
+			"invalid",
+			[],
+			{ expire: "30" },
+			{ expire: -1 },
+		])("should reject invalid durations: %j", async (durations) => {
+			const event = createEvent({
+				rawPath: "/cache/revalidate-tags",
+				method: "POST",
+				body: toReadableStream(JSON.stringify({ tags: ["tag1"], durations })),
+			});
+
+			const result = await runHandler(event);
+
+			expect(result.statusCode).toBe(400);
+			expect(mockTagCache.writeTags).not.toHaveBeenCalled();
+		});
+
+		it("should accept an SWR duration without an expiry", async () => {
+			mockTagCache.mode = "nextMode";
+			vi.useFakeTimers().setSystemTime(100_000);
+			const event = createEvent({
+				rawPath: "/cache/revalidate-tags",
+				method: "POST",
+				body: toReadableStream(JSON.stringify({ tags: ["tag1"], durations: {} })),
+			});
+
+			const result = await runHandler(event);
+
+			expect(result.statusCode).toBe(200);
+			expect(mockTagCache.writeTags).toHaveBeenCalledWith([
+				{ tag: "tag1", stale: 100_000, expire: undefined },
+			]);
+			vi.useRealTimers();
+		});
+
 		it("should return 400 when body is invalid JSON", async () => {
 			const event = createEvent({
 				rawPath: "/cache/revalidate-tags",
