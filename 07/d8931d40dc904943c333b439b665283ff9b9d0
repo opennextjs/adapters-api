@@ -1,0 +1,29 @@
+packages/aws/src/overrides/tagCache/dynamodb-nextMode.ts
+  s_825fbe81760922::t_496c8a6b3f3a7d 192,222
+packages/core/src/adapters/cache-handler.ts
+  s_825fbe81760922::t_9b60fd0128dd6f 337-341,414
+packages/tests-unit/tests/adapters/cache-adapter.test.ts
+  s_825fbe81760922::t_e21a106b8cc32e 690-704,828
+packages/tests-unit/tests/overrides/tag-cache/dynamodb.test.ts
+  s_825fbe81760922::t_71f8de197c41d1 3-4
+packages/tests-unit/tests/overrides/tag-cache/fs-dev.test.ts
+  s_825fbe81760922::t_e96bb6ff78bc5f 16,31
+packages/tests-unit/tests/overrides/tag-cache/next-mode.test.ts
+  s_825fbe81760922::t_5a01f10996e23c 1-3,37-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "07d8931d40dc904943c333b439b665283ff9b9d0",
+  "prompts": {},
+  "sessions": {
+    "s_825fbe81760922": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f2dbc8f64ffeGzJEW7RfB77HlB",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
