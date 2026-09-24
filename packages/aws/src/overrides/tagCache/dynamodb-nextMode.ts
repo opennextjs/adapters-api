@@ -20,6 +20,22 @@ type DynamoDBItem = {
 	expire?: { N: string };
 };
 
+/**
+ * Determines whether a next-mode tag requires blocking regeneration.
+ *
+ * @param item Stored tag record.
+ * @param lastModified Cached entry timestamp.
+ * @param now Current timestamp.
+ * @return Whether the tag was hard-revalidated or its SWR window expired.
+ */
+export function hasHardRevalidation(item: DynamoDBItem, lastModified: number, now: number): boolean {
+	if (item.expire?.N) {
+		const expiry = Number.parseInt(item.expire.N);
+		return expiry <= now && expiry > lastModified;
+	}
+	return Number.parseInt(item.revalidatedAt?.N ?? "0") > lastModified;
+}
+
 const getAwsClient = () => {
 	const { CACHE_BUCKET_REGION } = process.env;
 	if (awsClient) {
@@ -158,11 +174,7 @@ export default {
 		const now = Date.now();
 		const compute = (item: DynamoDBItem): boolean => {
 			if (!item) return false;
-			if (item.expire?.N) {
-				const expiry = Number.parseInt(item.expire.N);
-				if (expiry <= now && expiry > (lastModified ?? 0)) return true;
-			}
-			return Number.parseInt(item.revalidatedAt?.N ?? "0") > (lastModified ?? 0);
+			return hasHardRevalidation(item, lastModified ?? 0, now);
 		};
 
 		const { uncachedTags, hasMatch } = checkItemsCache(tags, itemsCache, compute);

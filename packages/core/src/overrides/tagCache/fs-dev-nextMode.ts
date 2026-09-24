@@ -37,7 +37,13 @@ export default {
 
 		const hasRevalidatedTag = tags.some((tag) => {
 			const tagData = tagsMap.get(tag);
-			return tagData ? tagData.revalidatedAt > (lastModified ?? 0) : false;
+			if (!tagData) {
+				return false;
+			}
+			if (tagData.expire !== undefined) {
+				return tagData.expire <= Date.now() && tagData.expire > (lastModified ?? 0);
+			}
+			return tagData.revalidatedAt > (lastModified ?? 0);
 		});
 
 		debug("hasBeenRevalidated result:", hasRevalidatedTag);
