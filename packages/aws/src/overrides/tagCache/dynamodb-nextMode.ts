@@ -12,7 +12,7 @@ import { MAX_DYNAMO_BATCH_WRITE_ITEM_COUNT, getDynamoBatchWriteCommandConcurrenc
 
 let awsClient: AwsClient | null = null;
 
-type DynamoDBItem = {
+export type DynamoDBItem = {
 	tag?: { S: string };
 	path?: { S: string };
 	revalidatedAt?: { N: string };
@@ -91,14 +91,15 @@ function buildDynamoObject(tag: string, revalidatedAt?: number, stale?: number, 
  */
 function checkItemsCache(
 	tags: string[],
-	itemsCache: Map<string, DynamoDBItem> | undefined,
+	itemsCache: Map<string, DynamoDBItem | null> | undefined,
 	compute: (item: DynamoDBItem) => boolean
 ): { uncachedTags: string[]; hasMatch: boolean } {
 	const uncachedTags: string[] = [];
 	let hasMatch = false;
 	for (const tag of tags) {
 		if (itemsCache?.has(tag)) {
-			if (compute(itemsCache.get(tag)!)) hasMatch = true;
+			const item = itemsCache.get(tag);
+			if (item && compute(item)) hasMatch = true;
 		} else {
 			uncachedTags.push(tag);
 		}
@@ -107,12 +108,41 @@ function checkItemsCache(
 }
 
 /**
+ * Stores fetched DynamoDB tag records, including absent tags, in the request cache.
+ *
+ * @param tags Requested tag names.
+ * @param responseItems Records returned by DynamoDB.
+ * @param itemsCache Per-request tag cache.
+ * @param compute Predicate used to identify a matching record.
+ * @return Whether any returned record matched the predicate.
+ */
+export function cacheDynamoItems(
+	tags: string[],
+	responseItems: DynamoDBItem[],
+	itemsCache: Map<string, DynamoDBItem | null> | undefined,
+	compute: (item: DynamoDBItem) => boolean
+): boolean {
+	const responseByKey = new Map<string, DynamoDBItem>();
+	for (const item of responseItems) {
+		responseByKey.set(item.tag?.S ?? "", item);
+	}
+
+	let hasMatch = false;
+	for (const tag of tags) {
+		const item = responseByKey.get(buildDynamoKey(tag)) ?? null;
+		itemsCache?.set(tag, item);
+		if (item && compute(item)) hasMatch = true;
+	}
+	return hasMatch;
+}
+
+/**
  * Fetches uncached tags from DynamoDB via BatchGetItem, populates the items
  * cache (storing null for absent tags), and returns whether any tag matched.
  */
 async function fetchAndCacheItems(
 	uncachedTags: string[],
-	itemsCache: Map<string, DynamoDBItem> | undefined,
+	itemsCache: Map<string, DynamoDBItem | null> | undefined,
 	compute: (item: DynamoDBItem) => boolean
 ): Promise<boolean> {
 	const { CACHE_DYNAMO_TABLE } = process.env;
@@ -135,20 +165,7 @@ async function fetchAndCacheItems(
 	const { Responses } = await response.json();
 	const responseItems: DynamoDBItem[] = Responses?.[CACHE_DYNAMO_TABLE ?? ""] ?? [];
 
-	// Build a lookup map: DynamoDB key → item
-	const responseByKey = new Map<string, DynamoDBItem>();
-	for (const item of responseItems) {
-		responseByKey.set(item.tag?.S ?? "", item);
-	}
-
-	let hasMatch = false;
-	for (const tag of uncachedTags) {
-		const item = responseByKey.get(buildDynamoKey(tag)) ?? null;
-		if (!item) continue;
-		itemsCache?.set(tag, item);
-		if (compute(item)) hasMatch = true;
-	}
-	return hasMatch;
+	return cacheDynamoItems(uncachedTags, responseItems, itemsCache, compute);
 }
 
 export default {
@@ -169,7 +186,9 @@ export default {
 		}
 
 		const store = globalThis.__openNextAls.getStore();
-		const itemsCache = store?.requestCache.getOrCreate<string, DynamoDBItem>("ddb-nextMode:tagItems");
+		const itemsCache = store?.requestCache.getOrCreate<string, DynamoDBItem | null>(
+			"ddb-nextMode:tagItems"
+		);
 
 		const now = Date.now();
 		const compute = (item: DynamoDBItem): boolean => {
@@ -199,7 +218,9 @@ export default {
 		}
 
 		const store = globalThis.__openNextAls.getStore();
-		const itemsCache = store?.requestCache.getOrCreate<string, DynamoDBItem>("ddb-nextMode:tagItems");
+		const itemsCache = store?.requestCache.getOrCreate<string, DynamoDBItem | null>(
+			"ddb-nextMode:tagItems"
+		);
 
 		const compute = (item: DynamoDBItem): boolean => {
 			if (!item?.stale?.N) return false;

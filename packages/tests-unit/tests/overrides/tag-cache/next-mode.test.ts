@@ -1,4 +1,8 @@
-import { hasHardRevalidation } from "../../../../aws/src/overrides/tagCache/dynamodb-nextMode.js";
+import {
+	cacheDynamoItems,
+	hasHardRevalidation,
+} from "../../../../aws/src/overrides/tagCache/dynamodb-nextMode.js";
+import type { DynamoDBItem } from "../../../../aws/src/overrides/tagCache/dynamodb-nextMode.js";
 import fsDevTagCache from "@opennextjs/core/overrides/tagCache/fs-dev-nextMode";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -26,6 +30,16 @@ describe("next-mode SWR tag revalidation", () => {
 				2_000
 			)
 		).toBe(true);
+	});
+
+	it("caches missing DynamoDB tags for the duration of the request", () => {
+		const itemsCache = new Map<string, DynamoDBItem | null>();
+
+		const hasMatch = cacheDynamoItems(["missing-tag"], [], itemsCache, () => true);
+
+		expect(hasMatch).toBe(false);
+		expect(itemsCache.has("missing-tag")).toBe(true);
+		expect(itemsCache.get("missing-tag")).toBeNull();
 	});
 
 	it("does not hard-invalidate filesystem records before their expiry", async () => {
