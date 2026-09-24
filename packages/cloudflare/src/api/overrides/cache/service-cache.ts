@@ -98,11 +98,11 @@ const serviceCache = {
 		ensureResponseOk(response, "delete cache entry");
 	},
 
-	revalidateTags: async (tags) => {
+	revalidateTags: async (tags, durations) => {
 		const response = await getCacheService().fetch(new URL("/cache/revalidate-tags", CACHE_ORIGIN).href, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ tags }),
+			body: JSON.stringify({ tags, durations }),
 		});
 		ensureResponseOk(response, "revalidate cache tags");
 	},

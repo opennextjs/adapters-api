@@ -256,7 +256,14 @@ export default class Cache {
 		}
 	}
 
-	public async revalidateTag(tags: string | string[], durations?: { expire?: number }) {
+	/**
+	 * Revalidates one or more cache tags.
+	 *
+	 * @param tags Tags to revalidate.
+	 * @param durations Optional stale-while-revalidate durations.
+	 * @return A promise that resolves when revalidation has been requested.
+	 */
+	public async revalidateTag(tags: string | string[], durations?: { expire?: number }): Promise<void> {
 		const config = globalThis.openNextConfig.dangerous;
 		if (config?.disableTagCache || config?.disableIncrementalCache) {
 			return;
@@ -267,7 +274,11 @@ export default class Cache {
 		}
 
 		try {
-			await globalThis.cache.revalidateTags(_tags);
+			if (durations) {
+				await globalThis.cache.revalidateTags(_tags, durations);
+			} else {
+				await globalThis.cache.revalidateTags(_tags);
+			}
 		} catch (e) {
 			error("Failed to revalidate tag", e);
 		}

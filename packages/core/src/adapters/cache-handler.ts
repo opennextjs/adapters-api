@@ -316,17 +316,17 @@ async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<
 		return buildErrorResponse("Missing request body", 400);
 	}
 
-	let tags: string[];
+	let parsed: { tags?: unknown; durations?: { expire?: number } };
 	try {
-		const parsed = JSON.parse(bodyText) as { tags?: unknown };
-		tags =
-			Array.isArray(parsed.tags) &&
-			parsed.tags.every((tag: unknown): tag is string => typeof tag === "string")
-				? parsed.tags
-				: [];
+		parsed = JSON.parse(bodyText) as { tags?: unknown; durations?: { expire?: number } };
 	} catch {
 		return buildErrorResponse("Invalid JSON body", 400);
 	}
+
+	const tags =
+		Array.isArray(parsed.tags) && parsed.tags.every((tag: unknown): tag is string => typeof tag === "string")
+			? parsed.tags
+			: [];
 
 	if (tags.length === 0) {
 		return buildErrorResponse("Missing 'tags' array in request body", 400);
@@ -334,10 +334,21 @@ async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<
 
 	try {
 		await runWithOpenNextRequestContext({ isISRRevalidation: false }, async () => {
+			const now = Date.now();
+			const { durations } = parsed;
 			if (globalThis.tagCache.mode === "nextMode") {
 				const paths = (await globalThis.tagCache.getPathsByTags?.(tags)) ?? [];
+				const tagsToWrite = tags.map((tag) =>
+					durations
+						? {
+								tag,
+								stale: now,
+								expire: durations.expire === undefined ? undefined : now + durations.expire * 1000,
+							}
+						: { tag, expire: now }
+				);
 
-				await writeTags(tags);
+				await writeTags(tagsToWrite);
 				if (paths.length > 0) {
 					await globalThis.cdnInvalidationHandler.invalidatePaths(
 						paths.map((path) => ({
@@ -360,10 +371,16 @@ async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<
 				debug("revalidateTag", tag);
 				const paths = await globalThis.tagCache.getByTag(tag);
 				debug("Items", paths);
-				const toInsert = paths.map((path) => ({
-					path,
-					tag,
-				}));
+				const toInsert = paths.map((path) =>
+					durations
+						? {
+								path,
+								tag,
+								stale: now,
+								expire: durations.expire === undefined ? undefined : now + durations.expire * 1000,
+							}
+						: { path, tag, expire: now }
+				);
 
 				if (tag.startsWith(SOFT_TAG_PREFIX)) {
 					for (const path of paths) {
@@ -373,10 +390,19 @@ async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<
 							const _paths = await globalThis.tagCache.getByTag(hardTag);
 							debug({ hardTag, _paths });
 							toInsert.push(
-								..._paths.map((path) => ({
-									path,
-									tag: hardTag,
-								}))
+								..._paths.map((path) =>
+									durations
+										? {
+												path,
+												tag: hardTag,
+												stale: now,
+												expire:
+													durations.expire === undefined
+														? undefined
+														: now + durations.expire * 1000,
+											}
+										: { path, tag: hardTag, expire: now }
+								)
 							);
 						}
 					}

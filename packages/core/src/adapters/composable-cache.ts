@@ -85,6 +85,24 @@ export default {
 		}
 	},
 
+	/**
+	 * Updates tags with optional stale-while-revalidate durations.
+	 *
+	 * @param tags Tags to update.
+	 * @param durations Optional stale-while-revalidate durations.
+	 * @return A promise that resolves when the update has been requested.
+	 */
+	async updateTags(tags: string[], durations?: { expire?: number }): Promise<void> {
+		if (tags.length === 0) {
+			return;
+		}
+		try {
+			await globalThis.cache.revalidateTags(tags, durations);
+		} catch (e) {
+			debug("Failed to update tags", e);
+		}
+	},
+
 	// This one is necessary for older versions of next
 	async receiveExpiredTags(...tags: string[]) {
 		// This function does absolutely nothing

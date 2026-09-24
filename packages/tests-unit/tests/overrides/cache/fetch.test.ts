@@ -220,6 +220,17 @@ describe("fetch cache", () => {
 			});
 		});
 
+		it("should include revalidation durations", async () => {
+			await fetchCache.revalidateTags(["tag1"], { expire: 30 });
+
+			expect(global.fetch).toHaveBeenCalledWith(
+				"/cache/revalidate-tags",
+				expect.objectContaining({
+					body: JSON.stringify({ tags: ["tag1"], durations: { expire: 30 } }),
+				})
+			);
+		});
+
 		it("should reject an unsuccessful response", async () => {
 			mockFetch({ headers: {}, body: "", status: 500 });
 

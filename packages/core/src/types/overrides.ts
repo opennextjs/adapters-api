@@ -305,7 +305,7 @@ export type Cache = BaseOverride & {
 		additionalTags?: string[]
 	): Promise<void>;
 	delete(key: string): Promise<void>;
-	revalidateTags(tags: string[]): Promise<void>;
+	revalidateTags(tags: string[], durations?: { expire?: number }): Promise<void>;
 };
 
 type CDNPath = {

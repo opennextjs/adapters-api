@@ -53,11 +53,11 @@ const fetchCache: Cache = {
 		const response = await fetch(url, { method: "DELETE" });
 		ensureResponseOk(response, "delete cache entry");
 	},
-	revalidateTags: async (tags) => {
+	revalidateTags: async (tags, durations) => {
 		const response = await fetch(`${CACHE_URL}/cache/revalidate-tags`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ tags }),
+			body: JSON.stringify({ tags, durations }),
 		});
 		ensureResponseOk(response, "revalidate cache tags");
 	},

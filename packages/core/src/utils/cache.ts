@@ -81,7 +81,7 @@ function getTagKey(tag: WriteTagInput): string {
 }
 
 export async function writeTags(
-	tags: (string | OriginalTagCacheWriteInput)[],
+	tags: WriteTagInput[],
 	tagCache: TagCache = globalThis.tagCache
 ): Promise<void> {
 	const store = globalThis.__openNextAls.getStore();

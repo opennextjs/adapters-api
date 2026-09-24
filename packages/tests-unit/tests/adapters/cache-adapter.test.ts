@@ -779,5 +779,40 @@ describe("cache-handler", () => {
 
 			expect(result.statusCode).toBe(500);
 		});
+
+		it("should convert nextMode durations to stale and expiry timestamps", async () => {
+			mockTagCache.mode = "nextMode";
+			vi.useFakeTimers().setSystemTime(100_000);
+			const event = createEvent({
+				rawPath: "/cache/revalidate-tags",
+				method: "POST",
+				body: toReadableStream(JSON.stringify({ tags: ["tag1"], durations: { expire: 30 } })),
+			});
+
+			await runHandler(event);
+
+			expect(mockTagCache.writeTags).toHaveBeenCalledWith([
+				{ tag: "tag1", stale: 100_000, expire: 130_000 },
+			]);
+			vi.useRealTimers();
+		});
+
+		it("should convert original-mode durations to stale and expiry timestamps", async () => {
+			mockTagCache.mode = "original";
+			mockTagCache.getByTag.mockResolvedValue(["/path1"]);
+			vi.useFakeTimers().setSystemTime(100_000);
+			const event = createEvent({
+				rawPath: "/cache/revalidate-tags",
+				method: "POST",
+				body: toReadableStream(JSON.stringify({ tags: ["tag1"], durations: { expire: 30 } })),
+			});
+
+			await runHandler(event);
+
+			expect(mockTagCache.writeTags).toHaveBeenCalledWith([
+				{ path: "/path1", tag: "tag1", stale: 100_000, expire: 130_000 },
+			]);
+			vi.useRealTimers();
+		});
 	});
 });

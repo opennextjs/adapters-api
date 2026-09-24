@@ -120,6 +120,13 @@ describe("serviceCache", () => {
 		expect(JSON.parse(body as string)).toEqual({ tags: ["tag1", "tag2"] });
 	});
 
+	it("forwards revalidation durations", async () => {
+		await serviceCache.revalidateTags(["tag1"], { expire: 30 });
+
+		const { body } = lastRequest();
+		expect(JSON.parse(body as string)).toEqual({ tags: ["tag1"], durations: { expire: 30 } });
+	});
+
 	it("rejects an unsuccessful tag revalidation", async () => {
 		fetchMock.mockResolvedValue(new Response(null, { status: 502 }));
 
