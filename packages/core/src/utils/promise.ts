@@ -2,6 +2,8 @@ import type { WaitUntil } from "@/types/open-next";
 
 import { debug, error } from "../adapters/logger";
 
+import { RequestCache } from "./requestCache";
+
 /**
  * A `Promise.withResolvers` implementation that exposes the `resolve` and
  * `reject` functions on a `Promise`.
@@ -120,6 +122,7 @@ export function runWithOpenNextRequestContext<T>(
 			isISRRevalidation,
 			waitUntil,
 			writtenTags: new Set<string>(),
+			requestCache: new RequestCache(),
 		},
 		async () => {
 			provideNextAfterProvider();

@@ -100,7 +100,7 @@ const localCache: Cache = {
 		const result = await h(event);
 		ensureResultOk(result, "delete cache entry");
 	},
-	revalidateTags: async (tags) => {
+	revalidateTags: async (tags, durations) => {
 		const h = (await getHandler())!;
 		const url = `https://on/cache/revalidate-tags`;
 		const event: InternalEvent = {
@@ -112,7 +112,7 @@ const localCache: Cache = {
 			query: {},
 			cookies: {},
 			remoteAddress: "127.0.0.1",
-			body: toReadableStream(JSON.stringify({ tags })),
+			body: toReadableStream(JSON.stringify({ tags, durations })),
 		};
 		const result = await h(event);
 		ensureResultOk(result, "revalidate cache tags");

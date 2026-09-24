@@ -58,6 +58,24 @@ describe("Composable cache handler", () => {
 			expect(result?.value).toBeInstanceOf(ReadableStream);
 		});
 
+		it("should trigger revalidation for an entry marked stale by the cache handler", async () => {
+			cache.get.mockResolvedValueOnce({
+				value: {
+					value: "stale-value",
+					tags: ["tag1"],
+					stale: 0,
+					timestamp: Date.now(),
+					expire: Date.now() + 1000,
+					revalidate: 3600,
+				},
+				lastModified: 1,
+			});
+
+			const result = await ComposableCache.get("stale-key");
+
+			expect(result?.revalidate).toBe(-1);
+		});
+
 		it("should return undefined when cache entry does not exist", async () => {
 			cache.get.mockResolvedValueOnce(null);
 
@@ -294,6 +312,32 @@ describe("Composable cache handler", () => {
 
 			const content2 = await fromReadableStream(results[3]!.value);
 			expect(content2).toBe("concurrent-2");
+		});
+	});
+
+	describe("updateTags", () => {
+		it("should call cache.revalidateTags with tags and durations", async () => {
+			await ComposableCache.updateTags(["tag1", "tag2"], { expire: 30 });
+
+			expect(cache.revalidateTags).toHaveBeenCalledWith(["tag1", "tag2"], { expire: 30 });
+		});
+
+		it("should not call cache.revalidateTags when tags are empty", async () => {
+			await ComposableCache.updateTags([]);
+
+			expect(cache.revalidateTags).not.toHaveBeenCalled();
+		});
+
+		it("should call cache.revalidateTags without durations when not provided", async () => {
+			await ComposableCache.updateTags(["tag1"]);
+
+			expect(cache.revalidateTags).toHaveBeenCalledWith(["tag1"], undefined);
+		});
+
+		it("should not throw on cache error", async () => {
+			cache.revalidateTags.mockRejectedValueOnce(new Error("cache error"));
+
+			await expect(ComposableCache.updateTags(["tag1"])).resolves.not.toThrow();
 		});
 	});
 });

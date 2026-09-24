@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { debug, error } from "@opennextjs/core/adapters/logger.js";
 import { chunk, parseNumberFromEnv } from "@opennextjs/core/adapters/util.js";
-import type { NextModeTagCache } from "@opennextjs/core/types/overrides.js";
+import type { NextModeTagCache, NextModeTagCacheWriteInput } from "@opennextjs/core/types/overrides.js";
 import { RecoverableError } from "@opennextjs/core/utils/error.js";
 import { AwsClient } from "aws4fetch";
 
@@ -10,16 +10,38 @@ import { customFetchClient } from "../../utils/fetch.js";
 
 import { MAX_DYNAMO_BATCH_WRITE_ITEM_COUNT, getDynamoBatchWriteCommandConcurrency } from "./constants.js";
 
-type DynamoDBTagItem = {
-	revalidatedAt: { N: string };
-	tag: { S: string };
-};
-
-type DynamoDBBatchGetResponse = {
-	Responses?: Record<string, DynamoDBTagItem[]>;
-};
-
 let awsClient: AwsClient | null = null;
+
+export type DynamoDBItem = {
+	tag?: { S: string };
+	path?: { S: string };
+	revalidatedAt?: { N: string };
+	stale?: { N: string };
+	expire?: { N: string };
+};
+
+/**
+ * Determines whether a next-mode tag requires blocking regeneration.
+ *
+ * @param item Stored tag record.
+ * @param lastModified Cached entry timestamp.
+ * @param now Current timestamp.
+ * @return Whether the tag was hard-revalidated or its SWR window expired.
+ */
+export function hasHardRevalidation(item: DynamoDBItem, lastModified: number, now: number): boolean {
+	const revalidatedAt = Number.parseInt(item.revalidatedAt?.N ?? "0");
+	if (revalidatedAt <= lastModified) {
+		return false;
+	}
+	if (item.expire?.N) {
+		const expiry = Number.parseInt(item.expire.N);
+		return expiry <= now && expiry > lastModified;
+	}
+	if (item.stale?.N) {
+		return false;
+	}
+	return true;
+}
 
 const getAwsClient = () => {
 	const { CACHE_BUCKET_REGION } = process.env;
@@ -58,15 +80,101 @@ function buildDynamoKey(key: string) {
 // We use the same key for both path and tag
 // That's mostly for compatibility reason so that it's easier to use this with existing infra
 // FIXME: Allow a simpler object without an unnecessary path key
-function buildDynamoObject(tag: string, revalidatedAt?: number) {
+function buildDynamoObject(tag: string, revalidatedAt?: number, stale?: number, expire?: number) {
 	return {
 		path: { S: buildDynamoKey(tag) },
 		tag: { S: buildDynamoKey(tag) },
 		revalidatedAt: { N: `${revalidatedAt ?? Date.now()}` },
+		...(stale !== undefined ? { stale: { N: `${stale}` } } : {}),
+		...(expire !== undefined ? { expire: { N: `${expire}` } } : {}),
 	};
 }
 
 // This implementation does not support automatic invalidation of paths by the cdn
+
+/**
+ * Checks the items cache for each tag. Returns tags not yet cached and whether
+ * a positive result was already found among the cached ones.
+ */
+function checkItemsCache(
+	tags: string[],
+	itemsCache: Map<string, DynamoDBItem | null> | undefined,
+	compute: (item: DynamoDBItem) => boolean
+): { uncachedTags: string[]; hasMatch: boolean } {
+	const uncachedTags: string[] = [];
+	let hasMatch = false;
+	for (const tag of tags) {
+		if (itemsCache?.has(tag)) {
+			const item = itemsCache.get(tag);
+			if (item && compute(item)) hasMatch = true;
+		} else {
+			uncachedTags.push(tag);
+		}
+	}
+	return { uncachedTags, hasMatch };
+}
+
+/**
+ * Stores fetched DynamoDB tag records, including absent tags, in the request cache.
+ *
+ * @param tags Requested tag names.
+ * @param responseItems Records returned by DynamoDB.
+ * @param itemsCache Per-request tag cache.
+ * @param compute Predicate used to identify a matching record.
+ * @return Whether any returned record matched the predicate.
+ */
+export function cacheDynamoItems(
+	tags: string[],
+	responseItems: DynamoDBItem[],
+	itemsCache: Map<string, DynamoDBItem | null> | undefined,
+	compute: (item: DynamoDBItem) => boolean
+): boolean {
+	const responseByKey = new Map<string, DynamoDBItem>();
+	for (const item of responseItems) {
+		responseByKey.set(item.tag?.S ?? "", item);
+	}
+
+	let hasMatch = false;
+	for (const tag of tags) {
+		const item = responseByKey.get(buildDynamoKey(tag)) ?? null;
+		itemsCache?.set(tag, item);
+		if (item && compute(item)) hasMatch = true;
+	}
+	return hasMatch;
+}
+
+/**
+ * Fetches uncached tags from DynamoDB via BatchGetItem, populates the items
+ * cache (storing null for absent tags), and returns whether any tag matched.
+ */
+async function fetchAndCacheItems(
+	uncachedTags: string[],
+	itemsCache: Map<string, DynamoDBItem | null> | undefined,
+	compute: (item: DynamoDBItem) => boolean
+): Promise<boolean> {
+	const { CACHE_DYNAMO_TABLE } = process.env;
+	const response = await awsFetch(
+		JSON.stringify({
+			RequestItems: {
+				[CACHE_DYNAMO_TABLE ?? ""]: {
+					Keys: uncachedTags.map((tag) => ({
+						path: { S: buildDynamoKey(tag) },
+						tag: { S: buildDynamoKey(tag) },
+					})),
+				},
+			},
+		}),
+		"query"
+	);
+	if (response.status !== 200) {
+		throw new RecoverableError(`Failed to query dynamo item: ${response.status}`);
+	}
+	const { Responses } = await response.json();
+	const responseItems: DynamoDBItem[] = Responses?.[CACHE_DYNAMO_TABLE ?? ""] ?? [];
+
+	return cacheDynamoItems(uncachedTags, responseItems, itemsCache, compute);
+}
+
 export default {
 	name: "ddb-nextMode",
 	mode: "nextMode",
@@ -83,38 +191,58 @@ export default {
 				"Cannot query more than 100 tags at once. You should not be using this tagCache implementation for this amount of tags"
 			);
 		}
-		const { CACHE_DYNAMO_TABLE } = process.env;
+
+		const store = globalThis.__openNextAls.getStore();
+		const itemsCache = store?.requestCache.getOrCreate<string, DynamoDBItem | null>("ddb-nextMode:tagItems");
+
+		const now = Date.now();
+		const compute = (item: DynamoDBItem): boolean => {
+			if (!item) return false;
+			return hasHardRevalidation(item, lastModified ?? 0, now);
+		};
+
+		const { uncachedTags, hasMatch } = checkItemsCache(tags, itemsCache, compute);
+		if (hasMatch) return true;
+		if (uncachedTags.length === 0) return false;
+
 		// It's unlikely that we will have more than 100 items to query
 		// If that's the case, you should not use this tagCache implementation
-		const response = await awsFetch(
-			JSON.stringify({
-				RequestItems: {
-					[CACHE_DYNAMO_TABLE ?? ""]: {
-						Keys: tags.map((tag) => ({
-							path: { S: buildDynamoKey(tag) },
-							tag: { S: buildDynamoKey(tag) },
-						})),
-					},
-				},
-			}),
-			"query"
-		);
-		if (response.status !== 200) {
-			throw new RecoverableError(`Failed to query dynamo item: ${response.status}`);
-		}
-		// Now we need to check for every item if lastModified is greater than the revalidatedAt
-		const { Responses } = (await response.json()) as DynamoDBBatchGetResponse;
-		if (!Responses) {
+		const result = await fetchAndCacheItems(uncachedTags, itemsCache, compute);
+		debug("retrieved tags for hasBeenRevalidated", tags);
+		return result;
+	},
+	isStale: async (tags: string[], lastModified?: number) => {
+		if (globalThis.openNextConfig.dangerous?.disableTagCache) {
 			return false;
 		}
-		const revalidatedTags =
-			Responses?.[CACHE_DYNAMO_TABLE ?? ""]?.filter(
-				(item) => Number.parseInt(item.revalidatedAt.N) > (lastModified ?? 0)
-			) ?? [];
-		debug("retrieved tags", revalidatedTags);
-		return revalidatedTags.length > 0;
+		if (tags.length === 0) return false;
+		if (tags.length > 100) {
+			throw new RecoverableError(
+				"Cannot query more than 100 tags at once. You should not be using this tagCache implementation for this amount of tags"
+			);
+		}
+
+		const store = globalThis.__openNextAls.getStore();
+		const itemsCache = store?.requestCache.getOrCreate<string, DynamoDBItem | null>("ddb-nextMode:tagItems");
+
+		const compute = (item: DynamoDBItem): boolean => {
+			if (!item?.stale?.N) return false;
+			const revalidatedAt = Number.parseInt(item.revalidatedAt?.N ?? "0");
+			// A tag is stale when both its stale timestamp and its revalidatedAt are newer than the page.
+			// revalidatedAt > lastModified ensures the revalidation that set this stale window happened
+			// after the page was generated, preventing a stale signal from a previous ISR cycle.
+			return revalidatedAt > (lastModified ?? 0) && Number.parseInt(item.stale.N) >= (lastModified ?? 0);
+		};
+
+		const { uncachedTags, hasMatch } = checkItemsCache(tags, itemsCache, compute);
+		if (hasMatch) return true;
+		if (uncachedTags.length === 0) return false;
+
+		const result = await fetchAndCacheItems(uncachedTags, itemsCache, compute);
+		debug("isStale result:", result);
+		return result;
 	},
-	writeTags: async (tags: string[]) => {
+	writeTags: async (tags) => {
 		try {
 			const { CACHE_DYNAMO_TABLE } = process.env;
 			if (globalThis.openNextConfig.dangerous?.disableTagCache) {
@@ -122,13 +250,18 @@ export default {
 			}
 			const dataChunks = chunk(tags, MAX_DYNAMO_BATCH_WRITE_ITEM_COUNT).map((Items) => ({
 				RequestItems: {
-					[CACHE_DYNAMO_TABLE ?? ""]: Items.map((tag) => ({
-						PutRequest: {
-							Item: {
-								...buildDynamoObject(tag),
+					[CACHE_DYNAMO_TABLE ?? ""]: Items.map((tag) => {
+						const tagStr = typeof tag === "string" ? tag : tag.tag;
+						const stale = typeof tag === "string" ? undefined : tag.stale;
+						const expiry = typeof tag === "string" ? undefined : tag.expire;
+						return {
+							PutRequest: {
+								Item: {
+									...buildDynamoObject(tagStr, undefined, stale, expiry),
+								},
 							},
-						},
-					})),
+						};
+					}),
 				},
 			}));
 			const toInsert = chunk(dataChunks, getDynamoBatchWriteCommandConcurrency());

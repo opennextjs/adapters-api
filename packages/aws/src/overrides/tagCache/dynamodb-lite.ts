@@ -14,7 +14,31 @@ type DynamoDBItem = {
 	tag?: { S: string };
 	path?: { S: string };
 	revalidatedAt?: { N: string };
+	stale?: { N: string };
+	expire?: { N: string };
 };
+
+/**
+ * Determines whether lightweight DynamoDB tag records require blocking regeneration.
+ *
+ * @param items Tag records newer than the cached entry.
+ * @param lastModified Cached entry timestamp.
+ * @param now Current timestamp.
+ * @return Whether a tag was hard-revalidated or its SWR window expired.
+ */
+export function hasHardRevalidation(items: DynamoDBItem[], lastModified: number, now: number): boolean {
+	return items.some((item) => {
+		const revalidatedAt = Number.parseInt(item.revalidatedAt?.N ?? "0");
+		if (revalidatedAt <= lastModified) {
+			return false;
+		}
+		if (item.expire?.N) {
+			const expiry = Number.parseInt(item.expire.N);
+			return expiry <= now && expiry > lastModified;
+		}
+		return !item.stale?.N;
+	});
+}
 
 type DynamoDBResponse = {
 	Items?: DynamoDBItem[];
@@ -56,11 +80,19 @@ function buildDynamoKey(key: string) {
 	return path.posix.join(NEXT_BUILD_ID ?? "", key);
 }
 
-function buildDynamoObject(path: string, tags: string, revalidatedAt?: number) {
+function buildDynamoObject(
+	path: string,
+	tags: string,
+	revalidatedAt?: number,
+	stale?: number,
+	expire?: number
+) {
 	return {
 		path: { S: buildDynamoKey(path) },
 		tag: { S: buildDynamoKey(tags) },
 		revalidatedAt: { N: `${revalidatedAt ?? Date.now()}` },
+		...(stale !== undefined ? { stale: { N: `${stale}` } } : {}),
+		...(expire !== undefined ? { expire: { N: `${expire}` } } : {}),
 	};
 }
 
@@ -72,6 +104,11 @@ const tagCache: OriginalTagCache = {
 				return [];
 			}
 			const { CACHE_DYNAMO_TABLE, NEXT_BUILD_ID } = process.env;
+			const store = globalThis.__openNextAls.getStore();
+			const cache = store?.requestCache.getOrCreate<string, string[]>("dynamoDb:getByPath");
+			if (cache?.has(path)) {
+				return cache.get(path)!;
+			}
 			const result = await awsFetch(
 				JSON.stringify({
 					TableName: CACHE_DYNAMO_TABLE,
@@ -93,7 +130,9 @@ const tagCache: OriginalTagCache = {
 			const tags = Items?.map((item) => item.tag?.S ?? "") ?? [];
 			debug("tags for path", path, tags);
 			// We need to remove the buildId from the path
-			return tags.map((tag: string) => tag.replace(`${NEXT_BUILD_ID}/`, ""));
+			const resultTags = tags.map((tag: string) => tag.replace(`${NEXT_BUILD_ID}/`, ""));
+			cache?.set(path, resultTags);
+			return resultTags;
 		} catch (e) {
 			error("Failed to get tags by path", e);
 			return [];
@@ -105,6 +144,11 @@ const tagCache: OriginalTagCache = {
 				return [];
 			}
 			const { CACHE_DYNAMO_TABLE, NEXT_BUILD_ID } = process.env;
+			const store = globalThis.__openNextAls.getStore();
+			const cache = store?.requestCache.getOrCreate<string, string[]>("dynamoDb:getByTag");
+			if (cache?.has(tag)) {
+				return cache.get(tag)!;
+			}
 			const result = await awsFetch(
 				JSON.stringify({
 					TableName: CACHE_DYNAMO_TABLE,
@@ -121,10 +165,9 @@ const tagCache: OriginalTagCache = {
 				throw new RecoverableError(`Failed to get by tag: ${result.status}`);
 			}
 			const { Items } = (await result.json()) as DynamoDBResponse;
-			return (
-				// We need to remove the buildId from the path
-				Items?.map((item) => item.path?.S?.replace(`${NEXT_BUILD_ID}/`, "") ?? "") ?? []
-			);
+			const paths = Items?.map((item) => item.path?.S?.replace(`${NEXT_BUILD_ID}/`, "") ?? "") ?? [];
+			cache?.set(tag, paths);
+			return paths;
 		} catch (e) {
 			error("Failed to get by tag", e);
 			return [];
@@ -136,6 +179,12 @@ const tagCache: OriginalTagCache = {
 				return lastModified ?? Date.now();
 			}
 			const { CACHE_DYNAMO_TABLE } = process.env;
+			const store = globalThis.__openNextAls.getStore();
+			const cache = store?.requestCache.getOrCreate<string, number>("dynamoDb:getLastModified");
+			const cacheKey = `${key}:${lastModified ?? 0}`;
+			if (cache?.has(cacheKey)) {
+				return cache.get(cacheKey)!;
+			}
 			const result = await awsFetch(
 				JSON.stringify({
 					TableName: CACHE_DYNAMO_TABLE,
@@ -156,14 +205,62 @@ const tagCache: OriginalTagCache = {
 			}
 			const revalidatedTags = ((await result.json()) as DynamoDBResponse).Items ?? [];
 			debug("revalidatedTags", revalidatedTags);
-			// If we have revalidated tags we return -1 to force revalidation
-			return revalidatedTags.length > 0 ? -1 : (lastModified ?? Date.now());
+
+			const resultValue = hasHardRevalidation(revalidatedTags, lastModified ?? 0, Date.now())
+				? -1
+				: (lastModified ?? Date.now());
+			cache?.set(cacheKey, resultValue);
+			return resultValue;
 		} catch (e) {
 			error("Failed to get revalidated tags", e);
 			return lastModified ?? Date.now();
 		}
 	},
-	async writeTags(tags: { tag: string; path: string; revalidatedAt?: number }[]) {
+	async isStale(key: string, lastModified?: number) {
+		try {
+			if (globalThis.openNextConfig.dangerous?.disableTagCache) {
+				return false;
+			}
+			const { CACHE_DYNAMO_TABLE } = process.env;
+			const store = globalThis.__openNextAls.getStore();
+			const itemsCache = store?.requestCache.getOrCreate<string, DynamoDBItem[]>(
+				"dynamoDb:revalidateQueryItems"
+			);
+			const cacheKey = `${key}:${lastModified ?? 0}`;
+			let items: DynamoDBItem[];
+			if (itemsCache?.has(cacheKey)) {
+				items = itemsCache.get(cacheKey)!;
+			} else {
+				// We can reuse the same query as getLastModified since it already checks for revalidatedAt > lastModified as revalidatedAt and stale have the same value
+				const result = await awsFetch(
+					JSON.stringify({
+						TableName: CACHE_DYNAMO_TABLE,
+						IndexName: "revalidate",
+						KeyConditionExpression: "#key = :key AND #revalidatedAt > :lastModified",
+						ExpressionAttributeNames: {
+							"#key": "path",
+							"#revalidatedAt": "revalidatedAt",
+						},
+						ExpressionAttributeValues: {
+							":key": { S: buildDynamoKey(key) },
+							":lastModified": { N: String(lastModified ?? 0) },
+						},
+					})
+				);
+				if (result.status !== 200) {
+					throw new RecoverableError(`Failed to check stale tags: ${result.status}`);
+				}
+				items = ((await result.json()) as DynamoDBResponse).Items ?? [];
+				itemsCache?.set(cacheKey, items);
+			}
+			debug("isStale items", key, items);
+			return items.length > 0;
+		} catch (e) {
+			error("Failed to check stale tags", e);
+			return false;
+		}
+	},
+	async writeTags(tags) {
 		try {
 			const { CACHE_DYNAMO_TABLE } = process.env;
 			if (globalThis.openNextConfig.dangerous?.disableTagCache) {
@@ -174,7 +271,7 @@ const tagCache: OriginalTagCache = {
 					[CACHE_DYNAMO_TABLE ?? ""]: Items.map((Item) => ({
 						PutRequest: {
 							Item: {
-								...buildDynamoObject(Item.path, Item.tag, Item.revalidatedAt),
+								...buildDynamoObject(Item.path, Item.tag, Item.revalidatedAt, Item.stale, Item.expire),
 							},
 						},
 					})),

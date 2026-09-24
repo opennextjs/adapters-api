@@ -237,6 +237,17 @@ describe("local cache", () => {
 			expect(await fromReadableStream(event.body)).toBe(JSON.stringify({ tags: ["tag1", "tag2"] }));
 		});
 
+		it("should include revalidation durations", async () => {
+			mockHandler.mockResolvedValue(createMockResult());
+
+			await localCache.revalidateTags(["tag1"], { expire: 30 });
+
+			const event = mockHandler.mock.calls[0][0];
+			expect(await fromReadableStream(event.body)).toBe(
+				JSON.stringify({ tags: ["tag1"], durations: { expire: 30 } })
+			);
+		});
+
 		it("should reject an unsuccessful response", async () => {
 			mockHandler.mockResolvedValue(createMockResult({ statusCode: 500 }));
 

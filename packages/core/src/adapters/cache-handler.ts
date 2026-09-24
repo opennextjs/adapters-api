@@ -13,7 +13,7 @@ import type {
 } from "@/types/overrides";
 
 import { resolveCdnInvalidation, resolveIncrementalCache, resolveTagCache } from "../core/resolve.js";
-import { getTagsFromValue, writeTags } from "../utils/cache.js";
+import { getTagsFromValue, isStale, writeTags } from "../utils/cache.js";
 import { runWithOpenNextRequestContext } from "../utils/promise.js";
 import { fromReadableStream, toReadableStream } from "../utils/stream.js";
 
@@ -173,6 +173,11 @@ async function handleGet(
 					},
 				};
 			}
+
+			const lastModified = result.lastModified ?? Date.now();
+			if (await isStale(key, tags, lastModified)) {
+				result.lastModified = 1;
+			}
 		}
 
 		return buildCacheGetResponse(result);
@@ -311,28 +316,54 @@ async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<
 		return buildErrorResponse("Missing request body", 400);
 	}
 
-	let tags: string[];
+	let parsed: { tags?: unknown; durations?: unknown };
 	try {
-		const parsed = JSON.parse(bodyText) as { tags?: unknown };
-		tags =
-			Array.isArray(parsed.tags) &&
-			parsed.tags.every((tag: unknown): tag is string => typeof tag === "string")
-				? parsed.tags
-				: [];
+		parsed = JSON.parse(bodyText) as { tags?: unknown; durations?: unknown };
 	} catch {
 		return buildErrorResponse("Invalid JSON body", 400);
 	}
+
+	const tags =
+		Array.isArray(parsed.tags) && parsed.tags.every((tag: unknown): tag is string => typeof tag === "string")
+			? parsed.tags
+			: [];
 
 	if (tags.length === 0) {
 		return buildErrorResponse("Missing 'tags' array in request body", 400);
 	}
 
+	let durations: { expire?: number } | undefined;
+	if (parsed.durations !== undefined) {
+		if (
+			typeof parsed.durations !== "object" ||
+			parsed.durations === null ||
+			Array.isArray(parsed.durations)
+		) {
+			return buildErrorResponse("Invalid 'durations' object in request body", 400);
+		}
+		const expire = Reflect.get(parsed.durations, "expire");
+		if (expire !== undefined && (typeof expire !== "number" || !Number.isFinite(expire) || expire < 0)) {
+			return buildErrorResponse("Invalid 'durations.expire' in request body", 400);
+		}
+		durations = expire === undefined ? {} : { expire };
+	}
+
 	try {
 		await runWithOpenNextRequestContext({ isISRRevalidation: false }, async () => {
+			const now = Date.now();
 			if (globalThis.tagCache.mode === "nextMode") {
 				const paths = (await globalThis.tagCache.getPathsByTags?.(tags)) ?? [];
+				const tagsToWrite = tags.map((tag) =>
+					durations
+						? {
+								tag,
+								stale: now,
+								expire: durations.expire === undefined ? undefined : now + durations.expire * 1000,
+							}
+						: { tag, expire: now }
+				);
 
-				await writeTags(tags);
+				await writeTags(tagsToWrite);
 				if (paths.length > 0) {
 					await globalThis.cdnInvalidationHandler.invalidatePaths(
 						paths.map((path) => ({
@@ -355,10 +386,16 @@ async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<
 				debug("revalidateTag", tag);
 				const paths = await globalThis.tagCache.getByTag(tag);
 				debug("Items", paths);
-				const toInsert = paths.map((path) => ({
-					path,
-					tag,
-				}));
+				const toInsert = paths.map((path) =>
+					durations
+						? {
+								path,
+								tag,
+								stale: now,
+								expire: durations.expire === undefined ? undefined : now + durations.expire * 1000,
+							}
+						: { path, tag, expire: now }
+				);
 
 				if (tag.startsWith(SOFT_TAG_PREFIX)) {
 					for (const path of paths) {
@@ -368,10 +405,16 @@ async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<
 							const _paths = await globalThis.tagCache.getByTag(hardTag);
 							debug({ hardTag, _paths });
 							toInsert.push(
-								..._paths.map((path) => ({
-									path,
-									tag: hardTag,
-								}))
+								..._paths.map((path) =>
+									durations
+										? {
+												path,
+												tag: hardTag,
+												stale: now,
+												expire: durations.expire === undefined ? undefined : now + durations.expire * 1000,
+											}
+										: { path, tag: hardTag, expire: now }
+								)
 							);
 						}
 					}

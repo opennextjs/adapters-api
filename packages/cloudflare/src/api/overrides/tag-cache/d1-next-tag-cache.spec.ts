@@ -18,7 +18,8 @@ vi.mock("../../cloudflare-context.js", () => ({
 	getCloudflareContext: vi.fn(),
 }));
 
-vi.mock("../internal.js", () => ({
+vi.mock("../internal.js", async (importOriginal) => ({
+	...(await importOriginal<typeof import("../internal.js")>()),
 	debugCache: vi.fn(),
 	FALLBACK_BUILD_ID: "fallback-build-id",
 	purgeCacheByTags: vi.fn(),
