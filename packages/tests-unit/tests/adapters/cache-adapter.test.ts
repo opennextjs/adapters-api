@@ -22,6 +22,7 @@ const mockTagCache = vi.hoisted(() => ({
 	getByTag: vi.fn(),
 	getByPath: vi.fn(),
 	getLastModified: vi.fn(),
+	isStale: vi.fn(),
 	writeTags: vi.fn(),
 	hasBeenRevalidated: vi.fn(),
 	getPathsByTags: undefined as Mock | undefined,
@@ -358,6 +359,42 @@ describe("cache-handler", () => {
 
 			expect(result.statusCode).toBe(404);
 			expect(result.headers["x-opennext-cache-tag-status"]).toBe("revalidated");
+		});
+
+		it("should mark stale entries in original mode", async () => {
+			mockTagCache.mode = "original";
+			mockTagCache.getLastModified.mockResolvedValue(1000);
+			mockTagCache.isStale.mockResolvedValue(true);
+			mockIncrementalCache.get.mockResolvedValue({
+				value: { type: "route", body: "data" },
+				lastModified: 1000,
+			});
+
+			const result = await runHandler(createEvent());
+
+			expect(mockTagCache.isStale).toHaveBeenCalledWith("test-key", 1000);
+			expect(result.statusCode).toBe(200);
+			expect(result.headers["x-opennext-cache-last-modified"]).toBe("1");
+		});
+
+		it("should mark stale entries in nextMode", async () => {
+			mockTagCache.mode = "nextMode";
+			mockTagCache.hasBeenRevalidated.mockResolvedValue(false);
+			mockTagCache.isStale.mockResolvedValue(true);
+			mockIncrementalCache.get.mockResolvedValue({
+				value: {
+					type: "route",
+					body: "data",
+					meta: { headers: { "x-next-cache-tags": "tag1" } },
+				},
+				lastModified: 1000,
+			});
+
+			const result = await runHandler(createEvent());
+
+			expect(mockTagCache.isStale).toHaveBeenCalledWith(["tag1"], 1000);
+			expect(result.statusCode).toBe(200);
+			expect(result.headers["x-opennext-cache-last-modified"]).toBe("1");
 		});
 
 		it("should return 404 when a fetch entry's owning path has been revalidated", async () => {

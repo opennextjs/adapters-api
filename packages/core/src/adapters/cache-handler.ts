@@ -13,7 +13,7 @@ import type {
 } from "@/types/overrides";
 
 import { resolveCdnInvalidation, resolveIncrementalCache, resolveTagCache } from "../core/resolve.js";
-import { getTagsFromValue, writeTags } from "../utils/cache.js";
+import { getTagsFromValue, isStale, writeTags } from "../utils/cache.js";
 import { runWithOpenNextRequestContext } from "../utils/promise.js";
 import { fromReadableStream, toReadableStream } from "../utils/stream.js";
 
@@ -172,6 +172,11 @@ async function handleGet(
 						"Cache-Control": "no-store",
 					},
 				};
+			}
+
+			const lastModified = result.lastModified ?? Date.now();
+			if (await isStale(key, tags, lastModified)) {
+				result.lastModified = 1;
 			}
 		}
 
