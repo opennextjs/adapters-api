@@ -235,12 +235,41 @@ export type OpenNextHandler<
 	R extends BaseEventOrResult = InternalResult,
 > = (event: E, options?: OpenNextHandlerOptions) => Promise<R>;
 
+export type ConverterOutput<R extends BaseEventOrResult = InternalResult> =
+	| {
+			type: "stream";
+			streamCreator: StreamCreator;
+			/**
+			 * A platform-specific result produced once the response stream completes.
+			 * It is omitted by transports that write directly to their response.
+			 */
+			output?: Promise<unknown>;
+			/**
+			 * Handles exceptional non-streamed results (for example middleware rewrites).
+			 */
+			data?: (result: R) => Promise<unknown | undefined>;
+	  }
+	| {
+			type: "direct";
+			/**
+			 * Converts a handler result that has no HTTP response stream into the
+			 * platform's native return value.
+			 */
+			data: (result: R) => Promise<unknown>;
+	  };
+
 export type Converter<
 	E extends BaseEventOrResult = InternalEvent,
 	R extends BaseEventOrResult = InternalResult,
 > = BaseOverride & {
 	convertFrom: (event: unknown) => Promise<E>;
-	convertTo: (result: R, originalRequest?: unknown) => Promise<unknown>;
+	/**
+	 * Creates the output for an invocation before the handler runs.
+	 *
+	 * `context` is supplied by the wrapper and contains transport-specific
+	 * response objects such as a Node ServerResponse or Lambda response stream.
+	 */
+	convertTo: (event: unknown, context?: unknown) => Promise<ConverterOutput<R>>;
 };
 
 export type Warmer = BaseOverride & {
@@ -272,10 +301,11 @@ export type Cache = BaseOverride & {
 	set<CacheType extends CacheEntryType = "cache">(
 		key: string,
 		value: CacheValue<CacheType>,
-		isFetch?: CacheType
+		isFetch?: CacheType,
+		additionalTags?: string[]
 	): Promise<void>;
 	delete(key: string): Promise<void>;
-	revalidateTags(tags: string[], durations?: { expire?: number }): Promise<void>;
+	revalidateTags(tags: string[]): Promise<void>;
 };
 
 type CDNPath = {

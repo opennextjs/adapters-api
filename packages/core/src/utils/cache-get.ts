@@ -22,6 +22,18 @@ function getHeaderNumber(headers: HeadersMap, name: string): number | undefined 
 	return Number.isNaN(n) ? undefined : n;
 }
 
+/**
+ * Parses a cache revalidation header.
+ *
+ * @param headers Cache response headers.
+ * @param name Revalidation header name.
+ * @return A numeric interval, false for permanent entries, or undefined for invalid values.
+ */
+function getHeaderRevalidate(headers: HeadersMap, name: string): number | false | undefined {
+	const value = getHeaderValue(headers, name);
+	return value === "false" ? false : getHeaderNumber(headers, name);
+}
+
 function collectPrefixedHeaders(headers: HeadersMap, prefix: string): Record<string, string | string[]> {
 	const result: Record<string, string | string[]> = {};
 	for (const [key, value] of Object.entries(headers)) {
@@ -99,7 +111,7 @@ function reconstructFetch(headers: HeadersMap, bodyText: string, base: Base) {
 	const dataTags = dataTagsStr ? JSON.parse(dataTagsStr) : undefined;
 	const fetchTagsStr = getHeaderValue(headers, "x-opennext-cache-fetch-tags");
 	const fetchTags = fetchTagsStr ? JSON.parse(fetchTagsStr) : undefined;
-	const revalidate = getHeaderNumber(headers, "x-opennext-cache-revalidate");
+	const revalidate = getHeaderRevalidate(headers, "x-opennext-cache-revalidate");
 
 	const dataHeaders = collectPrefixedHeaders(headers, "x-opennext-cache-header-") as Record<string, string>;
 
@@ -123,7 +135,7 @@ function reconstructCachedFile(headers: HeadersMap, bodyText: string, base: Base
 	const subType = getHeaderValue(headers, "x-opennext-cache-sub-type");
 	const metaStatus = getHeaderNumber(headers, "x-opennext-cache-meta-status");
 	const metaPostponed = getHeaderValue(headers, "x-opennext-cache-meta-postponed");
-	const revalidate = getHeaderNumber(headers, "x-opennext-cache-revalidate");
+	const revalidate = getHeaderRevalidate(headers, "x-opennext-cache-revalidate");
 
 	const metaHeaders = collectPrefixedHeaders(headers, "x-opennext-cache-header-");
 	const hasMetaHeaders = Object.keys(metaHeaders).length > 0;

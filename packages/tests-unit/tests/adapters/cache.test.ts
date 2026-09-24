@@ -357,7 +357,7 @@ describe("CacheHandler", () => {
 				html: "<html></html>",
 				pageData: {},
 				status: 200,
-				headers: {},
+				headers: { "x-next-cache-tags": "tag1,tag2" },
 			});
 
 			expect(cache.set).toHaveBeenCalledWith(
@@ -367,7 +367,8 @@ describe("CacheHandler", () => {
 					html: "<html></html>",
 					json: {},
 				},
-				"cache"
+				"cache",
+				["tag1", "tag2"]
 			);
 		});
 
@@ -450,17 +451,24 @@ describe("CacheHandler", () => {
 		});
 
 		it("Should set cache when for FETCH", async () => {
-			await instance.set("key", {
-				kind: "FETCH",
-				data: {
-					headers: {},
-					body: "{}",
-					url: "https://example.com",
-					status: 200,
-					tags: [],
+			await instance.set(
+				"key",
+				{
+					kind: "FETCH",
+					data: {
+						headers: {},
+						body: "{}",
+						url: "https://example.com",
+						status: 200,
+						tags: [],
+					},
+					revalidate: 60,
 				},
-				revalidate: 60,
-			});
+				{
+					fetchCache: true,
+					tags: ["tag1", "tag2"],
+				}
+			);
 
 			expect(cache.set).toHaveBeenCalledWith(
 				"key",
@@ -475,7 +483,8 @@ describe("CacheHandler", () => {
 					},
 					revalidate: 60,
 				},
-				"fetch"
+				"fetch",
+				["tag1", "tag2"]
 			);
 		});
 
@@ -535,13 +544,13 @@ describe("CacheHandler", () => {
 		it("Should call cache.revalidateTags with single tag", async () => {
 			await instance.revalidateTag("tag");
 
-			expect(cache.revalidateTags).toHaveBeenCalledWith(["tag"], undefined);
+			expect(cache.revalidateTags).toHaveBeenCalledWith(["tag"]);
 		});
 
 		it("Should call cache.revalidateTags with array of tags", async () => {
 			await instance.revalidateTag(["tag1", "tag2"]);
 
-			expect(cache.revalidateTags).toHaveBeenCalledWith(["tag1", "tag2"], undefined);
+			expect(cache.revalidateTags).toHaveBeenCalledWith(["tag1", "tag2"]);
 		});
 
 		it("Should not call cache.revalidateTags when tags array is empty", async () => {

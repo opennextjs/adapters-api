@@ -30,6 +30,7 @@ const handler: WrapperHandler<InternalEvent, InternalResult | MiddlewareResult> 
 		}
 
 		const internalEvent = await converter.convertFrom(request);
+		const output = await converter.convertTo(request);
 
 		// Retrieve geo information from the cloudflare request
 		// See https://developers.cloudflare.com/workers/runtime-apis/request
@@ -43,13 +44,16 @@ const handler: WrapperHandler<InternalEvent, InternalResult | MiddlewareResult> 
 			}
 		}
 
+		if (output.type === "direct") {
+			return output.data(await handler(internalEvent, { waitUntil: ctx.waitUntil.bind(ctx) }));
+		}
+
 		const response = await handler(internalEvent, {
+			streamCreator: output.streamCreator,
 			waitUntil: ctx.waitUntil.bind(ctx),
 		});
-
-		const result = (await converter.convertTo(response)) as Response;
-
-		return result;
+		const directResult = await output.data?.(response);
+		return directResult ?? output.output;
 	};
 
 export default {

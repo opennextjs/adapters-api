@@ -1,6 +1,6 @@
 import localCache from "@opennextjs/core/overrides/cache/local";
 import type { InternalResult } from "@opennextjs/core/types/open-next";
-import { toReadableStream } from "@opennextjs/core/utils/stream";
+import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream";
 import { vi, describe, expect, it, beforeEach } from "vitest";
 
 vi.mock("@opennextjs/core/utils/normalize-path", () => ({
@@ -9,7 +9,7 @@ vi.mock("@opennextjs/core/utils/normalize-path", () => ({
 
 const mockHandler = vi.fn();
 
-vi.mock("/mock/root/cache-function/index.mjs", () => ({
+vi.mock("/mock/root/cache-function/handler.mjs", () => ({
 	handler: mockHandler,
 }));
 
@@ -79,6 +79,14 @@ describe("local cache", () => {
 			const result = await localCache.get("key");
 
 			expect(result).toBeNull();
+		});
+
+		it("should return null when a cache miss has no body", async () => {
+			mockHandler.mockResolvedValue(
+				createMockResult({ body: undefined, headers: { "x-opennext-cache-found": "false" } })
+			);
+
+			await expect(localCache.get("key")).resolves.toBeNull();
 		});
 
 		it("should return null for cache miss (found = false)", async () => {
@@ -156,7 +164,7 @@ describe("local cache", () => {
 			expect(event.method).toBe("PUT");
 			expect(event.rawPath).toBe("/cache/key");
 			expect(event.headers).toEqual({ "Content-Type": "application/json" });
-			expect(event.body).toEqual(Buffer.from(JSON.stringify({ value })));
+			expect(await fromReadableStream(event.body)).toBe(JSON.stringify({ value }));
 		});
 
 		it("should encode the key", async () => {
@@ -178,6 +186,23 @@ describe("local cache", () => {
 			const event = mockHandler.mock.calls[0][0];
 			expect(event.query).toEqual({ type: "composable" });
 		});
+
+		it("should forward additional tags", async () => {
+			mockHandler.mockResolvedValue(createMockResult());
+
+			await localCache.set("key", {}, "fetch", ["tag1", "tag2"]);
+
+			const event = mockHandler.mock.calls[0][0];
+			expect(event.query).toEqual({ type: "fetch", tags: "tag1,tag2" });
+		});
+
+		it("should reject an unsuccessful response", async () => {
+			mockHandler.mockResolvedValue(createMockResult({ statusCode: 500 }));
+
+			await expect(localCache.set("key", {})).rejects.toThrow(
+				"Failed to set cache entry: cache handler returned 500"
+			);
+		});
 	});
 
 	describe("delete", () => {
@@ -190,6 +215,14 @@ describe("local cache", () => {
 			expect(event.method).toBe("DELETE");
 			expect(event.rawPath).toBe("/cache/key");
 		});
+
+		it("should reject an unsuccessful response", async () => {
+			mockHandler.mockResolvedValue(createMockResult({ statusCode: 500 }));
+
+			await expect(localCache.delete("key")).rejects.toThrow(
+				"Failed to delete cache entry: cache handler returned 500"
+			);
+		});
 	});
 
 	describe("revalidateTags", () => {
@@ -201,7 +234,15 @@ describe("local cache", () => {
 			const event = mockHandler.mock.calls[0][0];
 			expect(event.method).toBe("POST");
 			expect(event.rawPath).toBe("/cache/revalidate-tags");
-			expect(event.body).toEqual(Buffer.from(JSON.stringify({ tags: ["tag1", "tag2"] })));
+			expect(await fromReadableStream(event.body)).toBe(JSON.stringify({ tags: ["tag1", "tag2"] }));
+		});
+
+		it("should reject an unsuccessful response", async () => {
+			mockHandler.mockResolvedValue(createMockResult({ statusCode: 500 }));
+
+			await expect(localCache.revalidateTags(["tag"])).rejects.toThrow(
+				"Failed to revalidate cache tags: cache handler returned 500"
+			);
 		});
 	});
 

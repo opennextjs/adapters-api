@@ -190,7 +190,8 @@ export default class Cache {
 									json: pageData,
 									revalidate,
 								},
-								"cache"
+								"cache",
+								headers?.["x-next-cache-tags"]?.split(",")
 							);
 						}
 						break;
@@ -222,7 +223,12 @@ export default class Cache {
 						break;
 					}
 					case "FETCH":
-						await globalThis.cache.set(key, data, "fetch");
+						await globalThis.cache.set(
+							key,
+							data,
+							"fetch",
+							typeof ctx === "object" && "tags" in ctx ? ctx.tags : undefined
+						);
 						break;
 					case "REDIRECT":
 						await globalThis.cache.set(
@@ -261,7 +267,7 @@ export default class Cache {
 		}
 
 		try {
-			await globalThis.cache.revalidateTags(_tags, durations);
+			await globalThis.cache.revalidateTags(_tags);
 		} catch (e) {
 			error("Failed to revalidate tag", e);
 		}

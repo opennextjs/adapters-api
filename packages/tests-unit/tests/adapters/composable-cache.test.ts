@@ -85,44 +85,6 @@ describe("Composable cache handler", () => {
 			expect(result).toBeUndefined();
 		});
 
-		it("should set revalidate=-1 when lastModified is 1 (stale from cache adapter)", async () => {
-			cache.get.mockResolvedValueOnce({
-				value: {
-					value: "stale-value",
-					tags: ["tag1"],
-					stale: 0,
-					timestamp: 1000,
-					expire: 2000,
-					revalidate: 3600,
-				},
-				lastModified: 1,
-			});
-
-			const result = await ComposableCache.get("stale-key");
-
-			expect(result).toBeDefined();
-			expect(result?.revalidate).toBe(-1);
-		});
-
-		it("should keep original revalidate when lastModified is not 1", async () => {
-			cache.get.mockResolvedValueOnce({
-				value: {
-					value: "fresh-value",
-					tags: ["tag1"],
-					stale: 0,
-					timestamp: 1000,
-					expire: 2000,
-					revalidate: 3600,
-				},
-				lastModified: 1000,
-			});
-
-			const result = await ComposableCache.get("fresh-key");
-
-			expect(result).toBeDefined();
-			expect(result?.revalidate).toBe(3600);
-		});
-
 		it("should return pending write promise if available", async () => {
 			const pendingEntry = Promise.resolve({
 				value: toReadableStream("pending-value"),

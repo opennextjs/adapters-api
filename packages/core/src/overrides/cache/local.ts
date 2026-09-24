@@ -4,17 +4,36 @@ import type { InternalEvent, InternalResult } from "@/types/open-next";
 import type { Cache } from "@/types/overrides";
 import { parseCacheGetResponse } from "@/utils/cache-get";
 import { getMonorepoRelativePath } from "@/utils/normalize-path";
-import { fromReadableStream } from "@/utils/stream";
+import { fromReadableStream, toReadableStream } from "@/utils/stream";
 
 let handler: ((event: InternalEvent) => Promise<InternalResult>) | null = null;
 
+/**
+ * Loads the raw in-process cache handler.
+ *
+ * @return The cached internal cache handler.
+ * @throws When the cache handler bundle cannot be imported.
+ */
 async function getHandler() {
 	if (!handler) {
-		const cacheHandlerPath = path.join(getMonorepoRelativePath(), "cache-function/index.mjs");
+		const cacheHandlerPath = path.join(getMonorepoRelativePath(), "cache-function/handler.mjs");
 		const m = await import(cacheHandlerPath);
 		handler = m.handler;
 	}
 	return handler;
+}
+
+/**
+ * Rejects unsuccessful in-process cache mutations.
+ *
+ * @param result Internal cache handler response.
+ * @param operation Mutation being performed.
+ * @throws When the cache handler returns a non-success status.
+ */
+function ensureResultOk(result: InternalResult, operation: string): void {
+	if (result.statusCode < 200 || result.statusCode >= 300) {
+		throw new Error(`Failed to ${operation}: cache handler returned ${result.statusCode}`);
+	}
 }
 
 const localCache: Cache = {
@@ -37,11 +56,11 @@ const localCache: Cache = {
 			remoteAddress: "127.0.0.1",
 		};
 		const result = await h(event);
-		const bodyText = await fromReadableStream(result.body);
+		const bodyText = result.body ? await fromReadableStream(result.body) : "";
 		// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 		return parseCacheGetResponse(result.headers, bodyText) as any;
 	},
-	set: async (key, value, cacheType) => {
+	set: async (key, value, cacheType, additionalTags) => {
 		const h = (await getHandler())!;
 		const encodedKey = encodeURIComponent(key);
 		const url = `https://on/cache/${encodedKey}`;
@@ -49,6 +68,7 @@ const localCache: Cache = {
 		// writing without it would store the entry where `get` does not look for it.
 		const query: Record<string, string> = {};
 		if (cacheType) query.type = cacheType;
+		if (additionalTags && additionalTags.length > 0) query.tags = additionalTags.join(",");
 		const event: InternalEvent = {
 			type: "core",
 			method: "PUT",
@@ -58,9 +78,10 @@ const localCache: Cache = {
 			query,
 			cookies: {},
 			remoteAddress: "127.0.0.1",
-			body: Buffer.from(JSON.stringify({ value })),
+			body: toReadableStream(JSON.stringify({ value })),
 		};
-		await h(event);
+		const result = await h(event);
+		ensureResultOk(result, "set cache entry");
 	},
 	delete: async (key) => {
 		const h = (await getHandler())!;
@@ -76,9 +97,10 @@ const localCache: Cache = {
 			cookies: {},
 			remoteAddress: "127.0.0.1",
 		};
-		await h(event);
+		const result = await h(event);
+		ensureResultOk(result, "delete cache entry");
 	},
-	revalidateTags: async (tags, durations) => {
+	revalidateTags: async (tags) => {
 		const h = (await getHandler())!;
 		const url = `https://on/cache/revalidate-tags`;
 		const event: InternalEvent = {
@@ -90,9 +112,10 @@ const localCache: Cache = {
 			query: {},
 			cookies: {},
 			remoteAddress: "127.0.0.1",
-			body: Buffer.from(JSON.stringify({ tags, durations })),
+			body: toReadableStream(JSON.stringify({ tags })),
 		};
-		await h(event);
+		const result = await h(event);
+		ensureResultOk(result, "revalidate cache tags");
 	},
 };
 
