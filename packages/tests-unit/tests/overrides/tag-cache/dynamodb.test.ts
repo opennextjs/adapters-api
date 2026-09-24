@@ -21,4 +21,14 @@ describe("DynamoDB tag cache", () => {
 
 		expect(result).toBe(true);
 	});
+
+	it("keeps a tag stale when its SWR window has no expiry", () => {
+		const result = hasHardRevalidation(
+			[{ revalidatedAt: { N: "1500" }, stale: { N: "1500" } }],
+			1_000,
+			2_000
+		);
+
+		expect(result).toBe(false);
+	});
 });

@@ -32,6 +32,9 @@ export function hasHardRevalidation(items: DynamoDBItem[], lastModified: number,
 		if (revalidatedAt <= lastModified) {
 			return false;
 		}
+		if (item.stale?.N && !item.expire?.N) {
+			return false;
+		}
 		if (!item.expire?.N) {
 			return true;
 		}

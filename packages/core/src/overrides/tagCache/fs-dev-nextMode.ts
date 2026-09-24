@@ -43,6 +43,9 @@ export default {
 			if (tagData.expire !== undefined) {
 				return tagData.expire <= Date.now() && tagData.expire > (lastModified ?? 0);
 			}
+			if (tagData.stale !== undefined) {
+				return false;
+			}
 			return tagData.revalidatedAt > (lastModified ?? 0);
 		});
 

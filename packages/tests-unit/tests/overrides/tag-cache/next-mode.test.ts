@@ -32,6 +32,12 @@ describe("next-mode SWR tag revalidation", () => {
 		).toBe(true);
 	});
 
+	it("keeps DynamoDB records stale when their SWR window has no expiry", () => {
+		expect(
+			hasHardRevalidation({ revalidatedAt: { N: "1500" }, stale: { N: "1500" } }, 1_000, 2_000)
+		).toBe(false);
+	});
+
 	it("caches missing DynamoDB tags for the duration of the request", () => {
 		const itemsCache = new Map<string, DynamoDBItem | null>();
 
@@ -53,5 +59,12 @@ describe("next-mode SWR tag revalidation", () => {
 		await fsDevTagCache.writeTags([{ tag: "expired-swr", stale: 1_500, expire: 1_800 }]);
 
 		expect(await fsDevTagCache.hasBeenRevalidated(["expired-swr"], 1_000)).toBe(true);
+	});
+
+	it("keeps filesystem records stale when their SWR window has no expiry", async () => {
+		await fsDevTagCache.writeTags([{ tag: "indefinite-swr", stale: 2_000 }]);
+
+		expect(await fsDevTagCache.hasBeenRevalidated(["indefinite-swr"], 1_000)).toBe(false);
+		expect(await fsDevTagCache.isStale?.(["indefinite-swr"], 1_000)).toBe(true);
 	});
 });

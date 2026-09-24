@@ -42,8 +42,9 @@ const tagCache: TagCache = {
 			(tagPathMapping) =>
 				tagPathMapping.path.S === buildKey(path) &&
 				Number.parseInt(tagPathMapping.revalidatedAt.N) > (lastModified ?? 0) &&
-				(tagPathMapping.expire?.N === undefined ||
-					(Number.parseInt(tagPathMapping.expire.N) <= now &&
+				(tagPathMapping.stale?.N === undefined ||
+					(tagPathMapping.expire?.N !== undefined &&
+						Number.parseInt(tagPathMapping.expire.N) <= now &&
 						Number.parseInt(tagPathMapping.expire.N) > (lastModified ?? 0)))
 		);
 		return revalidatedTags.length > 0 ? -1 : (lastModified ?? Date.now());

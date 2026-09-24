@@ -33,6 +33,9 @@ export function hasHardRevalidation(item: DynamoDBItem, lastModified: number, no
 		const expiry = Number.parseInt(item.expire.N);
 		return expiry <= now && expiry > lastModified;
 	}
+	if (item.stale?.N) {
+		return false;
+	}
 	return Number.parseInt(item.revalidatedAt?.N ?? "0") > lastModified;
 }
 
