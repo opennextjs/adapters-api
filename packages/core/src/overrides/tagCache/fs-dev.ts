@@ -37,10 +37,14 @@ const tagCache: TagCache = {
 			.map((tagEntry) => tagEntry.path.S.replace(`${NEXT_BUILD_ID}/`, ""));
 	},
 	getLastModified: async (path: string, lastModified?: number) => {
+		const now = Date.now();
 		const revalidatedTags = tags.filter(
 			(tagPathMapping) =>
 				tagPathMapping.path.S === buildKey(path) &&
-				Number.parseInt(tagPathMapping.revalidatedAt.N) > (lastModified ?? 0)
+				Number.parseInt(tagPathMapping.revalidatedAt.N) > (lastModified ?? 0) &&
+				(tagPathMapping.expire?.N === undefined ||
+					(Number.parseInt(tagPathMapping.expire.N) <= now &&
+						Number.parseInt(tagPathMapping.expire.N) > (lastModified ?? 0)))
 		);
 		return revalidatedTags.length > 0 ? -1 : (lastModified ?? Date.now());
 	},
