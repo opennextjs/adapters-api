@@ -1,0 +1,29 @@
+packages/cloudflare/src/api/durable-objects/queue.spec.ts
+  s_825fbe81760922::t_869156b4c11c18 69-79
+packages/core/src/types/overrides.ts
+  s_825fbe81760922::t_d4b027673d5609 93-94
+packages/tests-unit/tests/adapters/cache.test.ts
+  s_825fbe81760922::t_bba99b49ef79b3 57-77
+packages/tests-unit/tests/build/patch/patches/patchTagStaleness.test.ts
+  s_825fbe81760922::t_5efc76e81212b0 1-78
+packages/tests-unit/tests/core/routing/cacheInterceptor.test.ts
+  s_825fbe81760922::t_4f2306de903e52 478,487-488,492-496,509,518-519,529,542-543
+packages/tests-unit/tests/utils/cache-get.test.ts
+  s_825fbe81760922::t_294dcb367b574e 5-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "89a07048a1871a0479ceb8837c80f80a11dc46d6",
+  "prompts": {},
+  "sessions": {
+    "s_825fbe81760922": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f2dbc8f64ffeGzJEW7RfB77HlB",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
