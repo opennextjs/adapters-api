@@ -1,0 +1,21 @@
+packages/aws/src/overrides/tagCache/dynamodb-nextMode.ts
+  s_825fbe81760922::t_4e6b5b72286f8c 147-153,161-173,175-193,195
+packages/tests-unit/tests/overrides/tag-cache/next-mode-batch.test.ts
+  s_825fbe81760922::t_16ad58ed8c494f 1-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "65bde8376aab7806bde08f92f7135e08c785bd02",
+  "prompts": {},
+  "sessions": {
+    "s_825fbe81760922": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f2dbc8f64ffeGzJEW7RfB77HlB",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
