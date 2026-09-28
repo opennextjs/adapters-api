@@ -1,0 +1,23 @@
+packages/aws/src/overrides/tagCache/dynamodb-lite.ts
+  s_825fbe81760922::t_5ef73899cde06f 12,177-183,191,194-196,222,229-235,251,274-275
+packages/aws/src/overrides/tagCache/stale-record.ts
+  s_825fbe81760922::t_060ed2d78e99e6 1-21
+packages/tests-unit/tests/overrides/tag-cache/dynamodb-staleness.test.ts
+  s_825fbe81760922::t_0418e4f507fbf9 1-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "966bbecbfdfaac6b40164a3d13bde44174d93d8d",
+  "prompts": {},
+  "sessions": {
+    "s_825fbe81760922": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f2dbc8f64ffeGzJEW7RfB77HlB",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
