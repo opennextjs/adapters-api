@@ -1,4 +1,5 @@
 import { NextModeTagCache } from "@opennextjs/core/types/overrides.js";
+import ts from "typescript";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { softTagFilter, withFilter } from "./tag-cache-filter.js";
@@ -15,6 +16,24 @@ const mockedTagCache = {
 const filterFn = (tag: string) => tag.startsWith("valid_");
 
 describe("withFilter", () => {
+	it("filters structured writes with existing string predicates without losing metadata", async () => {
+		const cache = withFilter({ tagCache: mockedTagCache, filterFn });
+		const swr = { tag: "valid_swr", stale: 100, expire: 200 };
+		const hard = { tag: "valid_hard", expire: 100 };
+		await cache.writeTags(["valid_plain", swr, hard, { tag: "invalid_tag", stale: 100 }]);
+		expect(mockedTagCache.writeTags).toHaveBeenCalledWith(["valid_plain", swr, hard]);
+	});
+
+	it("type checks string callbacks under strictFunctionTypes", () => {
+		// Include the actual consumer tests: the package build intentionally excludes spec files.
+		const configPath = ts.findConfigFile(process.cwd(), ts.sys.fileExists, "tsconfig.json")!;
+		const config = ts.readConfigFile(configPath, ts.sys.readFile);
+		const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, process.cwd());
+		const file = new URL("./tag-cache-filter.spec.ts", import.meta.url).pathname;
+		const program = ts.createProgram([file], { ...parsed.options, noEmit: true, strictFunctionTypes: true });
+		const diagnostics = program.getSemanticDiagnostics(program.getSourceFile(file));
+		expect(diagnostics.map((d) => ts.flattenDiagnosticMessageText(d.messageText, "\n"))).toEqual([]);
+	});
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});

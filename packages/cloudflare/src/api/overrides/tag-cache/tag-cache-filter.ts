@@ -1,4 +1,4 @@
-import { NextModeTagCache, NextModeTagCacheWriteInput } from "@opennextjs/core/types/overrides.js";
+import type { NextModeTagCache } from "@opennextjs/core/types/overrides.js";
 
 interface WithFilterOptions {
 	/**
@@ -10,12 +10,16 @@ interface WithFilterOptions {
 	 * Filter function that returns true if the tag should be forwarded to the underlying tag cache.
 	 * @returns true if the tag should be forwarded, false otherwise.
 	 */
-	filterFn: (tag: string | NextModeTagCacheWriteInput) => boolean;
+	filterFn: (tag: string) => boolean;
 }
 
 /**
  * Creates a new tag cache that filters tags based on the provided filter function.
+ *
  * This is useful to remove tags that are not used by the app, this could reduce the number of requests to the underlying tag cache.
+ * @param options Underlying cache and string-based tag predicate.
+ * @return A filtering cache that preserves accepted write metadata.
+ * @throws When the predicate or delegated cache operation throws.
  */
 export function withFilter({ tagCache, filterFn }: WithFilterOptions): NextModeTagCache {
 	return {
@@ -45,7 +49,7 @@ export function withFilter({ tagCache, filterFn }: WithFilterOptions): NextModeT
 			return tagCache.hasBeenRevalidated(filteredTags, lastModified);
 		},
 		writeTags: async (tags) => {
-			const filteredTags = tags.filter(filterFn);
+			const filteredTags = tags.filter((tag) => filterFn(typeof tag === "string" ? tag : tag.tag));
 			if (filteredTags.length === 0) {
 				return;
 			}
