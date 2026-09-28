@@ -18,13 +18,19 @@ interface WithFilterOptions {
  *
  * This is useful to remove tags that are not used by the app, this could reduce the number of requests to the underlying tag cache.
  * @param options Underlying cache and string-based tag predicate.
- * @return A filtering cache that preserves accepted write metadata.
+ * @return A filtering cache preserving write metadata and optional stale checks.
  * @throws When the predicate or delegated cache operation throws.
  */
 export function withFilter({ tagCache, filterFn }: WithFilterOptions): NextModeTagCache {
 	return {
 		name: `filtered-${tagCache.name}`,
 		mode: "nextMode",
+		isStale: tagCache.isStale
+			? async (tags, lastModified) => {
+					const filteredTags = tags.filter(filterFn);
+					return filteredTags.length > 0 && tagCache.isStale!(filteredTags, lastModified);
+				}
+			: undefined,
 		getLastRevalidated: async (tags) => {
 			const filteredTags = tags.filter(filterFn);
 			if (filteredTags.length === 0) {

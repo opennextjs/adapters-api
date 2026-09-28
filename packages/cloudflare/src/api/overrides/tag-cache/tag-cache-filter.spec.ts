@@ -16,6 +16,19 @@ const mockedTagCache = {
 const filterFn = (tag: string) => tag.startsWith("valid_");
 
 describe("withFilter", () => {
+	it("forwards filtered stale checks with the original timestamp and receiver", async () => {
+		const underlying = { ...mockedTagCache, isStale: vi.fn().mockResolvedValue(true) };
+		const cache = withFilter({ tagCache: underlying, filterFn });
+		expect(await cache.isStale?.(["valid_tag", "invalid_tag"], 1000)).toBe(true);
+		expect(underlying.isStale).toHaveBeenCalledWith(["valid_tag"], 1000);
+		expect(underlying.isStale.mock.contexts[0]).toBe(underlying);
+		expect(await cache.isStale?.(["invalid_tag"], 1000)).toBe(false);
+		expect(underlying.isStale).toHaveBeenCalledTimes(1);
+	});
+
+	it("does not advertise stale checks when the underlying cache has none", () => {
+		expect(withFilter({ tagCache: mockedTagCache, filterFn }).isStale).toBeUndefined();
+	});
 	it("filters structured writes with existing string predicates without losing metadata", async () => {
 		const cache = withFilter({ tagCache: mockedTagCache, filterFn });
 		const swr = { tag: "valid_swr", stale: 100, expire: 200 };
