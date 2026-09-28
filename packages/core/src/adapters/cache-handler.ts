@@ -117,6 +117,7 @@ export async function handler(
 /**
  * Reads a cache entry and attaches tag freshness without changing its timestamp.
  *
+ * Untagged original-mode fetch entries also inherit their owning path's freshness.
  * @param key Cache key.
  * @param cacheType Entry type.
  * @param additionalTags Tags supplied by the caller.
@@ -162,6 +163,7 @@ async function handleGet(
 
 		if (!result.shouldBypassTagCache) {
 			let revalidated = await checkTagRevalidation(key, tags, result);
+			let owningPath: string | undefined;
 
 			if (cacheType === "fetch" && globalThis.tagCache.mode === "original") {
 				const hasHardTags = additionalTags.some((tag) => !tag.startsWith(SOFT_TAG_PREFIX));
@@ -170,7 +172,8 @@ async function handleGet(
 				);
 
 				if (!revalidated && !hasHardTags && path) {
-					revalidated = await checkTagRevalidation(path.slice(SOFT_TAG_PREFIX.length), [], result);
+					owningPath = path.slice(SOFT_TAG_PREFIX.length);
+					revalidated = await checkTagRevalidation(owningPath, [], result);
 				}
 			}
 
@@ -189,7 +192,10 @@ async function handleGet(
 			}
 
 			const lastModified = result.lastModified ?? Date.now();
-			if (await isStale(key, tags, lastModified)) {
+			if (
+				(await isStale(key, tags, lastModified)) ||
+				(owningPath !== undefined && (await isStale(owningPath, [], lastModified)))
+			) {
 				return buildCacheGetResponse({ ...result, isStale: true });
 			}
 		}

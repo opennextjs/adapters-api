@@ -429,6 +429,26 @@ describe("cache-handler", () => {
 			expect(result.headers["x-opennext-cache-stale"]).toBe("true");
 		});
 
+		it.each([false, true])(
+			"inherits owning-path fetch staleness only without hard tags (hard=%s)",
+			async (hasHardTags) => {
+				mockTagCache.mode = "original";
+				mockTagCache.getLastModified.mockResolvedValue(1000);
+				mockTagCache.isStale.mockImplementation(async (key) => key === "some-path");
+				mockIncrementalCache.get.mockResolvedValueOnce({
+					value: { kind: "FETCH", data: { headers: {}, body: "data", url: "https://example.com" } },
+					lastModified: 1000,
+				});
+				const result = await runHandler(
+					createEvent({ query: { type: "fetch", tags: `_N_T_/some-path${hasHardTags ? ",hard-tag" : ""}` } })
+				);
+				expect(result.statusCode).toBe(200);
+				expect(result.headers["x-opennext-cache-last-modified"]).toBe("1000");
+				expect(result.headers["x-opennext-cache-stale"]).toBe(hasHardTags ? undefined : "true");
+				expect(mockTagCache.isStale).toHaveBeenCalledTimes(hasHardTags ? 1 : 2);
+			}
+		);
+
 		it("should return 404 when a fetch entry's owning path has been revalidated", async () => {
 			mockTagCache.mode = "original";
 			mockTagCache.getLastModified.mockResolvedValueOnce(1000).mockResolvedValueOnce(-1);
