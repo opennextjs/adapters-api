@@ -7,6 +7,7 @@ import { chunk, parseNumberFromEnv } from "@opennextjs/core/adapters/util.js";
 import type { TagCache } from "@opennextjs/core/types/overrides.js";
 
 import { MAX_DYNAMO_BATCH_WRITE_ITEM_COUNT, getDynamoBatchWriteCommandConcurrency } from "./constants";
+import { isStaleRecord } from "./stale-record.js";
 
 const { CACHE_BUCKET_REGION, CACHE_DYNAMO_TABLE, NEXT_BUILD_ID } = process.env;
 
@@ -184,6 +185,13 @@ const tagCache: TagCache = {
 			return lastModified ?? Date.now();
 		}
 	},
+	/**
+	 * Checks stale metadata in the same records used for hard-invalidation checks.
+	 *
+	 * @param key Entry key.
+	 * @param lastModified Entry generation time.
+	 * @return Whether an active stale window applies; false on read failure.
+	 */
 	async isStale(key: string, lastModified?: number) {
 		try {
 			if (globalThis.openNextConfig.dangerous?.disableTagCache) {
@@ -217,7 +225,8 @@ const tagCache: TagCache = {
 				itemsCache?.set(cacheKey, items);
 			}
 			debug("isStale items", key, items);
-			return items.length > 0;
+			const now = Date.now();
+			return items.some((item) => isStaleRecord(item, lastModified ?? 0, now));
 		} catch (e) {
 			error("Failed to check stale tags", e);
 			return false;

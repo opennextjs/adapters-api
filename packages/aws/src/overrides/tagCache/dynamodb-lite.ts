@@ -9,6 +9,7 @@ import { AwsClient } from "aws4fetch";
 import { customFetchClient } from "../../utils/fetch.js";
 
 import { MAX_DYNAMO_BATCH_WRITE_ITEM_COUNT, getDynamoBatchWriteCommandConcurrency } from "./constants.js";
+import { isStaleRecord } from "./stale-record.js";
 
 type DynamoDBItem = {
 	tag?: { S: string };
@@ -173,6 +174,13 @@ const tagCache: OriginalTagCache = {
 			return [];
 		}
 	},
+	/**
+	 * Checks hard invalidation and shares queried records with subsequent stale checks.
+	 *
+	 * @param key Entry key.
+	 * @param lastModified Entry generation time.
+	 * @return -1 for hard invalidation, otherwise the generation time; preserves it on failure.
+	 */
 	async getLastModified(key: string, lastModified?: number) {
 		try {
 			if (globalThis.openNextConfig.dangerous?.disableTagCache) {
@@ -180,10 +188,12 @@ const tagCache: OriginalTagCache = {
 			}
 			const { CACHE_DYNAMO_TABLE } = process.env;
 			const store = globalThis.__openNextAls.getStore();
-			const cache = store?.requestCache.getOrCreate<string, number>("dynamoDb:getLastModified");
+			const cache = store?.requestCache.getOrCreate<string, DynamoDBItem[]>("dynamoDb:revalidateQueryItems");
 			const cacheKey = `${key}:${lastModified ?? 0}`;
 			if (cache?.has(cacheKey)) {
-				return cache.get(cacheKey)!;
+				return hasHardRevalidation(cache.get(cacheKey)!, lastModified ?? 0, Date.now())
+					? -1
+					: (lastModified ?? Date.now());
 			}
 			const result = await awsFetch(
 				JSON.stringify({
@@ -209,13 +219,20 @@ const tagCache: OriginalTagCache = {
 			const resultValue = hasHardRevalidation(revalidatedTags, lastModified ?? 0, Date.now())
 				? -1
 				: (lastModified ?? Date.now());
-			cache?.set(cacheKey, resultValue);
+			cache?.set(cacheKey, revalidatedTags);
 			return resultValue;
 		} catch (e) {
 			error("Failed to get revalidated tags", e);
 			return lastModified ?? Date.now();
 		}
 	},
+	/**
+	 * Checks applicable stale timestamps rather than treating every queried tag as stale.
+	 *
+	 * @param key Entry key.
+	 * @param lastModified Entry generation time.
+	 * @return Whether an active stale window applies; false on read failure.
+	 */
 	async isStale(key: string, lastModified?: number) {
 		try {
 			if (globalThis.openNextConfig.dangerous?.disableTagCache) {
@@ -231,7 +248,7 @@ const tagCache: OriginalTagCache = {
 			if (itemsCache?.has(cacheKey)) {
 				items = itemsCache.get(cacheKey)!;
 			} else {
-				// We can reuse the same query as getLastModified since it already checks for revalidatedAt > lastModified as revalidatedAt and stale have the same value
+				// Share the query with getLastModified, then evaluate stale timestamps separately.
 				const result = await awsFetch(
 					JSON.stringify({
 						TableName: CACHE_DYNAMO_TABLE,
@@ -254,7 +271,8 @@ const tagCache: OriginalTagCache = {
 				itemsCache?.set(cacheKey, items);
 			}
 			debug("isStale items", key, items);
-			return items.length > 0;
+			const now = Date.now();
+			return items.some((item) => isStaleRecord(item, lastModified ?? 0, now));
 		} catch (e) {
 			error("Failed to check stale tags", e);
 			return false;
