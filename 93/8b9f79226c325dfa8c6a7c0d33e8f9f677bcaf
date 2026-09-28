@@ -1,0 +1,21 @@
+packages/core/src/adapters/cache-handler.ts
+  s_825fbe81760922::t_135b3d5360e737 51,61-65
+packages/tests-unit/tests/adapters/cache-adapter.test.ts
+  s_825fbe81760922::t_b103bc3f2077a4 5-6,70,100-126
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "938b9f79226c325dfa8c6a7c0d33e8f9f677bcaf",
+  "prompts": {},
+  "sessions": {
+    "s_825fbe81760922": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f2dbc8f64ffeGzJEW7RfB77HlB",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
