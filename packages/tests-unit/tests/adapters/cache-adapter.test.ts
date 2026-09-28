@@ -2,6 +2,8 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 import { handler } from "@opennextjs/core/adapters/cache-handler";
 import type { InternalEvent, InternalResult, OpenNextConfig } from "@opennextjs/core/types/open-next";
+import { runWithOpenNextRequestContext } from "@opennextjs/core/utils/promise";
+import { RequestCache } from "@opennextjs/core/utils/requestCache";
 import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream";
 import { type Mock, vi, describe, expect, it, beforeEach } from "vitest";
 
@@ -65,6 +67,7 @@ async function runHandler(event: InternalEvent): Promise<InternalResult> {
 			},
 			isISRRevalidation: false,
 			writtenTags: new Set<string>(),
+			requestCache: new RequestCache(),
 		},
 		() => handler(event)
 	);
@@ -94,6 +97,33 @@ describe("cache-handler", () => {
 	});
 
 	describe("routing", () => {
+		it("isolates concurrent standalone cache request contexts", async () => {
+			const contexts: unknown[] = [];
+			const read = async () => {
+				const store = globalThis.__openNextAls.getStore()!;
+				contexts.push(store.requestCache);
+				await Promise.resolve();
+				expect(globalThis.__openNextAls.getStore()).toBe(store);
+				expect(store.requestCache).toBeInstanceOf(RequestCache);
+				return null;
+			};
+			mockIncrementalCache.get.mockImplementationOnce(read).mockImplementationOnce(read);
+			await Promise.all([handler(createEvent()), handler(createEvent())]);
+			expect(contexts).toHaveLength(2);
+			expect(contexts[0]).not.toBe(contexts[1]);
+			expect(globalThis.__openNextAls.getStore()).toBeUndefined();
+		});
+
+		it("reuses the caller context for a local cache read", async () => {
+			await runWithOpenNextRequestContext({ isISRRevalidation: false }, async () => {
+				const store = globalThis.__openNextAls.getStore();
+				mockIncrementalCache.get.mockImplementationOnce(async () => {
+					expect(globalThis.__openNextAls.getStore()).toBe(store);
+					return null;
+				});
+				await handler(createEvent());
+			});
+		});
 		it("should return 404 for non-cache paths", async () => {
 			const event = createEvent({ rawPath: "/other/path" });
 			const result = await runHandler(event);

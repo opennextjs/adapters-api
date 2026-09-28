@@ -48,6 +48,7 @@ async function initializeCaches() {
 /**
  * Handles an internal cache function request.
  *
+ * Standalone invocations establish a request context; local calls reuse their caller's context.
  * @param event Normalized cache request.
  * @param options Handler execution options.
  * @return The normalized cache response.
@@ -57,6 +58,11 @@ export async function handler(
 	options?: OpenNextHandlerOptions
 ): Promise<InternalResult> {
 	debug("cache handler event", event);
+	if (!globalThis.__openNextAls.getStore()) {
+		return runWithOpenNextRequestContext({ isISRRevalidation: false, waitUntil: options?.waitUntil }, () =>
+			handler(event, options)
+		);
+	}
 
 	try {
 		await initializeCaches();
