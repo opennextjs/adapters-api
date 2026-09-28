@@ -31,6 +31,13 @@ export default class Cache {
 			: this.getIncrementalCache(key);
 	}
 
+	/**
+	 * Reads fetch data with explicit tag freshness for the Next incremental-cache integration.
+	 *
+	 * @param key Fetch cache key.
+	 * @param additionalTags Tags associated with the fetch.
+	 * @return The entry, or null on a miss or read failure.
+	 */
 	async getFetchCache(key: string, additionalTags: string[] = []): Promise<CacheHandlerValue | null> {
 		debug("get fetch cache", { key });
 		try {
@@ -40,6 +47,7 @@ export default class Cache {
 
 			return {
 				lastModified: result.lastModified ?? Date.now(),
+				...(result.isStale ? { isStale: true } : {}),
 				value: result.value,
 			} as CacheHandlerValue;
 		} catch (e) {
@@ -49,6 +57,12 @@ export default class Cache {
 		}
 	}
 
+	/**
+	 * Reads route data, preserving the real timestamp for revalidation queue deduplication.
+	 *
+	 * @param key Route cache key.
+	 * @return The Next cache entry, or null on a miss or read failure.
+	 */
 	async getIncrementalCache(key: string): Promise<CacheHandlerValue | null> {
 		try {
 			const cachedEntry = await globalThis.cache.get(key, "cache");
@@ -61,6 +75,7 @@ export default class Cache {
 
 			const meta = cacheData.meta;
 			const _lastModified = cachedEntry.lastModified ?? Date.now();
+			const freshness = cachedEntry.isStale ? { isStale: true } : {};
 
 			const store = globalThis.__openNextAls.getStore();
 			if (store) {
@@ -70,6 +85,7 @@ export default class Cache {
 			if (cacheData?.type === "route") {
 				return {
 					lastModified: _lastModified,
+					...freshness,
 					value: {
 						kind: "APP_ROUTE",
 						body: Buffer.from(
@@ -91,6 +107,7 @@ export default class Cache {
 					}
 					return {
 						lastModified: _lastModified,
+						...freshness,
 						value: {
 							kind: "APP_PAGE",
 							html: cacheData.html,
@@ -104,6 +121,7 @@ export default class Cache {
 				}
 				return {
 					lastModified: _lastModified,
+					...freshness,
 					value: {
 						kind: "PAGES",
 						html: cacheData.html,
@@ -116,6 +134,7 @@ export default class Cache {
 			if (cacheData?.type === "redirect") {
 				return {
 					lastModified: _lastModified,
+					...freshness,
 					value: {
 						kind: "REDIRECT",
 						props: cacheData.props,

@@ -54,6 +54,27 @@ describe("CacheHandler", () => {
 	});
 
 	describe("get", () => {
+		it("preserves stale route timestamps in both Next results and the queue context", async () => {
+			cache.get.mockResolvedValueOnce({
+				value: { type: "route", body: "data" },
+				lastModified: 100_000,
+				isStale: true,
+			});
+			expect(await instance.get("key")).toMatchObject({ lastModified: 100_000, isStale: true });
+			expect(globalThis.__openNextAls.getStore()?.lastModified).toBe(100_000);
+		});
+
+		it("passes explicit fetch staleness to Next without changing the timestamp", async () => {
+			cache.get.mockResolvedValueOnce({
+				value: { kind: "FETCH", data: { body: "data" } },
+				lastModified: 100_000,
+				isStale: true,
+			});
+			expect(await instance.get("key", { kind: "FETCH" })).toMatchObject({
+				lastModified: 100_000,
+				isStale: true,
+			});
+		});
 		it("Should return null for cache miss", async () => {
 			cache.get.mockResolvedValueOnce({});
 

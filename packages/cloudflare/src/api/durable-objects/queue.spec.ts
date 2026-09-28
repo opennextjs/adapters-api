@@ -66,6 +66,17 @@ const createMessage = (dedupId: string, lastModified = Date.now()) => ({
 });
 
 describe("DurableObjectQueue", () => {
+	it("does not suppress a later stale entry after an earlier successful regeneration", () => {
+		const queue = createDurableObjectQueue({ fetchDuration: 0 });
+		vi.mocked(queue.sql.exec).mockImplementation(
+			(_query, _id, timestamp) =>
+				({
+					toArray: () => (90 > Number(timestamp) ? [{ found: 1 }] : []),
+				}) as never
+		);
+		expect(queue.checkSyncTable(createMessage("later", 100_000))).toBe(false);
+		expect(queue.checkSyncTable(createMessage("old", 80_000))).toBe(true);
+	});
 	describe("successful revalidation", () => {
 		it("should process a single revalidation", async () => {
 			process.env.__NEXT_PREVIEW_MODE_ID = "test";

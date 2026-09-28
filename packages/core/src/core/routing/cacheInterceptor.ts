@@ -293,6 +293,12 @@ function decodePathParams(pathname: string): string {
 		.join("/");
 }
 
+/**
+ * Serves eligible cached routes and schedules regeneration for stale entries.
+ *
+ * @param event Incoming middleware request.
+ * @return A cached response or the request to forward to Next.js.
+ */
 export async function cacheInterceptor(
 	event: MiddlewareEvent
 ): Promise<InternalEvent | InternalResult | PartialResult> {
@@ -356,9 +362,7 @@ export async function cacheInterceptor(
 				return event;
 			}
 			const host = event.headers.host;
-			//TODO: change returned type to provide staleness as a prop
-			// Detect staleness signaled by the cache adapter (sets lastModified to 1)
-			const isStaleFromTagCache = cachedData.lastModified === 1;
+			const isStaleFromTagCache = cachedData.isStale === true;
 			switch (cachedData?.value?.type) {
 				case "app":
 				case "page":

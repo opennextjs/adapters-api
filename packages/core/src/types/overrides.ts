@@ -90,6 +90,8 @@ export type CachedFetchValue = {
 };
 
 export type WithLastModified<T> = {
+	/** Tag-triggered staleness, independent of the entry's generation timestamp. */
+	isStale?: boolean;
 	lastModified?: number;
 	value?: T;
 	/**

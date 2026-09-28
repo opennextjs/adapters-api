@@ -2,6 +2,19 @@ import { parseCacheGetResponse } from "@opennextjs/core/utils/cache-get";
 import { describe, expect, it } from "vitest";
 
 describe("parseCacheGetResponse", () => {
+	it("preserves generation time separately from tag staleness", () => {
+		const result = parseCacheGetResponse(
+			{
+				"x-opennext-cache-found": "true",
+				"x-opennext-cache-type": "cache",
+				"x-opennext-cache-sub-type": "route",
+				"x-opennext-cache-last-modified": "100000",
+				"x-opennext-cache-stale": "true",
+			},
+			"body"
+		);
+		expect(result).toMatchObject({ lastModified: 100_000, isStale: true });
+	});
 	it("should return null when x-opennext-cache-found is not 'true'", () => {
 		const result = parseCacheGetResponse({ "x-opennext-cache-type": "cache" }, "body");
 		expect(result).toBeNull();

@@ -68,7 +68,8 @@ describe("Composable cache handler", () => {
 					expire: Date.now() + 1000,
 					revalidate: 3600,
 				},
-				lastModified: 1,
+				lastModified: 1000,
+				isStale: true,
 			});
 
 			const result = await ComposableCache.get("stale-key");

@@ -76,6 +76,8 @@ export interface CacheHandlerContext {
 	fetchCacheKeyPrefix?: string;
 }
 export interface CacheHandlerValue {
+	/** Consumed by the OpenNext incremental-cache patch, including permanently cached routes. */
+	isStale?: boolean;
 	lastModified?: number;
 	age?: number;
 	cacheState?: string;

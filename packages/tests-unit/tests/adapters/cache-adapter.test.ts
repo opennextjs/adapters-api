@@ -374,7 +374,8 @@ describe("cache-handler", () => {
 
 			expect(mockTagCache.isStale).toHaveBeenCalledWith("test-key", 1000);
 			expect(result.statusCode).toBe(200);
-			expect(result.headers["x-opennext-cache-last-modified"]).toBe("1");
+			expect(result.headers["x-opennext-cache-last-modified"]).toBe("1000");
+			expect(result.headers["x-opennext-cache-stale"]).toBe("true");
 		});
 
 		it("should mark stale entries in nextMode", async () => {
@@ -394,7 +395,8 @@ describe("cache-handler", () => {
 
 			expect(mockTagCache.isStale).toHaveBeenCalledWith(["tag1"], 1000);
 			expect(result.statusCode).toBe(200);
-			expect(result.headers["x-opennext-cache-last-modified"]).toBe("1");
+			expect(result.headers["x-opennext-cache-last-modified"]).toBe("1000");
+			expect(result.headers["x-opennext-cache-stale"]).toBe("true");
 		});
 
 		it("should return 404 when a fetch entry's owning path has been revalidated", async () => {

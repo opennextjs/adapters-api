@@ -108,6 +108,14 @@ export async function handler(
 // Route handlers   //
 //////////////////////
 
+/**
+ * Reads a cache entry and attaches tag freshness without changing its timestamp.
+ *
+ * @param key Cache key.
+ * @param cacheType Entry type.
+ * @param additionalTags Tags supplied by the caller.
+ * @return The cache response, or an error response when the read fails.
+ */
 async function handleGet(
 	key: string,
 	cacheType: CacheEntryType,
@@ -176,7 +184,7 @@ async function handleGet(
 
 			const lastModified = result.lastModified ?? Date.now();
 			if (await isStale(key, tags, lastModified)) {
-				result.lastModified = 1;
+				return buildCacheGetResponse({ ...result, isStale: true });
 			}
 		}
 
@@ -454,6 +462,12 @@ async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<
 // Cache GET response builder //
 /////////////////////////////
 
+/**
+ * Serializes cache metadata and payload for all cache transports.
+ *
+ * @param result Cached entry and freshness metadata.
+ * @return The cache-service response.
+ */
 function buildCacheGetResponse(result: WithLastModified<CacheValue<CacheEntryType>>): InternalResult {
 	const value = result.value!;
 
@@ -467,6 +481,9 @@ function buildCacheGetResponse(result: WithLastModified<CacheValue<CacheEntryTyp
 	}
 	if (result.shouldBypassTagCache) {
 		headers["x-opennext-cache-should-bypass"] = "true";
+	}
+	if (result.isStale) {
+		headers["x-opennext-cache-stale"] = "true";
 	}
 
 	if ("kind" in value && value.kind === "FETCH") {

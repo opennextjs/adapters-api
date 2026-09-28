@@ -7,6 +7,12 @@ import { debug } from "./logger";
 const pendingWritePromiseMap = new Map<string, Promise<CacheValue<"composable">>>();
 
 export default {
+	/**
+	 * Reads a composable entry, translating tag staleness into Next's revalidate interval.
+	 *
+	 * @param cacheKey Entry key.
+	 * @return A streamed entry, or undefined on a miss or read failure.
+	 */
 	async get(cacheKey: string) {
 		try {
 			// We first check if we have a pending write for this cache key
@@ -26,7 +32,7 @@ export default {
 			}
 
 			debug("composable cache result", result);
-			const revalidate = result.lastModified === 1 ? -1 : result.value.revalidate;
+			const revalidate = result.isStale ? -1 : result.value.revalidate;
 
 			return {
 				...result.value,

@@ -475,7 +475,7 @@ describe("cacheInterceptor", () => {
 	});
 
 	describe("isStaleFromTagCache", () => {
-		it("should serve SSG app content with STALE when lastModified is 1", async () => {
+		it("should serve stale SSG app content and queue its real timestamp", async () => {
 			const event = createEvent({
 				url: "/albums",
 			});
@@ -484,10 +484,16 @@ describe("cacheInterceptor", () => {
 					type: "app",
 					html: "Hello, world!",
 				},
-				lastModified: 1,
+				lastModified: 100_000,
+				isStale: true,
 			});
 
 			const result = await cacheInterceptor(event);
+			expect(globalThis.queue.send).toHaveBeenCalledWith(
+				expect.objectContaining({
+					MessageBody: expect.objectContaining({ lastModified: 100_000 }),
+				})
+			);
 
 			expect(result).toEqual(
 				expect.objectContaining({
@@ -500,7 +506,7 @@ describe("cacheInterceptor", () => {
 			);
 		});
 
-		it("should serve SSG page content with STALE when lastModified is 1", async () => {
+		it("should serve SSG page content with explicit staleness", async () => {
 			const event = createEvent({
 				url: "/albums",
 			});
@@ -509,7 +515,8 @@ describe("cacheInterceptor", () => {
 					type: "page",
 					html: "Hello, world!",
 				},
-				lastModified: 1,
+				lastModified: 100_000,
+				isStale: true,
 			});
 
 			const result = await cacheInterceptor(event);
@@ -519,7 +526,7 @@ describe("cacheInterceptor", () => {
 			expect((result as any).headers["x-opennext-cache"]).toBe("STALE");
 		});
 
-		it("should serve SSG route content with STALE when lastModified is 1", async () => {
+		it("should serve SSG route content with explicit staleness", async () => {
 			const event = createEvent({
 				url: "/albums",
 			});
@@ -532,7 +539,8 @@ describe("cacheInterceptor", () => {
 						headers: { "content-type": "text/plain" },
 					},
 				},
-				lastModified: 1,
+				lastModified: 100_000,
+				isStale: true,
 			});
 
 			const result = await cacheInterceptor(event);
