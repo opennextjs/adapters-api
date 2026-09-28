@@ -144,8 +144,13 @@ export function cacheDynamoItems(
 }
 
 /**
- * Fetches uncached tags from DynamoDB via BatchGetItem, populates the items
- * cache (storing null for absent tags), and returns whether any tag matched.
+ * Fetches tag records, retrying partial batches before treating absent items as misses.
+ *
+ * @param uncachedTags Tags to query.
+ * @param itemsCache Request-local record cache.
+ * @param compute Predicate evaluated for processed records.
+ * @return Whether any processed record matches.
+ * @throws When DynamoDB fails or leaves keys unprocessed after three retries.
  */
 async function fetchAndCacheItems(
 	uncachedTags: string[],
@@ -153,26 +158,41 @@ async function fetchAndCacheItems(
 	compute: (item: DynamoDBItem) => boolean
 ): Promise<boolean> {
 	const { CACHE_DYNAMO_TABLE } = process.env;
-	const response = await awsFetch(
-		JSON.stringify({
-			RequestItems: {
-				[CACHE_DYNAMO_TABLE ?? ""]: {
-					Keys: uncachedTags.map((tag) => ({
-						path: { S: buildDynamoKey(tag) },
-						tag: { S: buildDynamoKey(tag) },
-					})),
+	const table = CACHE_DYNAMO_TABLE ?? "";
+	let pending = [...new Set(uncachedTags)];
+	let hasMatch = false;
+	for (let attempt = 0; attempt <= 3; attempt++) {
+		const response = await awsFetch(
+			JSON.stringify({
+				RequestItems: {
+					[table]: {
+						Keys: pending.map((tag) => ({
+							path: { S: buildDynamoKey(tag) },
+							tag: { S: buildDynamoKey(tag) },
+						})),
+					},
 				},
-			},
-		}),
-		"query"
-	);
-	if (response.status !== 200) {
-		throw new RecoverableError(`Failed to query dynamo item: ${response.status}`);
+			}),
+			"query"
+		);
+		if (response.status !== 200) {
+			throw new RecoverableError(`Failed to query dynamo item: ${response.status}`);
+		}
+		const { Responses, UnprocessedKeys } = (await response.json()) as {
+			Responses?: Record<string, DynamoDBItem[]>;
+			UnprocessedKeys?: Record<string, { Keys?: DynamoDBItem[] }>;
+		};
+		const unprocessed = new Set((UnprocessedKeys?.[table]?.Keys ?? []).map((item) => item.tag?.S));
+		const processed = pending.filter((tag) => !unprocessed.has(buildDynamoKey(tag)));
+		const matched = cacheDynamoItems(processed, Responses?.[table] ?? [], itemsCache, compute);
+		hasMatch ||= matched;
+		pending = pending.filter((tag) => unprocessed.has(buildDynamoKey(tag)));
+		if (pending.length === 0) return hasMatch;
+		if (attempt < 3) {
+			await new Promise((resolve) => setTimeout(resolve, 50 * 2 ** attempt));
+		}
 	}
-	const { Responses } = await response.json();
-	const responseItems: DynamoDBItem[] = Responses?.[CACHE_DYNAMO_TABLE ?? ""] ?? [];
-
-	return cacheDynamoItems(uncachedTags, responseItems, itemsCache, compute);
+	throw new RecoverableError("DynamoDB tag read still has unprocessed keys after three retries");
 }
 
 export default {
