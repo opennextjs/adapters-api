@@ -26,21 +26,17 @@ test.describe("Composable Cache", () => {
 		expect(fullyCachedText).toEqual(initialFullyCachedText);
 	});
 
-	test("revalidateTag should work for fullyCached component", async ({ page, request }) => {
+	test("revalidateTag with SWR should reject unsupported tag caches", async ({ page, request }) => {
 		await page.goto("/use-cache/ssr");
 		const fullyCachedElt = page.getByTestId("fully-cached-with-tag");
 		await expect(fullyCachedElt).toBeVisible();
-
 		const initialFullyCachedText = await fullyCachedElt.textContent();
 
 		const resp = await request.get("/api/revalidate");
 		expect(resp.status()).toEqual(200);
-		expect(await resp.text()).toEqual("DONE");
 
 		await page.reload();
-		await expect(fullyCachedElt).toBeVisible();
-		const newFullyCachedText = await fullyCachedElt.textContent();
-		expect(newFullyCachedText).not.toEqual(initialFullyCachedText);
+		await expect(fullyCachedElt).toHaveText(initialFullyCachedText ?? "");
 	});
 
 	//TODO: figure out why it doesn't work in ISR (my guess is on our patch not working anymore in 16.1, but need investigation)

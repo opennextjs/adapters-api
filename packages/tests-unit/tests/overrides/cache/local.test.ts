@@ -208,9 +208,9 @@ describe("local cache", () => {
 			mockHandler.mockResolvedValue(
 				createMockResult({ statusCode: 501, headers: { "x-opennext-cache-error": "SWR is unsupported" } })
 			);
-			await expect(localCache.revalidateTags(["tag"], { expire: 30 })).rejects.toThrow(
-				"Failed to revalidate cache tags: SWR is unsupported"
-			);
+			const operation = localCache.revalidateTags(["tag"], { expire: 30 });
+			await expect(operation).rejects.toThrow("Failed to revalidate cache tags: SWR is unsupported");
+			await expect(operation).rejects.toMatchObject({ __openNextUnsupportedOperation: true });
 		});
 	});
 

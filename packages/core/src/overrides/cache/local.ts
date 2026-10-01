@@ -3,6 +3,7 @@ import path from "node:path";
 import type { InternalEvent, InternalResult } from "@/types/open-next";
 import type { Cache } from "@/types/overrides";
 import { parseCacheGetResponse } from "@/utils/cache-get";
+import { UnsupportedOperationError } from "@/utils/error";
 import { getMonorepoRelativePath } from "@/utils/normalize-path";
 import { fromReadableStream, toReadableStream } from "@/utils/stream";
 
@@ -32,7 +33,11 @@ async function getHandler() {
  */
 function ensureResultOk(result: InternalResult, operation: string): void {
 	if (result.statusCode < 200 || result.statusCode >= 300) {
-		const reason = result.headers["x-opennext-cache-error"] ?? `cache handler returned ${result.statusCode}`;
+		const exposedReason = result.headers["x-opennext-cache-error"];
+		if (exposedReason) {
+			throw new UnsupportedOperationError(`Failed to ${operation}: ${exposedReason}`);
+		}
+		const reason = `cache handler returned ${result.statusCode}`;
 		throw new Error(`Failed to ${operation}: ${reason}`);
 	}
 }

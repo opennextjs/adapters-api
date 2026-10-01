@@ -1,6 +1,7 @@
 import type { CacheHandlerValue, IncrementalCacheContext, IncrementalCacheValue } from "@/types/cache";
 
 import { isBinaryContentType } from "../utils/binary";
+import { isUnsupportedOperationError } from "../utils/error";
 
 import { debug, error, warn } from "./logger";
 
@@ -299,6 +300,9 @@ export default class Cache {
 				await globalThis.cache.revalidateTags(_tags);
 			}
 		} catch (e) {
+			if (isUnsupportedOperationError(e)) {
+				throw e;
+			}
 			error("Failed to revalidate tag", e);
 		}
 	}

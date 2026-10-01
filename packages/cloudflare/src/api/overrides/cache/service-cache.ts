@@ -12,6 +12,10 @@ export const BINDING_NAME = "NEXT_CACHE_SERVICE";
  */
 const CACHE_ORIGIN = "https://cache.opennext";
 
+class UnsupportedCacheServiceOperationError extends Error {
+	readonly __openNextUnsupportedOperation = true;
+}
+
 /**
  * Returns the cache handler bound to `NEXT_CACHE_SERVICE`.
  *
@@ -58,8 +62,11 @@ function getCacheUrl(key: string, cacheType?: CacheEntryType, additionalTags?: s
  */
 function ensureResponseOk(response: Pick<Response, "ok" | "status" | "headers">, operation: string): void {
 	if (!response.ok) {
-		const reason =
-			response.headers.get("x-opennext-cache-error") ?? `cache handler returned ${response.status}`;
+		const exposedReason = response.headers.get("x-opennext-cache-error");
+		if (exposedReason) {
+			throw new UnsupportedCacheServiceOperationError(`Failed to ${operation}: ${exposedReason}`);
+		}
+		const reason = `cache handler returned ${response.status}`;
 		throw new Error(`Failed to ${operation}: ${reason}`);
 	}
 }

@@ -198,9 +198,9 @@ describe("fetch cache", () => {
 				body: "",
 				status: 501,
 			});
-			await expect(fetchCache.revalidateTags(["tag"], { expire: 30 })).rejects.toThrow(
-				"Failed to revalidate cache tags: SWR is unsupported"
-			);
+			const operation = fetchCache.revalidateTags(["tag"], { expire: 30 });
+			await expect(operation).rejects.toThrow("Failed to revalidate cache tags: SWR is unsupported");
+			await expect(operation).rejects.toMatchObject({ __openNextUnsupportedOperation: true });
 		});
 	});
 

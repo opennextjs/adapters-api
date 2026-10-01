@@ -139,8 +139,8 @@ describe("serviceCache", () => {
 		fetchMock.mockResolvedValue(
 			new Response(null, { status: 501, headers: { "x-opennext-cache-error": "SWR is unsupported" } })
 		);
-		await expect(serviceCache.revalidateTags(["tag"], { expire: 30 })).rejects.toThrow(
-			"Failed to revalidate cache tags: SWR is unsupported"
-		);
+		const operation = serviceCache.revalidateTags(["tag"], { expire: 30 });
+		await expect(operation).rejects.toThrow("Failed to revalidate cache tags: SWR is unsupported");
+		await expect(operation).rejects.toMatchObject({ __openNextUnsupportedOperation: true });
 	});
 });

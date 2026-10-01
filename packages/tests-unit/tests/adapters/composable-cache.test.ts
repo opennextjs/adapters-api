@@ -1,4 +1,5 @@
 import ComposableCache from "@opennextjs/core/adapters/composable-cache";
+import { UnsupportedOperationError } from "@opennextjs/core/utils/error";
 import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream";
 import { vi } from "vitest";
 
@@ -339,6 +340,13 @@ describe("Composable cache handler", () => {
 			cache.revalidateTags.mockRejectedValueOnce(new Error("cache error"));
 
 			await expect(ComposableCache.updateTags(["tag1"])).resolves.not.toThrow();
+		});
+
+		it("should surface unsupported cache operations", async () => {
+			cache.revalidateTags.mockRejectedValueOnce(new UnsupportedOperationError("SWR is unsupported"));
+			await expect(ComposableCache.updateTags(["tag1"], { expire: 30 })).rejects.toThrow(
+				"SWR is unsupported"
+			);
 		});
 	});
 });

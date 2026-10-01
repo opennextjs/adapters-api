@@ -1,5 +1,6 @@
 import type { ComposableCacheEntry, ComposableCacheHandler } from "@/types/cache";
 import type { CacheValue } from "@/types/overrides";
+import { isUnsupportedOperationError } from "@/utils/error";
 import { fromReadableStream, toReadableStream } from "@/utils/stream";
 
 import { debug } from "./logger";
@@ -105,6 +106,9 @@ export default {
 		try {
 			await globalThis.cache.revalidateTags(tags, durations);
 		} catch (e) {
+			if (isUnsupportedOperationError(e)) {
+				throw e;
+			}
 			debug("Failed to update tags", e);
 		}
 	},

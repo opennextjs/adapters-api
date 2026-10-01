@@ -585,5 +585,13 @@ describe("CacheHandler", () => {
 
 			await expect(instance.revalidateTag("tag")).resolves.not.toThrow();
 		});
+
+		it("Should surface unsupported revalidation operations", async () => {
+			const error = Object.assign(new Error("SWR is unsupported"), {
+				__openNextUnsupportedOperation: true as const,
+			});
+			cache.revalidateTags.mockRejectedValueOnce(error);
+			await expect(instance.revalidateTag("tag", { expire: 30 })).rejects.toThrow("SWR is unsupported");
+		});
 	});
 });

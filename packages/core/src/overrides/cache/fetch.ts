@@ -1,5 +1,6 @@
 import type { Cache } from "@/types/overrides";
 import { parseCacheGetResponse } from "@/utils/cache-get";
+import { UnsupportedOperationError } from "@/utils/error";
 
 const CACHE_URL = process.env.OPEN_NEXT_CACHE_URL ?? "";
 
@@ -12,8 +13,11 @@ const CACHE_URL = process.env.OPEN_NEXT_CACHE_URL ?? "";
  */
 function ensureResponseOk(response: Pick<Response, "ok" | "status" | "headers">, operation: string): void {
 	if (!response.ok) {
-		const reason =
-			response.headers.get("x-opennext-cache-error") ?? `cache handler returned ${response.status}`;
+		const exposedReason = response.headers.get("x-opennext-cache-error");
+		if (exposedReason) {
+			throw new UnsupportedOperationError(`Failed to ${operation}: ${exposedReason}`);
+		}
+		const reason = `cache handler returned ${response.status}`;
 		throw new Error(`Failed to ${operation}: ${reason}`);
 	}
 }
