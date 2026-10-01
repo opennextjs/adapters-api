@@ -368,18 +368,21 @@ async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<
 		}
 		durations = expire === undefined ? {} : { expire };
 	}
+	const isStaleWhileRevalidate = durations !== undefined && durations.expire !== 0;
 
 	try {
 		await runWithOpenNextRequestContext({ isISRRevalidation: false }, async () => {
 			const now = Date.now();
+			const swrExpire =
+				isStaleWhileRevalidate && durations?.expire !== undefined ? now + durations.expire * 1000 : undefined;
 			if (globalThis.tagCache.mode === "nextMode") {
 				const paths = (await globalThis.tagCache.getPathsByTags?.(tags)) ?? [];
 				const tagsToWrite = tags.map((tag) =>
-					durations
+					isStaleWhileRevalidate
 						? {
 								tag,
 								stale: now,
-								expire: durations.expire === undefined ? undefined : now + durations.expire * 1000,
+								expire: swrExpire,
 							}
 						: { tag, expire: now }
 				);
@@ -408,12 +411,12 @@ async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<
 				const paths = await globalThis.tagCache.getByTag(tag);
 				debug("Items", paths);
 				const toInsert = paths.map((path) =>
-					durations
+					isStaleWhileRevalidate
 						? {
 								path,
 								tag,
 								stale: now,
-								expire: durations.expire === undefined ? undefined : now + durations.expire * 1000,
+								expire: swrExpire,
 							}
 						: { path, tag, expire: now }
 				);
@@ -427,12 +430,12 @@ async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<
 							debug({ hardTag, _paths });
 							toInsert.push(
 								..._paths.map((path) =>
-									durations
+									isStaleWhileRevalidate
 										? {
 												path,
 												tag: hardTag,
 												stale: now,
-												expire: durations.expire === undefined ? undefined : now + durations.expire * 1000,
+												expire: swrExpire,
 											}
 										: { path, tag: hardTag, expire: now }
 								)

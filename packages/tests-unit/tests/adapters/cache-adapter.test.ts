@@ -898,6 +898,28 @@ describe("cache-handler", () => {
 			vi.useRealTimers();
 		});
 
+		it.each(["nextMode", "original"] as const)(
+			"should preserve zero-expiry hard invalidation in %s",
+			async (mode) => {
+				mockTagCache.mode = mode;
+				mockTagCache.getByTag.mockResolvedValue(["/path1"]);
+				vi.useFakeTimers().setSystemTime(100_000);
+				await runHandler(
+					createEvent({
+						rawPath: "/cache/revalidate-tags",
+						method: "POST",
+						body: toReadableStream(JSON.stringify({ tags: ["tag1"], durations: { expire: 0 } })),
+					})
+				);
+				expect(mockTagCache.writeTags).toHaveBeenCalledWith(
+					mode === "nextMode"
+						? [{ tag: "tag1", expire: 100_000 }]
+						: [{ path: "/path1", tag: "tag1", expire: 100_000 }]
+				);
+				vi.useRealTimers();
+			}
+		);
+
 		it("should convert original-mode durations to stale and expiry timestamps", async () => {
 			mockTagCache.mode = "original";
 			mockTagCache.getByTag.mockResolvedValue(["/path1"]);
