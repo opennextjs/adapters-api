@@ -24,6 +24,10 @@ export const FALLBACK_BUILD_ID = "no-build-id";
 
 export const DEFAULT_PREFIX = "incremental-cache";
 
+class UnsupportedTagCacheOperationError extends Error {
+	readonly __openNextUnsupportedOperation = true;
+}
+
 export type KeyOptions = {
 	cacheType?: CacheEntryType;
 	prefix: string | undefined;
@@ -37,10 +41,21 @@ export function computeCacheKey(key: string, options: KeyOptions) {
 }
 
 /**
- * `writeTags` accepts either plain tag names or objects carrying the `stale`/`expire` durations.
- * The Cloudflare tag caches do not support durations, they only need the names.
+ * Extracts tag names accepted by Cloudflare tag caches.
+ *
+ * Structured hard invalidations are accepted, but duration-aware SWR requires storage metadata
+ * that the D1, KV, and sharded Durable Object implementations do not persist.
+ *
+ * @param tags Plain or structured tag writes.
+ * @return Tag names for a hard invalidation.
+ * @throws When a write requests stale-while-revalidate behavior.
  */
 export function toTagNames(tags: (string | NextModeTagCacheWriteInput)[]): string[] {
+	if (tags.some((tag) => typeof tag !== "string" && tag.stale !== undefined)) {
+		throw new UnsupportedTagCacheOperationError(
+			"Cloudflare D1, KV, and sharded Durable Object tag caches do not support stale-while-revalidate tag invalidation"
+		);
+	}
 	return tags.map((tag) => (typeof tag === "string" ? tag : tag.tag));
 }
 

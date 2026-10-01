@@ -40,6 +40,37 @@ export class FatalError extends Error implements BaseOpenNextError {
 	}
 }
 
+/**
+ * Reports an operation that the configured adapter cannot implement.
+ *
+ * @param message Description of the unsupported operation.
+ * @return An error that must be surfaced to the caller.
+ */
+export class UnsupportedOperationError extends FatalError {
+	readonly __openNextUnsupportedOperation = true;
+
+	constructor(message: string) {
+		super(message);
+		this.name = "UnsupportedOperationError";
+	}
+}
+
+/**
+ * Identifies unsupported-operation errors across package and bundle boundaries.
+ *
+ * @param error Value to inspect.
+ * @return Whether the value carries the OpenNext unsupported-operation marker.
+ */
+export function isUnsupportedOperationError(
+	error: unknown
+): error is Error & { readonly __openNextUnsupportedOperation: true } {
+	return (
+		error instanceof Error &&
+		"__openNextUnsupportedOperation" in error &&
+		error.__openNextUnsupportedOperation === true
+	);
+}
+
 export function isOpenNextError(e: unknown): e is BaseOpenNextError & Error {
 	try {
 		return e !== null && typeof e === "object" && "__openNextInternal" in e;

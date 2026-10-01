@@ -204,6 +204,19 @@ describe("KVNextModeTagCache", () => {
 	});
 
 	describe("writeTags", () => {
+		it("rejects SWR metadata before writing or purging", async () => {
+			await expect(tagCache.writeTags([{ tag: "tag1", stale: 100, expire: 200 }])).rejects.toThrow(
+				"do not support stale-while-revalidate"
+			);
+			expect(mockPut).not.toHaveBeenCalled();
+			expect(purgeCacheByTags).not.toHaveBeenCalled();
+		});
+
+		it("accepts structured hard invalidations", async () => {
+			await tagCache.writeTags([{ tag: "tag1", expire: 100 }]);
+			expect(mockPut).toHaveBeenCalledOnce();
+		});
+
 		it("should do nothing when cache is disabled", async () => {
 			(
 				globalThis as { openNextConfig?: { dangerous?: { disableTagCache?: boolean } } }

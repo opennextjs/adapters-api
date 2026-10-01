@@ -10,9 +10,11 @@ const CACHE_URL = process.env.OPEN_NEXT_CACHE_URL ?? "";
  * @param operation Mutation being performed.
  * @throws When the cache handler returns a non-success status.
  */
-function ensureResponseOk(response: Pick<Response, "ok" | "status">, operation: string): void {
+function ensureResponseOk(response: Pick<Response, "ok" | "status" | "headers">, operation: string): void {
 	if (!response.ok) {
-		throw new Error(`Failed to ${operation}: cache handler returned ${response.status}`);
+		const reason =
+			response.headers.get("x-opennext-cache-error") ?? `cache handler returned ${response.status}`;
+		throw new Error(`Failed to ${operation}: ${reason}`);
 	}
 }
 

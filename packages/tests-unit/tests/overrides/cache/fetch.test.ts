@@ -191,6 +191,17 @@ describe("fetch cache", () => {
 				"Failed to set cache entry: cache handler returned 500"
 			);
 		});
+
+		it("should surface an exposed cache-handler error", async () => {
+			mockFetch({
+				headers: { "x-opennext-cache-error": "SWR is unsupported" },
+				body: "",
+				status: 501,
+			});
+			await expect(fetchCache.revalidateTags(["tag"], { expire: 30 })).rejects.toThrow(
+				"Failed to revalidate cache tags: SWR is unsupported"
+			);
+		});
 	});
 
 	describe("delete", () => {

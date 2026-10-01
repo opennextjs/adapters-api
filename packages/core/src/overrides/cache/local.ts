@@ -32,7 +32,8 @@ async function getHandler() {
  */
 function ensureResultOk(result: InternalResult, operation: string): void {
 	if (result.statusCode < 200 || result.statusCode >= 300) {
-		throw new Error(`Failed to ${operation}: cache handler returned ${result.statusCode}`);
+		const reason = result.headers["x-opennext-cache-error"] ?? `cache handler returned ${result.statusCode}`;
+		throw new Error(`Failed to ${operation}: ${reason}`);
 	}
 }
 

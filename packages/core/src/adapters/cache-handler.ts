@@ -14,6 +14,7 @@ import type {
 
 import { resolveCdnInvalidation, resolveIncrementalCache, resolveTagCache } from "../core/resolve.js";
 import { getTagsFromValue, isStale, writeTags } from "../utils/cache.js";
+import { isUnsupportedOperationError } from "../utils/error.js";
 import { runWithOpenNextRequestContext } from "../utils/promise.js";
 import { fromReadableStream, toReadableStream } from "../utils/stream.js";
 
@@ -466,6 +467,9 @@ async function handleRevalidateTags(body?: ReadableStream<Uint8Array>): Promise<
 		return buildJsonResponse({ revalidated: tags }, 200);
 	} catch (e) {
 		error("Failed to revalidate tags", e);
+		if (isUnsupportedOperationError(e)) {
+			return buildErrorResponse(e.message, 501, true);
+		}
 		return buildErrorResponse("Failed to revalidate tags", 500);
 	}
 }
@@ -654,7 +658,7 @@ function buildJsonResponse(data: unknown, statusCode: number): InternalResult {
 	};
 }
 
-function buildErrorResponse(message: string, statusCode: number): InternalResult {
+function buildErrorResponse(message: string, statusCode: number, exposeMessage = false): InternalResult {
 	debug(message, statusCode);
 	const body = JSON.stringify({ error: message });
 	return {
@@ -665,6 +669,7 @@ function buildErrorResponse(message: string, statusCode: number): InternalResult
 		headers: {
 			"Content-Type": "application/json",
 			"Cache-Control": "no-store",
+			...(exposeMessage ? { "x-opennext-cache-error": message } : {}),
 		},
 	};
 }

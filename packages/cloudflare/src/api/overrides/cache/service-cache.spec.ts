@@ -134,4 +134,13 @@ describe("serviceCache", () => {
 			"Failed to revalidate cache tags: cache handler returned 502"
 		);
 	});
+
+	it("surfaces an exposed cache-handler error", async () => {
+		fetchMock.mockResolvedValue(
+			new Response(null, { status: 501, headers: { "x-opennext-cache-error": "SWR is unsupported" } })
+		);
+		await expect(serviceCache.revalidateTags(["tag"], { expire: 30 })).rejects.toThrow(
+			"Failed to revalidate cache tags: SWR is unsupported"
+		);
+	});
 });

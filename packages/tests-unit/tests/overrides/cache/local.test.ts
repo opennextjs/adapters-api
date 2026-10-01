@@ -203,6 +203,15 @@ describe("local cache", () => {
 				"Failed to set cache entry: cache handler returned 500"
 			);
 		});
+
+		it("should surface an exposed cache-handler error", async () => {
+			mockHandler.mockResolvedValue(
+				createMockResult({ statusCode: 501, headers: { "x-opennext-cache-error": "SWR is unsupported" } })
+			);
+			await expect(localCache.revalidateTags(["tag"], { expire: 30 })).rejects.toThrow(
+				"Failed to revalidate cache tags: SWR is unsupported"
+			);
+		});
 	});
 
 	describe("delete", () => {

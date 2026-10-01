@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 import { handler } from "@opennextjs/core/adapters/cache-handler";
 import type { InternalEvent, InternalResult, OpenNextConfig } from "@opennextjs/core/types/open-next";
+import { UnsupportedOperationError } from "@opennextjs/core/utils/error";
 import { runWithOpenNextRequestContext } from "@opennextjs/core/utils/promise";
 import { RequestCache } from "@opennextjs/core/utils/requestCache";
 import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream";
@@ -864,6 +865,22 @@ describe("cache-handler", () => {
 			const result = await runHandler(event);
 
 			expect(result.statusCode).toBe(500);
+		});
+
+		it("should expose unsupported tag revalidation operations", async () => {
+			mockTagCache.mode = "nextMode";
+			mockTagCache.writeTags.mockRejectedValueOnce(
+				new UnsupportedOperationError("Configured tag cache does not support SWR")
+			);
+			const result = await runHandler(
+				createEvent({
+					rawPath: "/cache/revalidate-tags",
+					method: "POST",
+					body: toReadableStream(JSON.stringify({ tags: ["tag1"], durations: { expire: 30 } })),
+				})
+			);
+			expect(result.statusCode).toBe(501);
+			expect(result.headers["x-opennext-cache-error"]).toBe("Configured tag cache does not support SWR");
 		});
 
 		it("should convert nextMode durations to stale and expiry timestamps", async () => {
