@@ -61,13 +61,11 @@ describe("tag staleness in the installed Next incremental cache", () => {
 					version: 4,
 				}) as never,
 		});
-		const get = vi
-			.fn()
-			.mockResolvedValue({
-				lastModified: Date.now(),
-				isStale: true,
-				value: { kind: "FETCH", data: { body: "data" }, revalidate: 3600 },
-			});
+		const get = vi.fn().mockResolvedValue({
+			lastModified: Date.now(),
+			isStale: true,
+			value: { kind: "FETCH", data: { body: "data" }, revalidate: 3600 },
+		});
 		cache.cacheHandler = { get } as never;
 		expect(await cache.get("fetch-key", { kind: "FETCH", revalidate: 3600 } as never)).toMatchObject({
 			isStale: true,
