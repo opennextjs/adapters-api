@@ -1,0 +1,45 @@
+packages/cloudflare/README.md
+  s_825fbe81760922::t_929203a742fc8c 58-61
+packages/cloudflare/src/api/overrides/cache/service-cache.spec.ts
+  s_8ef66b54393ba5::t_eba3b3f658fd16 137-145
+packages/cloudflare/src/api/overrides/cache/service-cache.ts
+  s_825fbe81760922::t_b2fc5b4cb9232d 59,61-63
+packages/cloudflare/src/api/overrides/tag-cache/d1-next-tag-cache.spec.ts
+  s_8ef66b54393ba5::t_9e8b5dc78763fa 230-242
+packages/cloudflare/src/api/overrides/tag-cache/do-sharded-tag-cache.spec.ts
+  s_8ef66b54393ba5::t_b5be7b9aaf08a2 303-317
+packages/cloudflare/src/api/overrides/tag-cache/kv-next-tag-cache.spec.ts
+  s_8ef66b54393ba5::t_dcf692feae1b6b 207-219
+packages/core/src/overrides/cache/fetch.ts
+  s_825fbe81760922::t_121c4cc8c52258 13,15-17
+packages/core/src/overrides/cache/local.ts
+  s_8ef66b54393ba5::t_739c4ffd1c8ba6 35-36
+packages/tests-unit/tests/overrides/cache/fetch.test.ts
+  s_8ef66b54393ba5::t_5b3df8f31e9e34 194-204
+packages/tests-unit/tests/overrides/cache/local.test.ts
+  s_8ef66b54393ba5::t_2ac2d9da92c5ed 206-214
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6f7de8d9dde26befe919cfdfe959faf59c4c5041",
+  "prompts": {},
+  "sessions": {
+    "s_825fbe81760922": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f2dbc8f64ffeGzJEW7RfB77HlB",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    },
+    "s_8ef66b54393ba5": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f18c79b4dffegieptgVAJzpkBA",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
