@@ -1,0 +1,19 @@
+packages/tests-unit/tests/build/patch/patches/patchTagStaleness.test.ts
+  s_825fbe81760922::t_63994e5e7260d3 64-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "cd54cf3b3c0f522aaf2d004625be919499ea5703",
+  "prompts": {},
+  "sessions": {
+    "s_825fbe81760922": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f2dbc8f64ffeGzJEW7RfB77HlB",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Victor Berchet <victor@suumit.com>"
+    }
+  }
+}
