@@ -172,6 +172,7 @@ async function extractOverrideFn(override?: DefaultOverrideOptions) {
 	return { wrapper, converter };
 }
 
+//TODO: fix this, this is stupid
 async function extractCommonOverride(override?: OverrideOptions) {
 	return { queue: await extractOverrideName("sqs", override?.queue) };
 }

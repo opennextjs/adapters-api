@@ -55,3 +55,7 @@ Deploy your application to production with the following:
   # or
   bun opennextjs-cloudflare build && bun opennextjs-cloudflare deploy
   ```
+
+## Cache compatibility
+
+The D1, KV, and sharded Durable Object tag-cache implementations support immediate tag invalidation. They do not support duration-aware stale-while-revalidate tag invalidation; calls such as `revalidateTag(tag, { expire })` fail explicitly instead of silently becoming immediate invalidations.

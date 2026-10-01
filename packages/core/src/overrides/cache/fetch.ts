@@ -1,5 +1,6 @@
 import type { Cache } from "@/types/overrides";
 import { parseCacheGetResponse } from "@/utils/cache-get";
+import { UnsupportedOperationError } from "@/utils/error";
 
 const CACHE_URL = process.env.OPEN_NEXT_CACHE_URL ?? "";
 
@@ -10,9 +11,14 @@ const CACHE_URL = process.env.OPEN_NEXT_CACHE_URL ?? "";
  * @param operation Mutation being performed.
  * @throws When the cache handler returns a non-success status.
  */
-function ensureResponseOk(response: Pick<Response, "ok" | "status">, operation: string): void {
+function ensureResponseOk(response: Pick<Response, "ok" | "status" | "headers">, operation: string): void {
 	if (!response.ok) {
-		throw new Error(`Failed to ${operation}: cache handler returned ${response.status}`);
+		const exposedReason = response.headers.get("x-opennext-cache-error");
+		if (exposedReason) {
+			throw new UnsupportedOperationError(`Failed to ${operation}: ${exposedReason}`);
+		}
+		const reason = `cache handler returned ${response.status}`;
+		throw new Error(`Failed to ${operation}: ${reason}`);
 	}
 }
 
@@ -53,11 +59,11 @@ const fetchCache: Cache = {
 		const response = await fetch(url, { method: "DELETE" });
 		ensureResponseOk(response, "delete cache entry");
 	},
-	revalidateTags: async (tags) => {
+	revalidateTags: async (tags, durations) => {
 		const response = await fetch(`${CACHE_URL}/cache/revalidate-tags`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ tags }),
+			body: JSON.stringify({ tags, durations }),
 		});
 		ensureResponseOk(response, "revalidate cache tags");
 	},

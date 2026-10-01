@@ -90,6 +90,8 @@ export type CachedFetchValue = {
 };
 
 export type WithLastModified<T> = {
+	/** Tag-triggered staleness, independent of the entry's generation timestamp. */
+	isStale?: boolean;
 	lastModified?: number;
 	value?: T;
 	/**
@@ -153,12 +155,19 @@ Cons :
 - One page request (i.e. GET request) could require to check a lot of tags (And some of them multiple time when used with the fetch cache)
 - Almost impossible to do automatic cdn revalidation by itself
 */
+export interface NextModeTagCacheWriteInput {
+	tag: string;
+	stale?: number;
+	expire?: number;
+}
+
 export type NextModeTagCache = BaseTagCache & {
 	mode: "nextMode";
 	// Necessary for the composable cache
 	getLastRevalidated(tags: string[]): Promise<number>;
 	hasBeenRevalidated(tags: string[], lastModified?: number): Promise<boolean>;
-	writeTags(tags: string[]): Promise<void>;
+	isStale?(tags: string[], lastModified?: number): Promise<boolean>;
+	writeTags(tags: (string | NextModeTagCacheWriteInput)[]): Promise<void>;
 	// Optional method to get paths by tags
 	// It is used to automatically invalidate paths in the CDN
 	getPathsByTags?: (tags: string[]) => Promise<string[]>;
@@ -168,6 +177,8 @@ export interface OriginalTagCacheWriteInput {
 	tag: string;
 	path: string;
 	revalidatedAt?: number;
+	stale?: number;
+	expire?: number;
 }
 
 /**
@@ -194,6 +205,7 @@ export type OriginalTagCache = BaseTagCache & {
 	getByTag(tag: string): Promise<string[]>;
 	getByPath(path: string): Promise<string[]>;
 	getLastModified(path: string, lastModified?: number): Promise<number>;
+	isStale?(path: string, lastModified?: number): Promise<boolean>;
 	writeTags(tags: OriginalTagCacheWriteInput[]): Promise<void>;
 };
 
@@ -295,7 +307,7 @@ export type Cache = BaseOverride & {
 		additionalTags?: string[]
 	): Promise<void>;
 	delete(key: string): Promise<void>;
-	revalidateTags(tags: string[]): Promise<void>;
+	revalidateTags(tags: string[], durations?: { expire?: number }): Promise<void>;
 };
 
 type CDNPath = {

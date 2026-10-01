@@ -1,7 +1,11 @@
 import { createHash } from "node:crypto";
 
 import { error } from "@opennextjs/core/adapters/logger.js";
-import type { CacheEntryType, CacheValue } from "@opennextjs/core/types/overrides.js";
+import type {
+	CacheEntryType,
+	CacheValue,
+	NextModeTagCacheWriteInput,
+} from "@opennextjs/core/types/overrides.js";
 
 import { getCloudflareContext } from "../cloudflare-context.js";
 
@@ -20,6 +24,10 @@ export const FALLBACK_BUILD_ID = "no-build-id";
 
 export const DEFAULT_PREFIX = "incremental-cache";
 
+class UnsupportedTagCacheOperationError extends Error {
+	readonly __openNextUnsupportedOperation = true;
+}
+
 export type KeyOptions = {
 	cacheType?: CacheEntryType;
 	prefix: string | undefined;
@@ -30,6 +38,25 @@ export function computeCacheKey(key: string, options: KeyOptions) {
 	const { cacheType = "cache", prefix = DEFAULT_PREFIX, buildId = FALLBACK_BUILD_ID } = options;
 	const hash = createHash("sha256").update(key).digest("hex");
 	return `${prefix}/${buildId}/${hash}.${cacheType}`.replace(/\/+/g, "/");
+}
+
+/**
+ * Extracts tag names accepted by Cloudflare tag caches.
+ *
+ * Structured hard invalidations are accepted, but duration-aware SWR requires storage metadata
+ * that the D1, KV, and sharded Durable Object implementations do not persist.
+ *
+ * @param tags Plain or structured tag writes.
+ * @return Tag names for a hard invalidation.
+ * @throws When a write requests stale-while-revalidate behavior.
+ */
+export function toTagNames(tags: (string | NextModeTagCacheWriteInput)[]): string[] {
+	if (tags.some((tag) => typeof tag !== "string" && tag.stale !== undefined)) {
+		throw new UnsupportedTagCacheOperationError(
+			"Cloudflare D1, KV, and sharded Durable Object tag caches do not support stale-while-revalidate tag invalidation"
+		);
+	}
+	return tags.map((tag) => (typeof tag === "string" ? tag : tag.tag));
 }
 
 export function isPurgeCacheEnabled(): boolean {

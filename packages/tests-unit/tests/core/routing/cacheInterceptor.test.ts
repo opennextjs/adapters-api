@@ -473,4 +473,87 @@ describe("cacheInterceptor", () => {
 		const result = await cacheInterceptor(event);
 		expect(result.statusCode).toBe(200);
 	});
+
+	describe("isStaleFromTagCache", () => {
+		it("should serve stale SSG app content and queue its real timestamp", async () => {
+			const event = createEvent({
+				url: "/albums",
+			});
+			cache.get.mockResolvedValueOnce({
+				value: {
+					type: "app",
+					html: "Hello, world!",
+				},
+				lastModified: 100_000,
+				isStale: true,
+			});
+
+			const result = await cacheInterceptor(event);
+			expect(globalThis.queue.send).toHaveBeenCalledWith(
+				expect.objectContaining({
+					MessageBody: expect.objectContaining({ lastModified: 100_000 }),
+				})
+			);
+
+			expect(result).toEqual(
+				expect.objectContaining({
+					type: "core",
+					headers: expect.objectContaining({
+						"cache-control": "s-maxage=1, stale-while-revalidate=2592000",
+						"x-opennext-cache": "STALE",
+					}),
+				})
+			);
+		});
+
+		it("should serve SSG page content with explicit staleness", async () => {
+			const event = createEvent({
+				url: "/albums",
+			});
+			cache.get.mockResolvedValueOnce({
+				value: {
+					type: "page",
+					html: "Hello, world!",
+				},
+				lastModified: 100_000,
+				isStale: true,
+			});
+
+			const result = await cacheInterceptor(event);
+
+			expect(result.type).toBe("core");
+			expect((result as any).headers["cache-control"]).toBe("s-maxage=1, stale-while-revalidate=2592000");
+			expect((result as any).headers["x-opennext-cache"]).toBe("STALE");
+		});
+
+		it("should serve SSG route content with explicit staleness", async () => {
+			const event = createEvent({
+				url: "/albums",
+			});
+			cache.get.mockResolvedValueOnce({
+				value: {
+					type: "route",
+					body: "API response",
+					meta: {
+						status: 200,
+						headers: { "content-type": "text/plain" },
+					},
+				},
+				lastModified: 100_000,
+				isStale: true,
+			});
+
+			const result = await cacheInterceptor(event);
+
+			expect(result).toEqual(
+				expect.objectContaining({
+					type: "core",
+					headers: expect.objectContaining({
+						"cache-control": "s-maxage=1, stale-while-revalidate=2592000",
+						"x-opennext-cache": "STALE",
+					}),
+				})
+			);
+		});
+	});
 });

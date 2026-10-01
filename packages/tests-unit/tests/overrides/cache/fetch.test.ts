@@ -191,6 +191,17 @@ describe("fetch cache", () => {
 				"Failed to set cache entry: cache handler returned 500"
 			);
 		});
+
+		it("should surface an exposed cache-handler error", async () => {
+			mockFetch({
+				headers: { "x-opennext-cache-error": "SWR is unsupported" },
+				body: "",
+				status: 501,
+			});
+			const operation = fetchCache.revalidateTags(["tag"], { expire: 30 });
+			await expect(operation).rejects.toThrow("Failed to revalidate cache tags: SWR is unsupported");
+			await expect(operation).rejects.toMatchObject({ __openNextUnsupportedOperation: true });
+		});
 	});
 
 	describe("delete", () => {
@@ -218,6 +229,17 @@ describe("fetch cache", () => {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ tags: ["tag1", "tag2"] }),
 			});
+		});
+
+		it("should include revalidation durations", async () => {
+			await fetchCache.revalidateTags(["tag1"], { expire: 30 });
+
+			expect(global.fetch).toHaveBeenCalledWith(
+				"/cache/revalidate-tags",
+				expect.objectContaining({
+					body: JSON.stringify({ tags: ["tag1"], durations: { expire: 30 } }),
+				})
+			);
 		});
 
 		it("should reject an unsuccessful response", async () => {

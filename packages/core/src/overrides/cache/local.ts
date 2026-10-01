@@ -3,6 +3,7 @@ import path from "node:path";
 import type { InternalEvent, InternalResult } from "@/types/open-next";
 import type { Cache } from "@/types/overrides";
 import { parseCacheGetResponse } from "@/utils/cache-get";
+import { UnsupportedOperationError } from "@/utils/error";
 import { getMonorepoRelativePath } from "@/utils/normalize-path";
 import { fromReadableStream, toReadableStream } from "@/utils/stream";
 
@@ -32,7 +33,12 @@ async function getHandler() {
  */
 function ensureResultOk(result: InternalResult, operation: string): void {
 	if (result.statusCode < 200 || result.statusCode >= 300) {
-		throw new Error(`Failed to ${operation}: cache handler returned ${result.statusCode}`);
+		const exposedReason = result.headers["x-opennext-cache-error"];
+		if (exposedReason) {
+			throw new UnsupportedOperationError(`Failed to ${operation}: ${exposedReason}`);
+		}
+		const reason = `cache handler returned ${result.statusCode}`;
+		throw new Error(`Failed to ${operation}: ${reason}`);
 	}
 }
 
@@ -100,7 +106,7 @@ const localCache: Cache = {
 		const result = await h(event);
 		ensureResultOk(result, "delete cache entry");
 	},
-	revalidateTags: async (tags) => {
+	revalidateTags: async (tags, durations) => {
 		const h = (await getHandler())!;
 		const url = `https://on/cache/revalidate-tags`;
 		const event: InternalEvent = {
@@ -112,7 +118,7 @@ const localCache: Cache = {
 			query: {},
 			cookies: {},
 			remoteAddress: "127.0.0.1",
-			body: toReadableStream(JSON.stringify({ tags })),
+			body: toReadableStream(JSON.stringify({ tags, durations })),
 		};
 		const result = await h(event);
 		ensureResultOk(result, "revalidate cache tags");

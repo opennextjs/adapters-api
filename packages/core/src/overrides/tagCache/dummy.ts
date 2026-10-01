@@ -13,6 +13,9 @@ const dummyTagCache: TagCache = {
 	getLastModified: async (_: string, lastModified) => {
 		return lastModified ?? Date.now();
 	},
+	isStale: async () => {
+		return false;
+	},
 	writeTags: async () => {
 		return;
 	},

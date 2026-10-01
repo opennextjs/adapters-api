@@ -12,6 +12,10 @@ export const BINDING_NAME = "NEXT_CACHE_SERVICE";
  */
 const CACHE_ORIGIN = "https://cache.opennext";
 
+class UnsupportedCacheServiceOperationError extends Error {
+	readonly __openNextUnsupportedOperation = true;
+}
+
 /**
  * Returns the cache handler bound to `NEXT_CACHE_SERVICE`.
  *
@@ -56,9 +60,14 @@ function getCacheUrl(key: string, cacheType?: CacheEntryType, additionalTags?: s
  * @return Nothing.
  * @throws When the cache handler returns a non-success status.
  */
-function ensureResponseOk(response: Pick<Response, "ok" | "status">, operation: string): void {
+function ensureResponseOk(response: Pick<Response, "ok" | "status" | "headers">, operation: string): void {
 	if (!response.ok) {
-		throw new Error(`Failed to ${operation}: cache handler returned ${response.status}`);
+		const exposedReason = response.headers.get("x-opennext-cache-error");
+		if (exposedReason) {
+			throw new UnsupportedCacheServiceOperationError(`Failed to ${operation}: ${exposedReason}`);
+		}
+		const reason = `cache handler returned ${response.status}`;
+		throw new Error(`Failed to ${operation}: ${reason}`);
 	}
 }
 
@@ -98,11 +107,11 @@ const serviceCache = {
 		ensureResponseOk(response, "delete cache entry");
 	},
 
-	revalidateTags: async (tags) => {
+	revalidateTags: async (tags, durations) => {
 		const response = await getCacheService().fetch(new URL("/cache/revalidate-tags", CACHE_ORIGIN).href, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ tags }),
+			body: JSON.stringify({ tags, durations }),
 		});
 		ensureResponseOk(response, "revalidate cache tags");
 	},

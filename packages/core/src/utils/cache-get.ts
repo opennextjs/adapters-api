@@ -5,6 +5,7 @@ type HeadersMap = Record<string, string | string[]>;
 
 type Base = {
 	lastModified?: number;
+	isStale?: boolean;
 	shouldBypassTagCache?: boolean;
 };
 
@@ -45,6 +46,14 @@ function collectPrefixedHeaders(headers: HeadersMap, prefix: string): Record<str
 	return result;
 }
 
+/**
+ * Reconstructs a cache entry while preserving its timestamp and separate stale flag.
+ *
+ * @param headers Cache-service response headers.
+ * @param bodyText Serialized payload.
+ * @return The reconstructed entry, or null for a miss or incomplete metadata.
+ * @throws When a JSON payload or tag list is malformed.
+ */
 export function parseCacheGetResponse(
 	headers: HeadersMap,
 	bodyText: string
@@ -62,6 +71,7 @@ export function parseCacheGetResponse(
 
 	const base: Base = {
 		...(lastModified !== undefined ? { lastModified } : {}),
+		...(getHeaderValue(headers, "x-opennext-cache-stale") === "true" ? { isStale: true } : {}),
 		...(shouldBypass ? { shouldBypassTagCache: true as const } : {}),
 	};
 

@@ -1,12 +1,12 @@
 import { debug, error } from "@opennextjs/core/adapters/logger.js";
 import { generateShardId } from "@opennextjs/core/core/routing/queue.js";
-import type { NextModeTagCache } from "@opennextjs/core/types/overrides.js";
+import type { NextModeTagCache, NextModeTagCacheWriteInput } from "@opennextjs/core/types/overrides.js";
 import { IgnorableError } from "@opennextjs/core/utils/error.js";
 
 import { getCloudflareContext } from "../../cloudflare-context.js";
 import type { OpenNextConfig } from "../../config.js";
 import { DOShardedTagCache } from "../../durable-objects/sharded-tag-cache.js";
-import { debugCache, isPurgeCacheEnabled, purgeCacheByTags } from "../internal.js";
+import { debugCache, isPurgeCacheEnabled, purgeCacheByTags, toTagNames } from "../internal.js";
 
 export const DEFAULT_WRITE_RETRIES = 3;
 export const DEFAULT_NUM_SHARDS = 4;
@@ -232,7 +232,8 @@ class ShardedDOTagCache implements NextModeTagCache {
 	 * @param tags
 	 * @returns
 	 */
-	public async writeTags(tags: string[]): Promise<void> {
+	public async writeTags(tagsToWrite: (string | NextModeTagCacheWriteInput)[]): Promise<void> {
+		const tags = toTagNames(tagsToWrite);
 		const { isDisabled } = this.getConfig();
 		if (isDisabled) return;
 

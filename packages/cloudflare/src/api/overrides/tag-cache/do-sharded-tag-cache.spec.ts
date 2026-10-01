@@ -300,6 +300,21 @@ describe("DOShardedTagCache", () => {
 			expect(writeTagsMock).not.toHaveBeenCalled();
 		});
 
+		it("rejects SWR metadata before writing", async () => {
+			const cache = shardedDOTagCache();
+			await expect(cache.writeTags([{ tag: "tag1", stale: 100, expire: 200 }])).rejects.toThrow(
+				"do not support stale-while-revalidate"
+			);
+			expect(idFromNameMock).not.toHaveBeenCalled();
+			expect(writeTagsMock).not.toHaveBeenCalled();
+		});
+
+		it("accepts structured hard invalidations", async () => {
+			const cache = shardedDOTagCache();
+			await cache.writeTags([{ tag: "tag1", expire: 100 }]);
+			expect(writeTagsMock).toHaveBeenCalled();
+		});
+
 		it("should write the tags to the cache", async () => {
 			const cache = shardedDOTagCache();
 			await cache.writeTags(["tag1"]);

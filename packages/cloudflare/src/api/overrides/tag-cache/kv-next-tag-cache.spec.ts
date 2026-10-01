@@ -15,7 +15,8 @@ vi.mock("../../cloudflare-context.js", () => ({
 	getCloudflareContext: vi.fn(),
 }));
 
-vi.mock("../internal.js", () => ({
+vi.mock("../internal.js", async (importOriginal) => ({
+	...(await importOriginal<typeof import("../internal.js")>()),
 	debugCache: vi.fn(),
 	FALLBACK_BUILD_ID: "fallback-build-id",
 	purgeCacheByTags: vi.fn(),
@@ -203,6 +204,19 @@ describe("KVNextModeTagCache", () => {
 	});
 
 	describe("writeTags", () => {
+		it("rejects SWR metadata before writing or purging", async () => {
+			await expect(tagCache.writeTags([{ tag: "tag1", stale: 100, expire: 200 }])).rejects.toThrow(
+				"do not support stale-while-revalidate"
+			);
+			expect(mockPut).not.toHaveBeenCalled();
+			expect(purgeCacheByTags).not.toHaveBeenCalled();
+		});
+
+		it("accepts structured hard invalidations", async () => {
+			await tagCache.writeTags([{ tag: "tag1", expire: 100 }]);
+			expect(mockPut).toHaveBeenCalledOnce();
+		});
+
 		it("should do nothing when cache is disabled", async () => {
 			(
 				globalThis as { openNextConfig?: { dangerous?: { disableTagCache?: boolean } } }

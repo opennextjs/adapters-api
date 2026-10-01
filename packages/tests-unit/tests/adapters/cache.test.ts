@@ -54,6 +54,27 @@ describe("CacheHandler", () => {
 	});
 
 	describe("get", () => {
+		it("preserves stale route timestamps in both Next results and the queue context", async () => {
+			cache.get.mockResolvedValueOnce({
+				value: { type: "route", body: "data" },
+				lastModified: 100_000,
+				isStale: true,
+			});
+			expect(await instance.get("key")).toMatchObject({ lastModified: 100_000, isStale: true });
+			expect(globalThis.__openNextAls.getStore()?.lastModified).toBe(100_000);
+		});
+
+		it("passes explicit fetch staleness to Next without changing the timestamp", async () => {
+			cache.get.mockResolvedValueOnce({
+				value: { kind: "FETCH", data: { body: "data" } },
+				lastModified: 100_000,
+				isStale: true,
+			});
+			expect(await instance.get("key", { kind: "FETCH" })).toMatchObject({
+				lastModified: 100_000,
+				isStale: true,
+			});
+		});
 		it("Should return null for cache miss", async () => {
 			cache.get.mockResolvedValueOnce({});
 
@@ -563,6 +584,14 @@ describe("CacheHandler", () => {
 			cache.revalidateTags.mockRejectedValueOnce(new Error("Error"));
 
 			await expect(instance.revalidateTag("tag")).resolves.not.toThrow();
+		});
+
+		it("Should surface unsupported revalidation operations", async () => {
+			const error = Object.assign(new Error("SWR is unsupported"), {
+				__openNextUnsupportedOperation: true as const,
+			});
+			cache.revalidateTags.mockRejectedValueOnce(error);
+			await expect(instance.revalidateTag("tag", { expire: 30 })).rejects.toThrow("SWR is unsupported");
 		});
 	});
 });

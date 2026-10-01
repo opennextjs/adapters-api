@@ -203,6 +203,15 @@ describe("local cache", () => {
 				"Failed to set cache entry: cache handler returned 500"
 			);
 		});
+
+		it("should surface an exposed cache-handler error", async () => {
+			mockHandler.mockResolvedValue(
+				createMockResult({ statusCode: 501, headers: { "x-opennext-cache-error": "SWR is unsupported" } })
+			);
+			const operation = localCache.revalidateTags(["tag"], { expire: 30 });
+			await expect(operation).rejects.toThrow("Failed to revalidate cache tags: SWR is unsupported");
+			await expect(operation).rejects.toMatchObject({ __openNextUnsupportedOperation: true });
+		});
 	});
 
 	describe("delete", () => {
@@ -235,6 +244,17 @@ describe("local cache", () => {
 			expect(event.method).toBe("POST");
 			expect(event.rawPath).toBe("/cache/revalidate-tags");
 			expect(await fromReadableStream(event.body)).toBe(JSON.stringify({ tags: ["tag1", "tag2"] }));
+		});
+
+		it("should include revalidation durations", async () => {
+			mockHandler.mockResolvedValue(createMockResult());
+
+			await localCache.revalidateTags(["tag1"], { expire: 30 });
+
+			const event = mockHandler.mock.calls[0][0];
+			expect(await fromReadableStream(event.body)).toBe(
+				JSON.stringify({ tags: ["tag1"], durations: { expire: 30 } })
+			);
 		});
 
 		it("should reject an unsuccessful response", async () => {

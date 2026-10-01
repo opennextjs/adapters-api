@@ -2,6 +2,9 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 import { handler } from "@opennextjs/core/adapters/cache-handler";
 import type { InternalEvent, InternalResult, OpenNextConfig } from "@opennextjs/core/types/open-next";
+import { UnsupportedOperationError } from "@opennextjs/core/utils/error";
+import { runWithOpenNextRequestContext } from "@opennextjs/core/utils/promise";
+import { RequestCache } from "@opennextjs/core/utils/requestCache";
 import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream";
 import { type Mock, vi, describe, expect, it, beforeEach } from "vitest";
 
@@ -22,6 +25,7 @@ const mockTagCache = vi.hoisted(() => ({
 	getByTag: vi.fn(),
 	getByPath: vi.fn(),
 	getLastModified: vi.fn(),
+	isStale: vi.fn(),
 	writeTags: vi.fn(),
 	hasBeenRevalidated: vi.fn(),
 	getPathsByTags: undefined as Mock | undefined,
@@ -64,6 +68,7 @@ async function runHandler(event: InternalEvent): Promise<InternalResult> {
 			},
 			isISRRevalidation: false,
 			writtenTags: new Set<string>(),
+			requestCache: new RequestCache(),
 		},
 		() => handler(event)
 	);
@@ -93,6 +98,33 @@ describe("cache-handler", () => {
 	});
 
 	describe("routing", () => {
+		it("isolates concurrent standalone cache request contexts", async () => {
+			const contexts: unknown[] = [];
+			const read = async () => {
+				const store = globalThis.__openNextAls.getStore()!;
+				contexts.push(store.requestCache);
+				await Promise.resolve();
+				expect(globalThis.__openNextAls.getStore()).toBe(store);
+				expect(store.requestCache).toBeInstanceOf(RequestCache);
+				return null;
+			};
+			mockIncrementalCache.get.mockImplementationOnce(read).mockImplementationOnce(read);
+			await Promise.all([handler(createEvent()), handler(createEvent())]);
+			expect(contexts).toHaveLength(2);
+			expect(contexts[0]).not.toBe(contexts[1]);
+			expect(globalThis.__openNextAls.getStore()).toBeUndefined();
+		});
+
+		it("reuses the caller context for a local cache read", async () => {
+			await runWithOpenNextRequestContext({ isISRRevalidation: false }, async () => {
+				const store = globalThis.__openNextAls.getStore();
+				mockIncrementalCache.get.mockImplementationOnce(async () => {
+					expect(globalThis.__openNextAls.getStore()).toBe(store);
+					return null;
+				});
+				await handler(createEvent());
+			});
+		});
 		it("should return 404 for non-cache paths", async () => {
 			const event = createEvent({ rawPath: "/other/path" });
 			const result = await runHandler(event);
@@ -359,6 +391,64 @@ describe("cache-handler", () => {
 			expect(result.statusCode).toBe(404);
 			expect(result.headers["x-opennext-cache-tag-status"]).toBe("revalidated");
 		});
+
+		it("should mark stale entries in original mode", async () => {
+			mockTagCache.mode = "original";
+			mockTagCache.getLastModified.mockResolvedValue(1000);
+			mockTagCache.isStale.mockResolvedValue(true);
+			mockIncrementalCache.get.mockResolvedValue({
+				value: { type: "route", body: "data" },
+				lastModified: 1000,
+			});
+
+			const result = await runHandler(createEvent());
+
+			expect(mockTagCache.isStale).toHaveBeenCalledWith("test-key", 1000);
+			expect(result.statusCode).toBe(200);
+			expect(result.headers["x-opennext-cache-last-modified"]).toBe("1000");
+			expect(result.headers["x-opennext-cache-stale"]).toBe("true");
+		});
+
+		it("should mark stale entries in nextMode", async () => {
+			mockTagCache.mode = "nextMode";
+			mockTagCache.hasBeenRevalidated.mockResolvedValue(false);
+			mockTagCache.isStale.mockResolvedValue(true);
+			mockIncrementalCache.get.mockResolvedValue({
+				value: {
+					type: "route",
+					body: "data",
+					meta: { headers: { "x-next-cache-tags": "tag1" } },
+				},
+				lastModified: 1000,
+			});
+
+			const result = await runHandler(createEvent());
+
+			expect(mockTagCache.isStale).toHaveBeenCalledWith(["tag1"], 1000);
+			expect(result.statusCode).toBe(200);
+			expect(result.headers["x-opennext-cache-last-modified"]).toBe("1000");
+			expect(result.headers["x-opennext-cache-stale"]).toBe("true");
+		});
+
+		it.each([false, true])(
+			"inherits owning-path fetch staleness only without hard tags (hard=%s)",
+			async (hasHardTags) => {
+				mockTagCache.mode = "original";
+				mockTagCache.getLastModified.mockResolvedValue(1000);
+				mockTagCache.isStale.mockImplementation(async (key) => key === "some-path");
+				mockIncrementalCache.get.mockResolvedValueOnce({
+					value: { kind: "FETCH", data: { headers: {}, body: "data", url: "https://example.com" } },
+					lastModified: 1000,
+				});
+				const result = await runHandler(
+					createEvent({ query: { type: "fetch", tags: `_N_T_/some-path${hasHardTags ? ",hard-tag" : ""}` } })
+				);
+				expect(result.statusCode).toBe(200);
+				expect(result.headers["x-opennext-cache-last-modified"]).toBe("1000");
+				expect(result.headers["x-opennext-cache-stale"]).toBe(hasHardTags ? undefined : "true");
+				expect(mockTagCache.isStale).toHaveBeenCalledTimes(hasHardTags ? 1 : 2);
+			}
+		);
 
 		it("should return 404 when a fetch entry's owning path has been revalidated", async () => {
 			mockTagCache.mode = "original";
@@ -650,6 +740,40 @@ describe("cache-handler", () => {
 			expect(mockTagCache.writeTags).not.toHaveBeenCalled();
 		});
 
+		it.each(["invalid", [], { expire: "30" }, { expire: -1 }])(
+			"should reject invalid durations: %j",
+			async (durations) => {
+				const event = createEvent({
+					rawPath: "/cache/revalidate-tags",
+					method: "POST",
+					body: toReadableStream(JSON.stringify({ tags: ["tag1"], durations })),
+				});
+
+				const result = await runHandler(event);
+
+				expect(result.statusCode).toBe(400);
+				expect(mockTagCache.writeTags).not.toHaveBeenCalled();
+			}
+		);
+
+		it("should accept an SWR duration without an expiry", async () => {
+			mockTagCache.mode = "nextMode";
+			vi.useFakeTimers().setSystemTime(100_000);
+			const event = createEvent({
+				rawPath: "/cache/revalidate-tags",
+				method: "POST",
+				body: toReadableStream(JSON.stringify({ tags: ["tag1"], durations: {} })),
+			});
+
+			const result = await runHandler(event);
+
+			expect(result.statusCode).toBe(200);
+			expect(mockTagCache.writeTags).toHaveBeenCalledWith([
+				{ tag: "tag1", stale: 100_000, expire: undefined },
+			]);
+			vi.useRealTimers();
+		});
+
 		it("should return 400 when body is invalid JSON", async () => {
 			const event = createEvent({
 				rawPath: "/cache/revalidate-tags",
@@ -741,6 +865,77 @@ describe("cache-handler", () => {
 			const result = await runHandler(event);
 
 			expect(result.statusCode).toBe(500);
+		});
+
+		it("should expose unsupported tag revalidation operations", async () => {
+			mockTagCache.mode = "nextMode";
+			mockTagCache.writeTags.mockRejectedValueOnce(
+				new UnsupportedOperationError("Configured tag cache does not support SWR")
+			);
+			const result = await runHandler(
+				createEvent({
+					rawPath: "/cache/revalidate-tags",
+					method: "POST",
+					body: toReadableStream(JSON.stringify({ tags: ["tag1"], durations: { expire: 30 } })),
+				})
+			);
+			expect(result.statusCode).toBe(501);
+			expect(result.headers["x-opennext-cache-error"]).toBe("Configured tag cache does not support SWR");
+		});
+
+		it("should convert nextMode durations to stale and expiry timestamps", async () => {
+			mockTagCache.mode = "nextMode";
+			vi.useFakeTimers().setSystemTime(100_000);
+			const event = createEvent({
+				rawPath: "/cache/revalidate-tags",
+				method: "POST",
+				body: toReadableStream(JSON.stringify({ tags: ["tag1"], durations: { expire: 30 } })),
+			});
+
+			await runHandler(event);
+
+			expect(mockTagCache.writeTags).toHaveBeenCalledWith([{ tag: "tag1", stale: 100_000, expire: 130_000 }]);
+			vi.useRealTimers();
+		});
+
+		it.each(["nextMode", "original"] as const)(
+			"should preserve zero-expiry hard invalidation in %s",
+			async (mode) => {
+				mockTagCache.mode = mode;
+				mockTagCache.getByTag.mockResolvedValue(["/path1"]);
+				vi.useFakeTimers().setSystemTime(100_000);
+				await runHandler(
+					createEvent({
+						rawPath: "/cache/revalidate-tags",
+						method: "POST",
+						body: toReadableStream(JSON.stringify({ tags: ["tag1"], durations: { expire: 0 } })),
+					})
+				);
+				expect(mockTagCache.writeTags).toHaveBeenCalledWith(
+					mode === "nextMode"
+						? [{ tag: "tag1", expire: 100_000 }]
+						: [{ path: "/path1", tag: "tag1", expire: 100_000 }]
+				);
+				vi.useRealTimers();
+			}
+		);
+
+		it("should convert original-mode durations to stale and expiry timestamps", async () => {
+			mockTagCache.mode = "original";
+			mockTagCache.getByTag.mockResolvedValue(["/path1"]);
+			vi.useFakeTimers().setSystemTime(100_000);
+			const event = createEvent({
+				rawPath: "/cache/revalidate-tags",
+				method: "POST",
+				body: toReadableStream(JSON.stringify({ tags: ["tag1"], durations: { expire: 30 } })),
+			});
+
+			await runHandler(event);
+
+			expect(mockTagCache.writeTags).toHaveBeenCalledWith([
+				{ path: "/path1", tag: "tag1", stale: 100_000, expire: 130_000 },
+			]);
+			vi.useRealTimers();
 		});
 	});
 });

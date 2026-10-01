@@ -34,7 +34,8 @@ async function computeCacheControl(
 	body: string,
 	host: string,
 	revalidate?: number | false,
-	lastModified?: number
+	lastModified?: number,
+	isStaleFromTagCache = false
 ) {
 	let finalRevalidate = CACHE_ONE_YEAR;
 
@@ -59,19 +60,26 @@ async function computeCacheControl(
 			etag,
 		};
 	}
-	if (finalRevalidate !== CACHE_ONE_YEAR) {
-		const sMaxAge = Math.max(finalRevalidate - age, 1);
+
+	// SSG uses one year cache
+	const isSSG = finalRevalidate === CACHE_ONE_YEAR;
+	const remainingTtl = Math.max(finalRevalidate - age, 1);
+
+	const isStaleFromTime = !isSSG && remainingTtl === 1;
+	const isStale = isStaleFromTime || isStaleFromTagCache;
+
+	if (!isSSG || isStaleFromTagCache) {
+		const sMaxAge = isStaleFromTagCache ? 1 : remainingTtl;
 		debug("sMaxAge", {
 			finalRevalidate,
 			age,
 			lastModified,
 			revalidate,
+			isStaleFromTagCache,
 		});
-		const isStale = sMaxAge === 1;
 		if (isStale) {
 			let url = NextConfig.trailingSlash ? `${path}/` : path;
 			if (NextConfig.basePath) {
-				// We need to add the basePath to the url
 				url = `${NextConfig.basePath}${url}`;
 			}
 			await globalThis.queue.send({
@@ -164,7 +172,8 @@ async function generateResult(
 	event: MiddlewareEvent,
 	localizedPath: string,
 	cachedValue: CacheValue<"cache">,
-	lastModified?: number
+	lastModified?: number,
+	isStaleFromTagCache = false
 ): Promise<InternalResult | PartialResult | InternalEvent> {
 	debug("Returning result from experimental cache");
 	let body = "";
@@ -231,7 +240,8 @@ async function generateResult(
 		body,
 		event.headers.host,
 		cachedValue.revalidate,
-		lastModified
+		lastModified,
+		isStaleFromTagCache
 	);
 	return {
 		type: "core",
@@ -283,6 +293,12 @@ function decodePathParams(pathname: string): string {
 		.join("/");
 }
 
+/**
+ * Serves eligible cached routes and schedules regeneration for stale entries.
+ *
+ * @param event Incoming middleware request.
+ * @return A cached response or the request to forward to Next.js.
+ */
 export async function cacheInterceptor(
 	event: MiddlewareEvent
 ): Promise<InternalEvent | InternalResult | PartialResult> {
@@ -346,17 +362,25 @@ export async function cacheInterceptor(
 				return event;
 			}
 			const host = event.headers.host;
+			const isStaleFromTagCache = cachedData.isStale === true;
 			switch (cachedData?.value?.type) {
 				case "app":
 				case "page":
-					return generateResult(event, localizedPath, cachedData.value, cachedData.lastModified);
+					return generateResult(
+						event,
+						localizedPath,
+						cachedData.value,
+						cachedData.lastModified,
+						isStaleFromTagCache
+					);
 				case "redirect": {
 					const cacheControl = await computeCacheControl(
 						localizedPath,
 						"",
 						host,
 						cachedData.value.revalidate,
-						cachedData.lastModified
+						cachedData.lastModified,
+						isStaleFromTagCache
 					);
 					return {
 						type: "core",
@@ -375,7 +399,8 @@ export async function cacheInterceptor(
 						cachedData.value.body,
 						host,
 						cachedData.value.revalidate,
-						cachedData.lastModified
+						cachedData.lastModified,
+						isStaleFromTagCache
 					);
 
 					const isBinary = isBinaryContentType(String(cachedData.value.meta?.headers?.["content-type"]));

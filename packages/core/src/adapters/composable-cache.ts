@@ -1,5 +1,6 @@
 import type { ComposableCacheEntry, ComposableCacheHandler } from "@/types/cache";
 import type { CacheValue } from "@/types/overrides";
+import { isUnsupportedOperationError } from "@/utils/error";
 import { fromReadableStream, toReadableStream } from "@/utils/stream";
 
 import { debug } from "./logger";
@@ -7,6 +8,12 @@ import { debug } from "./logger";
 const pendingWritePromiseMap = new Map<string, Promise<CacheValue<"composable">>>();
 
 export default {
+	/**
+	 * Reads a composable entry, translating tag staleness into Next's revalidate interval.
+	 *
+	 * @param cacheKey Entry key.
+	 * @return A streamed entry, or undefined on a miss or read failure.
+	 */
 	async get(cacheKey: string) {
 		try {
 			// We first check if we have a pending write for this cache key
@@ -26,9 +33,11 @@ export default {
 			}
 
 			debug("composable cache result", result);
+			const revalidate = result.isStale ? -1 : result.value.revalidate;
 
 			return {
 				...result.value,
+				revalidate,
 				value: toReadableStream(result.value.value),
 			};
 		} catch (e) {
@@ -80,6 +89,27 @@ export default {
 		const flatTags = tags.flat();
 		if (flatTags.length > 0) {
 			await globalThis.cache.revalidateTags(flatTags);
+		}
+	},
+
+	/**
+	 * Updates tags with optional stale-while-revalidate durations.
+	 *
+	 * @param tags Tags to update.
+	 * @param durations Optional stale-while-revalidate durations.
+	 * @return A promise that resolves when the update has been requested.
+	 */
+	async updateTags(tags: string[], durations?: { expire?: number }): Promise<void> {
+		if (tags.length === 0) {
+			return;
+		}
+		try {
+			await globalThis.cache.revalidateTags(tags, durations);
+		} catch (e) {
+			if (isUnsupportedOperationError(e)) {
+				throw e;
+			}
+			debug("Failed to update tags", e);
 		}
 	},
 

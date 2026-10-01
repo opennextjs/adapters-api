@@ -1,4 +1,5 @@
 import ComposableCache from "@opennextjs/core/adapters/composable-cache";
+import { UnsupportedOperationError } from "@opennextjs/core/utils/error";
 import { fromReadableStream, toReadableStream } from "@opennextjs/core/utils/stream";
 import { vi } from "vitest";
 
@@ -56,6 +57,25 @@ describe("Composable cache handler", () => {
 			expect(result).toBeDefined();
 			expect(result?.tags).toEqual(["tag1", "tag2"]);
 			expect(result?.value).toBeInstanceOf(ReadableStream);
+		});
+
+		it("should trigger revalidation for an entry marked stale by the cache handler", async () => {
+			cache.get.mockResolvedValueOnce({
+				value: {
+					value: "stale-value",
+					tags: ["tag1"],
+					stale: 0,
+					timestamp: Date.now(),
+					expire: Date.now() + 1000,
+					revalidate: 3600,
+				},
+				lastModified: 1000,
+				isStale: true,
+			});
+
+			const result = await ComposableCache.get("stale-key");
+
+			expect(result?.revalidate).toBe(-1);
 		});
 
 		it("should return undefined when cache entry does not exist", async () => {
@@ -294,6 +314,39 @@ describe("Composable cache handler", () => {
 
 			const content2 = await fromReadableStream(results[3]!.value);
 			expect(content2).toBe("concurrent-2");
+		});
+	});
+
+	describe("updateTags", () => {
+		it("should call cache.revalidateTags with tags and durations", async () => {
+			await ComposableCache.updateTags(["tag1", "tag2"], { expire: 30 });
+
+			expect(cache.revalidateTags).toHaveBeenCalledWith(["tag1", "tag2"], { expire: 30 });
+		});
+
+		it("should not call cache.revalidateTags when tags are empty", async () => {
+			await ComposableCache.updateTags([]);
+
+			expect(cache.revalidateTags).not.toHaveBeenCalled();
+		});
+
+		it("should call cache.revalidateTags without durations when not provided", async () => {
+			await ComposableCache.updateTags(["tag1"]);
+
+			expect(cache.revalidateTags).toHaveBeenCalledWith(["tag1"], undefined);
+		});
+
+		it("should not throw on cache error", async () => {
+			cache.revalidateTags.mockRejectedValueOnce(new Error("cache error"));
+
+			await expect(ComposableCache.updateTags(["tag1"])).resolves.not.toThrow();
+		});
+
+		it("should surface unsupported cache operations", async () => {
+			cache.revalidateTags.mockRejectedValueOnce(new UnsupportedOperationError("SWR is unsupported"));
+			await expect(ComposableCache.updateTags(["tag1"], { expire: 30 })).rejects.toThrow(
+				"SWR is unsupported"
+			);
 		});
 	});
 });

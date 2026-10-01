@@ -1,14 +1,13 @@
-import { NextModeTagCache } from "@opennextjs/core/types/overrides.js";
+import type { NextModeTagCache } from "@opennextjs/core/types/overrides.js";
 
 interface WithFilterOptions {
 	/**
 	 * The original tag cache.
-	 * Call to this will receive only the filtered tags.
 	 */
 	tagCache: NextModeTagCache;
+
 	/**
-	 * The function to filter tags.
-	 * @param tag The tag to filter.
+	 * Filter function that returns true if the tag should be forwarded to the underlying tag cache.
 	 * @returns true if the tag should be forwarded, false otherwise.
 	 */
 	filterFn: (tag: string) => boolean;
@@ -16,12 +15,22 @@ interface WithFilterOptions {
 
 /**
  * Creates a new tag cache that filters tags based on the provided filter function.
+ *
  * This is useful to remove tags that are not used by the app, this could reduce the number of requests to the underlying tag cache.
+ * @param options Underlying cache and string-based tag predicate.
+ * @return A filtering cache preserving write metadata and optional stale checks.
+ * @throws When the predicate or delegated cache operation throws.
  */
 export function withFilter({ tagCache, filterFn }: WithFilterOptions): NextModeTagCache {
 	return {
 		name: `filtered-${tagCache.name}`,
 		mode: "nextMode",
+		isStale: tagCache.isStale
+			? async (tags, lastModified) => {
+					const filteredTags = tags.filter(filterFn);
+					return filteredTags.length > 0 && tagCache.isStale!(filteredTags, lastModified);
+				}
+			: undefined,
 		getLastRevalidated: async (tags) => {
 			const filteredTags = tags.filter(filterFn);
 			if (filteredTags.length === 0) {
@@ -46,7 +55,7 @@ export function withFilter({ tagCache, filterFn }: WithFilterOptions): NextModeT
 			return tagCache.hasBeenRevalidated(filteredTags, lastModified);
 		},
 		writeTags: async (tags) => {
-			const filteredTags = tags.filter(filterFn);
+			const filteredTags = tags.filter((tag) => filterFn(typeof tag === "string" ? tag : tag.tag));
 			if (filteredTags.length === 0) {
 				return;
 			}
@@ -60,6 +69,7 @@ export function withFilter({ tagCache, filterFn }: WithFilterOptions): NextModeT
  * This is used to filter out internal soft tags.
  * Can be used if `revalidatePath` is not used.
  */
-export function softTagFilter(tag: string): boolean {
-	return !tag.startsWith("_N_T_");
+export function softTagFilter(tag: string | { tag: string }): boolean {
+	const tagStr = typeof tag === "string" ? tag : tag.tag;
+	return !tagStr.startsWith("_N_T_");
 }

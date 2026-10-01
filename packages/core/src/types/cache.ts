@@ -76,6 +76,8 @@ export interface CacheHandlerContext {
 	fetchCacheKeyPrefix?: string;
 }
 export interface CacheHandlerValue {
+	/** Consumed by the OpenNext incremental-cache patch, including permanently cached routes. */
+	isStale?: boolean;
 	lastModified?: number;
 	age?: number;
 	cacheState?: string;
@@ -168,6 +170,10 @@ export interface ComposableCacheHandler {
 	 * Removed from Next.js 16
 	 */
 	expireTags(...tags: string[]): Promise<void>;
+	/**
+	 * Added in Next.js 16. Updates tags with optional stale/expire durations.
+	 */
+	updateTags?(tags: string[], durations?: { expire?: number }): Promise<void>;
 	/**
 	 * This function is only there for older versions and do nothing
 	 */

@@ -120,11 +120,27 @@ describe("serviceCache", () => {
 		expect(JSON.parse(body as string)).toEqual({ tags: ["tag1", "tag2"] });
 	});
 
+	it("forwards revalidation durations", async () => {
+		await serviceCache.revalidateTags(["tag1"], { expire: 30 });
+
+		const { body } = lastRequest();
+		expect(JSON.parse(body as string)).toEqual({ tags: ["tag1"], durations: { expire: 30 } });
+	});
+
 	it("rejects an unsuccessful tag revalidation", async () => {
 		fetchMock.mockResolvedValue(new Response(null, { status: 502 }));
 
 		await expect(serviceCache.revalidateTags(["tag"])).rejects.toThrow(
 			"Failed to revalidate cache tags: cache handler returned 502"
 		);
+	});
+
+	it("surfaces an exposed cache-handler error", async () => {
+		fetchMock.mockResolvedValue(
+			new Response(null, { status: 501, headers: { "x-opennext-cache-error": "SWR is unsupported" } })
+		);
+		const operation = serviceCache.revalidateTags(["tag"], { expire: 30 });
+		await expect(operation).rejects.toThrow("Failed to revalidate cache tags: SWR is unsupported");
+		await expect(operation).rejects.toMatchObject({ __openNextUnsupportedOperation: true });
 	});
 });
