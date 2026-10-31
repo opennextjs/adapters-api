@@ -15,7 +15,7 @@ const TEST_APPS_DIR = path.join(os.homedir(), ".cache/opennext-next-suite/apps")
 
 const USAGE = `Usage:
   pnpm next-suite setup [--ref <ref>]
-  pnpm next-suite run --target <core|cloudflare> [--group 1/16] [-c 2] [--ref <ref>] [--include-disabled] [test paths...]
+  pnpm next-suite run --target <core|cloudflare> [--group 1/16] [-c 2] [--retries <n>] [--ref <ref>] [--include-disabled] [test paths...]
   pnpm next-suite disabled-from-junit --target <core|cloudflare> --input <dir> --output <file> --reason <text>`;
 
 /** Resolves the Next.js checkout, set `NEXT_SUITE_NEXT_DIR` to use an existing built one. */
@@ -48,6 +48,7 @@ function run(args: string[]): number {
 			target: { type: "string" },
 			group: { type: "string" },
 			concurrency: { type: "string", short: "c", default: "2" },
+			retries: { type: "string" },
 			ref: { type: "string", default: DEFAULT_NEXT_REF },
 			"include-disabled": { type: "boolean", default: false },
 		},
@@ -74,7 +75,12 @@ function run(args: string[]): number {
 
 	const { status } = spawnSync(
 		process.execPath,
-		buildRunSuiteArgs({ group: values.group, concurrency: Number(values.concurrency), tests: positionals }),
+		buildRunSuiteArgs({
+			group: values.group,
+			concurrency: Number(values.concurrency),
+			retries: values.retries === undefined ? undefined : Number(values.retries),
+			tests: positionals,
+		}),
 		{ cwd: nextDir, env, stdio: "inherit" }
 	);
 	return status ?? 1;

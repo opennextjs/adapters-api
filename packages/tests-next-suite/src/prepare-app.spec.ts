@@ -75,7 +75,7 @@ describe("prepareApp", () => {
 		expect(readPackageJson().packageManager).toBe("pnpm@11.25.0");
 		const workspace = readWorkspace();
 		expect(workspace.strictDepBuilds).toBe(false);
-		expect(workspace.minimumReleaseAge).toBe(0);
+		expect(workspace.minimumReleaseAge).toBeUndefined();
 		expect(workspace.allowBuilds).toMatchObject({ esbuild: true, sharp: true, workerd: true });
 	});
 

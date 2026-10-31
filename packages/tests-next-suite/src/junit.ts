@@ -8,7 +8,7 @@ import type { DisabledEntry, DisabledList } from "./disabled.js";
 const SUITE_ERROR_CASE = "Test suite failed to run";
 const REPORT_NAME_PREFIX = "deploy:e2e:";
 
-type TestCase = { name: string; file?: string; failure?: unknown; error?: unknown };
+type TestCase = { name: string; classname?: string; file?: string; failure?: unknown; error?: unknown };
 type TestSuite = { testcase?: TestCase[] };
 type Report = { testsuites?: { name?: string; testsuite?: TestSuite[] } };
 
@@ -56,7 +56,7 @@ export function disabledFromJUnit(xmlFiles: string[], nextDir: string, reason: s
 	const brokenFiles = new Set<string>();
 
 	for (const { file, testCase } of xmlFiles.flatMap((xmlFile) => readCases(xmlFile, nextDir))) {
-		if (testCase.name.includes(SUITE_ERROR_CASE)) {
+		if (testCase.classname === SUITE_ERROR_CASE) {
 			brokenFiles.add(file);
 		} else if (testCase.failure !== undefined || testCase.error !== undefined) {
 			failed.set(file, [...(failed.get(file) ?? []), testCase.name]);

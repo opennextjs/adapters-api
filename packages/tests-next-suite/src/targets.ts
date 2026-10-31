@@ -27,8 +27,13 @@ function readCatalogVersion(name: string): string {
 	return workspace.catalog[name];
 }
 
+/** Quotes a value for `.dev.vars`, dotenv has no escapes: the only way is a quote the value does not hold. */
 function quoteDevVar(value: string): string {
-	return `"${value.replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("\n", "\\n")}"`;
+	const quote = ["'", "`", '"'].find((candidate) => !value.includes(candidate));
+	if (!quote) {
+		throw new Error(`Can not write a value holding all the quote characters to .dev.vars: ${value}`);
+	}
+	return `${quote}${value}${quote}`;
 }
 
 export const TARGETS: Record<TargetName, Target> = {

@@ -11,6 +11,8 @@ import type { Target } from "./targets.js";
 const NOOP = ["node", "-e", ""];
 /** Prints what the harness' `post-build` script prints. */
 const BUILD_OK = `console.log("BUILD_ID: abc\\nDEPLOYMENT_ID: " + process.env.NEXT_DEPLOYMENT_ID + "\\nIMMUTABLE_ASSET_TOKEN: undefined")`;
+/** Ends on its own, so that a regression fails the test and does not leave a process behind. */
+const SLOW_BUILD = ["node", "-e", "setTimeout(() => {}, 4000)"];
 const SERVE = `require("node:http").createServer((_, res) => res.end("ok")).listen(process.env.PORT)`;
 
 let appDir: string;
@@ -159,6 +161,39 @@ describe("deploy", () => {
 		await expect(runDeploy(target, {}, 300)).rejects.toThrow(/did not become ready/);
 
 		expect(fs.existsSync(path.join(appDir, PID_FILE))).toBe(false);
+	});
+
+	test("gives up on a build which outlives the harness' setup timeout", async () => {
+		const target = makeTarget({ buildCommand: SLOW_BUILD });
+
+		await expect(runDeploy(target, { NEXT_E2E_TEST_TIMEOUT: "300" })).rejects.toThrow(/timed out/);
+	});
+
+	test("does not go on after cleanup stopped the build", async () => {
+		const target = makeTarget({
+			buildCommand: SLOW_BUILD,
+			startCommand: () => ["node", "-e", `${record("started", "1")}; ${SERVE}`],
+		});
+		const deployment = runDeploy(target);
+		await expect.poll(() => fs.existsSync(path.join(appDir, PID_FILE)), { timeout: 2000 }).toBe(true);
+
+		const failure = expect(deployment).rejects.toThrow(/failed/);
+
+		await cleanup(appDir);
+
+		await failure;
+		expect(fs.existsSync(path.join(appDir, "started"))).toBe(false);
+	});
+
+	test("does not start another server after cleanup", async () => {
+		const target = makeTarget({
+			startCommand: () => ["node", "-e", `${record("started", "1")}; ${SERVE}`],
+		});
+		await cleanup(appDir);
+
+		await expect(runDeploy(target)).rejects.toThrow(/stopped/);
+
+		expect(fs.existsSync(path.join(appDir, "started"))).toBe(false);
 	});
 
 	test("passes test-only env to prepareRuntimeEnv", async () => {

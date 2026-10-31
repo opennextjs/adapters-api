@@ -40,6 +40,11 @@ export function toolchainEnv(
 ): NodeJS.ProcessEnv {
 	const toolchain = hookEnv(env);
 	toolchain.PATH = [path.dirname(execPath), env.PATH].filter(Boolean).join(":");
+	// Set when the pnpm of this repository switched version, they would keep the checkout from using its own.
+	delete toolchain.pnpm_config_pm_on_fail;
+	if (toolchain.COREPACK_ROOT === "pnpm-with") {
+		delete toolchain.COREPACK_ROOT;
+	}
 	if (platform === "linux" && arch === "x64") {
 		toolchain.PLAYWRIGHT_HOST_PLATFORM_OVERRIDE ??= PLAYWRIGHT_LINUX_PLATFORM;
 	}

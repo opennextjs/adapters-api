@@ -8,13 +8,14 @@ import { disabledFromJUnit, mergeDisabled, summarize } from "./junit.js";
 
 const FILE = "test/e2e/a.test.ts";
 
-type Case = { name: string; file?: string; body?: string };
+type Case = { name: string; classname?: string; file?: string; body?: string };
 
 function writeReport(cases: Case[], report = FILE): string {
 	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "next-suite-junit-"));
 	const file = path.join(dir, "report.xml");
 	const testcases = cases.map(
-		({ name, file = FILE, body = "" }) => `<testcase name="${name}" file="${file}">${body}</testcase>`
+		({ name, classname = name, file = FILE, body = "" }) =>
+			`<testcase classname="${classname}" name="${name}" file="${file}">${body}</testcase>`
 	);
 	fs.writeFileSync(
 		file,
@@ -54,7 +55,9 @@ describe("disabledFromJUnit", () => {
 	});
 
 	test("disables a whole file when it reports a suite-level error", () => {
-		const report = writeReport([{ name: "s Test suite failed to run", body: "<error>boom</error>" }]);
+		const report = writeReport([
+			{ name: FILE, classname: "Test suite failed to run", body: "<error>boom</error>" },
+		]);
 
 		expect(disabledFromJUnit([report], "/x/next.js", "r")).toEqual({ [FILE]: { reason: "r" } });
 	});
@@ -64,7 +67,7 @@ describe("disabledFromJUnit", () => {
 		const report = path.join(dir, "report.xml");
 		fs.writeFileSync(
 			report,
-			`<testsuites name="deploy:e2e:${FILE}"><testsuite name="s"><testcase name="Test suite failed to run"><error>boom</error></testcase></testsuite></testsuites>`
+			`<testsuites name="deploy:e2e:${FILE}"><testsuite name="s"><testcase classname="Test suite failed to run" name="/x/next.js/${FILE}"><error>boom</error></testcase></testsuite></testsuites>`
 		);
 
 		expect(disabledFromJUnit([report], "/x/next.js", "r")).toEqual({ [FILE]: { reason: "r" } });

@@ -22,6 +22,8 @@ const BUNDLER_ENV: Record<TargetName, Record<string, string>> = {
 export type RunSuiteArgsOptions = {
 	group?: string;
 	concurrency: number;
+	/** How many times a failing file runs again, `run-tests.js` defaults to 2. */
+	retries?: number;
 	tests: string[];
 };
 
@@ -45,9 +47,10 @@ export type RunSuiteEnvOptions = {
  * @param options The tests to run.
  * @returns The arguments for `node`.
  */
-export function buildRunSuiteArgs({ group, concurrency, tests }: RunSuiteArgsOptions): string[] {
+export function buildRunSuiteArgs({ group, concurrency, retries, tests }: RunSuiteArgsOptions): string[] {
 	const selection = tests.length === 0 && group ? ["-g", group] : [];
-	return ["run-tests.js", ...selection, "-c", String(concurrency), "--type", "e2e", ...tests];
+	const retryArgs = retries === undefined ? [] : ["--retries", String(retries)];
+	return ["run-tests.js", ...selection, "-c", String(concurrency), ...retryArgs, "--type", "e2e", ...tests];
 }
 
 /**

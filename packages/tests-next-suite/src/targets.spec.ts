@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import { parse } from "dotenv";
 import { describe, expect, test } from "vitest";
 
 import { TARGETS, getTarget } from "./targets.js";
@@ -30,14 +31,20 @@ describe("TARGETS", () => {
 		]);
 	});
 
-	test("cloudflare writes test-only env to .dev.vars with values quoted", () => {
+	test("cloudflare writes test-only env to .dev.vars so that wrangler reads the same values", () => {
 		const appDir = fs.mkdtempSync(path.join(os.tmpdir(), "next-suite-targets-"));
+		const env = {
+			PLAIN: "value",
+			JSON_VALUE: '{"a":1}',
+			QUOTES: `it's "quoted"`,
+			BACKSLASHES: "C:\\new\\x",
+			MULTILINE: "line one\nline two",
+			EMPTY: "",
+		};
 
-		TARGETS.cloudflare.prepareRuntimeEnv!(appDir, { PLAIN: "value", TRICKY: 'line one\nsay "hi"' });
+		TARGETS.cloudflare.prepareRuntimeEnv!(appDir, env);
 
-		expect(fs.readFileSync(path.join(appDir, ".dev.vars"), "utf8")).toBe(
-			'PLAIN="value"\nTRICKY="line one\\nsay \\"hi\\""\n'
-		);
+		expect(parse(fs.readFileSync(path.join(appDir, ".dev.vars")))).toEqual(env);
 	});
 });
 

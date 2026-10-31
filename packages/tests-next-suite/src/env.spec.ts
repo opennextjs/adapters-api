@@ -27,6 +27,17 @@ describe("toolchainEnv", () => {
 		expect(env.PLAYWRIGHT_HOST_PLATFORM_OVERRIDE).toBe("debian12-x64");
 	});
 
+	test("drops the markers pnpm exports when it switches version, so the checkout can use its own", () => {
+		const env = toolchainEnv({ COREPACK_ROOT: "pnpm-with", pnpm_config_pm_on_fail: "ignore" }, linux);
+
+		expect(env.COREPACK_ROOT).toBeUndefined();
+		expect(env.pnpm_config_pm_on_fail).toBeUndefined();
+	});
+
+	test("keeps a real corepack root", () => {
+		expect(toolchainEnv({ COREPACK_ROOT: "/corepack" }, linux).COREPACK_ROOT).toBe("/corepack");
+	});
+
 	test("leaves Playwright alone elsewhere", () => {
 		const mac = { execPath: "/node/bin/node", platform: "darwin", arch: "arm64" } as const;
 

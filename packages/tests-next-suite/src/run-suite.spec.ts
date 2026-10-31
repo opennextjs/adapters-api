@@ -26,6 +26,20 @@ describe("buildRunSuiteArgs", () => {
 	});
 });
 
+test("passes the retry budget on", () => {
+	expect(buildRunSuiteArgs({ group: "1/16", concurrency: 2, retries: 1, tests: [] })).toEqual([
+		"run-tests.js",
+		"-g",
+		"1/16",
+		"-c",
+		"2",
+		"--retries",
+		"1",
+		"--type",
+		"e2e",
+	]);
+});
+
 describe("buildRunSuiteEnv", () => {
 	test("layers the target's disabled manifest on the upstream one", () => {
 		const env = buildRunSuiteEnv({

@@ -61,7 +61,6 @@ export function prepareApp({ appDir, target, tarballsDir, packageManager }: Prep
 		stringify({
 			...workspace,
 			strictDepBuilds: false,
-			minimumReleaseAge: 0,
 			allowBuilds: { ...workspace.allowBuilds, esbuild: true, sharp: true, workerd: true },
 			overrides: { ...workspace.overrides, ...PINNED_DEPENDENCIES, ...tarballs },
 		})

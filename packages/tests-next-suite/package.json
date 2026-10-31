@@ -17,6 +17,7 @@
 	"devDependencies": {
 		"@tsconfig/strictest": "catalog:",
 		"@types/node": "catalog:",
+		"dotenv": "^16.6.1",
 		"typescript": "catalog:",
 		"vitest": "catalog:"
 	}

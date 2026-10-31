@@ -7,7 +7,14 @@ import { setTimeout as sleep } from "node:timers/promises";
 
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
-import { getFreePorts, startDetached, stopProcessGroup, waitForHttp } from "./process.js";
+import {
+	getFreePorts,
+	parsePid,
+	runDetached,
+	startDetached,
+	stopProcessGroup,
+	waitForHttp,
+} from "./process.js";
 
 let dir: string;
 let logFile: string;
@@ -77,6 +84,44 @@ describe("startDetached", () => {
 		expect(fs.readFileSync(pidFile, "utf8")).toBe(String(pid));
 		await expect.poll(() => fs.readFileSync(logFile, "utf8")).toContain("hello");
 		expect(fs.readFileSync(logFile, "utf8")).toContain("oops");
+	});
+});
+
+describe("parsePid", () => {
+	test("accepts a process id", () => {
+		expect(parsePid("12345")).toBe(12345);
+		expect(parsePid("12345\n")).toBe(12345);
+	});
+
+	// 0 is the caller's own group and -1 is every process, so these must never reach `process.kill`.
+	test.each(["", " ", "0", "1", "-5", "abc", "12.5", "0x10"])("refuses %j", (content) => {
+		expect(() => parsePid(content)).toThrow(/Invalid pid/);
+	});
+});
+
+describe("runDetached", () => {
+	const run = (script: string, timeoutMs = 5000) =>
+		runDetached({ command: ["node", "-e", script], cwd: dir, env: process.env, logFile, pidFile, timeoutMs });
+
+	test("resolves with the exit code and clears the pid file", async () => {
+		await expect(run("process.exit(3)")).resolves.toBe(3);
+
+		expect(fs.existsSync(pidFile)).toBe(false);
+	});
+
+	test("records the pid while running, so that cleanup can stop it", async () => {
+		const running = run("setInterval(() => {}, 1000)");
+		await waitForFile(pidFile);
+
+		await stopProcessGroup(pidFile);
+
+		await expect(running).resolves.not.toBe(0);
+	});
+
+	test("stops the group at the deadline", async () => {
+		await expect(run("setInterval(() => {}, 1000)", 200)).resolves.toBe("timeout");
+
+		expect(fs.existsSync(pidFile)).toBe(false);
 	});
 });
 
@@ -150,6 +195,12 @@ describe("stopProcessGroup", () => {
 
 	test("is a no-op with no pid file", async () => {
 		await expect(stopProcessGroup(pidFile)).resolves.toBeUndefined();
+	});
+
+	test("refuses a corrupt pid file", async () => {
+		fs.writeFileSync(pidFile, "abc");
+
+		await expect(stopProcessGroup(pidFile)).rejects.toThrow(/Invalid pid/);
 	});
 
 	test("can run twice", async () => {

@@ -30,6 +30,7 @@ The whole suite is about 800 test files, each one building an app, so it is mean
 | Option                     | Purpose                                                               |
 | -------------------------- | --------------------------------------------------------------------- |
 | `--ref <ref>`              | The Next.js tag, branch or commit (default in `src/next-checkout.ts`) |
+| `--retries <n>`            | How many times a failing file runs again (2 by default)               |
 | `--include-disabled`       | Runs the disabled tests too                                           |
 | `NEXT_SUITE_NEXT_DIR`      | Uses an existing built Next.js checkout                               |
 | `NEXT_TEST_SKIP_CLEANUP=1` | Keeps the test apps                                                   |

@@ -1,17 +1,19 @@
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
 import { ENV, hookEnv, testOnlyEnv } from "./env.js";
 import { prepareApp } from "./prepare-app.js";
-import { getFreePorts, startDetached, stopProcessGroup, waitForHttp } from "./process.js";
+import { getFreePorts, runDetached, startDetached, stopProcessGroup, waitForHttp } from "./process.js";
 import { REPO_ROOT, type Target } from "./targets.js";
 
 export const BUILD_LOG = ".adapter-build.log";
 export const SERVER_LOG = ".adapter-server.log";
 export const PID_FILE = ".adapter-server.pid";
+/** Written by the cleanup hook, the harness may give up on a deployment which is still in progress. */
+const STOPPED_FILE = ".adapter-stopped";
 
 const DEFAULT_READY_TIMEOUT_MS = 120_000;
+const DEFAULT_SETUP_TIMEOUT_MS = 240_000;
 const START_ATTEMPTS = 3;
 const LOG_TAIL_LINES = 40;
 const INSTALL_COMMAND = ["pnpm", "install", "--no-frozen-lockfile", "--prefer-offline"];
@@ -42,17 +44,31 @@ function requireEnv(env: NodeJS.ProcessEnv, name: string): string {
 	return value;
 }
 
-/** Runs a command to completion with its output in the build log, as stdout belongs to the deployment URL. */
-function runLogged(command: string[], cwd: string, env: NodeJS.ProcessEnv): void {
-	const [file, ...args] = command as [string, ...string[]];
+/**
+ * Runs a command to completion with its output in the build log, as stdout belongs to the deployment URL.
+ *
+ * It is stoppable through the pid file, and has until the deadline: past it the harness has moved on.
+ */
+async function runLogged(
+	command: string[],
+	cwd: string,
+	env: NodeJS.ProcessEnv,
+	deadline: number
+): Promise<void> {
 	const logFile = path.join(cwd, BUILD_LOG);
-	const log = fs.openSync(logFile, "a");
-	const { status, error } = spawnSync(file, args, { cwd, env, stdio: ["ignore", log, log] });
-	fs.closeSync(log);
-	if (status !== 0) {
-		throw new Error(
-			`\`${command.join(" ")}\` failed (${error?.message ?? `exit code ${status}`}):\n${logTail(logFile)}`
-		);
+	const result = await runDetached({
+		command,
+		cwd,
+		env,
+		logFile,
+		pidFile: path.join(cwd, PID_FILE),
+		timeoutMs: Math.max(deadline - Date.now(), 0),
+	});
+	if (result === "timeout") {
+		throw new Error(`\`${command.join(" ")}\` timed out:\n${logTail(logFile)}`);
+	}
+	if (result !== 0) {
+		throw new Error(`\`${command.join(" ")}\` failed (exit code ${result}):\n${logTail(logFile)}`);
 	}
 }
 
@@ -67,6 +83,9 @@ async function startServer(
 	const pidFile = path.join(appDir, PID_FILE);
 
 	for (let attempt = 1; attempt <= START_ATTEMPTS; attempt++) {
+		if (fs.existsSync(path.join(appDir, STOPPED_FILE))) {
+			throw new Error("The deployment was stopped by the cleanup hook");
+		}
 		const [port, inspectorPort] = (await getFreePorts(2)) as [number, number];
 		const url = `http://localhost:${port}`;
 		const pid = startDetached({
@@ -105,16 +124,17 @@ export async function deploy({
 	readyTimeoutMs = DEFAULT_READY_TIMEOUT_MS,
 	installCommand = INSTALL_COMMAND,
 }: HookDeps): Promise<void> {
+	const deadline = Date.now() + (Number(env.NEXT_E2E_TEST_TIMEOUT) || DEFAULT_SETUP_TIMEOUT_MS);
 	const deploymentEnv = { ...hookEnv(env), NEXT_DEPLOYMENT_ID: `opennext-${path.basename(appDir)}` };
 	const { packageManager } = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "package.json"), "utf8"));
 	const baseKeys: string[] = JSON.parse(fs.readFileSync(requireEnv(env, ENV.BASE_ENV_FILE), "utf8"));
 
 	stderr(`Preparing the app for ${target.name}`);
 	prepareApp({ appDir, target, tarballsDir: requireEnv(env, ENV.TARBALLS_DIR), packageManager });
-	runLogged(installCommand, appDir, deploymentEnv);
+	await runLogged(installCommand, appDir, deploymentEnv, deadline);
 
 	stderr("Building the app");
-	runLogged(target.buildCommand, appDir, deploymentEnv);
+	await runLogged(target.buildCommand, appDir, deploymentEnv, deadline);
 	if (!/BUILD_ID: .+/.test(readIfExists(path.join(appDir, BUILD_LOG)))) {
 		throw new Error(`The build output has no BUILD_ID marker, did the harness' post-build run?`);
 	}
@@ -157,5 +177,6 @@ export function logs(appDir: string): string {
  * @param appDir The app directory.
  */
 export async function cleanup(appDir: string): Promise<void> {
+	fs.writeFileSync(path.join(appDir, STOPPED_FILE), "");
 	await stopProcessGroup(path.join(appDir, PID_FILE));
 }
