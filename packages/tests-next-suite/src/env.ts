@@ -5,7 +5,7 @@ export const ENV = {
 	BASE_ENV_FILE: "OPEN_NEXT_SUITE_BASE_ENV_FILE",
 } as const;
 
-const HARNESS_ENV_PREFIXES = ["NEXT_TEST_", "JEST_", "NODE_", "npm_", "PNPM_"];
+const HARNESS_ENV_PREFIXES = ["OPEN_NEXT_SUITE_", "NEXT_TEST_", "JEST_", "NODE_", "npm_", "PNPM_"];
 
 /**
  * Returns the environment for commands run by the hooks.
