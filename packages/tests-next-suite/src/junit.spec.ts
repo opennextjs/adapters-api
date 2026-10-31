@@ -113,7 +113,10 @@ describe("mergeDisabled", () => {
 	});
 
 	test("sorts by path so regenerated lists diff cleanly", () => {
-		const merged = mergeDisabled({ "test/z.test.ts": { reason: "x" } }, { "test/a.test.ts": { reason: "y" } });
+		const merged = mergeDisabled(
+			{ "test/z.test.ts": { reason: "x" } },
+			{ "test/a.test.ts": { reason: "y" } }
+		);
 
 		expect(Object.keys(merged)).toEqual(["test/a.test.ts", "test/z.test.ts"]);
 	});

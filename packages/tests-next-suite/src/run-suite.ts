@@ -69,7 +69,9 @@ export function buildRunSuiteEnv({
 		...toolchainEnv(base),
 		NEXT_TEST_MODE: "deploy",
 		NEXT_E2E_TEST_TIMEOUT: String(SETUP_TIMEOUT_MS[target]),
-		NEXT_EXTERNAL_TESTS_FILTERS: [UPSTREAM_MANIFEST, ...(disabledManifest ? [disabledManifest] : [])].join(","),
+		NEXT_EXTERNAL_TESTS_FILTERS: [UPSTREAM_MANIFEST, ...(disabledManifest ? [disabledManifest] : [])].join(
+			","
+		),
 		NEXT_JUNIT_TEST_REPORT: "1",
 		...BUNDLER_ENV[target],
 		NEXT_TEST_JOB: "1",

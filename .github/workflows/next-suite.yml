@@ -1,0 +1,160 @@
+name: Next.js Test Suite
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      nextRef:
+        description: Next.js ref (tag, branch or commit)
+        default: v16.2.1
+        type: string
+  pull_request:
+    paths:
+      - ".github/workflows/next-suite.yml"
+      - "packages/tests-next-suite/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NEXT_REF: ${{ inputs.nextRef || 'v16.2.1' }}
+  NEXT_DIR: packages/tests-next-suite/.cache/next.js
+
+jobs:
+  # Checks out and builds Next.js once, the other jobs restore it from the cache.
+  next:
+    name: Build Next.js
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+
+      - name: Cache the Next.js checkout
+        id: next-cache
+        uses: actions/cache@v6
+        with:
+          path: |
+            packages/tests-next-suite/.cache/next.js
+            ~/.cache/ms-playwright
+          key: next-suite-${{ runner.os }}-${{ inputs.nextRef || 'v16.2.1' }}
+
+      - name: Build Next.js
+        if: steps.next-cache.outputs.cache-hit != 'true'
+        run: pnpm next-suite setup --ref "$NEXT_REF"
+
+  smoke:
+    name: Smoke (${{ matrix.target }})
+    needs: next
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [core, cloudflare]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+
+      - name: Restore the Next.js checkout
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            packages/tests-next-suite/.cache/next.js
+            ~/.cache/ms-playwright
+          key: next-suite-${{ runner.os }}-${{ inputs.nextRef || 'v16.2.1' }}
+          fail-on-cache-miss: true
+
+      - name: Install the browser dependencies
+        working-directory: ${{ env.NEXT_DIR }}
+        run: pnpm playwright install --with-deps chromium
+
+      - name: Run the smoke test
+        run: pnpm next-suite run --target ${{ matrix.target }} --ref "$NEXT_REF" -c 1 test/e2e/app-dir/hello-world/hello-world.test.ts
+
+  suite:
+    name: Suite (${{ matrix.target }} ${{ matrix.group }}/16)
+    needs: next
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [core, cloudflare]
+        group: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+
+      - name: Restore the Next.js checkout
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            packages/tests-next-suite/.cache/next.js
+            ~/.cache/ms-playwright
+          key: next-suite-${{ runner.os }}-${{ inputs.nextRef || 'v16.2.1' }}
+          fail-on-cache-miss: true
+
+      - name: Install the browser dependencies
+        working-directory: ${{ env.NEXT_DIR }}
+        run: pnpm playwright install --with-deps chromium
+
+      - name: Run the tests
+        run: pnpm next-suite run --target ${{ matrix.target }} --ref "$NEXT_REF" --group ${{ matrix.group }}/16 -c 2
+
+      - name: Upload the reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: junit-${{ matrix.target }}-${{ matrix.group }}
+          path: |
+            ${{ env.NEXT_DIR }}/test/turbopack-test-junit-report
+            ${{ env.NEXT_DIR }}/test/test-junit-report
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # Lists what failed, as disable lists which can replace the ones in `packages/tests-next-suite/disabled`.
+  report:
+    name: Report
+    needs: suite
+    if: always() && needs.suite.result != 'skipped'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+
+      - name: Download the reports
+        uses: actions/download-artifact@v8
+        with:
+          pattern: junit-*
+          path: reports
+
+      - name: Summarize the failures
+        run: |
+          mkdir -p candidates
+          for target in core cloudflare; do
+            mkdir -p "reports-$target"
+            for dir in reports/junit-"$target"-*; do
+              if [ -d "$dir" ]; then cp -r "$dir" "reports-$target/"; fi
+            done
+            pnpm --silent next-suite disabled-from-junit \
+              --target "$target" \
+              --input "reports-$target" \
+              --output "candidates/$target.json" \
+              --reason "Failing in CI run $GITHUB_RUN_ID" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      - name: Upload the candidate disable lists
+        uses: actions/upload-artifact@v7
+        with:
+          name: next-suite-disabled
+          path: candidates
+          retention-days: 14

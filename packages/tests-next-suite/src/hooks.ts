@@ -144,7 +144,9 @@ export async function deploy({
  */
 export function logs(appDir: string): string {
 	const buildLog = readIfExists(path.join(appDir, BUILD_LOG));
-	const immutableToken = /IMMUTABLE_ASSET_TOKEN: .+/.test(buildLog) ? "" : "IMMUTABLE_ASSET_TOKEN: undefined\n";
+	const immutableToken = /IMMUTABLE_ASSET_TOKEN: .+/.test(buildLog)
+		? ""
+		: "IMMUTABLE_ASSET_TOKEN: undefined\n";
 	const serverLog = readIfExists(path.join(appDir, SERVER_LOG));
 	return `NEXT_SUPPORTS_IMMUTABLE_ASSETS: 0\n${immutableToken}${buildLog}\n=== ${SERVER_LOG} ===\n${serverLog}`;
 }
