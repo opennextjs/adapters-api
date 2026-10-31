@@ -1,0 +1,16 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"extends": "@tsconfig/strictest/tsconfig.json",
+	"compilerOptions": {
+		"exactOptionalPropertyTypes": false,
+		"lib": ["ESNext"],
+		"module": "NodeNext",
+		"moduleResolution": "nodenext",
+		"noEmit": true,
+		"noPropertyAccessFromIndexSignature": false,
+		"resolveJsonModule": true,
+		"target": "ES2022",
+		"types": ["node"]
+	},
+	"include": ["src/**/*.ts"]
+}

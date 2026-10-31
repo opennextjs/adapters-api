@@ -1,0 +1,23 @@
+{
+	"name": "tests-next-suite",
+	"version": null,
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"clean": "rm -rf .turbo node_modules .cache",
+		"next-suite": "tsx src/cli.ts",
+		"test": "vitest run",
+		"ts:check": "tsc --noEmit"
+	},
+	"dependencies": {
+		"fast-xml-parser": "^5.2.5",
+		"tsx": "catalog:",
+		"yaml": "^2.8.1"
+	},
+	"devDependencies": {
+		"@tsconfig/strictest": "catalog:",
+		"@types/node": "catalog:",
+		"typescript": "catalog:",
+		"vitest": "catalog:"
+	}
+}
