@@ -39,7 +39,6 @@ describe("buildRunSuiteEnv", () => {
 			"test/deploy-tests-manifest.json,/p/.cache/disabled-core.json"
 		);
 		expect(env.NEXT_TEST_MODE).toBe("deploy");
-		expect(env.IS_TURBOPACK_TEST).toBe("1");
 		expect(env.NEXT_JUNIT_TEST_REPORT).toBe("1");
 		expect(env.NEXT_TEST_DEPLOY_SCRIPT_PATH).toBe("/p/bin/e2e-deploy.sh");
 		expect(env.NEXT_TEST_DEPLOY_LOGS_SCRIPT_PATH).toBe("/p/bin/e2e-logs.sh");
@@ -67,6 +66,20 @@ describe("buildRunSuiteEnv", () => {
 		});
 
 		expect(env.NODE_ENV).toBeUndefined();
+	});
+
+	test("core builds with Turbopack", () => {
+		const env = buildRunSuiteEnv({ ...options, target: "core", base: {}, disabledManifest: null });
+
+		expect(env.IS_TURBOPACK_TEST).toBe("1");
+		expect(env.IS_WEBPACK_TEST).toBeUndefined();
+	});
+
+	test("cloudflare builds with webpack", () => {
+		const env = buildRunSuiteEnv({ ...options, target: "cloudflare", base: {}, disabledManifest: null });
+
+		expect(env.IS_WEBPACK_TEST).toBe("1");
+		expect(env.IS_TURBOPACK_TEST).toBeUndefined();
 	});
 
 	test("pins the toolchain", () => {

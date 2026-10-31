@@ -1,3 +1,4 @@
+// @ts-nocheck: `next build` type checks this file with a tsconfig that can not resolve package exports.
 import { defineCloudflareConfig } from "@opennextjs/cloudflare";
 import r2IncrementalCache from "@opennextjs/cloudflare/overrides/incremental-cache/r2-incremental-cache";
 import doQueue from "@opennextjs/cloudflare/overrides/queue/do-queue";

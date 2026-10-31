@@ -8,6 +8,17 @@ const UPSTREAM_MANIFEST = "test/deploy-tests-manifest.json";
 /** How long a test may take to deploy its app, Cloudflare builds are a lot slower. */
 const SETUP_TIMEOUT_MS: Record<TargetName, number> = { core: 240_000, cloudflare: 480_000 };
 
+/**
+ * The bundler of each target, selected through the variable Next.js reads.
+ *
+ * Cloudflare uses webpack as its Turbopack chunk loader generates broken paths for apps which are not in a
+ * monorepo, and every app of the harness is standalone.
+ */
+const BUNDLER_ENV: Record<TargetName, Record<string, string>> = {
+	core: { IS_TURBOPACK_TEST: "1" },
+	cloudflare: { IS_WEBPACK_TEST: "1" },
+};
+
 export type RunSuiteArgsOptions = {
 	group?: string;
 	concurrency: number;
@@ -60,7 +71,7 @@ export function buildRunSuiteEnv({
 		NEXT_E2E_TEST_TIMEOUT: String(SETUP_TIMEOUT_MS[target]),
 		NEXT_EXTERNAL_TESTS_FILTERS: [UPSTREAM_MANIFEST, ...(disabledManifest ? [disabledManifest] : [])].join(","),
 		NEXT_JUNIT_TEST_REPORT: "1",
-		IS_TURBOPACK_TEST: "1",
+		...BUNDLER_ENV[target],
 		NEXT_TEST_JOB: "1",
 		NEXT_TELEMETRY_DISABLED: "1",
 		NEXT_TEST_DIR: testAppsDir,
