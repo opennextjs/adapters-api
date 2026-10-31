@@ -79,6 +79,32 @@ describe("prepareApp", () => {
 		expect(workspace.allowBuilds).toMatchObject({ esbuild: true, sharp: true, workerd: true });
 	});
 
+	test("pins what the harness requests as latest to versions this Next.js supports", () => {
+		prepare();
+
+		const { overrides } = readWorkspace();
+		expect(overrides.typescript).toBe("5.9.3");
+		expect(overrides["@types/node"]).toBe("24.0.0");
+	});
+
+	test("adds a next.config when the test app has none, as the OpenNext build requires one", () => {
+		prepare();
+
+		expect(fs.readFileSync(path.join(appDir, "next.config.mjs"), "utf8")).toBe("export default {};\n");
+	});
+
+	test.each(["next.config.js", "next.config.ts", "next.config.mjs", "next.config.cjs"])(
+		"keeps an existing %s",
+		(file) => {
+			fs.writeFileSync(path.join(appDir, file), "// from the test");
+
+			prepare();
+
+			expect(fs.readdirSync(appDir).filter((name) => name.startsWith("next.config"))).toEqual([file]);
+			expect(fs.readFileSync(path.join(appDir, file), "utf8")).toBe("// from the test");
+		}
+	);
+
 	test("merges into a pnpm-workspace.yaml shipped by the test app", () => {
 		fs.writeFileSync(
 			path.join(appDir, "pnpm-workspace.yaml"),

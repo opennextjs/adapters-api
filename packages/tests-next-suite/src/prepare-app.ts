@@ -5,6 +5,15 @@ import { parse, stringify } from "yaml";
 
 import { PACKAGE_DIR, type Target } from "./targets.js";
 
+const NEXT_CONFIG_FILES = ["next.config.js", "next.config.ts", "next.config.mjs", "next.config.cjs"];
+
+/**
+ * Versions forced in the apps, where the harness asks for `latest`.
+ *
+ * Next.js 16.2 can not load TypeScript 7 and writes a tsconfig TypeScript 6 rejects.
+ */
+const PINNED_DEPENDENCIES = { typescript: "5.9.3", "@types/node": "24.0.0" };
+
 export type PrepareAppOptions = {
 	appDir: string;
 	target: Target;
@@ -54,9 +63,13 @@ export function prepareApp({ appDir, target, tarballsDir, packageManager }: Prep
 			strictDepBuilds: false,
 			minimumReleaseAge: 0,
 			allowBuilds: { ...workspace.allowBuilds, esbuild: true, sharp: true, workerd: true },
-			overrides: { ...workspace.overrides, ...tarballs },
+			overrides: { ...workspace.overrides, ...PINNED_DEPENDENCIES, ...tarballs },
 		})
 	);
+
+	if (!NEXT_CONFIG_FILES.some((file) => fs.existsSync(path.join(appDir, file)))) {
+		fs.writeFileSync(path.join(appDir, "next.config.mjs"), "export default {};\n");
+	}
 
 	for (const file of target.templateFiles) {
 		fs.copyFileSync(path.join(PACKAGE_DIR, "templates", target.name, file), path.join(appDir, file));
