@@ -26,6 +26,20 @@
 	"test/e2e/app-dir/actions/app-action.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/app-dir/app-basepath/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"app dir - basepath should properly stream an internal server action redirect() with a absolute URL",
+			"app dir - basepath should properly stream an internal server action redirect() with a relative URL",
+			"app dir - basepath should successfully hard navigate from pages -> app",
+			"app dir - basepath should support Link with basePath prefixed",
+			"app dir - basepath should support `basePath`"
+		]
+	},
+	"test/e2e/app-dir/app-catch-all-optional/app-catch-all-optional.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["app-catch-all-optional should handle optional catchall with no params"]
+	},
 	"test/e2e/app-dir/app-css/index.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
@@ -37,6 +51,10 @@
 	},
 	"test/e2e/app-dir/app-edge/app-edge.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-esm-js/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["app-dir - esm js extension should be able to use nextjs api in pages router"]
 	},
 	"test/e2e/app-dir/app-middleware-proxy/app-middleware-proxy-in-src-dir.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -55,6 +73,19 @@
 	},
 	"test/e2e/app-dir/app-middleware/app-middleware.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-prefetch/prefetching.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"app dir - prefetching fetch priority should have an auto priority for all other fetch operations",
+			"app dir - prefetching fetch priority should prefetch links in viewport with low priority",
+			"app dir - prefetching fetch priority should respect multiple prefetch types to the same URL",
+			"app dir - prefetching should not unintentionally modify the requested prefetch by escaping the uri encoded query params"
+		]
+	},
+	"test/e2e/app-dir/app-root-params-getters/generate-static-params.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["app-root-param-getters - generateStaticParams should be statically prerenderable"]
 	},
 	"test/e2e/app-dir/app-routes-trailing-slash/app-routes-trailing-slash.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -89,6 +120,25 @@
 	"test/e2e/app-dir/app/useReportWebVitals.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/app-dir/asset-prefix-absolute/asset-prefix-absolute.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["app-dir absolute assetPrefix bundles should return 200 on served assetPrefix"]
+	},
+	"test/e2e/app-dir/asset-prefix-with-basepath/asset-prefix-with-basepath.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"app-dir assetPrefix with basePath handling bundles should return 200 on served assetPrefix",
+			"app-dir assetPrefix with basePath handling should redirect route when clicking link",
+			"app-dir assetPrefix with basePath handling should render link"
+		]
+	},
+	"test/e2e/app-dir/asset-prefix/asset-prefix.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Test execution failure: could be caused by test hooks like 'afterAll'.",
+			"app-dir assetPrefix handling rewrites rewrites that do not start with assetPrefix should still work"
+		]
+	},
 	"test/e2e/app-dir/bun-externals/bun-externals.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
@@ -97,6 +147,26 @@
 	},
 	"test/e2e/app-dir/cache-components-segment-configs/cache-components-segment-configs.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/catch-error/catch-error-react-compiler.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"app-dir - unstable_catchError with react compiler should recover after reset on Pages Router",
+			"app-dir - unstable_catchError with react compiler should throw when unstable_retry is called on Pages Router"
+		]
+	},
+	"test/e2e/app-dir/catch-error/catch-error.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"app-dir - unstable_catchError should recover after reset on Pages Router",
+			"app-dir - unstable_catchError should throw when unstable_retry is called on Pages Router"
+		]
+	},
+	"test/e2e/app-dir/concurrent-navigations/mismatching-prefetch.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"mismatching prefetch recovers when a navigation rewrites to a different route than the one that was prefetched"
+		]
 	},
 	"test/e2e/app-dir/dedupe-rsc-error-log/dedupe-rsc-error-log.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -119,14 +189,73 @@
 	"test/e2e/app-dir/edge-runtime-node-compatibility/edge-runtime-node-compatibility.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/app-dir/fallback-shells/fallback-shells.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"fallback-shells with cached IO with generateStaticParams and the page wrapped in Suspense and params.then/catch/finally passed to a cached function resumes a postponed fallback shell",
+			"fallback-shells with cached IO with generateStaticParams and the page wrapped in Suspense and the params accessed in cached non-page function resumes a postponed fallback shell",
+			"fallback-shells with cached IO with generateStaticParams and the page wrapped in Suspense and the params accessed in the cached page does not produce hydration errors when resuming a fallback shell containing a layout with unused params",
+			"fallback-shells with cached IO with generateStaticParams and the page wrapped in Suspense and the params accessed in the cached page resumes a postponed fallback shell",
+			"fallback-shells with cached IO with generateStaticParams and the page wrapped in Suspense and the params transformed with an async function and then passed to a cached function resumes a postponed fallback shell",
+			"fallback-shells with cached IO without generateStaticParams and params.then/catch/finally passed to a cached function resumes a postponed fallback shell",
+			"fallback-shells with cached IO without generateStaticParams and the params accessed in cached non-page function resumes a postponed fallback shell",
+			"fallback-shells with cached IO without generateStaticParams and the params accessed in the cached page resumes a postponed fallback shell"
+		]
+	},
+	"test/e2e/app-dir/front-redirect-issue/front-redirect-issue.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["app dir - front redirect issue should redirect"]
+	},
+	"test/e2e/app-dir/hooks/hooks.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"app dir - hooks from pages should have the correct hooks at /adapter-hooks/1",
+			"app dir - hooks from pages should have the correct hooks at /adapter-hooks/1/account",
+			"app dir - hooks from pages should have the correct hooks at /adapter-hooks/2",
+			"app dir - hooks from pages should have the correct hooks at /adapter-hooks/static",
+			"app dir - hooks usePathname should have the canonical url pathname on rewrite"
+		]
+	},
 	"test/e2e/app-dir/interception-route-prefetch-cache/interception-route-prefetch-cache.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/interoperability-with-pages/navigation.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"navigation between pages and app dir It should be able to navigate app -> pages",
+			"navigation between pages and app dir It should be able to navigate pages -> app"
+		]
+	},
+	"test/e2e/app-dir/javascript-urls/javascript-urls.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"javascript-urls should prevent javascript URLs in pages router Link as prop",
+			"javascript-urls should prevent javascript URLs in pages router Link component",
+			"javascript-urls should prevent javascript URLs in pages router router.push",
+			"javascript-urls should prevent javascript URLs in pages router router.replace"
+		]
+	},
+	"test/e2e/app-dir/layout-params/layout-params.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"app dir - layout params catchall params should give empty optional catchall params won't give params to any layout"
+		]
 	},
 	"test/e2e/app-dir/logging/fetch-logging.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
 	"test/e2e/app-dir/logging/fetch-warning.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/mdx-no-mdx-components/mdx.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["mdx pages directory should work in initial html"]
+	},
+	"test/e2e/app-dir/metadata-dynamic-routes-async-deps/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"app dir - metadata dynamic routes with async deps should serve the opengraph-image route as a valid image"
+		]
 	},
 	"test/e2e/app-dir/metadata-dynamic-routes/index.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -137,14 +266,193 @@
 	"test/e2e/app-dir/metadata-font/metadata-font.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/app-dir/metadata-icons-parallel-routes/metadata-icons-parallel-routes.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["app-dir - metadata-icons-parallel-routes should serve both icon formats"]
+	},
+	"test/e2e/app-dir/metadata-thrown/metadata-thrown.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"app dir - metadata thrown should not crash from error thrown during preloading nested generateMetadata"
+		]
+	},
 	"test/e2e/app-dir/metadata/metadata.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/middleware-rewrite-dynamic/middleware-rewrite-dynamic.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["app dir - middleware rewrite dynamic should properly rewrite for /favicon.ico"]
+	},
+	"test/e2e/app-dir/middleware-sitemap/matcher-exclude-sitemap/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"middleware-sitemap should not be affected by middleware if sitemap.xml is excluded from the matcher"
+		]
+	},
+	"test/e2e/app-dir/navigation/navigation.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"app dir - navigation navigation between pages and app should not contain _rsc query while navigating from app to pages",
+			"app dir - navigation navigation between pages and app should not contain _rsc query while navigating from pages to app",
+			"app dir - navigation navigation between pages and app should not omit the hash while navigating from app to pages",
+			"app dir - navigation query string useParams identity between renders should be stable in pages"
+		]
 	},
 	"test/e2e/app-dir/next-after-app-deploy/index.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
 	"test/e2e/app-dir/next-after-app/index.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/async-function/async-function-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-async-function-cjs should support config as async function (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/async-function/async-function-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-async-function-esm should support config as async function (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/dynamic-import-esm/next-config-ts-dynamic-import-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-dynamic-import-esm should support dynamic import (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/export-as-default/next-config-ts-export-as-default-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-export-as-default-cjs should support export as default (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/export-as-default/next-config-ts-export-as-default-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-export-as-default-esm should support export as default (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/export-default/next-config-ts-export-default-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-export-default-cjs should support export default (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/export-default/next-config-ts-export-default-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-export-default-esm should support export default (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/import-from-node-modules/next-config-ts-import-from-node-modules-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-import-from-node-modules-cjs should import from node_modules (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/import-from-node-modules/next-config-ts-import-from-node-modules-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-import-from-node-modules-esm should import from node_modules (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/import-js-extensions-cjs/next-config-ts-import-js-extensions-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-import-js-extensions-cjs should import js extensions (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/import-js-extensions-esm/next-config-ts-import-js-extensions-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-import-js-extensions-esm should import js extensions (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/import-json/next-config-ts-import-json-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-import-json-cjs should support import json (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/import-json/next-config-ts-import-json-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-import-json-esm should support import json (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/nested-imports/next-config-ts-nested-imports-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-nested-imports-cjs should handle nested imports (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/nested-imports/next-config-ts-nested-imports-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-nested-imports-esm should handle nested imports (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/node-api-cjs/next-config-ts-node-api-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-node-api-cjs should be able to use Node.js API (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/node-api-esm/next-config-ts-node-api-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-node-api-esm should be able to use Node.js API (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-mts/top-level-await-esm/next-config-ts-top-level-await-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-top-level-await-esm should support top-level await (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/async-function/async-function-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-async-function-cjs should support config as async function (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/async-function/async-function-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-async-function-esm should support config as async function (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/dynamic-import-esm/next-config-ts-dynamic-import-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-dynamic-import-esm should support dynamic import (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/export-as-default/next-config-ts-export-as-default-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-export-as-default-cjs should support export as default (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/export-as-default/next-config-ts-export-as-default-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-export-as-default-esm should support export as default (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/export-default/next-config-ts-export-default-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-export-default-cjs should support export default (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/export-default/next-config-ts-export-default-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-export-default-esm should support export default (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/import-from-node-modules/next-config-ts-import-from-node-modules-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-import-from-node-modules-cjs should import from node_modules (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/import-from-node-modules/next-config-ts-import-from-node-modules-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-import-from-node-modules-esm should import from node_modules (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/import-js-extensions-cjs/next-config-ts-import-js-extensions-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-import-js-extensions-cjs should import js extensions (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/import-js-extensions-esm/next-config-ts-import-js-extensions-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-import-js-extensions-esm should import js extensions (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/import-json/next-config-ts-import-json-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-import-json-cjs should support import json (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/import-json/next-config-ts-import-json-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-import-json-esm should support import json (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/nested-imports/next-config-ts-nested-imports-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-nested-imports-cjs should handle nested imports (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/nested-imports/next-config-ts-nested-imports-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-nested-imports-esm should handle nested imports (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/node-api-cjs/next-config-ts-node-api-cjs.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-node-api-cjs should be able to use Node.js API (CJS)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/node-api-esm/next-config-ts-node-api-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-node-api-esm should be able to use Node.js API (ESM)"]
+	},
+	"test/e2e/app-dir/next-config-ts-native-ts/top-level-await-esm/next-config-ts-top-level-await-esm.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["next-config-ts-top-level-await-esm should support top-level await (ESM)"]
+	},
+	"test/e2e/app-dir/next-dist-client-esm-import/next-dist-client-esm-import.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"next-dist-client-esm-import should resolve ESM modules that have \"next/dist/client\" in their filename"
+		]
 	},
 	"test/e2e/app-dir/next-font/next-font.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -158,8 +466,22 @@
 	"test/e2e/app-dir/next-image/next-image.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/app-dir/no-duplicate-headers-middleware/no-duplicate-headers-middleware.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["no-duplicate-headers-next-config should prioritise headers in middleware for static assets"]
+	},
+	"test/e2e/app-dir/no-duplicate-headers-next-config/no-duplicate-headers-next-config.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["no-duplicate-headers-next-config should prioritise headers in next config for static assets"]
+	},
 	"test/e2e/app-dir/node-extensions/node-extensions.random.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/not-found-with-pages-i18n/not-found-with-pages.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"not-found-with-pages-i18n should prefer the app router 404 over the pages router 404 when both are present - SSR /app-dir/foo"
+		]
 	},
 	"test/e2e/app-dir/not-found/basic/index.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -170,11 +492,51 @@
 	"test/e2e/app-dir/not-found/group-route/index.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/app-dir/parallel-route-not-found-params/parallel-route-not-found-params.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["parallel-route-not-found should behave correctly without any errors"]
+	},
+	"test/e2e/app-dir/parallel-routes-and-interception-basepath/parallel-routes-and-interception-basepath.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["parallel-routes-and-interception-basepath should show parallel intercepted slot with basepath"]
+	},
 	"test/e2e/app-dir/parallel-routes-and-interception-from-root/parallel-routes-and-interception-from-root.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
 	"test/e2e/app-dir/parallel-routes-and-interception/parallel-routes-and-interception.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/parallel-routes-catchall-slotted-non-catchalls/parallel-routes-catchall-slotted-non-catchalls.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"parallel-routes-catchall-slotted-non-catchalls should match default and dynamic segment paths before catch-all"
+		]
+	},
+	"test/e2e/app-dir/parallel-routes-generate-static-params/parallel-routes-generate-static-params.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["parallel-routes-generate-static-params should render the intercepted/non-intercepted modal"]
+	},
+	"test/e2e/app-dir/parallel-routes-revalidation/parallel-routes-revalidation.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"parallel-routes-revalidation router.refresh (dynamic) - searchParams: false should correctly refresh data for previously intercepted modal and active page slot",
+			"parallel-routes-revalidation router.refresh (dynamic) - searchParams: false should correctly refresh data for the intercepted route and previously active page slot",
+			"parallel-routes-revalidation router.refresh (dynamic) - searchParams: true should correctly refresh data for previously intercepted modal and active page slot",
+			"parallel-routes-revalidation router.refresh (dynamic) - searchParams: true should correctly refresh data for the intercepted route and previously active page slot"
+		]
+	},
+	"test/e2e/app-dir/params-hooks-compat/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"app-dir - params hooks compat should only access path params with useParams",
+			"app-dir - params hooks compat should only access search params with useSearchParams"
+		]
+	},
+	"test/e2e/app-dir/ppr-root-param-fallback/ppr-root-param-fallback.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"ppr-root-param-fallback should have use-cache content in fallback shells for all pregenerated locales"
+		]
 	},
 	"test/e2e/app-dir/ppr/ppr.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -182,14 +544,255 @@
 	"test/e2e/app-dir/preferred-region/preferred-region.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/app-dir/prerender-encoding/prerender-encoding.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["prerender-encoding should respond with the prerendered page correctly"]
+	},
 	"test/e2e/app-dir/proxy-runtime/proxy-runtime.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/resource-url-encoding/resource-url-encoding.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["scripts encodes characters in pages router", "styles encodes characters in pages router"]
+	},
+	"test/e2e/app-dir/resume-data-cache/resume-data-cache.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"resume-data-cache should have consistent data between static and dynamic renders with fetch cache",
+			"resume-data-cache should have consistent data between static and dynamic renders with use cache",
+			"resume-data-cache should see fresh data after updateTag in server action with fetch cache",
+			"resume-data-cache should see fresh data after updateTag in server action with use cache",
+			"resume-data-cache should use RDC for server action re-renders"
+		]
 	},
 	"test/e2e/app-dir/rsc-basic/rsc-basic-react-experimental.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
 	"test/e2e/app-dir/rsc-basic/rsc-basic.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/rsc-redirect/rsc-redirect.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["rsc-redirect should get 200 status code for rsc request"]
+	},
+	"test/e2e/app-dir/scss/3rd-party-module/3rd-party-module.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"3rd Party CSS Module Support ({\"sass\": \"1.54.0\"}) should render the module",
+			"3rd Party CSS Module Support ({\"sass-embedded\": \"1.75.0\"}) should render the module"
+		]
+	},
+	"test/e2e/app-dir/scss/basic-module-additional-data/basic-module-additional-data.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Basic Module Additional Data Support ({\"sass\": \"1.54.0\"}) should render the module",
+			"Basic Module Additional Data Support ({\"sass-embedded\": \"1.75.0\"}) should render the module"
+		]
+	},
+	"test/e2e/app-dir/scss/basic-module-include-paths/basic-module-include-paths.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Basic Module Include Paths Support ({\"sass\": \"1.54.0\"}) should render the module",
+			"Basic Module Include Paths Support ({\"sass-embedded\": \"1.75.0\"}) should render the module"
+		]
+	},
+	"test/e2e/app-dir/scss/basic-module-prepend-data/basic-module-prepend-data.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Basic Module Prepend Data Support ({\"sass\": \"1.54.0\"}) should render the module",
+			"Basic Module Prepend Data Support ({\"sass-embedded\": \"1.75.0\"}) should render the module"
+		]
+	},
+	"test/e2e/app-dir/scss/basic-module/basic-module.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Basic SCSS Module Support ({\"sass\": \"1.54.0\"}) should render the module",
+			"Basic SCSS Module Support ({\"sass-embedded\": \"1.75.0\"}) should render the module"
+		]
+	},
+	"test/e2e/app-dir/scss/catch-all-module/catch-all-module.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Catch-all Route CSS Module Usage ({\"sass\": \"1.54.0\"}) should render the module",
+			"Catch-all Route CSS Module Usage ({\"sass-embedded\": \"1.75.0\"}) should render the module"
+		]
+	},
+	"test/e2e/app-dir/scss/composes-basic/composes-basic.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"CSS Module Composes Usage (Basic) ({\"sass\": \"1.54.0\"}) should render the module",
+			"CSS Module Composes Usage (Basic) ({\"sass-embedded\": \"1.75.0\"}) should render the module"
+		]
+	},
+	"test/e2e/app-dir/scss/composes-external/composes-external.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"CSS Module Composes Usage (External) ({\"sass\": \"1.54.0\"}) should render the module",
+			"CSS Module Composes Usage (External) ({\"sass-embedded\": \"1.75.0\"}) should render the module"
+		]
+	},
+	"test/e2e/app-dir/scss/data-url/data-url.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"SCSS Support loader handling Data Urls ({\"sass\": \"1.54.0\"}) should render the module",
+			"SCSS Support loader handling Data Urls ({\"sass-embedded\": \"1.75.0\"}) should render the module"
+		]
+	},
+	"test/e2e/app-dir/scss/dev-module/dev-module.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Has CSS Module in computed styles in Development ({\"sass\": \"1.54.0\"}) should have CSS for page",
+			"Has CSS Module in computed styles in Development ({\"sass-embedded\": \"1.75.0\"}) should have CSS for page"
+		]
+	},
+	"test/e2e/app-dir/scss/dynamic-route-module/dynamic-route-module.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Dynamic Route CSS Module Usage ({\"sass\": \"1.54.0\"}) should apply styles correctly",
+			"Dynamic Route CSS Module Usage ({\"sass-embedded\": \"1.75.0\"}) should apply styles correctly"
+		]
+	},
+	"test/e2e/app-dir/scss/external-url/external-url.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"SCSS Support loader handling External imports ({\"sass\": \"1.54.0\"}) should include font on the page",
+			"SCSS Support loader handling External imports ({\"sass-embedded\": \"1.75.0\"}) should include font on the page"
+		]
+	},
+	"test/e2e/app-dir/scss/loader-order/loader-order.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"SCSS Support loader handling Preprocessor loader order ({\"sass\": \"1.54.0\"}) should render the module",
+			"SCSS Support loader handling Preprocessor loader order ({\"sass-embedded\": \"1.75.0\"}) should render the module"
+		]
+	},
+	"test/e2e/app-dir/scss/multi-global-reversed/multi-global-reversed.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"(SCSS) Multi Global Support (reversed) ({\"sass\": \"1.54.0\"}) should render the page",
+			"(SCSS) Multi Global Support (reversed) ({\"sass-embedded\": \"1.75.0\"}) should render the page"
+		]
+	},
+	"test/e2e/app-dir/scss/multi-global/multi-global.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Multi Global Support ({\"sass\": \"1.54.0\"}) should render the page",
+			"Multi Global Support ({\"sass-embedded\": \"1.75.0\"}) should render the page"
+		]
+	},
+	"test/e2e/app-dir/scss/multi-page/multi-page.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"SCSS Support ({\"sass\": \"1.54.0\"}) Has CSS in computed styles in Development should have CSS for page",
+			"SCSS Support ({\"sass\": \"1.54.0\"}) Has CSS in computed styles in Production should have CSS for page",
+			"SCSS Support ({\"sass-embedded\": \"1.75.0\"}) Has CSS in computed styles in Development should have CSS for page",
+			"SCSS Support ({\"sass-embedded\": \"1.75.0\"}) Has CSS in computed styles in Production should have CSS for page"
+		]
+	},
+	"test/e2e/app-dir/scss/nested-global/nested-global.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Nested @import() Global Support ({\"sass\": \"1.54.0\"}) should render the page",
+			"Nested @import() Global Support ({\"sass-embedded\": \"1.75.0\"}) should render the page"
+		]
+	},
+	"test/e2e/app-dir/scss/nm-module-nested/nm-module-nested.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Valid Nested CSS Module Usage from within node_modules ({\"sass\": \"1.54.0\"}) should render the page",
+			"Valid Nested CSS Module Usage from within node_modules ({\"sass-embedded\": \"1.75.0\"}) should render the page"
+		]
+	},
+	"test/e2e/app-dir/scss/nm-module/nm-module.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Valid CSS Module Usage from within node_modules ({\"sass\": \"1.54.0\"}) should render the page",
+			"Valid CSS Module Usage from within node_modules ({\"sass-embedded\": \"1.75.0\"}) should render the page"
+		]
+	},
+	"test/e2e/app-dir/scss/npm-import-nested/npm-import-nested.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Good Nested CSS Import from node_modules ({\"sass\": \"1.54.0\"}) should render the page",
+			"Good Nested CSS Import from node_modules ({\"sass-embedded\": \"1.75.0\"}) should render the page"
+		]
+	},
+	"test/e2e/app-dir/scss/npm-import-tilde/npm-import-tilde.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Good CSS Import from node_modules with tilde ({\"sass\": \"1.54.0\"}) should render the page",
+			"Good CSS Import from node_modules with tilde ({\"sass-embedded\": \"1.75.0\"}) should render the page"
+		]
+	},
+	"test/e2e/app-dir/scss/npm-import/npm-import.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Good CSS Import from node_modules ({\"sass\": \"1.54.0\"}) should render the page",
+			"Good CSS Import from node_modules ({\"sass-embedded\": \"1.75.0\"}) should render the page"
+		]
+	},
+	"test/e2e/app-dir/scss/prod-module/prod-module.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Has CSS Module in computed styles in Production ({\"sass\": \"1.54.0\"}) should render the page",
+			"Has CSS Module in computed styles in Production ({\"sass-embedded\": \"1.75.0\"}) should render the page"
+		]
+	},
+	"test/e2e/app-dir/scss/single-global-src/single-global-src.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Basic Global Support with src/ dir ({\"sass\": \"1.54.0\"}) should render the page",
+			"Basic Global Support with src/ dir ({\"sass-embedded\": \"1.75.0\"}) should render the page"
+		]
+	},
+	"test/e2e/app-dir/scss/single-global/single-global.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Basic Global Support scss ({\"sass\": \"1.54.0\"}) should render the page",
+			"Basic Global Support scss ({\"sass-embedded\": \"1.75.0\"}) should render the page"
+		]
+	},
+	"test/e2e/app-dir/scss/url-global-partial/url-global-partial.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"SCSS Support loader handling CSS URL via file-loader sass partial ({\"sass\": \"1.54.0\"}) should render the page",
+			"SCSS Support loader handling CSS URL via file-loader sass partial ({\"sass-embedded\": \"1.75.0\"}) should render the page"
+		]
+	},
+	"test/e2e/app-dir/scss/url-global/url-global.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"SCSS Support loader handling ({\"sass\": \"1.54.0\"}) CSS URL via `file-loader` should render the page",
+			"SCSS Support loader handling ({\"sass-embedded\": \"1.75.0\"}) CSS URL via `file-loader` should render the page"
+		]
+	},
+	"test/e2e/app-dir/scss/with-styled-jsx/with-styled-jsx.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Ordering with styled-jsx ({\"sass\": \"1.54.0\"}) should have the correct color (css ordering)",
+			"Ordering with styled-jsx ({\"sass-embedded\": \"1.75.0\"}) should have the correct color (css ordering)"
+		]
+	},
+	"test/e2e/app-dir/searchparams-reuse-loading/searchparams-reuse-loading.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["searchparams-reuse-loading when aliasing is skipped should work for navigating to pages dir"]
+	},
+	"test/e2e/app-dir/segment-cache/memory-pressure/segment-cache-memory-pressure.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["segment cache memory pressure does not leak memory when repeatedly triggering prefetches"]
+	},
+	"test/e2e/app-dir/segment-cache/search-params/segment-cache-search-params.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"segment cache (search params) handles rewrites to the same page but with different search params",
+			"segment cache (search params) stores prefetched data by its rewritten search params, not the original ones",
+			"segment cache (search params) when fetching with PPR, does not include search params in the cache key",
+			"segment cache (search params) when fetching without PPR (e.g. prefetch=\"unstable_forceStale\"), includes the search params in the cache key"
+		]
+	},
+	"test/e2e/app-dir/segment-cache/vary-params/vary-params.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["segment cache - vary params does not reuse prefetched segment when page accesses searchParams"]
 	},
 	"test/e2e/app-dir/server-actions-redirect-middleware-rewrite/server-actions-redirect-middleware-rewrite.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -203,14 +806,132 @@
 	"test/e2e/app-dir/set-cookies/set-cookies.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/app-dir/sitemap-group/sitemap-group.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"sitemap-group should not add suffix to sitemap under group routes",
+			"sitemap-group should not add suffix to static sitemap.xml under group routes"
+		]
+	},
+	"test/e2e/app-dir/static-siblings/static-siblings.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"static-siblings cross-route-group siblings should include static sibling info in the server response",
+			"static-siblings parallel route siblings should include static sibling info in the server response",
+			"static-siblings same-directory siblings should include static sibling info in the server response"
+		]
+	},
 	"test/e2e/app-dir/temporary-references/temporary-references.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/turbopack-reports/turbopack-reports.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["turbopack-reports should render page importing sqlite3"]
+	},
+	"test/e2e/app-dir/underscore-ignore-app-paths/underscore-ignore-app-paths.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["underscore-ignore-app-paths should serve pages path with underscore"]
+	},
+	"test/e2e/app-dir/use-cache-metadata-route-handler/use-cache-metadata-route-handler.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"use-cache-metadata-route-handler should generate manifest.json with a metadata route handler that uses \"use cache\"",
+			"use-cache-metadata-route-handler should generate robots.txt with a metadata route handler that uses \"use cache\"",
+			"use-cache-metadata-route-handler should generate sitemaps with a metadata route handler that uses \"use cache\""
+		]
 	},
 	"test/e2e/app-dir/use-cache-segment-configs/use-cache-segment-configs.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/app-dir/use-params/use-params.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"use-params should work for nested dynamic params",
+			"use-params should work for nested dynamic params client navigating",
+			"use-params should work on pages router"
+		]
+	},
 	"test/e2e/app-dir/with-exported-function-config/with-exported-function-config.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-document/rendering.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Document and App - Rendering via HTTP _app shows a custom tag",
+			"Document and App - Rendering via HTTP _document Document.getInitialProps returns html prop representing app shell",
+			"Document and App - Rendering via HTTP _document renders ctx.renderPage with enhanceApp and enhanceComponent correctly",
+			"Document and App - Rendering via HTTP _document renders ctx.renderPage with enhanceApp correctly",
+			"Document and App - Rendering via HTTP _document renders ctx.renderPage with enhanceComponent correctly",
+			"Document and App - Rendering via HTTP _document renders ctx.renderPage with enhancer correctly",
+			"Document and App - Rendering via HTTP _document should include required elements in rendered html"
+		]
+	},
+	"test/e2e/async-modules/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Async modules can render async 404 pages",
+			"Async modules can render async error page",
+			"Async modules csr async page modules",
+			"Async modules ssr async page modules",
+			"Async modules works on async api routes",
+			"Async modules works with getServerSideProps"
+		]
+	},
+	"test/e2e/babel/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["Babel Should compile a page with flowtype correctly"]
+	},
+	"test/e2e/basepath/error-pages.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"basePath client-side navigation should navigate to /404 correctly client-side",
+			"basePath client-side navigation should navigate to /_error correctly client-side",
+			"basePath manually added basePath in application logic should 404 when manually adding basePath with <Link>",
+			"basePath manually added basePath in application logic should 404 when manually adding basePath with router.push",
+			"basePath manually added basePath in application logic should 404 when manually adding basePath with router.replace"
+		]
+	},
+	"test/e2e/basepath/query-hash.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"basePath query/hash handling is correct during query updating ## $search",
+			"basePath query/hash handling is correct during query updating ##? $search",
+			"basePath query/hash handling is correct during query updating ##hello $search",
+			"basePath query/hash handling is correct during query updating ##hello? $search",
+			"basePath query/hash handling is correct during query updating #? $search",
+			"basePath query/hash handling is correct during query updating #a ?hello",
+			"basePath query/hash handling is correct during query updating #a ?hello=",
+			"basePath query/hash handling is correct during query updating #a ?hello=world",
+			"basePath query/hash handling is correct during query updating #hello? $search",
+			"basePath query/hash handling is correct during query updating #hello?world $search",
+			"basePath query/hash handling should work with hash links"
+		]
+	},
+	"test/e2e/basepath/redirect-and-rewrite.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"basePath should not redirect with basePath when set to false",
+			"basePath should not rewrite with basePath when set to false",
+			"basePath should rewrite with basePath by default",
+			"basePath should rewrite without basePath when set to false"
+		]
+	},
+	"test/e2e/basepath/router-events.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"basePath should use urls with basepath in router events",
+			"basePath should use urls with basepath in router events for cancelled routes",
+			"basePath should use urls with basepath in router events for failed route change",
+			"basePath should use urls with basepath in router events for hash changes"
+		]
+	},
+	"test/e2e/basepath/trailing-slash.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["basePath + trailingSlash should allow URL query strings without refresh"]
+	},
+	"test/e2e/browserslist-extends/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["browserslist-extends should work"]
 	},
 	"test/e2e/cache-handlers-upstream-wiring/index.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -218,8 +939,38 @@
 	"test/e2e/cancel-request/stream-cancel.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/children-page/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["children-page with pages dir should show the content if you have a page named children"]
+	},
+	"test/e2e/chrome-devtools-workspace/chrome-devtools-workspace-custom-disable.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["chrome-devtools-workspace custom disable can be disabled by providing your own endpoint"]
+	},
+	"test/e2e/config-promise-export/async-function.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["async export should work"]
+	},
+	"test/e2e/config-promise-export/promise.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["promise export should work"]
+	},
+	"test/e2e/css-data-url-global-pages/css-data-url-global-pages.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["css-data-url-global-pages should apply styles from data url correctly"]
+	},
 	"test/e2e/deferred-entries/deferred-entries.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/deprecation-warnings/deprecation-warnings.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"deprecation-warnings without next.config.js should not emit any deprecation warnings when no config file exists"
+		]
+	},
+	"test/e2e/disable-js-preload/test/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["disabled JS preloads should render the page"]
 	},
 	"test/e2e/edge-api-endpoints-can-receive-body/index.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -248,11 +999,162 @@
 	"test/e2e/edge-runtime-uses-edge-light-import-specifier-for-packages/edge-runtime-uses-edge-light-import-specifier-for-packages.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/error-handler-not-found-req-url/error-handler-not-found-req-url.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"error-handler-not-found-req-url should log the correct request url and asPath for not found _error page"
+		]
+	},
+	"test/e2e/esm-externals/esm-externals.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"esm-externals pages url /ssr should render the correct page",
+			"esm-externals pages url /ssr should return the correct SSR HTML",
+			"esm-externals pages url /static should render the correct page",
+			"esm-externals pages url /static should return the correct SSR HTML"
+		]
+	},
 	"test/e2e/fetch-failures-have-good-stack-traces-in-edge-runtime/fetch-failures-have-good-stack-traces-in-edge-runtime.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/getserversideprops/test/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"getServerSideProps should SSR normal page correctly",
+			"getServerSideProps should allow POST request for getServerSideProps page",
+			"getServerSideProps should dedupe server data requests",
+			"getServerSideProps should handle throw ENOENT correctly",
+			"getServerSideProps should have correct req.url and query for direct visit dynamic page rewrite direct",
+			"getServerSideProps should have correct req.url and query for direct visit dynamic page rewrite direct with internal query",
+			"getServerSideProps should have correct req.url and query for direct visit dynamic page rewrite param",
+			"getServerSideProps should have gssp in __NEXT_DATA__",
+			"getServerSideProps should navigate between pages successfully",
+			"getServerSideProps should navigate to a normal page and back",
+			"getServerSideProps should not include rewrite query params in `asPath` and `req.url`",
+			"getServerSideProps should not show error for invalid JSON returned from getStaticProps on CST",
+			"getServerSideProps should not trigger an error when a data request is cancelled due to another navigation",
+			"getServerSideProps should pass query for data request on navigation",
+			"getServerSideProps should reload page on failed data request",
+			"getServerSideProps should render 404 correctly when notFound is returned client-transition (dynamic)",
+			"getServerSideProps should render 404 correctly when notFound is returned client-transition (non-dynamic)"
+		]
+	},
+	"test/e2e/handle-non-hoisted-swc-helpers/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["handle-non-hoisted-swc-helpers should work"]
+	},
+	"test/e2e/hello-world/hello-world.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"hello-world should work using browser",
+			"hello-world should work using cheerio",
+			"hello-world should work with fetch",
+			"hello-world should work with html"
+		]
+	},
+	"test/e2e/i18n-default-locale-redirect/i18n-default-locale-redirect.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"i18-default-locale-redirect should not request a path prefixed with default locale",
+			"i18-default-locale-redirect should request a path prefixed with non-default locale"
+		]
+	},
+	"test/e2e/i18n-ignore-redirect-source-locale/redirects-with-basepath.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from and to:",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from and to: /en",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from and to: /nl",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from and to: /sv",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from:  to: /",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from:  to: en",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from:  to: sv",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from: /en to: /",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from: /en to: en",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from: /en to: sv",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from: /nl to: /",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from: /nl to: en",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from: /nl to: sv",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from: /sv to: /",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from: /sv to: en",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from: /sv to: sv"
+		]
+	},
+	"test/e2e/i18n-ignore-redirect-source-locale/redirects.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from and to:",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from and to: /en",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from and to: /nl",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from and to: /sv",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from:  to: /",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from:  to: en",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from:  to: sv",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from: /en to: /",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from: /en to: en",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from: /en to: sv",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from: /nl to: /",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from: /nl to: en",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from: /nl to: sv",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from: /sv to: /",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from: /sv to: en",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from: /sv to: sv"
+		]
+	},
+	"test/e2e/i18n-ignore-rewrite-source-locale/rewrites.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"i18n-ignore-rewrite-source-locale get public file by skipping locale in rewrite, locale:",
+			"i18n-ignore-rewrite-source-locale get public file by skipping locale in rewrite, locale: /en",
+			"i18n-ignore-rewrite-source-locale get public file by skipping locale in rewrite, locale: /nl",
+			"i18n-ignore-rewrite-source-locale get public file by skipping locale in rewrite, locale: /sv"
+		]
+	},
+	"test/e2e/i18n-navigations-middleware/i18n-navigations-middleware.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"i18n-navigations-middleware should respect selected locale when navigating to a dynamic route",
+			"i18n-navigations-middleware should respect selected locale when navigating to a static route"
+		]
+	},
+	"test/e2e/i18n-preferred-locale-detection/i18n-preferred-locale-detection.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"i18-preferred-locale-redirect should not request a path prefixed with my preferred detected locale when clicking link to index from a non-locale-prefixed path"
+		]
+	},
+	"test/e2e/ignore-invalid-popstateevent/with-i18n.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"i18n: Event with stale state - static route previously was dynamic Don't ignore event with different locale",
+			"i18n: Event with stale state - static route previously was dynamic Ignore event with query param",
+			"i18n: Event with stale state - static route previously was dynamic Ignore event without query param"
+		]
+	},
+	"test/e2e/ignore-invalid-popstateevent/without-i18n.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Event with stale state - static route previously was dynamic Ignore event with query param",
+			"Event with stale state - static route previously was dynamic Ignore event without query param"
+		]
+	},
 	"test/e2e/import-conditions/import-conditions.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/import-meta/import-meta.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"import-meta import.meta.url should work in browser",
+			"import-meta import.meta.url should work on the server"
+		]
+	},
+	"test/e2e/instrumentation-client-hook/instrumentation-client-hook.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Instrumentation Client Hook App Router should execute instrumentation-client from app router before hydration",
+			"Instrumentation Client Hook Pages Router should execute instrumentation-client from pages router before hydration",
+			"Instrumentation Client Hook With src folder should execute instrumentation-client from with src folder before hydration"
+		]
 	},
 	"test/e2e/instrumentation-hook-src/instrumentation-hook-src.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -260,17 +1162,258 @@
 	"test/e2e/instrumentation-hook/instrumentation-hook.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/invalid-static-asset-404-app/invalid-static-asset-404-app-asset-prefix.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"invalid-static-asset-404-app-asset-prefix should return 404 with plain text when fetching invalid asset path",
+			"invalid-static-asset-404-app-asset-prefix should return correct output with status 200 on valid asset path"
+		]
+	},
+	"test/e2e/invalid-static-asset-404-app/invalid-static-asset-404-app-base-path.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"invalid-static-asset-404-app-base-path should return custom 404 page when fetching invalid non-asset path"
+		]
+	},
+	"test/e2e/invalid-static-asset-404-app/invalid-static-asset-404-app.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"invalid-static-asset-404-app should return 404 with plain text when fetching invalid asset path"
+		]
+	},
+	"test/e2e/invalid-static-asset-404-pages/invalid-static-asset-404-pages-asset-prefix.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"invalid-static-asset-404-pages-asset-prefix should return correct output with status 200 on valid asset path",
+			"invalid-static-asset-404-pages-asset-prefix should return custom 404 page when fetching invalid non-asset path"
+		]
+	},
+	"test/e2e/invalid-static-asset-404-pages/invalid-static-asset-404-pages-base-path.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"invalid-static-asset-404-pages-base-path should return custom 404 page when fetching invalid non-asset path"
+		]
+	},
+	"test/e2e/invalid-static-asset-404-pages/invalid-static-asset-404-pages.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"invalid-static-asset-404-pages should return custom 404 page when fetching invalid non-asset path"
+		]
+	},
+	"test/e2e/legacy-link-behavior-pages/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Link with legacyBehavior errors when calling onClick without the event",
+			"Link with legacyBehavior if the child is an <a> tag forwards the href attribute",
+			"Link with legacyBehavior if the child is an <a> tag navigates correctly",
+			"Link with legacyBehavior passHref forwards the href attribute",
+			"Link with legacyBehavior passHref navigates correctly",
+			"Link with legacyBehavior works if the child is a number",
+			"Link with legacyBehavior works if the child is a string"
+		]
+	},
+	"test/e2e/link-on-navigate-prop/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"<Link /> onNavigate prop Pages Router should only trigger both onClick for external links",
+			"<Link /> onNavigate prop Pages Router should only trigger onClick for download links",
+			"<Link /> onNavigate prop Pages Router should only trigger onClick for external links with target=\"_blank\"",
+			"<Link /> onNavigate prop Pages Router should prevent navigation when onNavigate calls preventDefault",
+			"<Link /> onNavigate prop Pages Router should replace history state for external links with replace prop",
+			"<Link /> onNavigate prop Pages Router should trigger both onClick and onNavigate for internal navigation",
+			"<Link /> onNavigate prop Pages Router should trigger onClick but not onNavigate when using modifier key"
+		]
+	},
+	"test/e2e/link-with-api-rewrite/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"link-with-api-rewrite should perform hard navigation for direct urls",
+			"link-with-api-rewrite should perform hard navigation for rewritten urls"
+		]
+	},
+	"test/e2e/middleware-base-path/test/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Middleware base tests router.query must exist when Link clicked page routing",
+			"Middleware base tests should allow client-side navigation to the root",
+			"Middleware base tests should execute from absolute paths"
+		]
+	},
+	"test/e2e/middleware-custom-matchers/test/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Middleware custom matchers should match has cookie",
+			"Middleware custom matchers should match has header",
+			"Middleware custom matchers should match has header value",
+			"Middleware custom matchers should match has query",
+			"Middleware custom matchers should match missing header correctly",
+			"Middleware custom matchers should match missing query correctly",
+			"Middleware custom matchers should match source path"
+		]
+	},
+	"test/e2e/middleware-fetches-with-body/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Middleware fetches with body should return 413 for body equal to 10mb",
+			"Middleware fetches with body with bodyParser = false should be able to send and return with body greater than 16KiB",
+			"Middleware fetches with body with bodyParser = false should be able to send and return with body size equal to 16KiB",
+			"Middleware fetches with body with custom bodyParser sizeLimit (5kb) should be able to send and return body size equal to 5kb",
+			"Middleware fetches with body with custom bodyParser sizeLimit (5kb) should return 413 for body greater than 5kb",
+			"Middleware fetches with body with custom bodyParser sizeLimit (5mb) should return 413 for body greater than 5mb",
+			"Middleware fetches with body with default bodyParser sizeLimit (1mb) should be able to send and return body greater than default highWaterMark (16KiB)",
+			"Middleware fetches with body with default bodyParser sizeLimit (1mb) should be able to send and return body size equal to 1mb",
+			"Middleware fetches with body with default bodyParser sizeLimit (1mb) should return 413 for body greater than 1mb"
+		]
+	},
 	"test/e2e/middleware-general/test/index.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
 	"test/e2e/middleware-general/test/node-runtime.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/middleware-redirects/test/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Middleware Redirect /fr should implement internal redirects",
+			"Middleware Redirect /fr should redirect",
+			"Middleware Redirect /fr should redirect multiple times",
+			"Middleware Redirect /fr should redirect to api route with locale",
+			"Middleware Redirect /fr should redirect with a fragment",
+			"Middleware Redirect should implement internal redirects",
+			"Middleware Redirect should redirect",
+			"Middleware Redirect should redirect correctly with redirect in next.config.js",
+			"Middleware Redirect should redirect multiple times",
+			"Middleware Redirect should redirect to api route with locale",
+			"Middleware Redirect should redirect to external urls with data requests and external redirects",
+			"Middleware Redirect should redirect with a fragment"
+		]
+	},
+	"test/e2e/middleware-redirects/test/node-runtime.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Middleware Redirect /fr should implement internal redirects",
+			"Middleware Redirect /fr should redirect",
+			"Middleware Redirect /fr should redirect multiple times",
+			"Middleware Redirect /fr should redirect to api route with locale",
+			"Middleware Redirect /fr should redirect with a fragment",
+			"Middleware Redirect should implement internal redirects",
+			"Middleware Redirect should redirect",
+			"Middleware Redirect should redirect correctly with redirect in next.config.js",
+			"Middleware Redirect should redirect multiple times",
+			"Middleware Redirect should redirect to api route with locale",
+			"Middleware Redirect should redirect to external urls with data requests and external redirects",
+			"Middleware Redirect should redirect with a fragment"
+		]
+	},
 	"test/e2e/middleware-request-header-overrides/test/index.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/middleware-rewrites/test/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Middleware Rewrite /fr should correctly rewriting to a different dynamic path",
+			"Middleware Rewrite should behave consistently on recursive rewrites",
+			"Middleware Rewrite should correctly rewriting to a different dynamic path",
+			"Middleware Rewrite should hard navigate on 404 for data request",
+			"Middleware Rewrite should override with rewrite externally correctly",
+			"Middleware Rewrite should rewrite to fallback: true page successfully"
+		]
+	},
+	"test/e2e/middleware-shallow-link/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["browser-shallow-navigation should render the correct page"]
+	},
+	"test/e2e/middleware-static-files/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Middleware Runtime should match middleware correctly for /another%2ffile.svg",
+			"Middleware Runtime should match middleware correctly for /another/file.svg",
+			"Middleware Runtime should match middleware correctly for /file.svg",
+			"Middleware Runtime should match middleware correctly for /glob%2ffile.svg",
+			"Middleware Runtime should match middleware correctly for /glob/file.svg",
+			"Middleware Runtime should match middleware correctly for /vercel copy.svg",
+			"Middleware Runtime should match middleware correctly for /vercel%20copy.svg"
+		]
+	},
+	"test/e2e/middleware-trailing-slash/test/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Middleware Runtime trailing slash allows shallow linking with middleware",
+			"Middleware Runtime trailing slash should add a rewrite header on data requests for rewrites",
+			"Middleware Runtime trailing slash should have correct dynamic route params for middleware rewrite to dynamic route",
+			"Middleware Runtime trailing slash should have correct dynamic route params on client-transition to dynamic route",
+			"Middleware Runtime trailing slash should have correct query values for rewrite to ssg page",
+			"Middleware Runtime trailing slash should have correct route params for chained rewrite from middleware to config rewrite",
+			"Middleware Runtime trailing slash should have correct route params for rewrite from config dynamic route",
+			"Middleware Runtime trailing slash should have correct route params for rewrite from config non-dynamic route",
+			"Middleware Runtime trailing slash should normalize data requests into page requests",
+			"Middleware Runtime trailing slash should respond with 400 on decode failure",
+			"Middleware Runtime trailing slash should rewrite correctly for non-SSG/SSP page",
+			"Middleware Runtime trailing slash should rewrite the same for direct visit and client-transition",
+			"Middleware Runtime trailing slash should trigger middleware for data requests",
+			"Middleware Runtime trailing slash with .html extension should work when navigating",
+			"Middleware Runtime trailing slash without .html extension should work when navigating"
+		]
+	},
 	"test/e2e/module-layer/module-layer.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/new-link-behavior/child-a-tag-error.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["New Link Behavior with <a> child should throw error with <a> child"]
+	},
+	"test/e2e/new-link-behavior/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"New Link Behavior should handle onclick",
+			"New Link Behavior should handle preventdefault",
+			"New Link Behavior should navigate to /about",
+			"New Link Behavior should render link with <a>",
+			"New Link Behavior should render link with classname",
+			"New Link Behavior should render link with id",
+			"New Link Behavior should render link with multiple children"
+		]
+	},
+	"test/e2e/next-form/default/app-dir.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"next-form - app dir functions passed to action runs server action",
+			"next-form - app dir functions passed to action runs server action (closure)",
+			"next-form - app dir functions passed to formAction runs server action (closure) from submitter and doesn't warn about unsupported attributes",
+			"next-form - app dir functions passed to formAction runs server action from submitter and doesn't warn about unsupported attributes"
+		]
+	},
+	"test/e2e/next-form/default/pages-dir.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"next-form - pages dir does not navigate if preventDefault is called in onSubmit",
+			"next-form - pages dir does not push a new history entry if `replace` is passed",
+			"next-form - pages dir functions passed to action runs client action",
+			"next-form - pages dir functions passed to formAction runs client action from submitter and doesn't warn about unsupported attributes",
+			"next-form - pages dir should soft-navigate on submit",
+			"next-form - pages dir should soft-navigate to the formAction url of the submitter",
+			"next-form - pages dir unsupported attributes on submitter should warn if submitter sets \"formEncType\" to an unsupported value and fall back to default submit behavior",
+			"next-form - pages dir unsupported attributes on submitter should warn if submitter sets \"formMethod\" to an unsupported value and fall back to default submit behavior",
+			"next-form - pages dir unsupported attributes on submitter should warn if submitter sets \"formTarget\" to an unsupported value and fall back to default submit behavior",
+			"next-form - pages dir url-encodes file inputs, but warns about them"
+		]
+	},
+	"test/e2e/next-head/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"next/head should have correct head tags after hydration",
+			"next/head should have correct head tags from a fragment",
+			"next/head should have correct head tags in initial document",
+			"next/head should have current head tags from a _document getInitialProps",
+			"next/head should place charset element at the top of <head>"
+		]
+	},
+	"test/e2e/nonce-head-manager/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"nonce head manager should not re-execute the script when re-rendering",
+			"nonce head manager should not re-execute the script when re-rendering with CSP header"
+		]
 	},
 	"test/e2e/og-api/index.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -284,11 +1427,29 @@
 	"test/e2e/on-request-error/server-action-error/server-action-error.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/opentelemetry/client-trace-metadata/client-trace-metadata.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"clientTraceMetadata pages router next start only soft navigating to a dynamic page should not transform previous propagation data",
+			"clientTraceMetadata pages router next start only soft navigating to a static page should not transform previous propagation data"
+		]
+	},
 	"test/e2e/opentelemetry/instrumentation/instrumentation-pages-app-only.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
 	"test/e2e/opentelemetry/instrumentation/opentelemetry.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/optimized-loading/test/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Optimized loading page / should load scripts with defer in head",
+			"Optimized loading page / should render the page /"
+		]
+	},
+	"test/e2e/postcss-config-package/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["postcss-config-json works with postcss config specified in package.json"]
 	},
 	"test/e2e/prerender-crawler.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -302,8 +1463,19 @@
 	"test/e2e/react-version/react-version.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/revalidate-reason/revalidate-reason.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"revalidate-reason should support revalidateReason: \"on-demand\"",
+			"revalidate-reason should support revalidateReason: \"stale\""
+		]
+	},
 	"test/e2e/skip-trailing-slash-redirect/index.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/ssr-react-context/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["React Context should render a page with context"]
 	},
 	"test/e2e/streaming-ssr-edge/streaming-ssr-edge.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -314,10 +1486,91 @@
 	"test/e2e/switchable-runtime/index.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/test-template/{{ toFileName name }}/{{ toFileName name }}.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"{{name}} should work using browser",
+			"{{name}} should work using cheerio",
+			"{{name}} should work with fetch",
+			"{{name}} should work with html"
+		]
+	},
+	"test/e2e/test-utils-tests/basic/basic.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["nextTestSetup should work"]
+	},
 	"test/e2e/testmode/testmode.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
+	"test/e2e/trailing-slashes/with-trailing-slash.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Trailing slashes with trailingSlash: true / should client side render /index.js, with router path /",
+			"Trailing slashes with trailingSlash: true / should resolve to /index.js, with router path /",
+			"Trailing slashes with trailingSlash: true /about/ should client side render /about.js, with router path /about",
+			"Trailing slashes with trailingSlash: true /about/ should resolve to /about.js, with router path /about",
+			"Trailing slashes with trailingSlash: true /about/?hello=world should client side render /about.js, with router path /about",
+			"Trailing slashes with trailingSlash: true /about/?hello=world should resolve to /about.js, with router path /about",
+			"Trailing slashes with trailingSlash: true /catch-all/hello/world/ should client side render /catch-all/[...slug].js, with router path /catch-all/[...slug]",
+			"Trailing slashes with trailingSlash: true /catch-all/hello/world/ should resolve to /catch-all/[...slug].js, with router path /catch-all/[...slug]"
+		]
+	},
+	"test/e2e/trailing-slashes/without-trailing-slash.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Trailing slashes with trailingSlash: false / should client side render /index.js, with router path /",
+			"Trailing slashes with trailingSlash: false / should resolve to /index.js, with router path /",
+			"Trailing slashes with trailingSlash: false /about should client side render /about.js, with router path /about",
+			"Trailing slashes with trailingSlash: false /about should resolve to /about.js, with router path /about",
+			"Trailing slashes with trailingSlash: false /about?hello=world should client side render /about.js, with router path /about",
+			"Trailing slashes with trailingSlash: false /about?hello=world should resolve to /about.js, with router path /about",
+			"Trailing slashes with trailingSlash: false /catch-all/hello/world should client side render /catch-all/[...slug].js, with router path /catch-all/[...slug]",
+			"Trailing slashes with trailingSlash: false /catch-all/hello/world should resolve to /catch-all/[...slug].js, with router path /catch-all/[...slug]"
+		]
+	},
+	"test/e2e/tsconfig-path/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["specified tsconfig pages router: allows a user-specific tsconfig via the next config"]
+	},
+	"test/e2e/twoslash/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"twoslash should annotate twoslash types default",
+			"twoslash should annotate twoslash types esnext"
+		]
+	},
+	"test/e2e/type-module-interop/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Type module interop should render server-side",
+			"Type module interop should render server-side with modules"
+		]
+	},
+	"test/e2e/typescript-custom-tsconfig/test/index.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": ["Custom TypeScript Config pages router: allows a user-specific tsconfig via the next config"]
+	},
 	"test/e2e/url/url.test.ts": {
 		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/use-router-with-rewrites/use-router-with-rewrites.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"use-router-with-rewrites rewrite to another segment should preserve current pathname when using Link with rewrites on dynamic route",
+			"use-router-with-rewrites rewrite to another segment should preserve current pathname when using useRouter.push with rewrites on dynamic route",
+			"use-router-with-rewrites rewrite to another segment should preserve current pathname when using useRouter.replace with rewrites on dynamic route",
+			"use-router-with-rewrites rewrite to same segment should preserve current pathname when using Link with rewrites on dynamic route",
+			"use-router-with-rewrites rewrite to same segment should preserve current pathname when using useRouter.push with rewrites on dynamic route",
+			"use-router-with-rewrites rewrite to same segment should preserve current pathname when using useRouter.replace with rewrites on dynamic route",
+			"use-router-with-rewrites should preserve current pathname when using Link with rewrites",
+			"use-router-with-rewrites should preserve current pathname when using useRouter.push with rewrites",
+			"use-router-with-rewrites should preserve current pathname when using useRouter.replace with rewrites"
+		]
+	},
+	"test/e2e/useselectedlayoutsegment-s-in-pages-router/useselectedlayoutsegment-s-in-pages-router.test.ts": {
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"useSelectedLayoutSegment(s) in Pages Router Should render with `useSelectedLayoutSegment(s) hooks"
+		]
 	}
 }
