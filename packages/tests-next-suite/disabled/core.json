@@ -1,1 +1,323 @@
-{}
+{
+	"test/e2e/app-dir/actions-unrecognized/actions-unrecognized.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/actions/app-action-export.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/actions/app-action-form-state-node-middleware.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/actions/app-action-form-state.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/actions/app-action-node-middleware.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/actions/app-action-progressive-enhancement.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/actions/app-action-size-limit-invalid-node-middleware.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/actions/app-action-size-limit-invalid.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/actions/app-action.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-css/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-edge-root-layout/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-edge/app-edge-invalid-reexport.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-edge/app-edge.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-middleware-proxy/app-middleware-proxy-in-src-dir.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-middleware-proxy/app-middleware-proxy-without-pages-dir.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-middleware-proxy/app-middleware-proxy.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-middleware/app-middleware-in-src-dir.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-middleware/app-middleware-without-pages-dir.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-middleware/app-middleware.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-routes-trailing-slash/app-routes-trailing-slash.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-routes/app-custom-route-base-path.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-routes/app-custom-routes.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-simple-routes/app-simple-routes.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-static/app-static-custom-handler.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app-static/app-static.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app/experimental-compile.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app/standalone-gsp.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app/standalone.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/app/useReportWebVitals.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/bun-externals/bun-externals.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/cache-components-segment-configs/cache-components-edge-deduplication.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/cache-components-segment-configs/cache-components-segment-configs.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/dedupe-rsc-error-log/dedupe-rsc-error-log.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/draft-mode/draft-mode.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/dynamic-css/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/dynamic/dynamic.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/edge-route-catchall/edge-route-catchall.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/edge-route-rewrite/edge-route-rewrite.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/edge-runtime-node-compatibility/edge-runtime-node-compatibility.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/interception-route-prefetch-cache/interception-route-prefetch-cache.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/logging/fetch-logging.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/logging/fetch-warning.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/metadata-dynamic-routes/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/metadata-edge/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/metadata-font/metadata-font.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/metadata/metadata.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/next-after-app-deploy/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/next-after-app/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/next-font/next-font.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/next-image/next-image-https.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/next-image/next-image-proxy.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/next-image/next-image.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/node-extensions/node-extensions.random.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/not-found/basic/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/not-found/conflict-route/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/not-found/group-route/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/parallel-routes-and-interception-from-root/parallel-routes-and-interception-from-root.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/parallel-routes-and-interception/parallel-routes-and-interception.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/ppr/ppr.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/preferred-region/preferred-region.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/proxy-runtime/proxy-runtime.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/rsc-basic/rsc-basic-react-experimental.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/rsc-basic/rsc-basic.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/server-actions-redirect-middleware-rewrite/server-actions-redirect-middleware-rewrite.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/server-source-maps/server-source-maps-edge.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/server-source-maps/server-source-maps.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/set-cookies/set-cookies.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/temporary-references/temporary-references.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/use-cache-segment-configs/use-cache-segment-configs.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/app-dir/with-exported-function-config/with-exported-function-config.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/cache-handlers-upstream-wiring/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/cancel-request/stream-cancel.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/deferred-entries/deferred-entries.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/edge-api-endpoints-can-receive-body/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/edge-async-local-storage/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/edge-can-use-wasm-files/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/edge-compiler-can-import-blob-assets/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/edge-configurable-runtime/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/edge-pages-support/edge-document.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/edge-pages-support/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/edge-runtime-pages-api-route/edge-runtime-pages-api-route.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/edge-runtime-uses-edge-light-import-specifier-for-packages/edge-runtime-uses-edge-light-import-specifier-for-packages.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/fetch-failures-have-good-stack-traces-in-edge-runtime/fetch-failures-have-good-stack-traces-in-edge-runtime.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/import-conditions/import-conditions.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/instrumentation-hook-src/instrumentation-hook-src.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/instrumentation-hook/instrumentation-hook.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/middleware-general/test/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/middleware-general/test/node-runtime.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/middleware-request-header-overrides/test/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/module-layer/module-layer.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/og-api/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/og-routes-custom-font/og-routes-custom-font.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/on-request-error/basic/basic.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/on-request-error/server-action-error/server-action-error.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/opentelemetry/instrumentation/instrumentation-pages-app-only.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/opentelemetry/instrumentation/opentelemetry.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/prerender-crawler.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/prerender-native-module.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/prerender.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/react-version/react-version.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/skip-trailing-slash-redirect/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/streaming-ssr-edge/streaming-ssr-edge.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/streaming-ssr/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/switchable-runtime/index.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/testmode/testmode.test.ts": {
+		"reason": "The edge runtime is not supported"
+	},
+	"test/e2e/url/url.test.ts": {
+		"reason": "The edge runtime is not supported"
+	}
+}

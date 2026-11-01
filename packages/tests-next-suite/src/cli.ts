@@ -5,10 +5,11 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 
 import { findStaleEntries, loadDisabled, toManifest } from "./disabled.js";
+import { disabledEdgeTests, findEdgeRuntimeTests } from "./edge.js";
 import { disabledFromJUnit, mergeDisabled, summarize } from "./junit.js";
 import { DEFAULT_NEXT_REF, ensureNextCheckout, packTarballs } from "./next-checkout.js";
 import { buildRunSuiteArgs, buildRunSuiteEnv } from "./run-suite.js";
-import { PACKAGE_DIR, getTarget, type TargetName } from "./targets.js";
+import { PACKAGE_DIR, TARGETS, getTarget, type TargetName } from "./targets.js";
 
 const CACHE_DIR = path.join(PACKAGE_DIR, ".cache");
 const TEST_APPS_DIR = path.join(os.homedir(), ".cache/opennext-next-suite/apps");
@@ -16,7 +17,8 @@ const TEST_APPS_DIR = path.join(os.homedir(), ".cache/opennext-next-suite/apps")
 const USAGE = `Usage:
   pnpm next-suite setup [--ref <ref>]
   pnpm next-suite run --target <core|cloudflare> [--group 1/16] [-c 2] [--retries <n>] [--ref <ref>] [--include-disabled] [test paths...]
-  pnpm next-suite disabled-from-junit --target <core|cloudflare> --input <dir> --output <file> --reason <text>`;
+  pnpm next-suite disabled-from-junit --target <core|cloudflare> --input <dir> --output <file> --reason <text>
+  pnpm next-suite disable-edge [--ref <ref>]`;
 
 /** Resolves the Next.js checkout, set `NEXT_SUITE_NEXT_DIR` to use an existing built one. */
 function resolveNextDir(ref: string): string {
@@ -126,6 +128,19 @@ function seedDisabled(args: string[]): number {
 	return 0;
 }
 
+/** Adds the edge runtime tests of the checkout to the disable list of every target. */
+function disableEdge(args: string[]): number {
+	const { values } = parseArgs({ args, options: { ref: { type: "string", default: DEFAULT_NEXT_REF } } });
+	const edgeTests = disabledEdgeTests(findEdgeRuntimeTests(resolveNextDir(values.ref)));
+	for (const target of Object.keys(TARGETS)) {
+		const file = path.join(PACKAGE_DIR, "disabled", `${target}.json`);
+		const list = mergeDisabled(loadDisabled(file), edgeTests);
+		fs.writeFileSync(file, `${JSON.stringify(list, null, "\t")}\n`);
+	}
+	console.log(`Disabled ${Object.keys(edgeTests).length} edge runtime test files`);
+	return 0;
+}
+
 function main([command, ...args]: string[]): number {
 	switch (command) {
 		case "setup":
@@ -134,6 +149,8 @@ function main([command, ...args]: string[]): number {
 			return run(args);
 		case "disabled-from-junit":
 			return seedDisabled(args);
+		case "disable-edge":
+			return disableEdge(args);
 		default:
 			console.error(USAGE);
 			return 1;
