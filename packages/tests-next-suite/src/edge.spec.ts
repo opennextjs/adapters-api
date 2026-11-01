@@ -68,6 +68,35 @@ describe("findEdgeRuntimeTests", () => {
 		expect(findEdgeRuntimeTests(nextDir)).toEqual([]);
 	});
 
+	test("does not scan all tests for a test at the root of the e2e directory", () => {
+		write("test/e2e/prerender.test.ts");
+		write("test/e2e/other/other.test.ts");
+		write("test/e2e/other/app/page.tsx", `export const runtime = 'edge'`);
+
+		expect(findEdgeRuntimeTests(nextDir)).toEqual(["test/e2e/other/other.test.ts"]);
+	});
+
+	test("finds the fixture of a test at the root of the e2e directory", () => {
+		write("test/e2e/prerender.test.ts");
+		write("test/e2e/prerender/pages/a.tsx", `export const config = { runtime: 'edge' }`);
+
+		expect(findEdgeRuntimeTests(nextDir)).toEqual(["test/e2e/prerender.test.ts"]);
+	});
+
+	test("does not scan all tests for a test at the root of the app-dir directory", () => {
+		write("test/e2e/app-dir/root.test.ts");
+		write("test/e2e/app-dir/other/app/page.tsx", `export const runtime = 'edge'`);
+
+		expect(findEdgeRuntimeTests(nextDir)).toEqual([]);
+	});
+
+	test("ignores an edge runtime declared by a sibling test file", () => {
+		write("test/e2e/a/a.test.ts");
+		write("test/e2e/a/b.test.ts", `export const runtime = 'edge'`);
+
+		expect(findEdgeRuntimeTests(nextDir)).toEqual(["test/e2e/a/b.test.ts"]);
+	});
+
 	test("keeps sibling test directories apart", () => {
 		write("test/e2e/a/a.test.ts");
 		write("test/e2e/a/app/page.tsx", `export const runtime = 'edge'`);

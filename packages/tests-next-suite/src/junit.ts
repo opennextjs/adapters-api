@@ -68,12 +68,14 @@ export function disabledFromJUnit(xmlFiles: string[], nextDir: string, reason: s
 	const brokenFiles = new Set<string>();
 
 	for (const { file, testCase } of xmlFiles.flatMap((xmlFile) => readCases(xmlFile, nextDir))) {
+		// jest-junit joins the describe blocks and the title with a space, even without describe blocks.
+		const name = testCase.name.replace(/^ /, "");
 		if (testCase.classname === SUITE_ERROR_CASE || testCase.name.includes(HOOK_ERROR_CASE)) {
 			brokenFiles.add(file);
 		} else if (testCase.failure !== undefined || testCase.error !== undefined) {
-			failed.set(file, [...(failed.get(file) ?? []), testCase.name]);
+			failed.set(file, [...(failed.get(file) ?? []), name]);
 		} else if (testCase.skipped === undefined) {
-			passed.add(`${file}\0${testCase.name}`);
+			passed.add(`${file}\0${name}`);
 		}
 	}
 

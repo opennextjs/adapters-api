@@ -92,6 +92,12 @@ describe("disabledFromJUnit", () => {
 		expect(disabledFromJUnit([report], "/x/next.js", "r")[FILE]?.cases).toEqual(['renders "a" & b']);
 	});
 
+	test("drops the space jest-junit adds before tests outside of a describe", () => {
+		const report = writeReport([{ name: " top level, locale: ", body: FAILURE }]);
+
+		expect(disabledFromJUnit([report], "/x/next.js", "r")[FILE]?.cases).toEqual(["top level, locale: "]);
+	});
+
 	test("keeps the trailing space of a case name, as names have to match exactly", () => {
 		const report = writeReport([{ name: "redirected, locale: ", body: FAILURE }]);
 

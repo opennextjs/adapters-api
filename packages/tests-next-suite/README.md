@@ -58,7 +58,7 @@ Each adapter has its own list, `disabled/core.json` and `disabled/cloudflare.jso
 - The key is an exact path, globs are not supported.
 - A reason is required.
 
-The edge runtime is not supported, so `pnpm next-suite disable-edge` adds every test whose app declares it to both lists, as whole files. Run it again after updating the Next.js ref. Middleware does not count. Fixtures are shared, so one edge page in a fixture disables all of its tests.
+The edge runtime is not supported, so `pnpm next-suite disable-edge` adds every test whose app declares it to both lists, as whole files. Run it again after updating the Next.js ref. Middleware does not count. Fixtures are shared, so one edge page in a fixture disables all the tests of its directory.
 
 A run warns about entries for files which no longer exist, as can happen after updating the Next.js ref. Entries for cases are not checked, so remove them once the test is fixed: use `--include-disabled` to find out.
 

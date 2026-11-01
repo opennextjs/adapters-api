@@ -261,9 +261,6 @@
 	"test/e2e/app-dir/logging/fetch-logging.test.ts": {
 		"reason": "The edge runtime is not supported"
 	},
-	"test/e2e/app-dir/logging/fetch-warning.test.ts": {
-		"reason": "The edge runtime is not supported"
-	},
 	"test/e2e/app-dir/mdx-no-mdx-components/mdx.test.ts": {
 		"reason": "Failing on Next.js 16.2.1, not triaged yet",
 		"cases": ["mdx pages directory should work in initial html"]
@@ -1545,13 +1542,43 @@
 		"cases": ["postcss-config-json works with postcss config specified in package.json"]
 	},
 	"test/e2e/prerender-crawler.test.ts": {
-		"reason": "The edge runtime is not supported"
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Prerender crawler handling should block for crawler correctly",
+			"Prerender crawler handling should return fallback for non-crawler correctly"
+		]
 	},
 	"test/e2e/prerender-native-module.test.ts": {
-		"reason": "The edge runtime is not supported"
+		"reason": "Failing on Next.js 16.2.1, not triaged yet"
 	},
 	"test/e2e/prerender.test.ts": {
-		"reason": "The edge runtime is not supported"
+		"reason": "Failing on Next.js 16.2.1, not triaged yet",
+		"cases": [
+			"Prerender should 404 for a missing catchall explicit route",
+			"Prerender should SSR blocking path correctly (blocking)",
+			"Prerender should allow rewriting to SSG page with fallback: 'blocking'",
+			"Prerender should handle fallback only page correctly HTML",
+			"Prerender should handle revalidating HTML correctly",
+			"Prerender should handle revalidating HTML correctly with blocking",
+			"Prerender should handle revalidating HTML correctly with blocking and seed",
+			"Prerender should handle revalidating JSON correctly",
+			"Prerender should handle revalidating JSON correctly with blocking",
+			"Prerender should handle revalidating JSON correctly with blocking and seed",
+			"Prerender should navigate between pages successfully",
+			"Prerender should not error when rewriting to fallback dynamic SSG page",
+			"Prerender should not have gsp in __NEXT_DATA__ for non-GSP page",
+			"Prerender should not show error for invalid JSON returned from getStaticProps on SSR",
+			"Prerender should render correctly for SSG pages that starts with api-docs",
+			"Prerender should respond for catch-all deep folder",
+			"Prerender should respond with 405 for POST to static page",
+			"Prerender should return data correctly for dynamic page (non-seeded)",
+			"Prerender should support lazy catchall route",
+			"Prerender should support nested lazy catchall route",
+			"Prerender should use correct caching headers for a fallback-true page (lazy)",
+			"Prerender should use correct caching headers for a fallback-true page (prerendered)",
+			"Prerender should use correct caching headers for a no-revalidate page",
+			"Prerender should use correct caching headers for a revalidate page"
+		]
 	},
 	"test/e2e/proxy-request-with-middleware/test/index.test.ts": {
 		"reason": "Failing on Next.js 16.2.1, not triaged yet",
