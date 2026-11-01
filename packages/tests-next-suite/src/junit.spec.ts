@@ -73,6 +73,18 @@ describe("disabledFromJUnit", () => {
 		expect(disabledFromJUnit([report], "/x/next.js", "r")).toEqual({ [FILE]: { reason: "r" } });
 	});
 
+	test("reads reports with failure messages holding many escaped characters", () => {
+		const report = writeReport([{ name: "suite case", body: `<failure>${"&lt;".repeat(2000)}</failure>` }]);
+
+		expect(disabledFromJUnit([report], "/x/next.js", "r")[FILE]?.cases).toEqual(["suite case"]);
+	});
+
+	test("decodes case names so that they match the names of jest", () => {
+		const report = writeReport([{ name: "renders &quot;a&quot; &amp; b", body: FAILURE }]);
+
+		expect(disabledFromJUnit([report], "/x/next.js", "r")[FILE]?.cases).toEqual(['renders "a" & b']);
+	});
+
 	test("sorts and de-duplicates cases", () => {
 		const report = writeReport([
 			{ name: "b", body: FAILURE },

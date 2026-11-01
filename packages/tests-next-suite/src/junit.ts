@@ -15,6 +15,8 @@ type Report = { testsuites?: { name?: string; testsuite?: TestSuite[] } };
 const parser = new XMLParser({
 	ignoreAttributes: false,
 	attributeNamePrefix: "",
+	// The limit protects against hostile documents, these reports have long failure messages.
+	processEntities: { enabled: true, maxTotalExpansions: Number.MAX_SAFE_INTEGER },
 	isArray: (name) => name === "testsuite" || name === "testcase",
 });
 
