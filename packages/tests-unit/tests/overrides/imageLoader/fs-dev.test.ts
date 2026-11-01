@@ -28,6 +28,12 @@ describe("fs-dev image loader", () => {
 		expect(contentType).toBe("image/png");
 	});
 
+	it("rejects for a directory, which can be opened but not read", async () => {
+		fs.mkdirSync(path.join(root.dir, "assets/images"));
+
+		await expect(loader.load("/images")).rejects.toThrow(/not a file/);
+	});
+
 	it("rejects for a missing image instead of emitting an error nothing handles", async () => {
 		await expect(loader.load("/missing.png")).rejects.toThrow(/ENOENT/);
 	});
