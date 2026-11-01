@@ -133,11 +133,7 @@
 		]
 	},
 	"test/e2e/app-dir/asset-prefix/asset-prefix.test.ts": {
-		"reason": "Failing on Next.js 16.2.1, not triaged yet",
-		"cases": [
-			"Test execution failure: could be caused by test hooks like 'afterAll'.",
-			"app-dir assetPrefix handling rewrites rewrites that do not start with assetPrefix should still work"
-		]
+		"reason": "Failing on Next.js 16.2.1, not triaged yet"
 	},
 	"test/e2e/app-dir/bun-externals/bun-externals.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -1062,7 +1058,7 @@
 	"test/e2e/i18n-ignore-redirect-source-locale/redirects-with-basepath.test.ts": {
 		"reason": "Failing on Next.js 16.2.1, not triaged yet",
 		"cases": [
-			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from and to:",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from and to: ",
 			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from and to: /en",
 			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from and to: /nl",
 			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from and to: /sv",
@@ -1083,7 +1079,7 @@
 	"test/e2e/i18n-ignore-redirect-source-locale/redirects.test.ts": {
 		"reason": "Failing on Next.js 16.2.1, not triaged yet",
 		"cases": [
-			"i18n-ignore-redirect-source-locale get redirected to the new page, from and to:",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from and to: ",
 			"i18n-ignore-redirect-source-locale get redirected to the new page, from and to: /en",
 			"i18n-ignore-redirect-source-locale get redirected to the new page, from and to: /nl",
 			"i18n-ignore-redirect-source-locale get redirected to the new page, from and to: /sv",
@@ -1104,7 +1100,7 @@
 	"test/e2e/i18n-ignore-rewrite-source-locale/rewrites.test.ts": {
 		"reason": "Failing on Next.js 16.2.1, not triaged yet",
 		"cases": [
-			"i18n-ignore-rewrite-source-locale get public file by skipping locale in rewrite, locale:",
+			"i18n-ignore-rewrite-source-locale get public file by skipping locale in rewrite, locale: ",
 			"i18n-ignore-rewrite-source-locale get public file by skipping locale in rewrite, locale: /en",
 			"i18n-ignore-rewrite-source-locale get public file by skipping locale in rewrite, locale: /nl",
 			"i18n-ignore-rewrite-source-locale get public file by skipping locale in rewrite, locale: /sv"

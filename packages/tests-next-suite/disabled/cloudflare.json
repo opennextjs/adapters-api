@@ -1153,7 +1153,7 @@
 	"test/e2e/i18n-ignore-redirect-source-locale/redirects-with-basepath.test.ts": {
 		"reason": "Failing on Next.js 16.2.1, not triaged yet",
 		"cases": [
-			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from and to:",
+			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from and to: ",
 			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from and to: /en",
 			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from and to: /nl",
 			"i18n-ignore-redirect-source-locale with basepath get redirected to the new page, from and to: /sv",
@@ -1174,7 +1174,7 @@
 	"test/e2e/i18n-ignore-redirect-source-locale/redirects.test.ts": {
 		"reason": "Failing on Next.js 16.2.1, not triaged yet",
 		"cases": [
-			"i18n-ignore-redirect-source-locale get redirected to the new page, from and to:",
+			"i18n-ignore-redirect-source-locale get redirected to the new page, from and to: ",
 			"i18n-ignore-redirect-source-locale get redirected to the new page, from and to: /en",
 			"i18n-ignore-redirect-source-locale get redirected to the new page, from and to: /nl",
 			"i18n-ignore-redirect-source-locale get redirected to the new page, from and to: /sv",
@@ -1195,7 +1195,7 @@
 	"test/e2e/i18n-ignore-rewrite-source-locale/rewrites.test.ts": {
 		"reason": "Failing on Next.js 16.2.1, not triaged yet",
 		"cases": [
-			"i18n-ignore-rewrite-source-locale get public file by skipping locale in rewrite, locale:",
+			"i18n-ignore-rewrite-source-locale get public file by skipping locale in rewrite, locale: ",
 			"i18n-ignore-rewrite-source-locale get public file by skipping locale in rewrite, locale: /en",
 			"i18n-ignore-rewrite-source-locale get public file by skipping locale in rewrite, locale: /nl",
 			"i18n-ignore-rewrite-source-locale get public file by skipping locale in rewrite, locale: /sv"
@@ -1383,29 +1383,7 @@
 		]
 	},
 	"test/e2e/middleware-redirects/test/node-runtime.test.ts": {
-		"reason": "Failing on Next.js 16.2.1, not triaged yet",
-		"cases": [
-			"Middleware Redirect /fr should implement internal redirects",
-			"Middleware Redirect /fr should redirect",
-			"Middleware Redirect /fr should redirect (infinite-loop)",
-			"Middleware Redirect /fr should redirect cleanly with the original url param",
-			"Middleware Redirect /fr should redirect multiple times",
-			"Middleware Redirect /fr should redirect to api route with locale",
-			"Middleware Redirect /fr should redirect with a fragment",
-			"Middleware Redirect does not include the locale in redirects by default",
-			"Middleware Redirect should have relative path for same host redirect",
-			"Middleware Redirect should implement internal redirects",
-			"Middleware Redirect should redirect",
-			"Middleware Redirect should redirect (infinite-loop)",
-			"Middleware Redirect should redirect cleanly with the original url param",
-			"Middleware Redirect should redirect correctly with redirect in next.config.js",
-			"Middleware Redirect should redirect multiple times",
-			"Middleware Redirect should redirect to api route with locale",
-			"Middleware Redirect should redirect to data urls with data requests and internal redirects",
-			"Middleware Redirect should redirect to external urls with data requests and external redirects",
-			"Middleware Redirect should redirect with a fragment",
-			"Test execution failure: could be caused by test hooks like 'afterAll'."
-		]
+		"reason": "Failing on Next.js 16.2.1, not triaged yet"
 	},
 	"test/e2e/middleware-request-header-overrides/test/index.test.ts": {
 		"reason": "The edge runtime is not supported"
@@ -1578,7 +1556,7 @@
 	"test/e2e/proxy-request-with-middleware/test/index.test.ts": {
 		"reason": "Failing on Next.js 16.2.1, not triaged yet",
 		"cases": [
-			"Requests not effected when middleware used should proxy GET request",
+			"Requests not effected when middleware used should proxy GET request ",
 			"Requests not effected when middleware used should proxy POST request with body"
 		]
 	},

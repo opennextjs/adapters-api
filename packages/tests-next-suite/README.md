@@ -25,7 +25,7 @@ pnpm next-suite run --target cloudflare -c 1 test/e2e/app-dir/hello-world/hello-
 pnpm next-suite run --target core --group 1/16 -c 2
 ```
 
-The whole suite is about 800 test files, each one building an app, so it is meant for CI. Only do one run at a time on a checkout, as each run rebuilds and packs the OpenNext packages.
+The whole suite is about 800 test files, a run takes about 1 hour on `core` and 3 hours on `cloudflare`. Only do one run at a time on a checkout, as each run rebuilds and packs the OpenNext packages.
 
 | Option                     | Purpose                                                               |
 | -------------------------- | --------------------------------------------------------------------- |
@@ -67,6 +67,14 @@ A run warns about entries for files which no longer exist, as can happen after u
 `.github/workflows/next-suite.yml` runs the whole suite nightly and on demand (with a `nextRef` input), split in 16 groups per target. Pull requests changing this package only run a smoke test.
 
 Each run uploads a `next-suite-disabled` artifact: the current lists with what failed in that run added to them. Entries already in a list are kept. To accept these failures, copy the files over `disabled/`.
+
+The same can be done from a local run, the JUnit reports are in `test/turbopack-test-junit-report` (`core`) and `test/test-junit-report` (`cloudflare`) of the Next.js checkout:
+
+```bash
+pnpm next-suite disabled-from-junit --target core --input packages/tests-next-suite/.cache/next.js/test/turbopack-test-junit-report --output packages/tests-next-suite/disabled/core.json --reason "Failing on Next.js 16.2.1"
+```
+
+Reports add up between runs, delete these directories first to only use the latest run.
 
 ## How it works
 

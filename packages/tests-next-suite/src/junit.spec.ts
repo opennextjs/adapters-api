@@ -47,6 +47,13 @@ describe("disabledFromJUnit", () => {
 		expect(disabledFromJUnit([report], "/x/next.js", "r")).toEqual({});
 	});
 
+	test("keeps a failure when a later run skipped the case", () => {
+		const failingRun = writeReport([{ name: "broken", body: FAILURE }]);
+		const skippingRun = writeReport([{ name: "broken", body: "<skipped/>" }]);
+
+		expect(disabledFromJUnit([failingRun, skippingRun], "/x/next.js", "r")[FILE]?.cases).toEqual(["broken"]);
+	});
+
 	test("omits a case which passed on a retry", () => {
 		const firstAttempt = writeReport([{ name: "flaky", body: FAILURE }]);
 		const secondAttempt = writeReport([{ name: "flaky" }]);
@@ -83,6 +90,25 @@ describe("disabledFromJUnit", () => {
 		const report = writeReport([{ name: "renders &quot;a&quot; &amp; b", body: FAILURE }]);
 
 		expect(disabledFromJUnit([report], "/x/next.js", "r")[FILE]?.cases).toEqual(['renders "a" & b']);
+	});
+
+	test("keeps the trailing space of a case name, as names have to match exactly", () => {
+		const report = writeReport([{ name: "redirected, locale: ", body: FAILURE }]);
+
+		expect(disabledFromJUnit([report], "/x/next.js", "r")[FILE]?.cases).toEqual(["redirected, locale: "]);
+	});
+
+	test("disables a whole file when a hook failed", () => {
+		const report = writeReport([
+			{ name: "passing" },
+			{
+				name: "Test execution failure: could be caused by test hooks like 'afterAll'.",
+				classname: "Test execution failure: could be caused by test hooks like 'afterAll'.",
+				body: "<error>boom</error>",
+			},
+		]);
+
+		expect(disabledFromJUnit([report], "/x/next.js", "r")).toEqual({ [FILE]: { reason: "r" } });
 	});
 
 	test("sorts and de-duplicates cases", () => {

@@ -6,15 +6,25 @@ import { XMLParser } from "fast-xml-parser";
 import type { DisabledEntry, DisabledList } from "./disabled.js";
 
 const SUITE_ERROR_CASE = "Test suite failed to run";
+const HOOK_ERROR_CASE = "Test execution failure";
 const REPORT_NAME_PREFIX = "deploy:e2e:";
 
-type TestCase = { name: string; classname?: string; file?: string; failure?: unknown; error?: unknown };
+type TestCase = {
+	name: string;
+	classname?: string;
+	file?: string;
+	failure?: unknown;
+	error?: unknown;
+	skipped?: unknown;
+};
 type TestSuite = { testcase?: TestCase[] };
 type Report = { testsuites?: { name?: string; testsuite?: TestSuite[] } };
 
 const parser = new XMLParser({
 	ignoreAttributes: false,
 	attributeNamePrefix: "",
+	// Case names have to match exactly, some end with a space.
+	trimValues: false,
 	// The limit protects against hostile documents, these reports have long failure messages.
 	processEntities: { enabled: true, maxTotalExpansions: Number.MAX_SAFE_INTEGER },
 	isArray: (name) => name === "testsuite" || name === "testcase",
@@ -58,11 +68,11 @@ export function disabledFromJUnit(xmlFiles: string[], nextDir: string, reason: s
 	const brokenFiles = new Set<string>();
 
 	for (const { file, testCase } of xmlFiles.flatMap((xmlFile) => readCases(xmlFile, nextDir))) {
-		if (testCase.classname === SUITE_ERROR_CASE) {
+		if (testCase.classname === SUITE_ERROR_CASE || testCase.name.includes(HOOK_ERROR_CASE)) {
 			brokenFiles.add(file);
 		} else if (testCase.failure !== undefined || testCase.error !== undefined) {
 			failed.set(file, [...(failed.get(file) ?? []), testCase.name]);
-		} else {
+		} else if (testCase.skipped === undefined) {
 			passed.add(`${file}\0${testCase.name}`);
 		}
 	}
