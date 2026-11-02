@@ -143,7 +143,10 @@ export function createRoutingConfig(
 	// The set has to be snapshotted before the prerendered pathnames are indexed - they are servable
 	// but not executable, and may never be the resolution target of another prerendered pathname.
 	const executableRoutes = new Set(Object.keys(routeIndex));
-	const staticPageRoutes = getStaticPages(context.outputs).map(({ route }) => route);
+	const staticPageRoutes = getStaticPages(context.outputs, {
+		basePath: context.config.basePath,
+		locales: context.config.i18n?.locales,
+	}).map(({ route }) => route);
 	for (const route of staticPageRoutes) {
 		routeIndex[route] = { type: "static", isFallback: false, isISR: false };
 	}

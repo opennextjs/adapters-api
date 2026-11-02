@@ -1,5 +1,7 @@
 import fs from "node:fs";
+import path from "node:path";
 
+import { loadConfig } from "@/config/util.js";
 import type { NextAdapterOutputs } from "@/types/adapter.js";
 import { getCrossPlatformPathRegex } from "@/utils/regex.js";
 
@@ -77,7 +79,13 @@ ${Object.entries(routeToHandlerPath)
  * @returns The JavaScript declaring the map.
  */
 export function renderStaticPages(outputs: Pick<NextAdapterOutputs, "staticFiles">): string {
-	const pages = getStaticPages(outputs).map(({ route, filePath }) => [
+	const html = (outputs.staticFiles ?? []).find(({ filePath }) => filePath.includes("/server/pages/"));
+	// The routes have to match the ones of the routing config, which uses the config of the build.
+	const config = html
+		? loadConfig(html.filePath.slice(0, html.filePath.indexOf("/server/pages/")))
+		: undefined;
+	const options = { basePath: config?.basePath, locales: config?.i18n?.locales };
+	const pages = getStaticPages(outputs, options).map(({ route, filePath }) => [
 		route,
 		fs.readFileSync(filePath, "utf8"),
 	]);

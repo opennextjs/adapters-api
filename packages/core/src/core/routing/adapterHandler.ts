@@ -74,9 +74,10 @@ export function createStaticPageHandler(html: string) {
 			if (req.method !== "GET" && !isHead) {
 				res.statusCode = 405;
 				res.setHeader("allow", "GET, HEAD");
-				res.end();
+				res.end("Method Not Allowed");
 			} else {
-				res.statusCode = 200;
+				// A rewrite can have set the status code, it applies to the page.
+				res.statusCode ||= 200;
 				res.setHeader("content-type", "text/html; charset=utf-8");
 				res.end(isHead ? undefined : html);
 			}

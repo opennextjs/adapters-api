@@ -24,14 +24,33 @@ describe("getStaticPages", () => {
 	});
 
 	it.each([
-		["/index", "/"],
-		["/docs/index", "/docs"],
-		["/en/index", "/en"],
-		["/blog/index-of-posts", "/blog/index-of-posts"],
-	])("serves %s on %s", (pathname, route) => {
-		const pages = getStaticPages(outputs(staticFile(pathname, `/app/.next/server/pages${pathname}.html`)));
+		["/index", "/", {}],
+		["/docs/index", "/docs", { basePath: "/docs" }],
+		["/en/index", "/en", { locales: ["en", "fr"] }],
+		["/docs/en/index", "/docs/en", { basePath: "/docs", locales: ["en"] }],
+		["/index/index/foo", "/index/foo", {}],
+		["/foo/index", "/foo/index", {}],
+		["/blog/index-of-posts", "/blog/index-of-posts", {}],
+	])("serves %s on %s", (pathname, route, options) => {
+		const pages = getStaticPages(
+			outputs(staticFile(pathname, `/app/.next/server/pages${pathname}.html`)),
+			options
+		);
 
 		expect(pages.map((page) => page.route)).toEqual([route]);
+	});
+
+	it.each([
+		["/en/404", { locales: ["en"] }],
+		["/docs/500", { basePath: "/docs" }],
+		["/docs/fr/404", { basePath: "/docs", locales: ["fr"] }],
+	])("leaves out the error page %s", (pathname, options) => {
+		const pages = getStaticPages(
+			outputs(staticFile(pathname, `/app/.next/server/pages${pathname}.html`)),
+			options
+		);
+
+		expect(pages).toEqual([]);
 	});
 
 	it("leaves out the error pages, which are not routes", () => {
@@ -63,12 +82,36 @@ describe("getStaticPages", () => {
 
 describe("renderStaticPages", () => {
 	it("generates the content of the pages, whatever characters they hold", () => {
-		const dir = fs.mkdtempSync(path.join(os.tmpdir(), "static-pages-"));
+		const nextDir = fs.mkdtempSync(path.join(os.tmpdir(), "static-pages-"));
+		fs.mkdirSync(path.join(nextDir, "server/pages"), { recursive: true });
+		fs.writeFileSync(path.join(nextDir, "required-server-files.json"), JSON.stringify({ config: {} }));
 		const html = `<p class="a">$& costs $1 \`now\`</p>\n`;
-		fs.writeFileSync(path.join(dir, "index.html"), html);
+		fs.writeFileSync(path.join(nextDir, "server/pages/index.html"), html);
 
-		const code = renderStaticPages(outputs(staticFile("/index", path.join(dir, "index.html"))));
+		const code = renderStaticPages(
+			outputs(staticFile("/index", path.join(nextDir, "server/pages/index.html")))
+		);
 
 		expect(new Function(`${code}; return staticPages;`)()).toEqual({ "/": html });
+	});
+
+	it("keys the pages like the routing config, with the base path and locales of the build", () => {
+		const nextDir = fs.mkdtempSync(path.join(os.tmpdir(), "static-pages-"));
+		fs.mkdirSync(path.join(nextDir, "server/pages/en"), { recursive: true });
+		fs.writeFileSync(
+			path.join(nextDir, "required-server-files.json"),
+			JSON.stringify({ config: { basePath: "/docs", i18n: { locales: ["en"], defaultLocale: "en" } } })
+		);
+		fs.writeFileSync(path.join(nextDir, "server/pages/en/index.html"), "en");
+		fs.writeFileSync(path.join(nextDir, "server/pages/en/404.html"), "404");
+
+		const code = renderStaticPages(
+			outputs(
+				staticFile("/docs/en/index", path.join(nextDir, "server/pages/en/index.html")),
+				staticFile("/docs/en/404", path.join(nextDir, "server/pages/en/404.html"))
+			)
+		);
+
+		expect(new Function(`${code}; return staticPages;`)()).toEqual({ "/docs/en": "en" });
 	});
 });

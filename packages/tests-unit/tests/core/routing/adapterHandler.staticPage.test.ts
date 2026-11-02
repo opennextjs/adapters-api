@@ -19,8 +19,9 @@ function createResponse() {
 	return { res, headers, body: () => Buffer.concat(chunks).toString() };
 }
 
-async function serve(method: string) {
+async function serve(method: string, statusCode = 0) {
 	const response = createResponse();
+	response.res.statusCode = statusCode;
 	await createStaticPageHandler("<p>hello</p>").handler({ method } as never, response.res as never);
 	return response;
 }
@@ -46,6 +47,13 @@ describe("createStaticPageHandler", () => {
 
 		expect(res.statusCode).toBe(405);
 		expect(headers.allow).toBe("GET, HEAD");
-		expect(body()).toBe("");
+		expect(body()).toBe("Method Not Allowed");
+	});
+
+	it("keeps the status set by a rewrite", async () => {
+		const { res, body } = await serve("GET", 403);
+
+		expect(res.statusCode).toBe(403);
+		expect(body()).toBe("<p>hello</p>");
 	});
 });
