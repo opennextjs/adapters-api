@@ -61,6 +61,31 @@ export async function adapterHandler(
 	}
 }
 
+/**
+ * Creates the handler of a page Next.js rendered to HTML at build time.
+ *
+ * @param html The content of the page.
+ * @returns The handler, it answers like the Next.js server does.
+ */
+export function createStaticPageHandler(html: string) {
+	return {
+		handler: async (req: IncomingMessage, res: OpenNextNodeResponse) => {
+			const isHead = req.method === "HEAD";
+			if (req.method !== "GET" && !isHead) {
+				res.statusCode = 405;
+				res.setHeader("allow", "GET, HEAD");
+				res.end("Method Not Allowed");
+			} else {
+				// A rewrite can have set the status code, it applies to the page.
+				res.statusCode ||= 200;
+				res.setHeader("content-type", "text/html; charset=utf-8");
+				res.end(isHead ? undefined : html);
+			}
+			await finished(res);
+		},
+	};
+}
+
 async function handle404(req: IncomingMessage, res: OpenNextNodeResponse, waitUntil?: WaitUntil) {
 	try {
 		// TODO: find the correct one to use.

@@ -45,7 +45,7 @@ export type RuntimeRoutingConfig = {
 	routeIndex: Record<
 		string,
 		{
-			type: "page" | "app" | "route";
+			type: "page" | "app" | "route" | "static";
 			isFallback: boolean;
 			/**
 			 * Whether the route is prerendered - it either has a build time cache entry or is a

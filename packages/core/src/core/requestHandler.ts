@@ -20,6 +20,10 @@ import routingHandler, {
 	MIDDLEWARE_HEADER_PREFIX_LEN,
 } from "./routingHandler";
 
+// Next.js sets this when `next-server` is loaded, which the adapter bundle does not do. Without it, the
+// runtime of the routes throws when it gets loaded, when nothing else (like node middleware) has set it.
+globalThis.AsyncLocalStorage ??= AsyncLocalStorage;
+
 // This is used to identify requests in the cache
 globalThis.__openNextAls = new AsyncLocalStorage();
 

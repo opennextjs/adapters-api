@@ -130,7 +130,7 @@ export type IncludedConverter =
 	| "sqs-revalidate"
 	| "dummy";
 
-export type RouteType = "route" | "page" | "app";
+export type RouteType = "route" | "page" | "app" | "static";
 
 export interface ResolvedRoute {
 	route: string;

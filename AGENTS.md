@@ -64,6 +64,20 @@ pnpm --filter tests-unit vitest
 pnpm --filter @opennextjs/cloudflare test
 ```
 
+### Next.js test suite
+
+Runs the Next.js e2e suite against the `core` and `cloudflare` adapters. See `packages/tests-next-suite/README.md`.
+
+```bash
+# Check out and build Next.js, once
+pnpm next-suite setup
+
+# Run a test file on an adapter
+pnpm next-suite run --target cloudflare -c 1 test/e2e/app-dir/hello-world/hello-world.test.ts
+```
+
+Tests are disabled per adapter in `packages/tests-next-suite/disabled/<target>.json`.
+
 ### Package-specific commands
 
 ```bash

@@ -1,7 +1,12 @@
+import fs from "node:fs";
+import path from "node:path";
+
+import { loadConfig } from "@/config/util.js";
 import type { NextAdapterOutputs } from "@/types/adapter.js";
 import { getCrossPlatformPathRegex } from "@/utils/regex.js";
 
 import { patchCode } from "../build/patch/astCodePatcher.js";
+import { getStaticPages } from "../build/staticPages.js";
 
 import type { ContentUpdater, Plugin } from "./content-updater.js";
 
@@ -18,7 +23,8 @@ export function inlineRouteHandler(
 				escape: false,
 			}),
 			contentFilter: /getHandler/,
-			callback: ({ contents }) => patchCode(contents, inlineRule(outputs)),
+			callback: ({ contents }) =>
+				`${patchCode(contents, inlineRule(outputs))}\n${renderStaticPages(outputs)}`,
 		},
 		// For turbopack, we need to also patch the `[turbopack]_runtime.js` file.
 		{
@@ -49,6 +55,9 @@ rule:
   pattern: "function getHandler($ROUTE) { $$$BODY }"
 fix: |-
   function getHandler($ROUTE) {
+    if ($ROUTE.type === "static") {
+      return createStaticPageHandler(staticPages[$ROUTE.route]);
+    }
     switch($ROUTE.route) {
 ${Object.entries(routeToHandlerPath)
 	.map(([route, file]) => `      case "${route}": return require("${file}");`)
@@ -58,6 +67,29 @@ ${Object.entries(routeToHandlerPath)
     }
 
   }`;
+}
+
+/**
+ * Generates the map of the static pages, `getHandler` serves them from it.
+ *
+ * Their content has to be in the bundle as the runtime can not always read from a filesystem. This is
+ * appended to the file and not part of the patch, which would interpret the `$` of the pages.
+ *
+ * @param outputs The outputs of the build.
+ * @returns The JavaScript declaring the map.
+ */
+export function renderStaticPages(outputs: Pick<NextAdapterOutputs, "staticFiles">): string {
+	const html = (outputs.staticFiles ?? []).find(({ filePath }) => filePath.includes("/server/pages/"));
+	// The routes have to match the ones of the routing config, which uses the config of the build.
+	const config = html
+		? loadConfig(html.filePath.slice(0, html.filePath.indexOf("/server/pages/")))
+		: undefined;
+	const options = { basePath: config?.basePath, locales: config?.i18n?.locales };
+	const pages = getStaticPages(outputs, options).map(({ route, filePath }) => [
+		route,
+		fs.readFileSync(filePath, "utf8"),
+	]);
+	return `const staticPages = ${JSON.stringify(Object.fromEntries(pages))};`;
 }
 
 //TODO: Make this one more resilient to code changes

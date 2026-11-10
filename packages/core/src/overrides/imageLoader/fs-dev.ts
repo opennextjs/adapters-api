@@ -10,6 +10,11 @@ export default {
 	load: async (url: string) => {
 		const urlWithoutBasePath = NextConfig.basePath ? url.slice(NextConfig.basePath.length) : url;
 		const imagePath = path.join(getMonorepoRelativePath(), "assets", urlWithoutBasePath);
+		// A stream emits this as an `error` event nothing listens to, which would kill the server.
+		const stats = await fs.promises.stat(imagePath);
+		if (!stats.isFile()) {
+			throw new Error(`The image is not a file: ${imagePath}`);
+		}
 		const body = fs.createReadStream(imagePath);
 		const contentType = url.endsWith(".png") ? "image/png" : "image/jpeg";
 		return {

@@ -6,6 +6,7 @@ import type { RuntimeRoutingConfig } from "../types/adapter.js";
 import type { BuildCompleteContext } from "./adapter.js";
 import type * as buildHelper from "./helper.js";
 import { normalizeRouting } from "./normalizeRouting.js";
+import { getStaticPages } from "./staticPages.js";
 
 const EXECUTABLE_OUTPUT_TYPES = ["pages", "pagesApi", "appPages", "appRoutes"] as const;
 const PATHNAME_OUTPUT_TYPES = [...EXECUTABLE_OUTPUT_TYPES, "staticFiles"] as const;
@@ -142,6 +143,13 @@ export function createRoutingConfig(
 	// The set has to be snapshotted before the prerendered pathnames are indexed - they are servable
 	// but not executable, and may never be the resolution target of another prerendered pathname.
 	const executableRoutes = new Set(Object.keys(routeIndex));
+	const staticPageRoutes = getStaticPages(context.outputs, {
+		basePath: context.config.basePath,
+		locales: context.config.i18n?.locales,
+	}).map(({ route }) => route);
+	for (const route of staticPageRoutes) {
+		routeIndex[route] = { type: "static", isFallback: false, isISR: false };
+	}
 	const resolvePrerenderRoute = createPrerenderRouteResolver(context, executableRoutes);
 	const prerenderPathnames: string[] = [];
 
@@ -162,7 +170,7 @@ export function createRoutingConfig(
 	const outputPathnames = PATHNAME_OUTPUT_TYPES.flatMap((outputType) =>
 		(context.outputs[outputType] ?? []).map((output) => output.pathname)
 	);
-	const servablePathnames = [...outputPathnames, ...prerenderPathnames];
+	const servablePathnames = [...outputPathnames, ...prerenderPathnames, ...staticPageRoutes];
 	const pathnames = [
 		...new Set(
 			context.config.trailingSlash ? withTrailingSlashVariants(servablePathnames) : servablePathnames

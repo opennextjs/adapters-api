@@ -7,6 +7,37 @@ import { vi } from "vitest";
 vi.mock("node:fs");
 
 describe("createRoutingConfig", () => {
+	it("indexes static html pages as servable routes", () => {
+		const context = {
+			buildId: "build-id",
+			config: {},
+			routing: {
+				beforeMiddleware: [],
+				beforeFiles: [],
+				afterFiles: [],
+				dynamicRoutes: [],
+				onMatch: [],
+				fallback: [],
+			},
+			outputs: {
+				pages: [],
+				pagesApi: [],
+				appPages: [],
+				appRoutes: [],
+				staticFiles: [
+					{ id: "index", pathname: "/index", filePath: "/app/.next/server/pages/index.html", assets: {} },
+					{ id: "about", pathname: "/about", filePath: "/app/.next/server/pages/about.html", assets: {} },
+				],
+			},
+		} as unknown as BuildCompleteContext;
+
+		const result = createRoutingConfig({ appBuildOutputPath: "/app" } as never, context);
+
+		expect(result.pathnames).toContain("/");
+		expect(result.routeIndex["/"]).toEqual({ type: "static", isFallback: false, isISR: false });
+		expect(result.routeIndex["/about"]).toEqual({ type: "static", isFallback: false, isISR: false });
+	});
+
 	it("serializes routing metadata and executable route classifications", () => {
 		const context = {
 			buildId: "build-id",
