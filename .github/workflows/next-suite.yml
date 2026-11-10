@@ -9,10 +9,13 @@ on:
         description: Next.js ref (tag, branch or commit)
         default: v16.2.1
         type: string
+  # The adapters' runtime is in the packages, a change there can make a test of the suite fail.
   pull_request:
     paths:
+      - ".github/actions/setup/**"
       - ".github/workflows/next-suite.yml"
-      - "packages/tests-next-suite/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -48,43 +51,9 @@ jobs:
         if: steps.next-cache.outputs.cache-hit != 'true'
         run: pnpm next-suite setup --ref "$NEXT_REF"
 
-  smoke:
-    name: Smoke (${{ matrix.target }})
-    needs: next
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [core, cloudflare]
-    steps:
-      - uses: actions/checkout@v7
-      # These jobs run unlocked packages from npm, they must not save to a cache release jobs restore.
-      - uses: ./.github/actions/setup
-        with:
-          pnpm-cache: "false"
-
-      - name: Restore the Next.js checkout
-        uses: actions/cache/restore@v6
-        with:
-          path: |
-            packages/tests-next-suite/.cache/next.js
-            ~/.cache/ms-playwright
-          key: next-suite-${{ runner.os }}-${{ inputs.nextRef || 'v16.2.1' }}
-          fail-on-cache-miss: true
-
-      - name: Install the browser dependencies
-        working-directory: ${{ env.NEXT_DIR }}
-        run: pnpm playwright install --with-deps chromium
-
-      - name: Run the smoke test
-        run: pnpm next-suite run --target ${{ matrix.target }} --ref "$NEXT_REF" -c 1 test/e2e/app-dir/hello-world/hello-world.test.ts
-
   suite:
     name: Suite (${{ matrix.target }} ${{ matrix.group }}/16)
     needs: next
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     strategy:

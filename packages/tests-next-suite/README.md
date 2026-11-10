@@ -64,7 +64,7 @@ A run warns about entries for files which no longer exist, as can happen after u
 
 ## CI
 
-`.github/workflows/next-suite.yml` runs the whole suite nightly and on demand (with a `nextRef` input), split in 16 groups per target. Pull requests changing this package only run a smoke test.
+`.github/workflows/next-suite.yml` runs the whole suite nightly and on demand (with a `nextRef` input), split in 16 groups per target. It also runs on the pull requests changing the packages, where a failing test fails the check.
 
 Each run uploads a `next-suite-disabled` artifact: the current lists with what failed in that run added to them. Entries already in a list are kept. To accept these failures, copy the files over `disabled/`.
 
